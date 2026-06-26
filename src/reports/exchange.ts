@@ -6,6 +6,11 @@ export interface RawMailboxRow {
   active: number | string
 }
 
+export interface RawMailboxStorageRow {
+  reportDate: number | string
+  storageUsedInBytes: number | string | undefined
+}
+
 export interface RawEmailRow {
   reportDate: number | string
   send: number | string
@@ -15,14 +20,17 @@ export interface RawEmailRow {
 
 const n = (v: number | string | undefined) => Number(v ?? 0) || 0
 
-export function parseMailboxSummary(rows: RawMailboxRow[]): MailboxSummary {
+export function parseMailboxStorage(rows: RawMailboxStorageRow[]): number {
+  const latest = rows[rows.length - 1]
+  return n(latest?.storageUsedInBytes)
+}
+
+export function parseMailboxSummary(rows: RawMailboxRow[], storageUsedBytes: number = 0): MailboxSummary {
   const latest = rows[rows.length - 1]
   return {
     totalMailboxes: n(latest?.total),
     activeMailboxes: n(latest?.active),
-    // note: getMailboxUsageMailboxCounts carries no storage figure (documented
-    // limitation) — we deliberately do not issue an extra API call for it.
-    storageUsedBytes: 0,
+    storageUsedBytes,
   }
 }
 

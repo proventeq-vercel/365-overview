@@ -4,8 +4,8 @@ import { parseResourceCounts, parseSubscriptions, parseCostQuery } from '../repo
 import type { RawCostQuery } from '../reports/azure'
 import { parseOrg, parseUsageCounts } from '../reports/estate'
 import type { RawOrg } from '../reports/estate'
-import { parseEmailActivity, parseMailboxSummary } from '../reports/exchange'
-import type { RawEmailRow, RawMailboxRow } from '../reports/exchange'
+import { parseEmailActivity, parseMailboxStorage, parseMailboxSummary } from '../reports/exchange'
+import type { RawEmailRow, RawMailboxRow, RawMailboxStorageRow } from '../reports/exchange'
 import { parseSubscribedSkus } from '../reports/licensing'
 import type { RawSku } from '../reports/licensing'
 import { parseSharePointDetail } from '../reports/sharepoint'
@@ -77,10 +77,15 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     },
 
     async getMailbox(period: ReportPeriod) {
-      const res = await graph.get<JsonReport<RawMailboxRow>>(
-        `/reports/getMailboxUsageMailboxCounts(period='${period}')?$format=application/json`,
-      )
-      return parseMailboxSummary(res.value)
+      const [counts, storage] = await Promise.all([
+        graph.get<JsonReport<RawMailboxRow>>(
+          `/reports/getMailboxUsageMailboxCounts(period='${period}')?$format=application/json`,
+        ),
+        graph.get<JsonReport<RawMailboxStorageRow>>(
+          `/reports/getMailboxUsageStorage(period='${period}')?$format=application/json`,
+        ),
+      ])
+      return parseMailboxSummary(counts.value, parseMailboxStorage(storage.value))
     },
 
     async getEmailActivity(period: ReportPeriod) {

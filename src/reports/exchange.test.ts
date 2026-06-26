@@ -1,17 +1,52 @@
 import { describe, it, expect } from 'vitest'
-import { parseMailboxSummary, parseEmailActivity, type RawEmailRow } from './exchange'
+import { parseMailboxSummary, parseMailboxStorage, parseEmailActivity, type RawEmailRow } from './exchange'
 
 // Live-shape fixtures: Graph returns camelCase resource property names with
-// ?$format=application/json. getMailboxUsageMailboxCounts has NO storage field,
-// so storageUsedBytes is always 0 (documented limitation). Numeric values are
-// mixed numbers/strings to prove coercion.
+// ?$format=application/json. Numeric values are mixed numbers/strings to prove coercion.
+
+describe('parseMailboxStorage', () => {
+  it('reads storageUsedInBytes from the last (latest) row', () => {
+    const result = parseMailboxStorage([
+      { reportDate: '2026-06-01', storageUsedInBytes: 1000000 },
+      { reportDate: '2026-06-08', storageUsedInBytes: 2000000 },
+    ])
+    expect(result).toBe(2000000)
+  })
+
+  it('coerces numeric strings', () => {
+    const result = parseMailboxStorage([
+      { reportDate: '2026-06-01', storageUsedInBytes: '5368709120' },
+    ])
+    expect(result).toBe(5368709120)
+  })
+
+  it('handles undefined storageUsedInBytes as 0', () => {
+    const result = parseMailboxStorage([
+      { reportDate: '2026-06-01', storageUsedInBytes: undefined },
+    ])
+    expect(result).toBe(0)
+  })
+
+  it('handles empty input as 0', () => {
+    expect(parseMailboxStorage([])).toBe(0)
+  })
+})
+
 describe('parseMailboxSummary', () => {
-  it('uses the last (latest) row; storage is always 0', () => {
+  it('uses the last (latest) row; defaults storage to 0', () => {
     const result = parseMailboxSummary([
       { reportDate: '2026-06-01', total: 100, active: 60 },
       { reportDate: '2026-06-08', total: 105, active: 65 },
     ])
     expect(result).toEqual({ totalMailboxes: 105, activeMailboxes: 65, storageUsedBytes: 0 })
+  })
+
+  it('passes through storageUsedBytes when provided', () => {
+    const result = parseMailboxSummary(
+      [{ reportDate: '2026-06-08', total: 105, active: 65 }],
+      5368709120,
+    )
+    expect(result).toEqual({ totalMailboxes: 105, activeMailboxes: 65, storageUsedBytes: 5368709120 })
   })
 
   it('handles a single row and coerces numeric strings', () => {
