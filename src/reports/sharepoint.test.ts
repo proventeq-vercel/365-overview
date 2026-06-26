@@ -1,9 +1,29 @@
 import { describe, it, expect } from 'vitest'
-import { parseSharePointDetail } from './sharepoint'
+import { parseSharePointDetail, type RawSpoRow } from './sharepoint'
 
-const rows = [
-  { 'Site Id': 's1', 'Site URL': 'https://a', 'Owner Display Name': 'A', 'File Count': '10', 'Active File Count': '3', 'Storage Used (Byte)': '1000', 'Storage Allocated (Byte)': '5000' },
-  { 'Site Id': 's2', 'Site URL': 'https://b', 'Owner Display Name': 'B', 'File Count': '20', 'Active File Count': '5', 'Storage Used (Byte)': '2000', 'Storage Allocated (Byte)': '5000' },
+// Live-shape fixtures: Graph returns camelCase resource property names with
+// ?$format=application/json. Numeric fields arrive as real numbers here to
+// prove the coercion helper accepts numbers as well as strings.
+const rows: RawSpoRow[] = [
+  {
+    siteId: 's1',
+    siteUrl: 'https://a',
+    ownerDisplayName: 'A',
+    fileCount: 10,
+    activeFileCount: 3,
+    storageUsedInBytes: 1000,
+    storageAllocatedInBytes: 5000,
+  },
+  {
+    // strings here prove the helper still coerces numeric strings
+    siteId: 's2',
+    siteUrl: 'https://b',
+    ownerDisplayName: 'B',
+    fileCount: '20',
+    activeFileCount: '5',
+    storageUsedInBytes: '2000',
+    storageAllocatedInBytes: '5000',
+  },
 ]
 
 describe('parseSharePointDetail', () => {

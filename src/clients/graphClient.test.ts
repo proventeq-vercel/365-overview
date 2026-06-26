@@ -21,7 +21,10 @@ describe('graphClient', () => {
   it('throws ApiError with status on failure', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'nope' } }, 403))
     const client = createGraphClient(token, fetchImpl)
-    await expect(client.get('/x')).rejects.toBeInstanceOf(ApiError)
+    const err = (await client.get('/x').catch((e) => e)) as ApiError
+    expect(err).toBeInstanceOf(ApiError)
+    expect(err.status).toBe(403)
+    expect(err.message).toBe('nope')
   })
   it('follows @odata.nextLink in getAllPages', async () => {
     const fetchImpl = vi.fn()

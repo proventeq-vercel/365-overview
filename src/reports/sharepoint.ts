@@ -1,26 +1,26 @@
 import type { SharePointSite, SharePointSummary } from '../types/reports'
 
 export interface RawSpoRow {
-  'Site Id': string
-  'Site URL': string
-  'Owner Display Name': string
-  'File Count': string
-  'Active File Count': string
-  'Storage Used (Byte)': string
-  'Storage Allocated (Byte)': string
+  siteId: string
+  siteUrl: string
+  ownerDisplayName: string
+  fileCount: number | string
+  activeFileCount: number | string
+  storageUsedInBytes: number | string
+  storageAllocatedInBytes: number | string
 }
 
-const num = (v: string | undefined) => Number(v ?? 0) || 0
+const num = (v: number | string | undefined) => Number(v ?? 0) || 0
 
 export function parseSharePointDetail(rows: RawSpoRow[]): SharePointSummary {
   const sites: SharePointSite[] = rows.map((r) => ({
-    siteId: r['Site Id'],
-    siteUrl: r['Site URL'],
-    ownerDisplayName: r['Owner Display Name'],
-    fileCount: num(r['File Count']),
-    activeFileCount: num(r['Active File Count']),
-    storageUsedBytes: num(r['Storage Used (Byte)']),
-    storageAllocatedBytes: num(r['Storage Allocated (Byte)']),
+    siteId: r.siteId,
+    siteUrl: r.siteUrl,
+    ownerDisplayName: r.ownerDisplayName,
+    fileCount: num(r.fileCount),
+    activeFileCount: num(r.activeFileCount),
+    storageUsedBytes: num(r.storageUsedInBytes),
+    storageAllocatedBytes: num(r.storageAllocatedInBytes),
   }))
   return {
     totalSites: sites.length,

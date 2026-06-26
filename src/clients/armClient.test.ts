@@ -20,4 +20,14 @@ describe('armClient', () => {
     expect((init as RequestInit).method).toBe('POST')
     expect((init as RequestInit).body).toBe('{"a":1}')
   })
+  it('follows ARM nextLink in getAllPages', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(
+        ok({ value: [1], nextLink: 'https://management.azure.com/subscriptions/x/resources?api-version=2021-04-01&$skiptoken=abc' }),
+      )
+      .mockResolvedValueOnce(ok({ value: [2] }))
+    const result = await createArmClient(token, fetchImpl).getAllPages<number>('/subscriptions/x/resources')
+    expect(result).toEqual([1, 2])
+    expect(fetchImpl.mock.calls[1][0]).toContain('$skiptoken=abc')
+  })
 })

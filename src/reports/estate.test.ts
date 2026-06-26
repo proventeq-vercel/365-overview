@@ -39,33 +39,43 @@ describe('parseOrg', () => {
 })
 
 describe('parseUsageCounts', () => {
-  it('maps rows with Report Date to date/value pairs', () => {
+  // Live-shape fixtures: Graph returns camelCase `reportDate` plus numeric
+  // value columns (often as real numbers) with ?$format=application/json.
+  it('maps rows with reportDate to date/value pairs (numeric values)', () => {
     const result = parseUsageCounts(
-      [{ 'Report Date': '2026-06-01', Total: '5' }],
-      'Total',
+      [{ reportDate: '2026-06-01', office365: 5 }],
+      'office365',
     )
     expect(result).toEqual([{ date: '2026-06-01', value: 5 }])
   })
 
-  it('filters out rows lacking Report Date', () => {
+  it('coerces numeric string values', () => {
+    const result = parseUsageCounts(
+      [{ reportDate: '2026-06-01', storageUsedInBytes: '1024' }],
+      'storageUsedInBytes',
+    )
+    expect(result).toEqual([{ date: '2026-06-01', value: 1024 }])
+  })
+
+  it('filters out rows lacking reportDate', () => {
     const result = parseUsageCounts(
       [
-        { 'Report Date': '2026-06-01', Total: '10' },
-        { Total: '99' }, // no Report Date
-        { 'Report Date': '2026-06-02', Total: '20' },
+        { reportDate: '2026-06-01', office365: 10 },
+        { office365: 99 }, // no reportDate
+        { reportDate: '2026-06-02', office365: 20 },
       ],
-      'Total',
+      'office365',
     )
     expect(result).toHaveLength(2)
     expect(result[1].date).toBe('2026-06-02')
   })
 
   it('coerces missing valueKey to 0', () => {
-    const result = parseUsageCounts([{ 'Report Date': '2026-06-01' }], 'Missing')
+    const result = parseUsageCounts([{ reportDate: '2026-06-01' }], 'Missing')
     expect(result[0].value).toBe(0)
   })
 
   it('handles empty input', () => {
-    expect(parseUsageCounts([], 'Total')).toEqual([])
+    expect(parseUsageCounts([], 'office365')).toEqual([])
   })
 })

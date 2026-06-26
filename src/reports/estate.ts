@@ -11,8 +11,11 @@ export function parseOrg(raw: RawOrg): OrgInfo {
   return { displayName: raw.displayName, verifiedDomain: def?.name ?? '', country: raw.countryLetterCode }
 }
 
-export function parseUsageCounts(rows: Record<string, string>[], valueKey: string): UsagePoint[] {
+export function parseUsageCounts(
+  rows: Record<string, string | number | undefined>[],
+  valueKey: string,
+): UsagePoint[] {
   return rows
-    .filter((r) => r['Report Date'])
-    .map((r) => ({ date: r['Report Date'], value: Number(r[valueKey] ?? 0) || 0 }))
+    .filter((r) => r.reportDate)
+    .map((r) => ({ date: String(r.reportDate), value: Number(r[valueKey] ?? 0) || 0 }))
 }

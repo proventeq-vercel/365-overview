@@ -21,6 +21,7 @@ async function handle<T>(res: Response): Promise<T> {
 
 export interface ArmClient {
   get<T>(path: string, apiVersion?: string): Promise<T>
+  getAllPages<T>(path: string, apiVersion?: string): Promise<T[]>
   post<T>(path: string, body: unknown, apiVersion: string): Promise<T>
 }
 
@@ -29,6 +30,20 @@ export function createArmClient(getToken: () => Promise<string>, fetchImpl: type
     async get<T>(path: string, apiVersion = '2021-04-01'): Promise<T> {
       const token = await getToken()
       return handle<T>(await fetchImpl(withVersion(path, apiVersion), { headers: { Authorization: `Bearer ${token}` } }))
+    },
+    async getAllPages<T>(path: string, apiVersion = '2021-04-01'): Promise<T[]> {
+      const out: T[] = []
+      // ARM paginates via a `nextLink` property holding an absolute URL.
+      let url: string | undefined = withVersion(path, apiVersion)
+      while (url) {
+        const token = await getToken()
+        const page: { value: T[]; nextLink?: string } = await handle<{ value: T[]; nextLink?: string }>(
+          await fetchImpl(url, { headers: { Authorization: `Bearer ${token}` } }),
+        )
+        out.push(...page.value)
+        url = page.nextLink
+      }
+      return out
     },
     async post<T>(path: string, body: unknown, apiVersion: string): Promise<T> {
       const token = await getToken()

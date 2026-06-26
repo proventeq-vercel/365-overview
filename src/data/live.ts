@@ -35,10 +35,10 @@ const costBody = {
 export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSource {
   return {
     async getSharePoint(period: ReportPeriod) {
-      const res = await graph.get<JsonReport<RawSpoRow>>(
+      const rows = await graph.getAllPages<RawSpoRow>(
         `/reports/getSharePointSiteUsageDetail(period='${period}')?$format=application/json`,
       )
-      return parseSharePointDetail(res.value)
+      return parseSharePointDetail(rows)
     },
 
     async getLicenses() {
@@ -54,26 +54,26 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     },
 
     async getActiveUsers(period: ReportPeriod) {
-      // Column 'Total' = combined active users across all M365 services.
-      const res = await graph.get<JsonReport<Record<string, string>>>(
+      // 'office365' = combined active users across all M365 services.
+      const res = await graph.get<JsonReport<Record<string, string | number>>>(
         `/reports/getOffice365ActiveUserCounts(period='${period}')?$format=application/json`,
       )
-      return parseUsageCounts(res.value, 'Total')
+      return parseUsageCounts(res.value, 'office365')
     },
 
     async getOneDriveUsage(period: ReportPeriod) {
-      const res = await graph.get<JsonReport<Record<string, string>>>(
+      const res = await graph.get<JsonReport<Record<string, string | number>>>(
         `/reports/getOneDriveUsageStorage(period='${period}')?$format=application/json`,
       )
-      return parseUsageCounts(res.value, 'Storage Used (Byte)')
+      return parseUsageCounts(res.value, 'storageUsedInBytes')
     },
 
     async getTeamsActivity(period: ReportPeriod) {
-      // Column 'Team Chat Messages' = channel messages posted per day.
-      const res = await graph.get<JsonReport<Record<string, string>>>(
+      // 'teamChatMessages' = channel messages posted per day.
+      const res = await graph.get<JsonReport<Record<string, string | number>>>(
         `/reports/getTeamsUserActivityCounts(period='${period}')?$format=application/json`,
       )
-      return parseUsageCounts(res.value, 'Team Chat Messages')
+      return parseUsageCounts(res.value, 'teamChatMessages')
     },
 
     async getMailbox(period: ReportPeriod) {
@@ -98,10 +98,10 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     },
 
     async getAzureResourceCounts(subId: string) {
-      const res = await arm.get<{ value: { type: string }[] }>(
+      const resources = await arm.getAllPages<{ type: string }>(
         `/subscriptions/${subId}/resources`,
       )
-      return parseResourceCounts(res)
+      return parseResourceCounts({ value: resources })
     },
 
     async getAzureCost(subId: string) {

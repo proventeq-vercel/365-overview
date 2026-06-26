@@ -29,8 +29,10 @@ test.describe('M365 Dashboard – mock mode', () => {
     // KPI label for SharePoint sites should be visible
     await expect(page.getByText('SharePoint sites')).toBeVisible()
 
-    // The fixture totalSites=4 → formatNumber(4) = '4'
-    await expect(page.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
+    // The fixture totalSites=4 → formatNumber(4) = '4'. Scope to the
+    // SharePoint-sites KPI card so the bare '4' can't match other cells.
+    const spCard = page.locator('.kpi-card').filter({ hasText: 'SharePoint sites' })
+    await expect(spCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
   })
 
   test('SharePoint page shows site count and a site URL', async ({ page }) => {
@@ -38,9 +40,10 @@ test.describe('M365 Dashboard – mock mode', () => {
     // Scope nav click to the sidebar nav (aria-label="Sections") to avoid the KPI card links
     await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'SharePoint' }).click()
 
-    // KPI label 'Total sites' with value '4'
+    // KPI label 'Total sites' with value '4', scoped to its KPI card
     await expect(page.getByText('Total sites')).toBeVisible()
-    await expect(page.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
+    const totalSitesCard = page.locator('.kpi-card').filter({ hasText: 'Total sites' })
+    await expect(totalSitesCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
 
     // One of the fixture site URLs rendered in the table
     await expect(page.getByText(FIXTURES.spSiteUrl)).toBeVisible()

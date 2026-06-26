@@ -62,7 +62,7 @@ The app uses **MSAL with authorization-code + PKCE** and acquires two separate t
    - `User.Read`
    - `Reports.Read.All`
    - `Organization.Read.All`
-7. Click **Grant admin consent** for the tenant (all three scopes require admin consent).
+7. Click **Grant admin consent** for the tenant: `Reports.Read.All` and `Organization.Read.All` require admin consent, while `User.Read` is consented by the signing-in user automatically.
 
 ---
 
