@@ -43,4 +43,33 @@ async function bootstrap() {
   )
 }
 
-void bootstrap()
+bootstrap().catch((err: unknown) => {
+  console.error('Bootstrap failed:', err)
+  const message = err instanceof Error ? err.message : String(err)
+  const root = document.getElementById('root')
+  if (root) {
+    createRoot(root).render(
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          background: '#0f1117',
+          fontFamily: 'sans-serif',
+        }}
+      >
+        <div className="error-state" style={{ maxWidth: '480px', width: '100%' }}>
+          <p className="error-state__message">Couldn&apos;t start the dashboard</p>
+          <p className="error-state__hint">
+            Check the app configuration or refresh to try again.
+          </p>
+          <p className="error-state__hint" style={{ marginTop: '0.75rem', wordBreak: 'break-word' }}>
+            {message}
+          </p>
+        </div>
+      </div>,
+    )
+  }
+})
