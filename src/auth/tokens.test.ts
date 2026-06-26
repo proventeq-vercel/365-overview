@@ -11,7 +11,7 @@ describe('acquireToken', () => {
   })
   it('falls back to popup on InteractionRequired', async () => {
     const instance = {
-      acquireTokenSilent: vi.fn().mockRejectedValue(new InteractionRequiredAuthError()),
+      acquireTokenSilent: vi.fn().mockRejectedValue(new InteractionRequiredAuthError('interaction_required', 'interaction required')),
       acquireTokenPopup: vi.fn().mockResolvedValue({ accessToken: 'popup' }),
     } as never
     expect(await acquireToken(instance, account, ['s'])).toBe('popup')
