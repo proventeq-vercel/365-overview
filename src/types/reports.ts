@@ -1,3 +1,5 @@
+export type ReportPeriod = 'D7' | 'D30' | 'D90' | 'D180'
+
 export interface SharePointSite {
   siteId: string;
   siteUrl: string;
