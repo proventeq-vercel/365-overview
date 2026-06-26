@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { useMsal } from '@azure/msal-react'
 import { env } from '../config/env'
+import { UserMenu } from './UserMenu'
 
 interface NavItem {
   to: string
@@ -20,12 +20,6 @@ const NAV: NavItem[] = [
 ]
 
 export function Layout({ children }: { children?: ReactNode }) {
-  // useMsal is always available (an MsalProvider wraps the app), but accounts is
-  // empty in mock mode, so the user name and sign-out are guarded.
-  const { instance, accounts } = useMsal()
-  const userName = accounts[0]?.name
-  const canSignOut = !env.useMock && accounts.length > 0
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -56,18 +50,9 @@ export function Layout({ children }: { children?: ReactNode }) {
         <header className="topbar">
           <div className="topbar__title">Microsoft 365 &amp; Azure Estate</div>
           <div className="topbar__account">
-            {userName && <span className="topbar__user">{userName}</span>}
-            {canSignOut && (
-              <button
-                type="button"
-                className="topbar__signout"
-                onClick={() => {
-                  void instance.logoutRedirect()
-                }}
-              >
-                Sign out
-              </button>
-            )}
+            {/* UserMenu calls useMsal(); only render it in live mode so Layout
+                stays MSAL-free in mock mode (tests/e2e). */}
+            {!env.useMock && <UserMenu />}
           </div>
         </header>
         <main className="content">{children ?? <Outlet />}</main>

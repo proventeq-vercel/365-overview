@@ -12,9 +12,9 @@ import { DataSourceContext } from './useDataSource'
 
 /**
  * Build a token getter bound to the currently active account. The account is
- * resolved lazily (per token request) so that a sign-in completed after the
- * provider mounts is picked up. A LoginGate (Task 11) wraps this provider, so an
- * active account can be assumed when live methods are actually called; if none
+ * resolved lazily (per token request) so a sign-in completed after the provider
+ * mounts is picked up. `MsalAuthHandler` gates the live app on an authenticated
+ * account, so one can normally be assumed when live methods are called; if none
  * is present we fail fast with a clear error rather than calling Graph/ARM
  * unauthenticated.
  */
@@ -32,20 +32,42 @@ function makeTokenGetter(
   }
 }
 
-function buildLiveSource(instance: IPublicClientApplication, accounts: AccountInfo[]): DataSource {
+function buildLiveSource(
+  instance: IPublicClientApplication,
+  accounts: AccountInfo[],
+): DataSource {
   const getAccount = () => instance.getActiveAccount() ?? accounts[0] ?? null
   const graph = createGraphClient(makeTokenGetter(instance, getAccount, GRAPH_SCOPES))
   const arm = createArmClient(makeTokenGetter(instance, getAccount, ARM_SCOPES))
   return createLiveDataSource(graph, arm)
 }
 
-export function DataProvider({ children }: { children: ReactNode }) {
+/**
+ * Live-mode provider. Calls `useMsal()` — so it is only ever mounted inside an
+ * `MsalProvider` (live mode). Mock mode never renders this, keeping mock mode
+ * MSAL-free end to end.
+ */
+function LiveDataProvider({ children }: { children: ReactNode }) {
   const { instance, accounts } = useMsal()
-
   const dataSource = useMemo<DataSource>(
-    () => (env.useMock ? createMockDataSource() : buildLiveSource(instance, accounts)),
+    () => buildLiveSource(instance, accounts),
     [instance, accounts],
   )
-
   return <DataSourceContext value={dataSource}>{children}</DataSourceContext>
+}
+
+/**
+ * Provides a `DataSource` to the app. In mock mode it supplies fixture data and
+ * never touches MSAL; in live mode it delegates to `LiveDataProvider` (which is
+ * the only place `useMsal()` is called for data).
+ */
+export function DataProvider({ children }: { children: ReactNode }) {
+  if (env.useMock) {
+    return (
+      <DataSourceContext value={createMockDataSource()}>
+        {children}
+      </DataSourceContext>
+    )
+  }
+  return <LiveDataProvider>{children}</LiveDataProvider>
 }

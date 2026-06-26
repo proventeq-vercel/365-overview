@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Runtime config — real local values, not committed (copy public/env.sample.json)
+public/env.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
