@@ -1,64 +1,25 @@
 import { Route, Routes } from 'react-router-dom'
 import { LoginGate } from './app/LoginGate'
 import { Layout } from './app/Layout'
+import { Overview } from './sections/Overview'
+import { SharePoint } from './sections/SharePoint'
+import { Licensing } from './sections/Licensing'
+import { Estate } from './sections/Estate'
+import { Exchange } from './sections/Exchange'
+import { Azure } from './sections/Azure'
 import './App.css'
-
-// Lightweight placeholders. Task 12 replaces each body with the real section
-// page; keeping them as named components makes those swaps a one-line change.
-function OverviewPage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">Overview</h1>
-    </section>
-  )
-}
-function SharePointPage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">SharePoint</h1>
-    </section>
-  )
-}
-function LicensingPage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">Licensing</h1>
-    </section>
-  )
-}
-function EstatePage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">Estate</h1>
-    </section>
-  )
-}
-function ExchangePage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">Exchange</h1>
-    </section>
-  )
-}
-function AzurePage() {
-  return (
-    <section className="page">
-      <h1 className="page__title">Azure</h1>
-    </section>
-  )
-}
 
 function App() {
   return (
     <LoginGate>
       <Layout>
         <Routes>
-          <Route path="/" element={<OverviewPage />} />
-          <Route path="/sharepoint" element={<SharePointPage />} />
-          <Route path="/licensing" element={<LicensingPage />} />
-          <Route path="/estate" element={<EstatePage />} />
-          <Route path="/exchange" element={<ExchangePage />} />
-          <Route path="/azure" element={<AzurePage />} />
+          <Route path="/" element={<Overview />} />
+          <Route path="/sharepoint" element={<SharePoint />} />
+          <Route path="/licensing" element={<Licensing />} />
+          <Route path="/estate" element={<Estate />} />
+          <Route path="/exchange" element={<Exchange />} />
+          <Route path="/azure" element={<Azure />} />
         </Routes>
       </Layout>
     </LoginGate>
