@@ -35,4 +35,16 @@ describe('Overview section', () => {
     const spend = await screen.findByText('Azure spend (MTD)')
     expect(spend.parentElement).toHaveTextContent('GBP')
   })
+
+  it('renders fixture-derived numbers: total SharePoint site count and total licensed seats', async () => {
+    renderWithProviders(<Overview />)
+
+    // fixtures.ts: sharePoint.totalSites = 4
+    const sitesCard = await screen.findByText('SharePoint sites')
+    expect(sitesCard.parentElement).toHaveTextContent('4')
+
+    // fixtures.ts: licenses consumed = 184 + 412 + 95 + 47 = 738
+    const licensesCard = await screen.findByText('Licensed seats')
+    expect(licensesCard.parentElement).toHaveTextContent('738')
+  })
 })

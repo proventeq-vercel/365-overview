@@ -20,9 +20,9 @@ export function Overview() {
   const subId = subscriptions.data?.[0]?.subscriptionId ?? ''
   const cost = useAzureCost(subId)
 
-  // Surface the first error from any primary query.
-  const error =
-    sharePoint.error ?? licenses.error ?? subscriptions.error ?? cost.error
+  // Surface the first error from core M365 queries only — Azure cost/subscription
+  // failures are non-fatal and fall back to '—' in the KPI card.
+  const error = sharePoint.error ?? licenses.error
   if (error) {
     return (
       <section className="page">
@@ -32,10 +32,10 @@ export function Overview() {
     )
   }
 
-  // Skeletons until the primary data resolves.
+  // Skeletons until the core M365 data resolves.
   const sp = sharePoint.data
   const licenseData = licenses.data
-  if (!sp || !licenseData || subscriptions.isPending) {
+  if (!sp || !licenseData) {
     return (
       <section className="page">
         <h1 className="page__title">Overview</h1>

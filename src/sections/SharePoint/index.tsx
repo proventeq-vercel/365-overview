@@ -3,6 +3,7 @@ import { useSharePoint } from '../../hooks/useReports'
 import { KpiCard } from '../../components/KpiCard'
 import { DataTable } from '../../components/DataTable'
 import { ConsumptionBar } from '../../components/ConsumptionBar'
+import { TrendChart } from '../../components/TrendChart'
 import { PeriodSelector } from '../../components/PeriodSelector'
 import { ErrorState } from '../../components/ErrorState'
 import { SkeletonCard } from '../../components/SkeletonCard'
@@ -56,6 +57,29 @@ export function SharePoint() {
             total={data.storageAllocatedBytes}
             label={`Storage used: ${formatBytes(data.storageUsedBytes)} of ${formatBytes(data.storageAllocatedBytes)}`}
           />
+
+          {data.sites.length > 0 && (() => {
+            const chartData = [...data.sites]
+              .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
+              .slice(0, 8)
+              .map((s) => {
+                const segments = s.siteUrl.replace(/\/$/, '').split('/')
+                const label = segments[segments.length - 1] || s.siteUrl
+                return { name: label, storageMB: Math.round(s.storageUsedBytes / (1024 * 1024)) }
+              })
+            return (
+              <div className="card" style={{ marginTop: '1.5rem' }}>
+                <h2 style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 600 }}>
+                  Top sites by storage
+                </h2>
+                <TrendChart
+                  data={chartData}
+                  xKey="name"
+                  series={[{ key: 'storageMB', name: 'Storage (MB)' }]}
+                />
+              </div>
+            )
+          })()}
 
           <DataTable
             columns={SITE_COLUMNS}
