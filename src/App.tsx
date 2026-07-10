@@ -6,7 +6,6 @@ import { Licensing } from './sections/Licensing'
 import { Estate } from './sections/Estate'
 import { Exchange } from './sections/Exchange'
 import { Azure } from './sections/Azure'
-import './App.css'
 
 function App() {
   return (

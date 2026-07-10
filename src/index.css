@@ -92,39 +92,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ===== LEGACY component classes — REMOVED in Task 13 once all pages migrate ===== */
-.kpi-card { background:#fff; border:1px solid #e3e6ea; border-radius:12px; padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:.4rem; }
-.kpi-card__label { font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#6b7280; }
-.kpi-card__value { font-size:2rem; font-weight:680; color:#0c2340; font-variant-numeric:tabular-nums; }
-.kpi-card__sub { font-size:.85rem; color:#6b7280; }
-.card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem; }
-.page { display:flex; flex-direction:column; gap:1rem; }
-.page__header { display:flex; align-items:center; justify-content:space-between; }
-.page__title { font-size:1.5rem; font-weight:650; }
-.section-heading { font-size:1rem; font-weight:600; margin-top:1rem; }
-.card, .trend-chart { background:#fff; border:1px solid #e3e6ea; border-radius:12px; padding:1rem 1.1rem; }
-.card-link { text-decoration:none; color:inherit; }
-.data-table { width:100%; border-collapse:collapse; font-size:.9rem; }
-.data-table th, .data-table td { text-align:left; padding:.65rem .85rem; border-bottom:1px solid #e3e6ea; }
-.data-table th { font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; }
-.consumption-bar { display:grid; grid-template-columns:1fr auto; gap:.35rem .75rem; }
-.consumption-bar__label { grid-column:1/-1; font-size:.8rem; color:#6b7280; }
-.consumption-bar__track { height:8px; background:#f1f2f5; border-radius:999px; overflow:hidden; }
-.consumption-bar__fill { height:100%; border-radius:999px; background:#34a1a0; }
-.consumption-bar__percent { font-size:.85rem; font-weight:600; }
-.period-selector { display:inline-flex; gap:.25rem; padding:.25rem; background:#fff; border:1px solid #e3e6ea; border-radius:999px; }
-.period-selector__btn { border:none; background:transparent; color:#6b7280; padding:.35rem .85rem; border-radius:999px; font-weight:600; }
-.period-selector__btn--active { background:rgba(52,161,160,.14); color:#277978; }
+/* Auth screens — consumed by src/auth/* (cannot be Tailwind-classed there) */
 .error-state { background:#fff; border:1px solid #e3e6ea; border-left:3px solid #f98d50; border-radius:12px; padding:1.1rem 1.25rem; }
-.error-state__message { font-weight:600; }
+.error-state__message { font-weight:600; color:#0c2340; }
 .error-state__hint { margin-top:.35rem; font-size:.85rem; color:#6b7280; }
-.skeleton-card { background:#fff; border:1px solid #e3e6ea; border-radius:12px; padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:.7rem; }
-.skeleton-card__line { height:14px; border-radius:6px; background:#f1f2f5; }
-.app-shell { display:flex; min-height:100vh; }
-.sidebar { width:220px; background:#fff; border-right:1px solid #e3e6ea; padding:1rem; }
-.app-main { flex:1; display:flex; flex-direction:column; }
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid #e3e6ea; background:#fff; }
-.content { padding:1.5rem; }
-.nav-link { display:flex; gap:.6rem; padding:.5rem .7rem; border-radius:8px; color:#16475c; }
-.nav-link--active { background:rgba(52,161,160,.14); color:#277978; font-weight:600; }
-.azure-sub-select { display:flex; gap:.5rem; align-items:center; }
+.auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f7f8f9; }
+.auth-screen__card { display:flex; flex-direction:column; align-items:center; gap:1rem; }
+.auth-screen__title { color:#6b7280; font-size:.95rem; }
+.auth-screen__spinner { width:36px; height:36px; border-radius:50%; border:3px solid #e3e6ea; border-top-color:#34a1a0; animation:auth-spin .8s linear infinite; }
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .auth-screen__spinner { animation: none; } }
