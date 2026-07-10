@@ -2,7 +2,6 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS, AXIS_INK, GRID_STROKE, TICK } from './chartTheme'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface Series { key: string; name: string }
 interface Props {
@@ -16,7 +15,6 @@ interface Props {
 }
 
 export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel, valueFormatter }: Props) {
-  const reduced = usePrefersReducedMotion()
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -53,7 +51,7 @@ export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel, 
                 strokeWidth={2}
                 fill={`url(#grad-${s.key})`}
                 dot={false}
-                isAnimationActive={!reduced}
+                isAnimationActive={false}
               />
             )
           })}

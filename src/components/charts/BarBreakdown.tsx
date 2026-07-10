@@ -2,7 +2,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS, AXIS_INK, GRID_STROKE, TICK } from './chartTheme'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface ValueKey { key: string; name: string }
 interface Props {
@@ -19,7 +18,6 @@ interface Props {
 export function BarBreakdown({
   data, categoryKey, valueKeys, horizontal = true, stack, height = 280, ariaLabel, valueFormatter,
 }: Props) {
-  const reduced = usePrefersReducedMotion()
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -53,7 +51,7 @@ export function BarBreakdown({
               stackId={stack ? 'a' : undefined}
               fill={CHART_COLORS[i % CHART_COLORS.length]}
               radius={horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
-              isAnimationActive={!reduced}
+              isAnimationActive={false}
             />
           ))}
         </BarChart>

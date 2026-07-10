@@ -5,9 +5,9 @@ import { test, expect } from '@playwright/test'
  * Source: src/data/fixtures.ts
  */
 const FIXTURES = {
-  /** sharePoint.totalSites = 4 sites */
-  spTotalSites: '4',
-  /** sharePoint.sites[0].siteUrl */
+  /** sharePoint.totalSites = 2,504 sites (4 named + 2500 generated) */
+  spTotalSites: '2,504',
+  /** a named fixture site surfaced via search */
   spSiteUrl: 'https://contoso.sharepoint.com/sites/marketing',
   /** licenses[0].skuPartNumber */
   licenseSku: 'SPE_E5',
@@ -30,7 +30,7 @@ test.describe('M365 Dashboard – mock mode', () => {
     // which would otherwise collide under Playwright's strict-mode matching.
     const spTile = page.getByRole('main').getByRole('link', { name: /SharePoint/ })
     await expect(spTile).toBeVisible()
-    await expect(page.getByText('4 sites')).toBeVisible()
+    await expect(page.getByRole('main').getByText('2,504 sites')).toBeVisible()
   })
 
   test('SharePoint page shows site count and a site URL', async ({ page }) => {
@@ -38,12 +38,13 @@ test.describe('M365 Dashboard – mock mode', () => {
     // Scope nav click to the sidebar nav (aria-label="Sections") to avoid the KPI card links
     await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'SharePoint' }).click()
 
-    // KPI label 'Total sites' with value '4', scoped to its StatCard container
+    // KPI label 'Total sites' with value '2,504', scoped to its StatCard container
     await expect(page.getByText('Total sites')).toBeVisible()
     const totalSitesCard = page.getByText('Total sites').locator('xpath=ancestor::*[@data-slot="card"][1]')
     await expect(totalSitesCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
 
-    // One of the fixture site URLs rendered in the table
+    // Search the virtualized site table to surface a named site.
+    await page.getByRole('searchbox', { name: 'Search sites' }).fill('marketing')
     await expect(page.getByText(FIXTURES.spSiteUrl)).toBeVisible()
   })
 

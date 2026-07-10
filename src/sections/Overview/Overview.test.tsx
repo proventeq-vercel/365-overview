@@ -31,10 +31,10 @@ describe('Overview section', () => {
     expect(azure.closest('a')).toHaveAttribute('href', '/azure')
   })
 
-  it('shows fixture-derived numbers: 4 SharePoint sites and 738 consumed seats', async () => {
+  it('shows fixture-derived numbers: 2,504 SharePoint sites and 738 consumed seats', async () => {
     renderWithProviders(<Overview />)
-    // sharePoint.totalSites = 4
-    expect(await screen.findByText('4 sites')).toBeInTheDocument()
+    // sharePoint.totalSites = 2,504 (4 named + 2500 generated)
+    expect(await screen.findByText('2,504 sites')).toBeInTheDocument()
     // licenses consumed = 184 + 412 + 95 + 47 = 738
     expect(await screen.findByText('738 seats')).toBeInTheDocument()
   })

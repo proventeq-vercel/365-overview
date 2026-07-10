@@ -12,7 +12,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatBytes, formatNumber } from '@/lib/format'
 import {
-  utilizationStatus, STORAGE_THRESHOLDS, LICENSE_THRESHOLDS, type HealthStatus,
+  utilizationStatus, LICENSE_THRESHOLDS, type HealthStatus,
 } from '@/lib/thresholds'
 
 const PERIOD = 'D30'
@@ -55,9 +55,9 @@ export function Overview() {
   const licenseStatus = lic
     .map((s) => utilizationStatus(s.consumed, s.enabled, LICENSE_THRESHOLDS))
     .reduce<HealthStatus>((worst, s) => (RANK[s] > RANK[worst] ? s : worst), 'healthy')
-  const spStatus = utilizationStatus(sp.storageUsedBytes, sp.storageAllocatedBytes, STORAGE_THRESHOLDS)
 
-  // Needs-attention list computed across services.
+  // Needs-attention list computed across services. SharePoint per-site storage
+  // no longer produces alerts (no honest per-site quota to measure against).
   const alerts: { status: HealthStatus; message: string }[] = []
   for (const s of lic) {
     const st = utilizationStatus(s.consumed, s.enabled, LICENSE_THRESHOLDS)
@@ -66,15 +66,8 @@ export function Overview() {
       alerts.push({ status: st, message: `${s.skuPartNumber} at ${pct}% seat capacity (${s.available} available)` })
     }
   }
-  for (const site of sp.sites) {
-    const st = utilizationStatus(site.storageUsedBytes, site.storageAllocatedBytes, STORAGE_THRESHOLDS)
-    if (st !== 'healthy') {
-      const pct = Math.round((site.storageUsedBytes / site.storageAllocatedBytes) * 100)
-      const name = site.siteUrl.replace(/\/$/, '').split('/').pop() || site.siteUrl
-      alerts.push({ status: st, message: `${name} site at ${pct}% storage capacity` })
-    }
-  }
   alerts.sort((a, b) => RANK[b.status] - RANK[a.status])
+  const visibleAlerts = alerts.slice(0, 6)
 
   const spend = cost.data ? `${cost.data.currency} ${formatNumber(Math.round(cost.data.amount))}` : '—'
   const activeUsersSeries = activeUsers.data ?? []
@@ -89,7 +82,7 @@ export function Overview() {
       <SectionHeader title="Overview" />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <HealthTile to="/sharepoint" label="SharePoint" value={`${formatNumber(sp.totalSites)} sites`} status={spStatus} />
+        <HealthTile to="/sharepoint" label="SharePoint" value={`${formatNumber(sp.totalSites)} sites`} status="healthy" />
         <HealthTile to="/licensing" label="Licensing" value={`${formatNumber(consumedSeats)} seats`} status={licenseStatus} />
         <HealthTile to="/exchange" label="Exchange"
           value={mailbox.data ? formatNumber(mailbox.data.totalMailboxes) : '—'} status="healthy" />
@@ -106,7 +99,14 @@ export function Overview() {
             <div className="flex flex-col gap-2">
               {alerts.length === 0
                 ? <InsightCallout status="healthy" message="All services within healthy thresholds." />
-                : alerts.map((a, i) => <InsightCallout key={i} status={a.status} message={a.message} />)}
+                : (
+                  <>
+                    {visibleAlerts.map((a, i) => <InsightCallout key={i} status={a.status} message={a.message} />)}
+                    {alerts.length > 6 && (
+                      <InsightCallout status="watch" message={`…and ${alerts.length - 6} more`} />
+                    )}
+                  </>
+                )}
             </div>
           </CardContent>
         </Card>

@@ -46,8 +46,9 @@ describe('useSharePoint', () => {
       wrapper: makeWrapper(),
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.totalSites).toBe(4)
-    expect(result.current.data?.sites.length).toBe(4)
+    // Fixtures now generate 2500 sites in addition to the 4 named ones.
+    expect(result.current.data?.totalSites).toBe(2504)
+    expect(result.current.data?.sites.length).toBe(2504)
   })
 })
 
