@@ -12,8 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Runtime config — real local values, not committed (copy public/env.sample.json)
-public/env.json
+# Local env files — real values, not committed (copy .env.example to .env).
+# On Vercel, set these in Project Settings > Environment Variables.
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*

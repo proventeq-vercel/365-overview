@@ -34,37 +34,36 @@ npm install
 
 ## Environment configuration
 
-The app has two layers of configuration.
-
-### 1. Runtime auth config — `public/env.json` (live mode only)
-
-Auth settings are loaded **at runtime** from `/env.json` (fetched on startup),
-not baked into the build — so the same bundle can be deployed to multiple
-environments. Copy the sample and fill in your values:
+All configuration is via **build-time Vite env vars** (`import.meta.env.VITE_*`),
+baked into the bundle at build time. For local dev, copy the example and fill in
+your values:
 
 ```bash
-cp public/env.sample.json public/env.json
+cp .env.example .env
 ```
 
-`public/env.json` is git-ignored (it holds real local values). Vite serves the
-`public/` directory at the site root, so the file is available at `/env.json`.
+`.env` is git-ignored (it holds real local values). On **Vercel**, set these in
+**Project Settings > Environment Variables** — no config file is deployed, and
+the same repo builds cleanly for any environment.
 
-| Key | Required | Description |
+### Auth config (live mode only)
+
+| Var | Required | Description |
 |---|---|---|
-| `VITE_CLIENT_ID` | Yes | Application (client) ID from your Entra ID app registration |
-| `VITE_AUTHORITY_URI` | Yes | Full authority URL, e.g. `https://login.microsoftonline.com/<tenant-id>` |
-| `VITE_REDIRECT_URI` | Yes | OAuth redirect URI (SPA), e.g. `http://localhost:5173` for dev |
+| `VITE_CLIENT_ID` | Yes (live) | Application (client) ID from your Entra ID app registration |
+| `VITE_AUTHORITY_URI` | Yes (live) | Full authority URL, e.g. `https://login.microsoftonline.com/<tenant-id>` |
+| `VITE_REDIRECT_URI` | Yes (live) | OAuth redirect URI (SPA), e.g. `http://localhost:5173/` for dev |
 
 MSAL is configured with `cacheLocation: localStorage` and uses **redirect-based**
 login and token acquisition (`acquireTokenSilent` → `acquireTokenRedirect` on
 interaction-required / browser-auth errors).
 
-### 2. Build-time flag — `VITE_USE_MOCK`
+### Mock flag — `VITE_USE_MOCK`
 
-`VITE_USE_MOCK` is a build-time Vite env var (set on the command line or in a
-local `.env`). When `true`, the app runs on built-in fixture data with **no MSAL
-and no `/env.json`** — no Entra ID tenant required. This is the mode used by the
-unit tests and Playwright e2e. See `.env.example`.
+When `VITE_USE_MOCK=true`, the app runs on built-in fixture data with **no MSAL
+and no auth config** — no Entra ID tenant required, and the three `VITE_*` auth
+vars above are not needed. This is the mode used by the unit tests and Playwright
+e2e. See `.env.example`.
 
 ---
 
@@ -75,8 +74,8 @@ The app uses **MSAL with authorization-code + PKCE** and acquires two separate t
 1. In the [Azure portal](https://portal.azure.com), go to **Entra ID > App registrations > New registration**.
 2. Enter a name (e.g. `M365 Overview`).
 3. Under **Supported account types**, choose your tenant type (single-tenant is typical).
-4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI` in `public/env.json`.
-5. After creation, copy the **Application (client) ID** into `VITE_CLIENT_ID` and build `VITE_AUTHORITY_URI` as `https://login.microsoftonline.com/<directory-tenant-id>` in `public/env.json`.
+4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI` in your `.env` (or Vercel env vars).
+5. After creation, copy the **Application (client) ID** into `VITE_CLIENT_ID` and build `VITE_AUTHORITY_URI` as `https://login.microsoftonline.com/<directory-tenant-id>` in your `.env` (or Vercel env vars).
 6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add:
    - `User.Read`
    - `Reports.Read.All`
@@ -152,7 +151,7 @@ src/
   app/           # App shell: Layout, UserMenu, query client
   auth/          # MSAL: getMsalInstance, GRAPH/ARM scopes, tokens, MsalAuthProvider/Handler
   clients/       # graphClient, armClient — thin fetch wrappers
-  config/        # env.ts (VITE_USE_MOCK build flag) + appConfig.ts (runtime /env.json)
+  config/        # env.ts (VITE_USE_MOCK build flag) + appConfig.ts (build-time VITE_* auth config)
   data/          # live.ts (real API calls), fixtures.ts (mock data + DataSource interface)
   hooks/         # React Query hooks per section
   reports/       # Pure parsers for each API response shape
