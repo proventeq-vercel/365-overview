@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatBytes, formatNumber } from './format'
+import { formatBytes, formatNumber, formatPercent, formatSignedPercent } from './format'
 
 describe('formatBytes', () => {
   it('formats units', () => {
@@ -27,5 +27,21 @@ describe('formatNumber', () => {
 
   it('handles small numbers', () => {
     expect(formatNumber(42)).toBe('42')
+  })
+})
+
+describe('formatPercent', () => {
+  it('formats a 0–1 ratio as a percent', () => {
+    expect(formatPercent(0.856)).toBe('86%')
+    expect(formatPercent(0.5, 1)).toBe('50.0%')
+  })
+})
+
+describe('formatSignedPercent', () => {
+  it('prefixes a plus for positive values', () => {
+    expect(formatSignedPercent(12.34)).toBe('+12.3%')
+  })
+  it('keeps the minus for negative values', () => {
+    expect(formatSignedPercent(-4.2)).toBe('-4.2%')
   })
 })
