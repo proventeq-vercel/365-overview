@@ -2,7 +2,7 @@ import { StrictMode, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
-import { loadConfig } from './config/appConfig'
+import { getConfig } from './config/appConfig'
 import { env } from './config/env'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
 import { queryClient } from './app/queryClient'
@@ -59,19 +59,25 @@ function renderBootstrapError(err: unknown) {
   )
 }
 
-async function bootstrap() {
+function bootstrap() {
   if (env.useMock) {
-    // Mock mode: no runtime config, no MSAL. Keeps mock mode MSAL-free for
+    // Mock mode: no auth config, no MSAL. Keeps mock mode MSAL-free for
     // unit tests and Playwright e2e.
     render(appTree)
     return
   }
 
-  // Live mode: load runtime config, then mount MSAL auth gating. The MSAL
-  // instance is initialized inside MsalAuthProvider, and DataProvider's
-  // LiveDataProvider runs inside MsalProvider so useMsal() works.
-  await loadConfig()
+  // Live mode: validate the build-time auth config eagerly (so a missing VITE_*
+  // var surfaces as a clear bootstrap error rather than a render crash), then
+  // mount MSAL auth gating. The MSAL instance is initialized inside
+  // MsalAuthProvider, and DataProvider's LiveDataProvider runs inside
+  // MsalProvider so useMsal() works.
+  getConfig()
   render(<MsalAuthProvider>{appTree}</MsalAuthProvider>)
 }
 
-bootstrap().catch(renderBootstrapError)
+try {
+  bootstrap()
+} catch (err) {
+  renderBootstrapError(err)
+}

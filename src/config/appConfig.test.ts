@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { parseConfig } from './appConfig'
 
 describe('parseConfig', () => {
-  it('returns a valid AppConfig from a well-formed payload', () => {
+  it('returns a valid AppConfig from a well-formed env source', () => {
     const config = parseConfig({
       VITE_CLIENT_ID: 'client-123',
       VITE_AUTHORITY_URI: 'https://login.microsoftonline.com/tenant-abc',
@@ -20,7 +20,8 @@ describe('parseConfig', () => {
       VITE_CLIENT_ID: 'c',
       VITE_AUTHORITY_URI: 'a',
       VITE_REDIRECT_URI: 'r',
-      EXTRA: 'ignored',
+      VITE_USE_MOCK: 'false',
+      MODE: 'production',
     })
     expect(config).toEqual({
       VITE_CLIENT_ID: 'c',
@@ -34,8 +35,8 @@ describe('parseConfig', () => {
   })
 
   it('throws on null / non-object', () => {
-    expect(() => parseConfig(null)).toThrow(/env\.json/)
-    expect(() => parseConfig('nope')).toThrow(/env\.json/)
+    expect(() => parseConfig(null)).toThrow(/not an object/)
+    expect(() => parseConfig('nope')).toThrow(/not an object/)
   })
 
   it('throws when a required key is missing', () => {
