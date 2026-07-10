@@ -19,6 +19,16 @@ interface JsonReport<T> {
 }
 
 /**
+ * Base for the `/reports/*` functions. These only return JSON on the `/beta`
+ * endpoint — on `/v1.0` they return CSV (via a 302 redirect) and reject
+ * `$format=application/json` with "JSON format is not supported." The graph
+ * client passes absolute URLs through unchanged, so report calls use this base
+ * while non-report calls (`/organization`, `/subscribedSkus`) stay on the
+ * client's default `/v1.0` base, where JSON is native.
+ */
+const REPORTS_BASE = 'https://graph.microsoft.com/beta/reports'
+
+/**
  * Cost Management query body: month-to-date actual cost, aggregated to a single
  * total (no grouping). Mirrors the body documented in the task brief.
  */
@@ -36,7 +46,7 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
   return {
     async getSharePoint(period: ReportPeriod) {
       const rows = await graph.getAllPages<RawSpoRow>(
-        `/reports/getSharePointSiteUsageDetail(period='${period}')?$format=application/json`,
+        `${REPORTS_BASE}/getSharePointSiteUsageDetail(period='${period}')?$format=application/json`,
       )
       return parseSharePointDetail(rows)
     },
@@ -56,14 +66,14 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     async getActiveUsers(period: ReportPeriod) {
       // 'office365' = combined active users across all M365 services.
       const res = await graph.get<JsonReport<Record<string, string | number>>>(
-        `/reports/getOffice365ActiveUserCounts(period='${period}')?$format=application/json`,
+        `${REPORTS_BASE}/getOffice365ActiveUserCounts(period='${period}')?$format=application/json`,
       )
       return parseUsageCounts(res.value, 'office365')
     },
 
     async getOneDriveUsage(period: ReportPeriod) {
       const res = await graph.get<JsonReport<Record<string, string | number>>>(
-        `/reports/getOneDriveUsageStorage(period='${period}')?$format=application/json`,
+        `${REPORTS_BASE}/getOneDriveUsageStorage(period='${period}')?$format=application/json`,
       )
       return parseUsageCounts(res.value, 'storageUsedInBytes')
     },
@@ -71,7 +81,7 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     async getTeamsActivity(period: ReportPeriod) {
       // 'teamChatMessages' = channel messages posted per day.
       const res = await graph.get<JsonReport<Record<string, string | number>>>(
-        `/reports/getTeamsUserActivityCounts(period='${period}')?$format=application/json`,
+        `${REPORTS_BASE}/getTeamsUserActivityCounts(period='${period}')?$format=application/json`,
       )
       return parseUsageCounts(res.value, 'teamChatMessages')
     },
@@ -79,10 +89,10 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
     async getMailbox(period: ReportPeriod) {
       const [counts, storage] = await Promise.all([
         graph.get<JsonReport<RawMailboxRow>>(
-          `/reports/getMailboxUsageMailboxCounts(period='${period}')?$format=application/json`,
+          `${REPORTS_BASE}/getMailboxUsageMailboxCounts(period='${period}')?$format=application/json`,
         ),
         graph.get<JsonReport<RawMailboxStorageRow>>(
-          `/reports/getMailboxUsageStorage(period='${period}')?$format=application/json`,
+          `${REPORTS_BASE}/getMailboxUsageStorage(period='${period}')?$format=application/json`,
         ),
       ])
       return parseMailboxSummary(counts.value, parseMailboxStorage(storage.value))
@@ -90,7 +100,7 @@ export function createLiveDataSource(graph: GraphClient, arm: ArmClient): DataSo
 
     async getEmailActivity(period: ReportPeriod) {
       const res = await graph.get<JsonReport<RawEmailRow>>(
-        `/reports/getEmailActivityCounts(period='${period}')?$format=application/json`,
+        `${REPORTS_BASE}/getEmailActivityCounts(period='${period}')?$format=application/json`,
       )
       return parseEmailActivity(res.value)
     },
