@@ -101,4 +101,11 @@ body {
 .auth-screen__title { color:#6b7280; font-size:.95rem; }
 .auth-screen__spinner { width:36px; height:36px; border-radius:50%; border:3px solid #e3e6ea; border-top-color:#34a1a0; animation:auth-spin .8s linear infinite; }
 @keyframes auth-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .auth-screen__spinner { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-screen__spinner { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

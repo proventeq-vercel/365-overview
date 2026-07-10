@@ -6,7 +6,7 @@ export function InsightCallout({ status, message }: { status: HealthStatus; mess
   return (
     <div className={cn('flex items-center gap-3 rounded-lg border border-hairline bg-surface px-4 py-3')}>
       <span className="size-2.5 shrink-0 rounded-full" style={{ background: STATUS_COLORS[status] }} aria-hidden="true" />
-      <span className="text-sm text-ink">{message}</span>
+      <span className="text-sm text-ink"><span className="sr-only">{status}: </span>{message}</span>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import {
   useSharePoint, useLicenses, useAzureSubscriptions, useAzureCost,
-  useActiveUsers, useTeams, useMailbox,
+  useActiveUsers, useMailbox,
 } from '@/hooks/useReports'
 import { HealthTile } from '@/components/HealthTile'
 import { InsightCallout } from '@/components/InsightCallout'
@@ -25,7 +25,6 @@ export function Overview() {
   const subId = subscriptions.data?.[0]?.subscriptionId ?? ''
   const cost = useAzureCost(subId)
   const activeUsers = useActiveUsers(PERIOD)
-  const teams = useTeams(PERIOD)
   const mailbox = useMailbox(PERIOD)
 
   const error = sharePoint.error ?? licenses.error
@@ -79,7 +78,6 @@ export function Overview() {
 
   const spend = cost.data ? `${cost.data.currency} ${formatNumber(Math.round(cost.data.amount))}` : '—'
   const activeUsersSeries = activeUsers.data ?? []
-  const teamsSeries = teams.data ?? []
 
   const storageByService = [
     { service: 'SharePoint', bytes: sp.storageUsedBytes },
@@ -127,11 +125,10 @@ export function Overview() {
           <h2 className="mb-3 text-sm font-semibold text-ink-soft">Storage used by service</h2>
           <BarBreakdown data={storageByService} categoryKey="service"
             valueKeys={[{ key: 'bytes', name: 'Storage used' }]}
-            ariaLabel="Storage used by service" height={160} />
+            ariaLabel="Storage used by service" height={160} valueFormatter={formatBytes} />
           <p className="mt-2 text-xs text-muted-foreground">
             SharePoint {formatBytes(sp.storageUsedBytes)}
             {mailbox.data ? ` · Mailbox ${formatBytes(mailbox.data.storageUsedBytes)}` : ''}
-            {teamsSeries.length ? '' : ''}
           </p>
         </CardContent>
       </Card>

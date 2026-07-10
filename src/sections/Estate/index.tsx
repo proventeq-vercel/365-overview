@@ -66,7 +66,7 @@ export function Estate() {
           <Card className="border-hairline shadow-none">
             <CardContent className="p-5">
               <h2 className="mb-3 text-sm font-semibold text-ink-soft">OneDrive usage</h2>
-              <AreaTrend data={oneDrive.data!.map((p) => ({ ...p }))} xKey="date" series={[{ key: 'value', name: 'Storage used (bytes)' }]} ariaLabel="OneDrive storage over time" />
+              <AreaTrend data={oneDrive.data!.map((p) => ({ ...p }))} xKey="date" series={[{ key: 'value', name: 'Storage used (bytes)' }]} ariaLabel="OneDrive storage over time" valueFormatter={formatBytes} />
             </CardContent>
           </Card>
           <Card className="border-hairline shadow-none">

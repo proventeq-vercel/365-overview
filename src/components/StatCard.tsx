@@ -19,6 +19,7 @@ export function StatCard({ label, value, sub, delta, status }: Props) {
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
           {status && <span className="size-2.5 rounded-full" style={{ background: STATUS_COLORS[status] }} aria-hidden="true" />}
+          {status && <span className="sr-only">{status}</span>}
         </div>
         <span className="text-3xl font-bold tabular text-ink">{value}</span>
         <div className="flex items-center gap-2">

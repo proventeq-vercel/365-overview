@@ -2,6 +2,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS, AXIS_INK, GRID_STROKE, TICK } from './chartTheme'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface Series { key: string; name: string }
 interface Props {
@@ -11,9 +12,11 @@ interface Props {
   stack?: boolean
   height?: number
   ariaLabel?: string
+  valueFormatter?: (v: number) => string
 }
 
-export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel }: Props) {
+export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel, valueFormatter }: Props) {
+  const reduced = usePrefersReducedMotion()
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -31,8 +34,11 @@ export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel }
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
           <XAxis dataKey={xKey} tick={TICK} stroke={AXIS_INK} tickLine={false} />
-          <YAxis tick={TICK} stroke={AXIS_INK} tickLine={false} width={48} />
-          <Tooltip contentStyle={{ borderRadius: 12, border: `1px solid ${GRID_STROKE}`, fontFamily: 'Open Sans' }} />
+          <YAxis tick={TICK} stroke={AXIS_INK} tickLine={false} width={48} tickFormatter={valueFormatter} />
+          <Tooltip
+            contentStyle={{ borderRadius: 12, border: `1px solid ${GRID_STROKE}`, fontFamily: 'Open Sans' }}
+            formatter={valueFormatter ? (v) => valueFormatter(Number(v)) : undefined}
+          />
           {series.length > 1 && <Legend />}
           {series.map((s, i) => {
             const c = CHART_COLORS[i % CHART_COLORS.length]
@@ -47,6 +53,7 @@ export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel }
                 strokeWidth={2}
                 fill={`url(#grad-${s.key})`}
                 dot={false}
+                isAnimationActive={!reduced}
               />
             )
           })}

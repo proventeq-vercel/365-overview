@@ -21,6 +21,7 @@ export function HealthTile({ to, label, value, status, series, seriesKey }: Prop
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-ink-soft">{label}</span>
             <span className="size-2.5 rounded-full" style={{ background: STATUS_COLORS[status] }} aria-hidden="true" />
+            <span className="sr-only">{status}</span>
           </div>
           <span className="text-2xl font-bold tabular text-ink">{value}</span>
           {series && seriesKey && series.length > 1 && (

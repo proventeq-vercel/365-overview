@@ -2,6 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS, AXIS_INK, GRID_STROKE, TICK } from './chartTheme'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface ValueKey { key: string; name: string }
 interface Props {
@@ -12,11 +13,13 @@ interface Props {
   stack?: boolean
   height?: number
   ariaLabel?: string
+  valueFormatter?: (v: number) => string
 }
 
 export function BarBreakdown({
-  data, categoryKey, valueKeys, horizontal = true, stack, height = 280, ariaLabel,
+  data, categoryKey, valueKeys, horizontal = true, stack, height = 280, ariaLabel, valueFormatter,
 }: Props) {
+  const reduced = usePrefersReducedMotion()
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -28,16 +31,19 @@ export function BarBreakdown({
           <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} horizontal={!horizontal} vertical={horizontal} />
           {horizontal ? (
             <>
-              <XAxis type="number" tick={TICK} stroke={AXIS_INK} tickLine={false} />
+              <XAxis type="number" tick={TICK} stroke={AXIS_INK} tickLine={false} tickFormatter={valueFormatter} />
               <YAxis type="category" dataKey={categoryKey} tick={TICK} stroke={AXIS_INK} tickLine={false} width={140} />
             </>
           ) : (
             <>
               <XAxis type="category" dataKey={categoryKey} tick={TICK} stroke={AXIS_INK} tickLine={false} />
-              <YAxis type="number" tick={TICK} stroke={AXIS_INK} tickLine={false} width={48} />
+              <YAxis type="number" tick={TICK} stroke={AXIS_INK} tickLine={false} width={48} tickFormatter={valueFormatter} />
             </>
           )}
-          <Tooltip contentStyle={{ borderRadius: 12, border: `1px solid ${GRID_STROKE}`, fontFamily: 'Open Sans' }} />
+          <Tooltip
+            contentStyle={{ borderRadius: 12, border: `1px solid ${GRID_STROKE}`, fontFamily: 'Open Sans' }}
+            formatter={valueFormatter ? (v) => valueFormatter(Number(v)) : undefined}
+          />
           {valueKeys.length > 1 && <Legend />}
           {valueKeys.map((v, i) => (
             <Bar
@@ -47,6 +53,7 @@ export function BarBreakdown({
               stackId={stack ? 'a' : undefined}
               fill={CHART_COLORS[i % CHART_COLORS.length]}
               radius={horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
+              isAnimationActive={!reduced}
             />
           ))}
         </BarChart>

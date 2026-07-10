@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { CHART_COLORS, GRID_STROKE } from './chartTheme'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface Props {
   data: Record<string, unknown>[]
@@ -10,11 +11,15 @@ interface Props {
 }
 
 export function DonutShare({ data, nameKey, valueKey, height = 240, ariaLabel }: Props) {
+  const reduced = usePrefersReducedMotion()
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
-          <Pie data={data} nameKey={nameKey} dataKey={valueKey} innerRadius="55%" outerRadius="80%" paddingAngle={2}>
+          <Pie
+            data={data} nameKey={nameKey} dataKey={valueKey} innerRadius="55%" outerRadius="80%" paddingAngle={2}
+            isAnimationActive={!reduced}
+          >
             {data.map((_, i) => (
               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
             ))}
