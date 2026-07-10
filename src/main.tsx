@@ -39,7 +39,8 @@ function renderBootstrapError(err: unknown) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        background: '#0f1117',
+        background: '#f7f8f9',
+        color: '#0c2340',
         fontFamily: 'sans-serif',
       }}
     >
