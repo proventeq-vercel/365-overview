@@ -45,9 +45,13 @@ describe('SharePoint section', () => {
       ).toHaveTextContent('2,504'),
     )
 
-    // The table renders rows (virtualized window is non-empty).
+    // The table renders rows (virtualized window is non-empty)...
     expect(screen.getByRole('table', { name: 'Sites' })).toBeInTheDocument()
-    expect(screen.getAllByRole('row').length).toBeGreaterThan(1)
+    const rows = screen.getAllByRole('row')
+    expect(rows.length).toBeGreaterThan(1)
+    // ...and is WINDOWED: only a small visible slice is in the DOM, never all
+    // 2,504 sites. Guards against a regression that drops the virtualizer.
+    expect(rows.length).toBeLessThan(100)
   })
 
   it('surfaces a named site when searched for', async () => {
