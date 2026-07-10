@@ -38,9 +38,9 @@ test.describe('M365 Dashboard – mock mode', () => {
     // Scope nav click to the sidebar nav (aria-label="Sections") to avoid the KPI card links
     await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'SharePoint' }).click()
 
-    // KPI label 'Total sites' with value '4', scoped to its KPI card
+    // KPI label 'Total sites' with value '4', scoped to its StatCard container
     await expect(page.getByText('Total sites')).toBeVisible()
-    const totalSitesCard = page.locator('.kpi-card').filter({ hasText: 'Total sites' })
+    const totalSitesCard = page.getByText('Total sites').locator('xpath=ancestor::*[@data-slot="card"][1]')
     await expect(totalSitesCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
 
     // One of the fixture site URLs rendered in the table

@@ -25,9 +25,9 @@ describe('SharePoint section', () => {
     // Total sites KPI = 4 from fixtures.
     expect(await screen.findByText('Total sites')).toBeInTheDocument()
     await waitFor(() =>
-      expect(screen.getByText('Total sites').parentElement).toHaveTextContent(
-        '4',
-      ),
+      expect(
+        screen.getByText('Total sites').closest('[data-slot="card"]'),
+      ).toHaveTextContent('4'),
     )
 
     // One table row per fixture site (site URLs render in the table).
