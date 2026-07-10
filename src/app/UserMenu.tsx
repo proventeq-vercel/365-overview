@@ -10,12 +10,11 @@ export function UserMenu() {
   const userName = accounts[0]?.name
 
   return (
-    <>
-      {userName && <span className="topbar__user">{userName}</span>}
+    <div className="flex items-center gap-2 rounded-lg border border-hairline px-3 py-1.5 text-sm text-ink hover:bg-muted">
+      {userName && <span>{userName}</span>}
       {accounts.length > 0 && (
         <button
           type="button"
-          className="topbar__signout"
           onClick={() => {
             void instance.logoutRedirect()
           }}
@@ -23,6 +22,6 @@ export function UserMenu() {
           Sign out
         </button>
       )}
-    </>
+    </div>
   )
 }

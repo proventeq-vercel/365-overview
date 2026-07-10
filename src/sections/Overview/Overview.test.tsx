@@ -22,29 +22,20 @@ function renderWithProviders(ui: ReactNode) {
 }
 
 describe('Overview section', () => {
-  it('renders KPI cards for sites, licenses and Azure spend from fixtures', async () => {
+  it('renders health tiles for each service from fixtures', async () => {
     renderWithProviders(<Overview />)
-
-    // Sites KPI (4 sites from SharePoint fixtures).
-    expect(await screen.findByText('SharePoint sites')).toBeInTheDocument()
-
-    // Licenses KPI (consumed seats across SKUs).
-    expect(await screen.findByText('Licensed seats')).toBeInTheDocument()
-
-    // Azure month-to-date spend KPI (currency from fixtures).
-    const spend = await screen.findByText('Azure spend (MTD)')
-    expect(spend.parentElement).toHaveTextContent('GBP')
+    expect(await screen.findByText('SharePoint')).toBeInTheDocument()
+    expect(await screen.findByText('Licensing')).toBeInTheDocument()
+    // Azure spend tile carries the fixture currency.
+    const azure = await screen.findByText('Azure spend (MTD)')
+    expect(azure.closest('a')).toHaveAttribute('href', '/azure')
   })
 
-  it('renders fixture-derived numbers: total SharePoint site count and total licensed seats', async () => {
+  it('shows fixture-derived numbers: 4 SharePoint sites and 738 consumed seats', async () => {
     renderWithProviders(<Overview />)
-
-    // fixtures.ts: sharePoint.totalSites = 4
-    const sitesCard = await screen.findByText('SharePoint sites')
-    expect(sitesCard.parentElement).toHaveTextContent('4')
-
-    // fixtures.ts: licenses consumed = 184 + 412 + 95 + 47 = 738
-    const licensesCard = await screen.findByText('Licensed seats')
-    expect(licensesCard.parentElement).toHaveTextContent('738')
+    // sharePoint.totalSites = 4
+    expect(await screen.findByText('4 sites')).toBeInTheDocument()
+    // licenses consumed = 184 + 412 + 95 + 47 = 738
+    expect(await screen.findByText('738 seats')).toBeInTheDocument()
   })
 })

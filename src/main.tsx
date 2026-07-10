@@ -39,21 +39,15 @@ function renderBootstrapError(err: unknown) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        background: '#0f1117',
+        background: '#f7f8f9',
+        color: '#0c2340',
         fontFamily: 'sans-serif',
       }}
     >
-      <div className="error-state" style={{ maxWidth: '480px', width: '100%' }}>
-        <p className="error-state__message">Couldn&apos;t start the dashboard</p>
-        <p className="error-state__hint">
-          Check the app configuration or refresh to try again.
-        </p>
-        <p
-          className="error-state__hint"
-          style={{ marginTop: '0.75rem', wordBreak: 'break-word' }}
-        >
-          {message}
-        </p>
+      <div style={{ maxWidth: 480, width: '100%', background: '#fff', border: '1px solid #e3e6ea', borderLeft: '3px solid #f98d50', borderRadius: 12, padding: '1.1rem 1.25rem' }}>
+        <p style={{ fontWeight: 600, margin: 0, color: '#0c2340' }}>Couldn&apos;t start the dashboard</p>
+        <p style={{ marginTop: '.35rem', fontSize: '.85rem', color: '#6b7280' }}>Check the app configuration or refresh to try again.</p>
+        <p style={{ marginTop: '.75rem', fontSize: '.85rem', color: '#6b7280', wordBreak: 'break-word' }}>{message}</p>
       </div>
     </div>,
   )

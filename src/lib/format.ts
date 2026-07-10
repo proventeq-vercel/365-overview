@@ -15,3 +15,12 @@ export function formatBytes(bytes: number): string {
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat().format(n)
 }
+
+export function formatPercent(ratio: number, digits = 0): string {
+  return `${(ratio * 100).toFixed(digits)}%`
+}
+
+export function formatSignedPercent(pct: number, digits = 1): string {
+  const sign = pct > 0 ? '+' : ''
+  return `${sign}${pct.toFixed(digits)}%`
+}

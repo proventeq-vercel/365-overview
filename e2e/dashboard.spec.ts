@@ -23,16 +23,14 @@ const FIXTURES = {
 }
 
 test.describe('M365 Dashboard – mock mode', () => {
-  test('Overview page renders KPI cards with fixture data', async ({ page }) => {
+  test('Overview page renders health tiles with fixture data', async ({ page }) => {
     await page.goto('/')
-
-    // KPI label for SharePoint sites should be visible
-    await expect(page.getByText('SharePoint sites')).toBeVisible()
-
-    // The fixture totalSites=4 → formatNumber(4) = '4'. Scope to the
-    // SharePoint-sites KPI card so the bare '4' can't match other cells.
-    const spCard = page.locator('.kpi-card').filter({ hasText: 'SharePoint sites' })
-    await expect(spCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
+    // SharePoint tile links to the section and shows the fixture site count.
+    // Scoped to <main> because the sidebar nav also has a "SharePoint" link,
+    // which would otherwise collide under Playwright's strict-mode matching.
+    const spTile = page.getByRole('main').getByRole('link', { name: /SharePoint/ })
+    await expect(spTile).toBeVisible()
+    await expect(page.getByText('4 sites')).toBeVisible()
   })
 
   test('SharePoint page shows site count and a site URL', async ({ page }) => {
@@ -40,9 +38,9 @@ test.describe('M365 Dashboard – mock mode', () => {
     // Scope nav click to the sidebar nav (aria-label="Sections") to avoid the KPI card links
     await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: 'SharePoint' }).click()
 
-    // KPI label 'Total sites' with value '4', scoped to its KPI card
+    // KPI label 'Total sites' with value '4', scoped to its StatCard container
     await expect(page.getByText('Total sites')).toBeVisible()
-    const totalSitesCard = page.locator('.kpi-card').filter({ hasText: 'Total sites' })
+    const totalSitesCard = page.getByText('Total sites').locator('xpath=ancestor::*[@data-slot="card"][1]')
     await expect(totalSitesCard.getByText(FIXTURES.spTotalSites, { exact: true })).toBeVisible()
 
     // One of the fixture site URLs rendered in the table
