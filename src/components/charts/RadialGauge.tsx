@@ -1,7 +1,6 @@
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts'
 import { STATUS_COLORS } from './chartTheme'
 import { utilizationStatus, LICENSE_THRESHOLDS } from '@/lib/thresholds'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface Props {
   value: number // 0–100
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export function RadialGauge({ value, label, height = 200, ariaLabel }: Props) {
-  const reduced = usePrefersReducedMotion()
   const clamped = Math.min(100, Math.max(0, value))
   const status = utilizationStatus(clamped, 100, LICENSE_THRESHOLDS)
   const color = STATUS_COLORS[status]
@@ -26,7 +24,7 @@ export function RadialGauge({ value, label, height = 200, ariaLabel }: Props) {
           outerRadius="100%"
         >
           <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <RadialBar dataKey="value" background cornerRadius={999} isAnimationActive={!reduced} />
+          <RadialBar dataKey="value" background cornerRadius={999} isAnimationActive={false} />
         </RadialBarChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

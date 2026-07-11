@@ -7,6 +7,7 @@ import type {
   MailboxSummary,
   OrgInfo,
   ReportPeriod,
+  SharePointSite,
   SharePointSummary,
   UsagePoint,
 } from '../types/reports'
@@ -43,8 +44,35 @@ function series(values: number[]): UsagePoint[] {
   return values.map((value, i) => ({ date: dates[i], value }))
 }
 
+/** 25 TB — the real default per-site storage quota Graph reports. */
+const SITE_QUOTA_BYTES = 27_487_790_694_400
+
+/**
+ * Deterministically generate a large, long-tailed site set so virtualization
+ * and scale behaviour are exercised in mock mode and e2e. No Math.random / Date
+ * so tests stay stable. Every 250th site is a big consumer (a realistic tail).
+ */
+function generateSites(count: number): SharePointSite[] {
+  const out: SharePointSite[] = []
+  for (let i = 0; i < count; i++) {
+    const fileCount = (i % 900) * 10 + 50
+    let gb = 1 + ((i * 37) % 200)
+    if (i % 250 === 0) gb += 2000
+    out.push({
+      siteId: `gen-${i}`,
+      siteUrl: `https://contoso.sharepoint.com/sites/team-${i}`,
+      ownerDisplayName: `Owner ${i}`,
+      fileCount,
+      activeFileCount: Math.round(fileCount * 0.1),
+      storageUsedBytes: gb * 1_073_741_824,
+      storageAllocatedBytes: SITE_QUOTA_BYTES,
+    })
+  }
+  return out
+}
+
 const sharePoint: SharePointSummary = (() => {
-  const sites = [
+  const namedSites: SharePointSite[] = [
     {
       siteId: 'site-1',
       siteUrl: 'https://contoso.sharepoint.com/sites/marketing',
@@ -82,6 +110,7 @@ const sharePoint: SharePointSummary = (() => {
       storageAllocatedBytes: 274_877_906_944,
     },
   ]
+  const sites = [...namedSites, ...generateSites(2500)]
   return {
     totalSites: sites.length,
     totalFiles: sites.reduce((a, s) => a + s.fileCount, 0),
