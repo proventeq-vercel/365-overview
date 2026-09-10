@@ -1,6 +1,5 @@
 import { guestDomain, isExternalDomain } from '../lib/domains'
 import { coverageOf, severityFor } from '../lib/severity'
-import { topNWithOther } from '../lib/topNWithOther'
 import type {
   CardKey,
   CardStat,
@@ -67,6 +66,11 @@ function linkTotalsOf(sites: SiteRow[]): LinkTotals {
   }
 }
 
+function broadLinksPerFile(site: SiteRow): number {
+  if (site.fileCount <= 0) return 0
+  return (site.anonymousLinks + site.organizationLinks + site.guestLinks) / site.fileCount
+}
+
 function riskOf(links: LinkTotals): RiskTotals {
   return { high: links.anonymous, medium: links.organization, lower: links.guest }
 }
@@ -99,12 +103,7 @@ function domainCountsOf(guests: GuestAccount[], verifiedDomains: string[]): Doma
 }
 
 function topDomainsOf(domainCounts: DomainCount[]): DomainCount[] {
-  return topNWithOther(
-    domainCounts,
-    TOP_DOMAINS,
-    (entry) => entry.domain,
-    (entry) => entry.guests,
-  ).map((slice) => ({ domain: slice.label, guests: slice.value }))
+  return domainCounts.slice(0, TOP_DOMAINS)
 }
 
 function topSharersOf(
@@ -186,10 +185,7 @@ function cardsOf(
       countWhere(sites, (s) => s.anonymousLinks > 0 || s.organizationLinks > 0),
       total,
     )
-    const highlyShared = countWhere(
-      sites,
-      (s) => s.linksPerFile !== null && s.linksPerFile >= HIGHLY_SHARED_LINKS_PER_FILE,
-    )
+    const highlyShared = countWhere(sites, (s) => broadLinksPerFile(s) >= HIGHLY_SHARED_LINKS_PER_FILE)
     cards.mostSharedSites = card(highlyShared, highlyShared, total)
   }
   if (audience !== null) {

@@ -91,18 +91,26 @@ describe('buildOversharingOverview — links and risk', () => {
 })
 
 describe('buildOversharingOverview — most-shared sites', () => {
-  it('counts a site as heavily shared at a quarter of a link per file', () => {
+  it('counts a site as heavily shared at a quarter of a broad link per file', () => {
     const overview = buildOversharingOverview(
       noInputs({
         siteUsage: [
-          siteRow({ siteId: 'just-under', linksPerFile: 0.249 }),
-          siteRow({ siteId: 'at-threshold', linksPerFile: 0.25 }),
-          siteRow({ siteId: 'over', linksPerFile: 4 }),
+          siteRow({ siteId: 'just-under', fileCount: 1000, anonymousLinks: 249 }),
+          siteRow({ siteId: 'at-threshold', fileCount: 1000, organizationLinks: 250 }),
+          siteRow({ siteId: 'over', fileCount: 100, guestLinks: 400 }),
         ],
       }),
       NOW,
     )
     expect(overview.cards.mostSharedSites?.count).toBe(2)
+  })
+
+  it('ignores member links, which reach nobody outside the site', () => {
+    const overview = buildOversharingOverview(
+      noInputs({ siteUsage: [siteRow({ fileCount: 100, memberLinks: 900, anonymousLinks: 0 })] }),
+      NOW,
+    )
+    expect(overview.cards.mostSharedSites?.count).toBe(0)
   })
 
   it('never counts an empty site, whose links-per-file is unknowable', () => {
@@ -127,6 +135,16 @@ describe('buildOversharingOverview — external access', () => {
 
   it('counts guests, pending invitations and disabled accounts separately', () => {
     expect(overview.external.guests).toEqual({ total: 5, pending: 1, disabled: 1, unattributed: 1 })
+  })
+
+  it('shows at most the top eight domains, and never an aggregated Other bar beside them', () => {
+    const many = Array.from({ length: 12 }, (_, index) =>
+      guest({ id: `g${index}`, mail: `person@domain${index}.com` }),
+    )
+    const overview = buildOversharingOverview(noInputs({ guests: many, organization: CONTOSO }), NOW)
+    expect(overview.external.topDomains).toHaveLength(8)
+    expect(overview.external.topDomains?.map((d) => d.domain)).not.toContain('Other')
+    expect(overview.external.externalDomainCount).toBe(12)
   })
 
   it('excludes a guest on a verified domain from the external domain breakdown', () => {

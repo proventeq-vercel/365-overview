@@ -31,6 +31,8 @@ const CALLS: CallSpec[] = [
   { key: 'getGlobalAdminCount', section: 'globalAdmins' },
 ]
 
+export const GRAPH_CALL_COUNT = CALLS.length
+
 export function reasonFor(error: unknown): UnavailableReason {
   if (isConsentRequired(error)) return 'consent'
   if (isForbidden(error)) return 'role'

@@ -89,11 +89,18 @@ const OWNERS = [
 const DEVICE_POLICIES = ['AllowFullAccess', 'AllowLimitedAccess', 'BlockAccess']
 
 function pseudoRandom(seed: number): () => number {
-  let state = seed
+  let state = seed >>> 0
   return () => {
-    state = (state * 1103515245 + 12345) % 2147483648
-    return state / 2147483648
+    state = (state + 0x6d2b79f5) >>> 0
+    let t = state
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+}
+
+function skewed(random: () => number, max: number): number {
+  return Math.round(max * random() ** 3)
 }
 
 interface SiteGenerationOptions {
@@ -117,10 +124,10 @@ export function generateSites({ count, exposureRate, conceal }: SiteGenerationOp
     const isGroupConnected = index % 3 === 0
     const fileCount = Math.round(random() * 4000)
     const exposed = random() < exposureRate
-    const anonymousLinks = exposed ? Math.round(random() * 60) : 0
-    const organizationLinks = exposed ? Math.round(random() * 120) : Math.round(random() * 4)
-    const guestLinks = exposed ? Math.round(random() * 40) : 0
-    const memberLinks = Math.round(random() * 200)
+    const anonymousLinks = exposed ? skewed(random, 900) : 0
+    const organizationLinks = exposed ? skewed(random, 1800) : skewed(random, 12)
+    const guestLinks = exposed ? skewed(random, 600) : 0
+    const memberLinks = skewed(random, 2400)
     const totalLinks = anonymousLinks + organizationLinks + guestLinks + memberLinks
     const url = `https://contoso.sharepoint.com/sites/${department.toLowerCase()}-${index}`
     sites.push({
@@ -181,8 +188,8 @@ function generateSharers(count: number, scale: number): UserSharingActivity[] {
   const random = pseudoRandom(909)
   return Array.from({ length: count }, (_, index) => ({
     userPrincipalName: `person${index}@contoso.com`,
-    sharedInternally: Math.round(random() * scale * 3),
-    sharedExternally: Math.round(random() * scale),
+    sharedInternally: skewed(random, scale * 12),
+    sharedExternally: skewed(random, scale * 4),
     lastActivityDate: '2026-09-05',
     isDeleted: false,
   }))
@@ -197,8 +204,8 @@ function generateDailyCounts(days: number, scale: number): DailySharingCounts[] 
     const workday = weekday !== 0 && weekday !== 6 ? 1 : 0.25
     return {
       date,
-      sharedInternally: Math.round(random() * scale * 3 * workday),
-      sharedExternally: Math.round(random() * scale * workday),
+      sharedInternally: Math.round(skewed(random, scale * 6) * workday),
+      sharedExternally: Math.round(skewed(random, scale * 3) * workday),
     }
   })
 }
