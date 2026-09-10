@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  parseAuthorizationPolicy,
-  parseGlobalAdminCount,
-  parseReportSettings,
-  parseSharePointSettings,
-} from './tenantSettings'
+import { parseAuthorizationPolicy, parseReportSettings, parseSharePointSettings } from './tenantSettings'
 
 describe('parseSharePointSettings', () => {
   it('reads the tenant sharing posture', () => {
@@ -79,17 +74,5 @@ describe('parseReportSettings', () => {
     expect(parseReportSettings({ displayConcealedNames: true })).toEqual({ displayConcealedNames: true })
     expect(parseReportSettings({ displayConcealedNames: false })).toEqual({ displayConcealedNames: false })
     expect(parseReportSettings(undefined)).toEqual({ displayConcealedNames: false })
-  })
-})
-
-describe('parseGlobalAdminCount', () => {
-  it('reads the $count annotation', () => {
-    expect(parseGlobalAdminCount({ '@odata.count': 3 })).toBe(3)
-    expect(parseGlobalAdminCount({ '@odata.count': 0 })).toBe(0)
-  })
-
-  it('is null when the count is absent, so the tile shows unavailable rather than zero admins', () => {
-    expect(parseGlobalAdminCount({})).toBeNull()
-    expect(parseGlobalAdminCount(undefined)).toBeNull()
   })
 })

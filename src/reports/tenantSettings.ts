@@ -80,12 +80,3 @@ export function parseAuthorizationPolicy(raw: RawAuthorizationPolicy | undefined
 export function parseReportSettings(raw: RawReportSettings | undefined): ReportSettings {
   return { displayConcealedNames: raw?.displayConcealedNames === true }
 }
-
-export interface RawDirectoryRoleMembers {
-  '@odata.count'?: number
-}
-
-export function parseGlobalAdminCount(raw: RawDirectoryRoleMembers | undefined): number | null {
-  const count = raw?.['@odata.count']
-  return typeof count === 'number' && Number.isFinite(count) ? count : null
-}

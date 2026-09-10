@@ -5,7 +5,8 @@ import { GRAPH_SCOPES } from '../auth/msalConfig'
 import { createGraphClient } from '../clients/graphClient'
 import { env } from '../config/env'
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser'
-import { createMockDataSource, type DataSource } from './fixtures'
+import { createMockDataSource, readFixtureTenantKey } from './fixtures'
+import type { DataSource } from './dataSource'
 import { createLiveDataSource } from './live'
 import { DataSourceContext } from './useDataSource'
 
@@ -62,7 +63,7 @@ function LiveDataProvider({ children }: { children: ReactNode }) {
 export function DataProvider({ children }: { children: ReactNode }) {
   if (env.useMock) {
     return (
-      <DataSourceContext value={createMockDataSource()}>
+      <DataSourceContext value={createMockDataSource(readFixtureTenantKey(window.location.search))}>
         {children}
       </DataSourceContext>
     )
