@@ -62,7 +62,7 @@ function LiveDataProvider({ children }: { children: ReactNode }) {
 export function DataProvider({ children }: { children: ReactNode }) {
   if (env.useMock) {
     return (
-      <DataSourceContext value={createMockDataSource()}>
+      <DataSourceContext value={createMockDataSource(env.mockScenario)}>
         {children}
       </DataSourceContext>
     )

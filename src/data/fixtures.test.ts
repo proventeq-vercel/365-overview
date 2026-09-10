@@ -1,16 +1,93 @@
 import { describe, it, expect } from 'vitest'
 import { createMockDataSource } from './fixtures'
+import { buildStorageOverview } from '../model/storageOverview'
+import { loadSettings } from '../lib/settings'
+
+async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0]) {
+  const ds = createMockDataSource(scenario)
+  const settings = loadSettings()
+  const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
+    await Promise.all([
+      ds.getSites(),
+      ds.getDrives(),
+      ds.getSharePointTrend(),
+      ds.getOneDriveTrend(),
+      ds.getLicenses(),
+      ds.getReportRefreshDate(),
+    ])
+  return buildStorageOverview({
+    sites,
+    drives,
+    sharePointTrend,
+    oneDriveTrend,
+    skus,
+    reportRefreshDate,
+    ratePerGb: settings.ratePerGb,
+    currency: settings.currency,
+    entitlementOverrideBytes: settings.entitlementOverrideBytes,
+  })
+}
 
 describe('mock data source', () => {
-  it('returns non-empty sharepoint summary', async () => {
-    const s = await createMockDataSource().getSharePoint('D30')
-    expect(s.totalSites).toBeGreaterThan(0)
-    expect(s.sites.length).toBe(s.totalSites)
+  it('generates a large estate so virtualization is exercised', async () => {
+    const sites = await createMockDataSource().getSites()
+    expect(sites.length).toBeGreaterThan(2500)
+    expect(sites.every((s) => s.pool === 'SharePoint')).toBe(true)
   })
-  it('returns licenses', async () => {
-    expect((await createMockDataSource().getLicenses()).length).toBeGreaterThan(0)
+
+  it('generates drives that carry their own cap, never a template', async () => {
+    const drives = await createMockDataSource().getDrives()
+    expect(drives.length).toBeGreaterThan(0)
+    expect(drives.every((d) => d.pool === 'OneDrive')).toBe(true)
+    expect(drives.every((d) => d.allocatedBytes !== undefined)).toBe(true)
+    expect(drives.every((d) => d.template === undefined)).toBe(true)
   })
-  it('returns org', async () => {
-    expect((await createMockDataSource().getOrg()).displayName).toBeTruthy()
+
+  it('is deterministic, so e2e assertions stay stable', async () => {
+    const first = await createMockDataSource().getSites()
+    const second = await createMockDataSource().getSites()
+    expect(first).toEqual(second)
+  })
+})
+
+describe('mock scenarios reach every caveat state', () => {
+  it('healthy: entitlement estimated, forecast graded, no other caveat', async () => {
+    const overview = await overviewFor('healthy')
+    expect(overview.caveats).toEqual({
+      entitlementIsEstimated: true,
+      namesAreConcealed: false,
+      historyTooShort: false,
+    })
+    expect(overview.growth.forecastStatus).not.toBe('Unknown')
+    expect(overview.sharePoint.remainingBytes).toBeGreaterThan(0)
+  })
+
+  it('over-entitlement: no headroom, zero runway, Critical', async () => {
+    const overview = await overviewFor('over-entitlement')
+    expect(overview.sharePoint.remainingBytes).toBeLessThan(0)
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastStatus).toBe('Critical')
+  })
+
+  it('concealed: names hashed, totals still measured', async () => {
+    const overview = await overviewFor('concealed')
+    expect(overview.caveats.namesAreConcealed).toBe(true)
+    expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
+    expect(overview.oneDrive.usedBytes).toBeGreaterThan(0)
+  })
+
+  it('short-history: no forecast at all', async () => {
+    const overview = await overviewFor('short-history')
+    expect(overview.caveats.historyTooShort).toBe(true)
+    expect(overview.growth.windowMonths).toBeLessThan(6)
+    expect(overview.growth.forecastStatus).toBe('Unknown')
+    expect(overview.growth.forecastExhaustionDate).toBeNull()
+  })
+
+  it('only the concealed tenant conceals names', async () => {
+    for (const scenario of ['healthy', 'over-entitlement', 'short-history'] as const) {
+      const overview = await overviewFor(scenario)
+      expect(overview.caveats.namesAreConcealed).toBe(false)
+    }
   })
 })

@@ -13,3 +13,23 @@ describe('readEnv', () => {
     expect(readEnv({}).useMock).toBe(false)
   })
 })
+
+describe('readEnv mock scenario', () => {
+  it('defaults to the healthy tenant', () => {
+    expect(readEnv({}).mockScenario).toBe('healthy')
+  })
+
+  it('reads each supported scenario', () => {
+    expect(readEnv({ VITE_MOCK_SCENARIO: 'over-entitlement' }).mockScenario).toBe(
+      'over-entitlement',
+    )
+    expect(readEnv({ VITE_MOCK_SCENARIO: 'concealed' }).mockScenario).toBe('concealed')
+    expect(readEnv({ VITE_MOCK_SCENARIO: 'short-history' }).mockScenario).toBe(
+      'short-history',
+    )
+  })
+
+  it('falls back to healthy for an unknown scenario rather than failing to boot', () => {
+    expect(readEnv({ VITE_MOCK_SCENARIO: 'nonsense' }).mockScenario).toBe('healthy')
+  })
+})
