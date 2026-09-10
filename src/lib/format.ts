@@ -12,8 +12,10 @@ export function formatBytes(bytes: number): string {
   return `${formatted} ${UNITS[unitIndex]}`
 }
 
+const REPORT_LOCALE = 'en-GB'
+
 export function formatNumber(n: number): string {
-  return new Intl.NumberFormat().format(n)
+  return new Intl.NumberFormat(REPORT_LOCALE).format(n)
 }
 
 export function formatPercent(ratio: number, digits = 0): string {

@@ -1,7 +1,6 @@
 import { StrictMode, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter } from 'react-router-dom'
 import { getConfig } from './config/appConfig'
 import { env } from './config/env'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
@@ -19,9 +18,7 @@ function render(tree: ReactNode) {
 const appTree = (
   <QueryClientProvider client={queryClient}>
     <DataProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <App />
     </DataProvider>
   </QueryClientProvider>
 )

@@ -27,5 +27,13 @@ export function getMsalInstance(): PublicClientApplication {
   return _msalInstance
 }
 
-export const GRAPH_SCOPES = ['User.Read', 'Reports.Read.All', 'Organization.Read.All']
-export const ARM_SCOPES = ['https://management.azure.com/user_impersonation']
+export const GRAPH_SCOPES = [
+  'User.Read',
+  'Reports.Read.All',
+  'Organization.Read.All',
+  'User.Read.All',
+  'Group.Read.All',
+  'SharePointTenantSettings.Read.All',
+  'Policy.Read.All',
+  'ReportSettings.Read.All',
+]

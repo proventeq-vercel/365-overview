@@ -1,139 +1,140 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import type { SharePointSite } from '@/types/reports'
-import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
+import { formatNumber } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
-interface SiteTableProps {
-  sites: SharePointSite[]
-  totalUsedBytes: number
+export interface VirtualColumn<T> {
+  key: string
+  header: string
+  width: string
+  render: (row: T) => ReactNode
+  sortValue?: (row: T) => number
+  align?: 'left' | 'right'
 }
 
-type SortKey = 'used' | 'files' | 'active' | 'share'
+interface SiteTableProps<T> {
+  rows: T[]
+  columns: VirtualColumn<T>[]
+  getRowKey: (row: T) => string
+  searchText: (row: T) => string
+  defaultSortKey: string
+  ariaLabel: string
+  searchPlaceholder: string
+  unitLabel: string
+  rowHeight?: number
+  height?: number
+}
+
 type SortDir = 'asc' | 'desc'
 
-function siteName(url: string): string {
-  return url.replace(/\/$/, '').split('/').pop() || url
-}
-
-type Column =
-  | { label: string; sortKey: SortKey }
-  | { label: string; sortKey: null }
-
-const COLUMNS: Column[] = [
-  { label: 'Site', sortKey: null },
-  { label: 'Owner', sortKey: null },
-  { label: 'Files', sortKey: 'files' },
-  { label: 'Active files', sortKey: 'active' },
-  { label: 'Storage used', sortKey: 'used' },
-  { label: 'Share', sortKey: 'share' },
-]
-
-export function SiteTable({ sites, totalUsedBytes }: SiteTableProps) {
+export function SiteTable<T>({
+  rows,
+  columns,
+  getRowKey,
+  searchText,
+  defaultSortKey,
+  ariaLabel,
+  searchPlaceholder,
+  unitLabel,
+  rowHeight = 52,
+  height = 480,
+}: SiteTableProps<T>) {
   const [search, setSearch] = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('used')
+  const [sortKey, setSortKey] = useState(defaultSortKey)
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const rows = useMemo(() => {
+  const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const filtered = q
-      ? sites.filter(
-          (s) =>
-            s.siteUrl.toLowerCase().includes(q) ||
-            s.ownerDisplayName.toLowerCase().includes(q),
-        )
-      : sites
-    const value = (s: SharePointSite): number => {
-      switch (sortKey) {
-        case 'files':
-          return s.fileCount
-        case 'active':
-          return s.activeFileCount
-        default:
-          return s.storageUsedBytes
-      }
-    }
-    const sorted = [...filtered].sort((a, b) => {
-      const diff = value(a) - value(b)
+    const filtered = q ? rows.filter((row) => searchText(row).toLowerCase().includes(q)) : rows
+    const sortValue = columns.find((c) => c.key === sortKey)?.sortValue
+    if (!sortValue) return filtered
+    return [...filtered].sort((a, b) => {
+      const diff = sortValue(a) - sortValue(b)
       return sortDir === 'asc' ? diff : -diff
     })
-    return sorted
-  }, [sites, search, sortKey, sortDir])
+  }, [rows, columns, search, searchText, sortKey, sortDir])
 
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: visible.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
+    estimateSize: () => rowHeight,
     overscan: 8,
   })
 
-  function toggleSort(key: SortKey) {
+  function toggleSort(key: string) {
     if (key === sortKey) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('desc')
+      return
     }
+    setSortKey(key)
+    setSortDir('desc')
   }
 
-  const sortIndicator = (key: SortKey) =>
+  const sortIndicator = (key: string) =>
     key === sortKey ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
 
-  const gridCols = 'minmax(0,2fr) minmax(0,1.5fr) 80px 96px 120px minmax(120px,1.4fr)'
+  const gridCols = columns.map((c) => c.width).join(' ')
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-4">
         <label className="flex-1">
-          <span className="sr-only">Search sites</span>
+          <span className="sr-only">{searchPlaceholder}</span>
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search site or owner"
-            aria-label="Search sites"
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             className="w-full max-w-sm rounded-md border border-hairline bg-transparent px-3 py-2 text-sm text-ink outline-none focus:border-ink-soft"
           />
         </label>
         <span className="text-sm text-muted-foreground tabular">
-          {formatNumber(rows.length)} of {formatNumber(sites.length)} sites
+          {formatNumber(visible.length)} of {formatNumber(rows.length)} {unitLabel}
         </span>
       </div>
 
-      <div role="table" aria-label="Sites" className="rounded-lg border border-hairline">
+      <div role="table" aria-label={ariaLabel} className="rounded-lg border border-hairline">
         <div
           role="row"
           className="grid items-center gap-2 border-b border-hairline px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
           style={{ gridTemplateColumns: gridCols }}
         >
-          {COLUMNS.map((col, i) =>
-            col.sortKey !== null ? (
+          {columns.map((col) =>
+            col.sortValue ? (
               <button
-                key={i}
+                key={col.key}
                 type="button"
                 role="columnheader"
-                onClick={() => toggleSort(col.sortKey)}
-                className="flex items-center text-left uppercase tracking-wide hover:text-ink"
+                onClick={() => toggleSort(col.key)}
+                className={cn(
+                  'flex items-center uppercase tracking-wide hover:text-ink',
+                  col.align === 'right' ? 'justify-end text-right' : 'text-left',
+                )}
               >
-                {col.label}
-                {sortIndicator(col.sortKey)}
+                {col.header}
+                {sortIndicator(col.key)}
               </button>
             ) : (
-              <span key={i} role="columnheader">
-                {col.label}
+              <span
+                key={col.key}
+                role="columnheader"
+                className={col.align === 'right' ? 'text-right' : undefined}
+              >
+                {col.header}
               </span>
             ),
           )}
         </div>
 
-        <div ref={parentRef} style={{ height: 480, overflow: 'auto' }}>
+        <div ref={parentRef} style={{ height, overflow: 'auto' }}>
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
             {virtualizer.getVirtualItems().map((vitem) => {
-              const site = rows[vitem.index]
-              const share = totalUsedBytes ? site.storageUsedBytes / totalUsedBytes : 0
+              const row = visible[vitem.index]
               return (
                 <div
-                  key={site.siteId}
+                  key={getRowKey(row)}
                   role="row"
                   className="absolute left-0 top-0 grid w-full items-center gap-2 border-b border-hairline px-4 text-sm"
                   style={{
@@ -142,33 +143,15 @@ export function SiteTable({ sites, totalUsedBytes }: SiteTableProps) {
                     gridTemplateColumns: gridCols,
                   }}
                 >
-                  <span role="cell" className="min-w-0">
-                    <span className="block truncate font-medium text-ink">{siteName(site.siteUrl)}</span>
-                    <span className="block truncate text-xs text-muted-foreground" title={site.siteUrl}>
-                      {site.siteUrl}
+                  {columns.map((col) => (
+                    <span
+                      key={col.key}
+                      role="cell"
+                      className={cn('min-w-0', col.align === 'right' && 'text-right')}
+                    >
+                      {col.render(row)}
                     </span>
-                  </span>
-                  <span role="cell" className="min-w-0 truncate text-ink-soft">
-                    {site.ownerDisplayName}
-                  </span>
-                  <span role="cell" className="tabular text-ink-soft">
-                    {formatNumber(site.fileCount)}
-                  </span>
-                  <span role="cell" className="tabular text-ink-soft">
-                    {formatNumber(site.activeFileCount)}
-                  </span>
-                  <span role="cell" className="tabular text-ink">
-                    {formatBytes(site.storageUsedBytes)}
-                  </span>
-                  <span role="cell" className="flex items-center gap-2">
-                    <span className="tabular text-ink-soft">{formatPercent(share, 1)}</span>
-                    <span className="h-1.5 flex-1 rounded-full bg-hairline">
-                      <span
-                        className="block h-full rounded-full bg-[#34a1a0]"
-                        style={{ width: `${Math.min(100, share * 100)}%` }}
-                      />
-                    </span>
-                  </span>
+                  ))}
                 </div>
               )
             })}
