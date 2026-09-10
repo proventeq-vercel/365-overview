@@ -211,6 +211,7 @@ export interface OversharingOverview {
 export interface OversharingInputs {
   organization: OrgInfo | null
   reportSettings: ReportSettings | null
+  reportRefreshDate: string | null
   siteUsage: SiteRow[] | null
   sharePointActivity: UserSharingActivity[] | null
   oneDriveActivity: UserSharingActivity[] | null
