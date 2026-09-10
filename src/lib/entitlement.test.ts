@@ -3,8 +3,10 @@ import type { LicenseSku } from '@/types/reports'
 import {
   BASE_ENTITLEMENT_BYTES,
   GB_IN_BYTES,
+  SELF_SERVICE_UNIT_SENTINEL,
   contributionGbFor,
   estimateEntitlementBytes,
+  isSelfServiceUnitCount,
 } from './entitlement'
 
 const sku = (skuPartNumber: string, enabled: number): LicenseSku => ({
@@ -68,5 +70,46 @@ describe('estimateEntitlementBytes', () => {
   it('uses binary GB, matching Microsoft storage accounting', () => {
     expect(GB_IN_BYTES).toBe(1_073_741_824)
     expect(BASE_ENTITLEMENT_BYTES).toBe(1024 * GB_IN_BYTES)
+  })
+})
+
+describe('isSelfServiceUnitCount', () => {
+  it('recognises the sentinel seat counts Microsoft reports for free plans', () => {
+    expect(isSelfServiceUnitCount(10_000)).toBe(true)
+    expect(isSelfServiceUnitCount(1_000_000)).toBe(true)
+    expect(isSelfServiceUnitCount(10_000_000)).toBe(true)
+  })
+
+  it('leaves a purchased seat count alone', () => {
+    expect(isSelfServiceUnitCount(200)).toBe(false)
+    expect(isSelfServiceUnitCount(SELF_SERVICE_UNIT_SENTINEL - 1)).toBe(false)
+  })
+})
+
+describe('estimateEntitlementBytes on a real tenant shape', () => {
+  const realTenantSkus: LicenseSku[] = [
+    sku('MCOPSTNC', 10_000_000),
+    sku('STREAM', 1_000_000),
+    sku('FORMS_PRO', 1_000_000),
+    sku('POWER_BI_STANDARD', 1_000_000),
+    sku('FLOW_FREE', 10_000),
+    sku('POWERAPPS_VIRAL', 10_000),
+    sku('Microsoft_Teams_Enterprise_New', 225),
+    sku('Microsoft_365_E5_(no_Teams)', 200),
+    sku('Microsoft_365_Copilot', 80),
+    sku('VISIOCLIENT', 15),
+  ]
+
+  it('ignores free and viral SKUs reported with a sentinel seat count', () => {
+    const purchasedSeats = 225 + 200 + 80 + 15
+    expect(estimateEntitlementBytes(realTenantSkus)).toBe(
+      BASE_ENTITLEMENT_BYTES + purchasedSeats * 10 * GB_IN_BYTES,
+    )
+  })
+
+  it('stays inside a plausible range instead of reporting petabytes', () => {
+    const tib = estimateEntitlementBytes(realTenantSkus) / (1024 * GB_IN_BYTES)
+    expect(tib).toBeLessThan(100)
+    expect(tib).toBeGreaterThan(1)
   })
 })

@@ -17,6 +17,15 @@ const FRONTLINE_MARKERS = [
   '_F3',
   'FIRSTLINE',
 ]
+/**
+ * Microsoft reports free, viral and trial self-service subscriptions with a
+ * sentinel seat count (10,000 / 1,000,000 / 10,000,000) rather than a purchased
+ * quantity. Measured on a real tenant: 12 of its 30 SKUs carried one, and
+ * billing them at the default rate produced an estimated entitlement of
+ * 127,743 TiB for a ~200-seat tenant. They are not purchases and add no storage.
+ */
+export const SELF_SERVICE_UNIT_SENTINEL = 10_000
+
 const ONEDRIVE_STANDALONE_MARKERS = [
   'ONEDRIVESTANDARD',
   'ONEDRIVEENTERPRISE',
@@ -34,9 +43,16 @@ export function contributionGbFor(skuPartNumber: string): number {
   return DEFAULT_CONTRIBUTION_GB
 }
 
+export function isSelfServiceUnitCount(enabled: number): boolean {
+  return enabled >= SELF_SERVICE_UNIT_SENTINEL
+}
+
 export function estimateEntitlementBytes(skus: LicenseSku[]): number {
   const perLicenceGb = skus.reduce(
-    (sum, sku) => sum + sku.enabled * contributionGbFor(sku.skuPartNumber),
+    (sum, sku) =>
+      isSelfServiceUnitCount(sku.enabled)
+        ? sum
+        : sum + sku.enabled * contributionGbFor(sku.skuPartNumber),
     0,
   )
   return BASE_ENTITLEMENT_BYTES + perLicenceGb * GB_IN_BYTES
