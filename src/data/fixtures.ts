@@ -1,47 +1,15 @@
 import type {
-  AzureCost,
-  AzureResourceCount,
-  AzureSubscription,
-  EmailActivityPoint,
   LicenseSku,
-  MailboxSummary,
   OrgInfo,
   ReportPeriod,
   SharePointSite,
   SharePointSummary,
-  UsagePoint,
 } from '../types/reports'
 
 export interface DataSource {
   getSharePoint(period: ReportPeriod): Promise<SharePointSummary>
   getLicenses(): Promise<LicenseSku[]>
   getOrg(): Promise<OrgInfo>
-  getActiveUsers(period: ReportPeriod): Promise<UsagePoint[]>
-  getOneDriveUsage(period: ReportPeriod): Promise<UsagePoint[]>
-  getTeamsActivity(period: ReportPeriod): Promise<UsagePoint[]>
-  getMailbox(period: ReportPeriod): Promise<MailboxSummary>
-  getEmailActivity(period: ReportPeriod): Promise<EmailActivityPoint[]>
-  getAzureSubscriptions(): Promise<AzureSubscription[]>
-  getAzureResourceCounts(subId: string): Promise<AzureResourceCount[]>
-  getAzureCost(subId: string): Promise<AzureCost>
-}
-
-const DAYS = 9
-/** Generate ISO dates (yyyy-mm-dd) ending today, oldest first. */
-function recentDates(count = DAYS): string[] {
-  const out: string[] = []
-  const base = new Date('2026-06-26T00:00:00Z')
-  for (let i = count - 1; i >= 0; i--) {
-    const d = new Date(base)
-    d.setUTCDate(base.getUTCDate() - i)
-    out.push(d.toISOString().slice(0, 10))
-  }
-  return out
-}
-
-function series(values: number[]): UsagePoint[] {
-  const dates = recentDates(values.length)
-  return values.map((value, i) => ({ date: dates[i], value }))
 }
 
 /** 25 TB — the real default per-site storage quota Graph reports. */
@@ -140,55 +108,10 @@ const org: OrgInfo = {
   country: 'GB',
 }
 
-const mailbox: MailboxSummary = {
-  totalMailboxes: 742,
-  activeMailboxes: 689,
-  storageUsedBytes: 4_398_046_511_104,
-}
-
-const emailActivity: EmailActivityPoint[] = recentDates().map((date, i) => ({
-  date,
-  send: 1200 + i * 35,
-  receive: 4800 + i * 60,
-  read: 3900 + i * 50,
-}))
-
-const subscriptions: AzureSubscription[] = [
-  { subscriptionId: 'sub1', displayName: 'Production', state: 'Enabled' },
-]
-
-const resourceCounts: AzureResourceCount[] = [
-  { type: 'Microsoft.Compute/virtualMachines', count: 24 },
-  { type: 'Microsoft.Storage/storageAccounts', count: 17 },
-  { type: 'Microsoft.Network/networkInterfaces', count: 31 },
-  { type: 'Microsoft.Web/sites', count: 9 },
-  { type: 'Microsoft.Sql/servers', count: 4 },
-]
-
-const azureCost: AzureCost = {
-  subscriptionId: 'sub1',
-  currency: 'GBP',
-  amount: 12_847.63,
-}
-
 export function createMockDataSource(): DataSource {
   return {
     getSharePoint: async () => sharePoint,
     getLicenses: async () => licenses,
     getOrg: async () => org,
-    getActiveUsers: async () =>
-      series([1820, 1875, 1903, 1860, 1940, 1988, 2012, 2045, 2090]),
-    getOneDriveUsage: async () =>
-      series([
-        2.10e12, 2.14e12, 2.17e12, 2.21e12, 2.24e12, 2.28e12, 2.31e12, 2.35e12, 2.40e12,
-      ]),
-    getTeamsActivity: async () =>
-      series([8400, 9120, 8870, 9560, 10230, 9980, 11040, 11580, 12010]),
-    getMailbox: async () => mailbox,
-    getEmailActivity: async () => emailActivity,
-    getAzureSubscriptions: async () => subscriptions,
-    getAzureResourceCounts: async (subId: string) =>
-      resourceCounts.map((r) => ({ ...r })).filter(() => subId.length > 0),
-    getAzureCost: async (subId: string) => ({ ...azureCost, subscriptionId: subId }),
   }
 }

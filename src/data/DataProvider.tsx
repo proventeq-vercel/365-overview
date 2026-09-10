@@ -1,8 +1,7 @@
 import { useMsal } from '@azure/msal-react'
 import { useMemo, type ReactNode } from 'react'
 import { acquireToken } from '../auth/tokens'
-import { ARM_SCOPES, GRAPH_SCOPES } from '../auth/msalConfig'
-import { createArmClient } from '../clients/armClient'
+import { GRAPH_SCOPES } from '../auth/msalConfig'
 import { createGraphClient } from '../clients/graphClient'
 import { env } from '../config/env'
 import type { IPublicClientApplication, AccountInfo } from '@azure/msal-browser'
@@ -15,7 +14,7 @@ import { DataSourceContext } from './useDataSource'
  * resolved lazily (per token request) so a sign-in completed after the provider
  * mounts is picked up. `MsalAuthHandler` gates the live app on an authenticated
  * account, so one can normally be assumed when live methods are called; if none
- * is present we fail fast with a clear error rather than calling Graph/ARM
+ * is present we fail fast with a clear error rather than calling Graph
  * unauthenticated.
  */
 function makeTokenGetter(
@@ -38,8 +37,7 @@ function buildLiveSource(
 ): DataSource {
   const getAccount = () => instance.getActiveAccount() ?? accounts[0] ?? null
   const graph = createGraphClient(makeTokenGetter(instance, getAccount, GRAPH_SCOPES))
-  const arm = createArmClient(makeTokenGetter(instance, getAccount, ARM_SCOPES))
-  return createLiveDataSource(graph, arm)
+  return createLiveDataSource(graph)
 }
 
 /**
