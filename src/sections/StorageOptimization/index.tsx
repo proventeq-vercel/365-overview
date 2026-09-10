@@ -3,6 +3,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { useOrg, useStorageOverview } from '@/hooks/useStorageOverview'
 import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
+import { DistributionSection } from './DistributionSection'
 import { KpiRow } from './KpiRow'
 import { ReportHeader } from './ReportHeader'
 
@@ -43,6 +44,7 @@ export function StorageOptimization() {
         onSettingsChange={applySettings}
       />
       <KpiRow overview={data} />
+      <DistributionSection overview={data} />
     </div>
   )
 }
