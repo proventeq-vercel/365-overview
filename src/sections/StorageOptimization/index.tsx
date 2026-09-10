@@ -6,7 +6,9 @@ import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
 import { DistributionSection } from './DistributionSection'
 import { GrowthSection } from './GrowthSection'
 import { KpiRow } from './KpiRow'
+import { OffendersSection } from './OffendersSection'
 import { ReportHeader } from './ReportHeader'
+import { COPY } from './copy'
 
 export function StorageOptimization() {
   const [settings, setSettings] = useState<ReportSettings>(() => loadSettings())
@@ -47,6 +49,10 @@ export function StorageOptimization() {
       <KpiRow overview={data} />
       <DistributionSection overview={data} />
       <GrowthSection overview={data} />
+      <OffendersSection overview={data} />
+      <footer className="rounded-lg border border-hairline bg-surface px-5 py-4 text-sm text-muted-foreground">
+        {COPY.reportFooter}
+      </footer>
     </div>
   )
 }
