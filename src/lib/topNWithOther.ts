@@ -1,7 +1,4 @@
-export interface Slice {
-  name: string
-  value: number
-}
+import type { Slice } from '@/types/storage'
 
 export function topNWithOther<T>(
   items: T[],

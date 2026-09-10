@@ -1,0 +1,82 @@
+export type StoragePool = 'SharePoint' | 'OneDrive'
+
+export interface StorageRow {
+  pool: StoragePool
+  id: string
+  url: string
+  ownerDisplayName: string
+  storageUsedBytes: number
+  fileCount: number
+  activeFileCount: number
+  lastActivityDate: string | null
+  isDeleted: boolean
+  template?: string
+  allocatedBytes?: number
+}
+
+export interface Slice {
+  name: string
+  value: number
+}
+
+export interface GrowthPoint {
+  month: string
+  actualUsedBytes: number | null
+  projectedUsedBytes: number | null
+}
+
+export type ForecastStatus = 'Healthy' | 'Warning' | 'Critical' | 'Unknown'
+
+export interface RetainedTotal {
+  bytes: number
+  count: number
+}
+
+export interface StorageOverview {
+  reportRefreshDate: string
+
+  sharePoint: {
+    usedBytes: number
+    entitledBytes: number | null
+    remainingBytes: number | null
+    usedPercentage: number | null
+    entitlementIsMeasured: boolean
+    byWorkload: Slice[]
+    byTemplate: Slice[]
+    sites: StorageRow[]
+    deletedButBilling: RetainedTotal
+  }
+
+  oneDrive: {
+    usedBytes: number
+    drives: StorageRow[]
+    drivesNearCap: number
+    deletedButBilling: RetainedTotal
+  }
+
+  growth: {
+    avgMonthlyGrowthBytes: number
+    windowMonths: number
+    seriesIsVolatile: boolean
+    points: GrowthPoint[]
+    forecastStatus: ForecastStatus
+    forecastExhaustionDate: string | null
+    forecastMonthsToExhaustion: number | null
+    forecastEndBytes: number
+  }
+
+  cost: {
+    ratePerGb: number
+    currency: string
+    growthNotionalAnnual: number
+    growthBillableAnnual: number | null
+    cumulativeNotionalYear3: number
+    cumulativeBillableYear3: number | null
+  }
+
+  caveats: {
+    entitlementIsEstimated: boolean
+    namesAreConcealed: boolean
+    historyTooShort: boolean
+  }
+}
