@@ -160,3 +160,15 @@ byte/number axis + tooltip formatting; the number axis is `XAxis` when
   The default locale made output machine-dependent (`1 000 000` on a
   non-English Windows box), which broke the seed's own test and would have made
   the rendered report differ per viewer.
+- `playwright.config.ts` — the mock flag moves from a POSIX `VITE_USE_MOCK=true
+  npm run dev` prefix into `webServer.env`. The prefix is not a command on
+  Windows, so the e2e gate could not run there at all.
+- `src/clients/apiError.ts` — adds `isConsentRequired` and `isForbidden`. Both
+  apps need to tell an unconsented organisation from a missing role.
+
+## Deliberate divergences from `365-overview` (do NOT cherry-pick back)
+
+- `src/auth/MsalAuthHandler.tsx` keeps the auth error **object** rather than its
+  message string, and delegates rendering to `AuthErrorScreen`, which shows the
+  admin-consent screen for `AADSTS65001`. The storage app's single-tenant
+  registration has no such flow.
