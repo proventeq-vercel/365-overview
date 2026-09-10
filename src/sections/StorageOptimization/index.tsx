@@ -4,6 +4,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 import { useOrg, useStorageOverview } from '@/hooks/useStorageOverview'
 import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
 import { DistributionSection } from './DistributionSection'
+import { GrowthSection } from './GrowthSection'
 import { KpiRow } from './KpiRow'
 import { ReportHeader } from './ReportHeader'
 
@@ -45,6 +46,7 @@ export function StorageOptimization() {
       />
       <KpiRow overview={data} />
       <DistributionSection overview={data} />
+      <GrowthSection overview={data} />
     </div>
   )
 }
