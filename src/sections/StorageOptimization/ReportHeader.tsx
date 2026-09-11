@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GB_IN_BYTES } from '@/lib/entitlement'
 import type { ReportSettings } from '@/lib/settings'
@@ -48,10 +49,12 @@ export function ReportHeader({
         <Button
           type="button"
           variant="outline"
+          size="icon"
+          aria-label="Settings"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
-          Settings
+          <Settings aria-hidden="true" />
         </Button>
       </div>
 

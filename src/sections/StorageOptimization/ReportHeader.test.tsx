@@ -106,3 +106,18 @@ describe('ReportHeader', () => {
     expect(screen.queryByLabelText(/entitlement/i)).not.toBeInTheDocument()
   })
 })
+
+it('renders the settings control as an icon button that still announces itself as Settings', () => {
+  render(
+    <ReportHeader
+      overview={base}
+      tenantName="Contoso"
+      settings={DEFAULT_SETTINGS}
+      onSettingsChange={() => {}}
+    />,
+  )
+  const button = screen.getByRole('button', { name: 'Settings' })
+  expect(button).toHaveAttribute('aria-label', 'Settings')
+  expect(button.querySelector('svg')).not.toBeNull()
+  expect(button).not.toHaveTextContent('Settings')
+})
