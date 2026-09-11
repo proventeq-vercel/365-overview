@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GB_IN_BYTES } from '@/lib/entitlement'
-import type { ReportSettings } from '@/lib/settings'
+import { isCurrencyCode, sanitizeSettings, type ReportSettings } from '@/lib/settings'
 import type { StorageOverview } from '@/types/storage'
 import { COPY } from './copy'
 
@@ -26,8 +26,11 @@ export function ReportHeader({
   onOpenChange,
 }: Props) {
   const [openState, setOpenState] = useState(false)
+  const [currencyDraft, setCurrencyDraft] = useState(settings.currency)
   const open = openProp ?? openState
   const setOpen = onOpenChange ?? setOpenState
+  const commit = (next: Partial<ReportSettings>) =>
+    onSettingsChange(sanitizeSettings({ ...settings, ...next }))
   const rateId = useId()
   const currencyId = useId()
   const entitlementId = useId()
@@ -68,9 +71,7 @@ export function ReportHeader({
               step="0.01"
               min="0"
               value={settings.ratePerGb}
-              onChange={(e) =>
-                onSettingsChange({ ...settings, ratePerGb: Number(e.target.value) })
-              }
+              onChange={(e) => commit({ ratePerGb: Number(e.target.value) })}
               className="rounded-md border border-hairline bg-transparent px-3 py-2 text-ink outline-none focus:border-ink-soft"
             />
           </label>
@@ -80,10 +81,13 @@ export function ReportHeader({
             <input
               id={currencyId}
               type="text"
-              value={settings.currency}
-              onChange={(e) =>
-                onSettingsChange({ ...settings, currency: e.target.value.toUpperCase() })
-              }
+              value={currencyDraft}
+              maxLength={3}
+              onChange={(e) => {
+                const code = e.target.value.toUpperCase()
+                setCurrencyDraft(code)
+                if (isCurrencyCode(code)) commit({ currency: code })
+              }}
               className="rounded-md border border-hairline bg-transparent px-3 py-2 text-ink outline-none focus:border-ink-soft"
             />
           </label>
@@ -98,8 +102,7 @@ export function ReportHeader({
               value={overrideTb}
               placeholder="Estimated from licences"
               onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
+                commit({
                   entitlementOverrideBytes:
                     e.target.value === '' ? null : Number(e.target.value) * TB_IN_BYTES,
                 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { useState } from 'react'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DEFAULT_SETTINGS, type ReportSettings } from '@/lib/settings'
 import { ReportHeader } from './ReportHeader'
@@ -92,6 +92,32 @@ describe('ReportHeader', () => {
     await user.clear(screen.getByLabelText(/rate/i))
     await user.type(screen.getByLabelText(/rate/i), '0.35')
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ ratePerGb: 0.35 }))
+  })
+
+  it('commits a currency only once it is a three-letter code', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<Harness onChange={onChange} />)
+    await user.click(screen.getByRole('button', { name: /settings/i }))
+    const currency = screen.getByLabelText(/currency/i)
+    await user.clear(currency)
+    await user.type(currency, 'eu')
+    expect(currency).toHaveValue('EU')
+    expect(onChange).not.toHaveBeenCalled()
+    await user.type(currency, 'r')
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ currency: 'EUR' }))
+  })
+
+  it('never lifts a negative rate', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<Harness onChange={onChange} />)
+    await user.click(screen.getByRole('button', { name: /settings/i }))
+    fireEvent.change(screen.getByLabelText(/rate/i), { target: { value: '-2' } })
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ ratePerGb: DEFAULT_SETTINGS.ratePerGb }),
+    )
   })
 
   it('keeps the settings panel closed until it is asked for', () => {

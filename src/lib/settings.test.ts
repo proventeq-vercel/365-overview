@@ -29,6 +29,30 @@ describe('settings', () => {
     expect(loadSettings().currency).toBe(DEFAULT_SETTINGS.currency)
   })
 
+  it('ignores a stored currency that is not a three-letter code, which would make Intl throw', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"currency":"GB"}')
+    expect(loadSettings().currency).toBe(DEFAULT_SETTINGS.currency)
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"currency":""}')
+    expect(loadSettings().currency).toBe(DEFAULT_SETTINGS.currency)
+  })
+
+  it('keeps a stored three-letter currency code', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"currency":"EUR"}')
+    expect(loadSettings().currency).toBe('EUR')
+  })
+
+  it('ignores a stored rate that is negative or not finite', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"ratePerGb":-1}')
+    expect(loadSettings().ratePerGb).toBe(DEFAULT_SETTINGS.ratePerGb)
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"ratePerGb":null}')
+    expect(loadSettings().ratePerGb).toBe(DEFAULT_SETTINGS.ratePerGb)
+  })
+
+  it('keeps a zero rate, which is a legitimate free-storage assumption', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"ratePerGb":0}')
+    expect(loadSettings().ratePerGb).toBe(0)
+  })
+
   it('reads a stored override of the wrong shape as no override, not as zero', () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":"lots"}')
     expect(loadSettings().entitlementOverrideBytes).toBeNull()

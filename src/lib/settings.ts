@@ -12,23 +12,32 @@ export const DEFAULT_SETTINGS: ReportSettings = {
   entitlementOverrideBytes: null,
 }
 
+const CURRENCY_CODE = /^[A-Z]{3}$/
+
+export function isCurrencyCode(value: unknown): value is string {
+  return typeof value === 'string' && CURRENCY_CODE.test(value)
+}
+
+const isRate = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+
+export function sanitizeSettings(candidate: Partial<ReportSettings>): ReportSettings {
+  return {
+    ratePerGb: isRate(candidate.ratePerGb) ? candidate.ratePerGb : DEFAULT_SETTINGS.ratePerGb,
+    currency: isCurrencyCode(candidate.currency) ? candidate.currency : DEFAULT_SETTINGS.currency,
+    entitlementOverrideBytes:
+      typeof candidate.entitlementOverrideBytes === 'number' &&
+      Number.isFinite(candidate.entitlementOverrideBytes)
+        ? candidate.entitlementOverrideBytes
+        : null,
+  }
+}
+
 export function loadSettings(): ReportSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<ReportSettings>
-    return {
-      ratePerGb:
-        typeof parsed.ratePerGb === 'number'
-          ? parsed.ratePerGb
-          : DEFAULT_SETTINGS.ratePerGb,
-      currency:
-        typeof parsed.currency === 'string' ? parsed.currency : DEFAULT_SETTINGS.currency,
-      entitlementOverrideBytes:
-        typeof parsed.entitlementOverrideBytes === 'number'
-          ? parsed.entitlementOverrideBytes
-          : null,
-    }
+    return sanitizeSettings(JSON.parse(raw) as Partial<ReportSettings>)
   } catch {
     return DEFAULT_SETTINGS
   }

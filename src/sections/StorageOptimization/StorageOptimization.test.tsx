@@ -125,6 +125,23 @@ describe('StorageOptimization report', () => {
     expect(ds.getSites).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps rendering while a currency code is half typed, and re-prices once it is whole', async () => {
+    const { default: userEvent } = await import('@testing-library/user-event')
+    const user = userEvent.setup()
+    renderReport()
+    await screen.findByRole('heading', { name: /main offenders/i })
+
+    await user.click(screen.getByRole('button', { name: /^settings$/i }))
+    const currency = screen.getByLabelText(/currency/i)
+    await user.clear(currency)
+    await user.type(currency, 'eu')
+    expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
+    expect(screen.getByText(/cost of doing nothing/i).closest('[data-slot="card"]')).toHaveTextContent('£')
+
+    await user.type(currency, 'r')
+    expect(screen.getByText(/cost of doing nothing/i).closest('[data-slot="card"]')).toHaveTextContent('€')
+  })
+
   it('routes a consent failure from the data source to the consent screen', async () => {
     renderReport('healthy', () =>
       Promise.reject(new ApiError(403, 'AADSTS65001: The user has not consented')),
