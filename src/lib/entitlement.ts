@@ -33,21 +33,6 @@ const ONEDRIVE_STANDALONE_PLANS = new Set([
   'WACONEDRIVEENTERPRISE',
 ])
 
-const KNOWN_NON_CONTRIBUTING_PLANS = new Set([
-  'SHAREPOINTWAC',
-  'SHAREPOINTWAC_EDU',
-  'SHAREPOINTWAC_DEVELOPER',
-  'SHAREPOINTWAC_GOV',
-  'SHAREPOINTDESKLESS',
-  'SHAREPOINTDESKLESS_GOV',
-  'SHAREPOINTLITE',
-])
-
-export interface EntitlementEstimate {
-  entitlementBytes: number
-  unmatchedPlans: string[]
-}
-
 export function skuStorageBytesPerLicence(servicePlans: string[]): number {
   const plans = servicePlans.map((plan) => plan.trim().toUpperCase()).filter((plan) => plan !== '')
   if (plans.includes(STORAGE_ADD_ON_PLAN)) return STORAGE_ADD_ON_BYTES_PER_UNIT
@@ -58,29 +43,9 @@ export function skuStorageBytesPerLicence(servicePlans: string[]): number {
   return 0
 }
 
-export function unmatchedSharePointPlans(servicePlans: string[]): string[] {
-  return servicePlans
-    .map((plan) => plan.trim().toUpperCase())
-    .filter(
-      (plan) =>
-        plan.startsWith('SHAREPOINT') &&
-        plan !== STORAGE_ADD_ON_PLAN &&
-        !FULL_STORAGE_PLANS.has(plan) &&
-        !KNOWN_NON_CONTRIBUTING_PLANS.has(plan),
-    )
-}
-
-export function estimateEntitlement(skus: LicenseSku[]): EntitlementEstimate {
-  const unmatched = new Set<string>()
-  let entitlementBytes = BASE_ENTITLEMENT_BYTES
-  for (const sku of skus) {
-    if (sku.enabled <= 0) continue
-    entitlementBytes += skuStorageBytesPerLicence(sku.servicePlans) * sku.enabled
-    for (const plan of unmatchedSharePointPlans(sku.servicePlans)) unmatched.add(plan)
-  }
-  return { entitlementBytes, unmatchedPlans: [...unmatched].sort() }
-}
-
 export function estimateEntitlementBytes(skus: LicenseSku[]): number {
-  return estimateEntitlement(skus).entitlementBytes
+  return skus.reduce(
+    (total, sku) => total + skuStorageBytesPerLicence(sku.servicePlans) * sku.enabled,
+    BASE_ENTITLEMENT_BYTES,
+  )
 }

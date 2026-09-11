@@ -6,10 +6,8 @@ import {
   ONEDRIVE_STANDALONE_BYTES_PER_LICENCE,
   PER_LICENCE_STORAGE_BYTES,
   STORAGE_ADD_ON_BYTES_PER_UNIT,
-  estimateEntitlement,
   estimateEntitlementBytes,
   skuStorageBytesPerLicence,
-  unmatchedSharePointPlans,
 } from './entitlement'
 
 const sku = (skuPartNumber: string, enabled: number, servicePlans: string[]): LicenseSku => ({
@@ -65,18 +63,6 @@ describe('skuStorageBytesPerLicence', () => {
   })
 })
 
-describe('unmatchedSharePointPlans', () => {
-  it('surfaces SHAREPOINT-prefixed plans no rule knows about', () => {
-    expect(
-      unmatchedSharePointPlans(['SHAREPOINTENTERPRISE_A365', 'SHAREPOINTWAC', 'SHAREPOINT_PROJECT']),
-    ).toEqual(['SHAREPOINTENTERPRISE_A365', 'SHAREPOINT_PROJECT'])
-  })
-
-  it('does not report known plans or non-SharePoint plans', () => {
-    expect(unmatchedSharePointPlans(['SHAREPOINTENTERPRISE', 'SHAREPOINTSTORAGE', 'EXCHANGE_S_ENTERPRISE'])).toEqual([])
-  })
-})
-
 describe('estimateEntitlement', () => {
   it('is the 1 TiB base when no licences are purchased', () => {
     expect(estimateEntitlementBytes([])).toBe(BASE_ENTITLEMENT_BYTES)
@@ -87,12 +73,10 @@ describe('estimateEntitlement', () => {
     expect(estimateEntitlementBytes(skus)).toBe(BASE_ENTITLEMENT_BYTES + 100 * 10 * GB_IN_BYTES)
   })
 
-  it('skips SKUs with no enabled units, including their unmatched plans', () => {
-    const estimate = estimateEntitlement([
-      sku('DYN365_SANDBOX', 0, ['SHAREPOINTENTERPRISE', 'SHAREPOINT_DYN365']),
-    ])
-    expect(estimate.entitlementBytes).toBe(BASE_ENTITLEMENT_BYTES)
-    expect(estimate.unmatchedPlans).toEqual([])
+  it('adds nothing for a SKU with no enabled units, whatever plans it carries', () => {
+    expect(
+      estimateEntitlementBytes([sku('DYN365_SANDBOX', 0, ['SHAREPOINTENTERPRISE'])]),
+    ).toBe(BASE_ENTITLEMENT_BYTES)
   })
 
   it('uses binary GB, matching Microsoft storage accounting', () => {
@@ -100,16 +84,6 @@ describe('estimateEntitlement', () => {
     expect(BASE_ENTITLEMENT_BYTES).toBe(1024 * GB_IN_BYTES)
   })
 
-  it('collects unmatched SharePoint plans across SKUs, deduplicated and sorted', () => {
-    const skus = [
-      sku('A', 1, ['SHAREPOINT_PROJECT']),
-      sku('B', 1, ['SHAREPOINTENTERPRISE_A365', 'SHAREPOINT_PROJECT']),
-    ]
-    expect(estimateEntitlement(skus).unmatchedPlans).toEqual([
-      'SHAREPOINTENTERPRISE_A365',
-      'SHAREPOINT_PROJECT',
-    ])
-  })
 })
 
 describe('estimateEntitlement on the real tenant shape', () => {
@@ -139,10 +113,4 @@ describe('estimateEntitlement on the real tenant shape', () => {
     expect(tib).toBeCloseTo(3.49, 2)
   })
 
-  it('reports the two SharePoint plans the allowlist has not learned about', () => {
-    expect(estimateEntitlement(realTenantSkus).unmatchedPlans).toEqual([
-      'SHAREPOINTENTERPRISE_A365',
-      'SHAREPOINT_PROJECT',
-    ])
-  })
 })
