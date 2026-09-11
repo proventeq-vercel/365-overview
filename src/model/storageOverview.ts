@@ -84,6 +84,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const remainingBytes = entitledBytes === null ? null : entitledBytes - sharePointUsed
   const usedPercentage =
     entitledBytes === null || entitledBytes <= 0 ? null : sharePointUsed / entitledBytes
+  const headroomRatio = usedPercentage === null ? null : Math.max(0, 1 - usedPercentage)
+  const overageBytes = entitledBytes === null ? null : Math.max(0, sharePointUsed - entitledBytes)
 
   const liveSites = sites.filter((site) => !site.isDeleted)
   const deletedSites = sites.filter((site) => site.isDeleted)
@@ -109,6 +111,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       entitledBytes,
       remainingBytes,
       usedPercentage,
+      headroomRatio,
+      overageBytes,
       entitlementIsMeasured,
       byWorkload: totalsBy(liveSites, (site) => classifyWorkload(site.template)).map(
         ([name, value]) => ({ name, value }),
@@ -137,6 +141,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     growth: {
       avgMonthlyGrowthBytes: rate,
+      addedInWindowBytes: (buckets.at(-1)?.bytes ?? 0) - (buckets[0]?.bytes ?? 0),
       windowMonths: buckets.length,
       seriesIsVolatile: isSeriesVolatile(buckets),
       points,

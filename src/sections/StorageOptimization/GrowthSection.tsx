@@ -1,122 +1,109 @@
 import { AreaTrend } from '@/components/charts/AreaTrend'
-import { InsightCallout } from '@/components/InsightCallout'
 import { formatBytes, formatNumber } from '@/lib/format'
-import { HORIZON_MONTHS } from '@/lib/forecast'
-import type { HealthStatus } from '@/lib/thresholds'
+import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import type { StorageOverview } from '@/types/storage'
 import { COPY } from './copy'
+import { buildCallout } from './forecastCopy'
+import { GrowthImpactCallout } from './GrowthImpactCallout'
 import { formatMoney } from './money'
-import { Panel, SectionShell } from './SectionShell'
-
-const STATUS_TONE: Record<StorageOverview['growth']['forecastStatus'], HealthStatus> = {
-  Healthy: 'healthy',
-  Warning: 'watch',
-  Critical: 'attention',
-  Unknown: 'watch',
-}
-
-function impactMessage(overview: StorageOverview): string {
-  const { growth, sharePoint, caveats } = overview
-  if (caveats.historyTooShort) return COPY.forecastIndeterminateNote
-  if (growth.forecastMonthsToExhaustion === 0) return COPY.alreadyExhaustedNote
-  if (sharePoint.entitledBytes === null) return COPY.forecastUnavailableNote
-  if (growth.forecastExhaustionDate === null) {
-    return COPY.noExhaustionNote(HORIZON_MONTHS / 12)
-  }
-  return COPY.impactNote(growth.forecastExhaustionDate)
-}
+import { MiniStat, MiniStatRow, Panel, SectionShell } from './SectionShell'
 
 interface Props {
   overview: StorageOverview
 }
 
 export function GrowthSection({ overview }: Props) {
-  const { growth, sharePoint, oneDrive, cost, caveats } = overview
+  const { growth, sharePoint, oneDrive, cost } = overview
+  const callout = buildCallout(overview)
 
-  const qualifiers: string[] = [
-    caveats.entitlementIsEstimated ? COPY.estimatedQuotaNote : '',
-    growth.seriesIsVolatile ? COPY.volatileNote : '',
-  ].filter((note) => note !== '')
-
-  const billable = cost.growthBillableAnnual !== null
-  const annual = billable
-    ? formatMoney(cost.growthBillableAnnual!, cost.currency)
-    : formatMoney(cost.growthNotionalAnnual, cost.currency)
-  const cumulative = billable
-    ? formatMoney(cost.cumulativeBillableYear3!, cost.currency)
-    : formatMoney(cost.cumulativeNotionalYear3, cost.currency)
+  const projected =
+    cost.growthBillableAnnual !== null && cost.cumulativeBillableYear3 !== null
+      ? {
+          billable: true,
+          annual: cost.growthBillableAnnual,
+          cumulative: cost.cumulativeBillableYear3,
+        }
+      : {
+          billable: false,
+          annual: cost.growthNotionalAnnual,
+          cumulative: cost.cumulativeNotionalYear3,
+        }
 
   return (
     <SectionShell
       title="Future state & growth impact"
       subtitle="Where storage is heading at the current growth rate — and what it costs if nothing changes"
     >
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          <Panel title="Storage trend and forecast">
+      <div className="grid gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <Panel title={COPY.growth.trendTitle}>
             <AreaTrend
               data={growth.points.map((point) => ({ ...point }))}
               xKey="month"
               series={[
-                { key: 'actualUsedBytes', name: 'Measured' },
-                { key: 'projectedUsedBytes', name: 'Linear forecast' },
+                { key: 'actualUsedBytes', name: COPY.growth.actual },
+                { key: 'projectedUsedBytes', name: COPY.growth.forecast },
               ]}
               valueFormatter={formatBytes}
-              ariaLabel="Storage trend and forecast"
+              ariaLabel={COPY.growth.trendTitle}
             />
+            <MiniStatRow>
+              <MiniStat
+                label={COPY.growth.avgMonthlyGrowth}
+                value={`+${formatBytes(growth.avgMonthlyGrowthBytes)}`}
+              />
+              <MiniStat
+                label={COPY.growth.addedInWindow(growth.windowMonths)}
+                value={formatBytes(growth.addedInWindowBytes)}
+              />
+              <MiniStat label={COPY.growth.sites} value={formatNumber(sharePoint.sites.length)} />
+              <MiniStat
+                label={COPY.growth.drivesNearCap}
+                value={formatNumber(oneDrive.drivesNearCap)}
+              />
+            </MiniStatRow>
           </Panel>
-
-          <InsightCallout
-            status={STATUS_TONE[growth.forecastStatus]}
-            message={impactMessage(overview)}
-          />
-          {qualifiers.map((note) => (
-            <p key={note} className="text-sm text-muted-foreground">
-              {note}
-            </p>
-          ))}
         </div>
 
-        <div className="flex flex-col gap-4">
-          <Panel title={billable ? 'Projected cost if nothing changes' : 'Projected value of growth'}>
-            <dl className="flex flex-col gap-2 text-sm">
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Next 12 months</dt>
-                <dd className="text-xl font-bold tabular text-ink">{annual}</dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Cumulative, 3 years</dt>
-                <dd className="text-lg font-semibold tabular text-ink">{cumulative}</dd>
-              </div>
-            </dl>
-            <p className="text-xs text-muted-foreground">
-              {billable
-                ? COPY.costOfNothingHint(formatMoney(cost.ratePerGb, cost.currency))
-                : `Notional — the value of the growth itself at ${formatMoney(cost.ratePerGb, cost.currency)}/GB per month. ${COPY.forecastUnavailableNote}`}
-            </p>
-          </Panel>
+        <div className="lg:col-span-5">
+          <Panel title={COPY.growth.impactTitle}>
+            <GrowthImpactCallout callout={callout} />
+            <MiniStatRow>
+              <MiniStat label={COPY.growth.usedToday} value={formatBytes(sharePoint.usedBytes)} />
+              <MiniStat
+                label={COPY.growth.forecastEnd(FORECAST_CHART_MONTHS)}
+                value={formatBytes(growth.forecastEndBytes)}
+              />
+              <MiniStat
+                label={COPY.growth.overEntitlement}
+                value={
+                  sharePoint.overageBytes === null
+                    ? COPY.kpi.unknown
+                    : formatBytes(sharePoint.overageBytes)
+                }
+              />
+            </MiniStatRow>
 
-          <Panel title="Measured">
+            <h4 className="text-sm font-semibold text-ink-soft">
+              {projected.billable ? COPY.growth.costTitle : COPY.growth.costTitleNotional}
+            </h4>
             <dl className="flex flex-col gap-2 text-sm">
               <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Average growth per month</dt>
-                <dd className="tabular text-ink">
-                  {formatBytes(growth.avgMonthlyGrowthBytes)}
+                <dt className="text-muted-foreground">{COPY.growth.nextTwelveMonths}</dt>
+                <dd className="text-xl font-bold tabular text-ink">
+                  {formatMoney(projected.annual, cost.currency)}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Months of history</dt>
-                <dd className="tabular text-ink">{formatNumber(growth.windowMonths)}</dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Sites</dt>
-                <dd className="tabular text-ink">{formatNumber(sharePoint.sites.length)}</dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">Drives near their cap</dt>
-                <dd className="tabular text-ink">{formatNumber(oneDrive.drivesNearCap)}</dd>
+                <dt className="text-muted-foreground">{COPY.growth.cumulativeThreeYears}</dt>
+                <dd className="text-lg font-semibold tabular text-ink">
+                  {formatMoney(projected.cumulative, cost.currency)}
+                </dd>
               </div>
             </dl>
+            <p className="text-xs text-muted-foreground">
+              {projected.billable ? COPY.growth.costSubtitle : COPY.growth.costSubtitleNotional}
+            </p>
           </Panel>
         </div>
       </div>

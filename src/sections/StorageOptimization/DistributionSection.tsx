@@ -22,21 +22,22 @@ export function DistributionSection({ overview }: Props) {
       subtitle="Where storage sits today — quota usage, workload split, and which site types drive the volume"
     >
       <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Quota usage — SharePoint pool">
-          {sharePoint.usedPercentage === null || sharePoint.entitledBytes === null ? (
-            <p className="text-sm text-muted-foreground">{COPY.entitlementUnknownNote}</p>
+        <Panel title={COPY.quota.title}>
+          {sharePoint.usedPercentage === null || sharePoint.remainingBytes === null ? (
+            <p className="text-sm text-muted-foreground">{COPY.quota.entitlementUnknown}</p>
           ) : (
             <>
               <RadialGauge
                 value={sharePoint.usedPercentage * 100}
-                label="Used"
-                ariaLabel="Quota usage"
+                label={COPY.quota.used}
+                ariaLabel={COPY.quota.title}
               />
               <p className="text-sm text-muted-foreground">
-                {formatBytes(sharePoint.usedBytes)} used of{' '}
-                {formatBytes(sharePoint.entitledBytes)}
+                {COPY.quota.used} {formatBytes(sharePoint.usedBytes)} · {COPY.quota.remaining}{' '}
+                {formatBytes(Math.max(0, sharePoint.remainingBytes))}
                 {caveats.entitlementIsEstimated ? ` · ${COPY.estimatedMarker}` : ''}
               </p>
+              <p className="text-xs text-muted-foreground">{COPY.quota.scopeNote}</p>
             </>
           )}
         </Panel>

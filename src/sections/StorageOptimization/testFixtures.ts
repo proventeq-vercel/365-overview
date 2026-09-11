@@ -9,6 +9,8 @@ export const base: StorageOverview = {
     entitledBytes: 1000 * GB,
     remainingBytes: 500 * GB,
     usedPercentage: 0.5,
+    headroomRatio: 0.5,
+    overageBytes: 0,
     entitlementIsMeasured: false,
     byWorkload: [],
     byTemplate: [],
@@ -23,6 +25,7 @@ export const base: StorageOverview = {
   },
   growth: {
     avgMonthlyGrowthBytes: 10 * GB,
+    addedInWindowBytes: 50 * GB,
     windowMonths: 6,
     seriesIsVolatile: false,
     points: [],
@@ -32,7 +35,7 @@ export const base: StorageOverview = {
     forecastEndBytes: 560 * GB,
   },
   cost: {
-    ratePerGb: 0.2,
+    ratePerGb: 0.16,
     currency: 'GBP',
     growthNotionalAnnual: 288,
     growthBillableAnnual: 0,
@@ -53,6 +56,8 @@ export const unknownEntitlement: StorageOverview = {
     entitledBytes: null,
     remainingBytes: null,
     usedPercentage: null,
+    headroomRatio: null,
+    overageBytes: null,
   },
   growth: {
     ...base.growth,

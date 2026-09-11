@@ -61,7 +61,7 @@ export function StorageOptimization() {
               </Button>
             }
           >
-            {COPY.estimatedQuotaNote}
+            {COPY.growth.estimatedQuotaNote}
           </CaveatBanner>
         )}
         {data.caveats.namesAreConcealed && (

@@ -136,6 +136,8 @@ describe('buildStorageOverview entitlement', () => {
     expect(overview.sharePoint.entitledBytes).toBeNull()
     expect(overview.sharePoint.remainingBytes).toBeNull()
     expect(overview.sharePoint.usedPercentage).toBeNull()
+    expect(overview.sharePoint.headroomRatio).toBeNull()
+    expect(overview.sharePoint.overageBytes).toBeNull()
     expect(overview.cost.growthBillableAnnual).toBeNull()
     expect(overview.cost.cumulativeBillableYear3).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Unknown')
@@ -293,12 +295,25 @@ describe('buildStorageOverview growth and cost', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
     expect(overview.growth.forecastStatus).toBe('Critical')
+    expect(overview.sharePoint.overageBytes).toBe(140 * GB)
+  })
+
+  it('reports zero overage, not a negative one, inside the entitlement', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
+    expect(overview.sharePoint.overageBytes).toBe(0)
+    expect(overview.sharePoint.headroomRatio).toBeCloseTo(0.85, 10)
+  })
+
+  it('clamps headroom at zero over the entitlement, never negative', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
+    expect(overview.sharePoint.headroomRatio).toBe(0)
   })
 
   it('reports the measured growth rate and the window it was measured over', () => {
     const overview = buildStorageOverview(inputs())
     expect(overview.growth.avgMonthlyGrowthBytes).toBe(10 * GB)
     expect(overview.growth.windowMonths).toBe(6)
+    expect(overview.growth.addedInWindowBytes).toBe(50 * GB)
   })
 
   it('gives a flat tenant no exhaustion date and no negative runway', () => {

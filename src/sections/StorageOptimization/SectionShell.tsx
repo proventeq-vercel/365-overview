@@ -66,3 +66,16 @@ export function SliceLegend({
     </ul>
   )
 }
+
+export function MiniStatRow({ children }: { children: ReactNode }) {
+  return <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">{children}</dl>
+}
+
+export function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-muted/50 px-3 py-2">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="tabular text-sm font-semibold text-ink">{value}</dd>
+    </div>
+  )
+}

@@ -16,7 +16,16 @@ describe('KpiRow', () => {
   it('shows remaining headroom with its percentage', () => {
     render(<KpiRow overview={base} />)
     expect(card('Remaining')).toHaveTextContent('500 GB')
-    expect(card('Remaining')).toHaveTextContent('50%')
+    expect(card('Remaining')).toHaveTextContent('50.0% headroom')
+  })
+
+  it('reports headroom as the unused share, to one decimal', () => {
+    render(
+      <KpiRow
+        overview={{ ...base, sharePoint: { ...base.sharePoint, headroomRatio: 0.218 } }}
+      />,
+    )
+    expect(card('Remaining')).toHaveTextContent('21.8% headroom')
   })
 
   it('says Unknown, never a zero figure, when the entitlement is unknown', () => {
@@ -32,9 +41,22 @@ describe('KpiRow', () => {
     expect(card('Cost of doing nothing')).not.toHaveTextContent('£0.00')
   })
 
-  it('shows the billable cost as money when the entitlement is known', () => {
+  it('says "No change today" instead of £0.00 when growth fits inside the entitlement', () => {
     render(<KpiRow overview={base} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£')
+    expect(card('Cost of doing nothing')).toHaveTextContent('No change today')
+    expect(card('Cost of doing nothing')).not.toHaveTextContent('£0.00')
+  })
+
+  it('shows the billable cost as money once growth exceeds the headroom', () => {
+    render(
+      <KpiRow overview={{ ...base, cost: { ...base.cost, growthBillableAnnual: 1234.5 } }} />,
+    )
+    expect(card('Cost of doing nothing')).toHaveTextContent('£1,234.50')
+  })
+
+  it('quotes the configured rate in the cost hint', () => {
+    render(<KpiRow overview={base} />)
+    expect(card('Cost of doing nothing')).toHaveTextContent('£0.16/GB per month')
   })
 
   it('does not present a forecast when history is too short', () => {
@@ -42,9 +64,28 @@ describe('KpiRow', () => {
     expect(card('Forecast exhaustion')).toHaveTextContent(/not enough history/i)
   })
 
-  it('states the exhaustion date when one is forecast', () => {
+  it('states the exhaustion month when one is forecast, qualified by the growth assumption', () => {
     render(<KpiRow overview={base} />)
-    expect(card('Forecast exhaustion')).toHaveTextContent('2030-01-01')
+    expect(card('Forecast exhaustion')).toHaveTextContent('January 2030')
+    expect(card('Forecast exhaustion')).toHaveTextContent('At current growth')
+  })
+
+  it('says the forecast needs the entitlement when it is unknown', () => {
+    render(<KpiRow overview={unknownEntitlement} />)
+    expect(card('Forecast exhaustion')).toHaveTextContent('Unknown')
+    expect(card('Forecast exhaustion')).toHaveTextContent('Needs tenant entitlement')
+  })
+
+  it('states the used figure against the entitlement, tenant-wide', () => {
+    render(<KpiRow overview={base} />)
+    expect(card('Storage used')).toHaveTextContent('500 GB of 1000 GB entitlement')
+    expect(card('Storage used')).toHaveTextContent('Tenant-wide, as reported by Microsoft 365')
+  })
+
+  it('says the entitlement is unavailable on the used card when it is unknown', () => {
+    render(<KpiRow overview={unknownEntitlement} />)
+    expect(card('Storage used')).toHaveTextContent('Tenant entitlement unavailable')
+    expect(card('Storage used')).not.toHaveTextContent(/ of /)
   })
 
   it('marks every entitlement-derived card as estimated while it is an estimate', () => {

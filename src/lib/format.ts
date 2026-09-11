@@ -24,3 +24,9 @@ export function formatSignedPercent(pct: number, digits = 1): string {
   const sign = pct > 0 ? '+' : ''
   return `${sign}${pct.toFixed(digits)}%`
 }
+
+export function formatLongMonthYear(isoDate: string): string {
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return isoDate
+  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
+}

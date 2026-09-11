@@ -3,6 +3,7 @@ import { formatBytes, formatPercent } from '@/lib/format'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import type { StorageOverview } from '@/types/storage'
 import { COPY } from './copy'
+import { RISK_TONE, forecastHeadline, forecastHint } from './forecastCopy'
 import { formatMoney } from './money'
 
 interface Props {
@@ -11,67 +12,68 @@ interface Props {
 
 export function KpiRow({ overview }: Props) {
   const { sharePoint, growth, cost, caveats } = overview
-  const estimated = caveats.entitlementIsEstimated ? COPY.estimatedMarker : undefined
+  const quotaKnown = sharePoint.entitledBytes !== null
+  const estimated = caveats.entitlementIsEstimated ? COPY.estimatedMarker : null
+  const rate = formatMoney(cost.ratePerGb, cost.currency)
+  const withEstimate = (text: string) => [text, estimated].filter(Boolean).join(' · ')
+
+  const used = {
+    sub:
+      sharePoint.entitledBytes === null
+        ? COPY.kpi.usedEntitlementUnknown
+        : withEstimate(
+            COPY.kpi.usedOfEntitled(
+              formatBytes(sharePoint.usedBytes),
+              formatBytes(sharePoint.entitledBytes),
+            ),
+          ),
+    status:
+      sharePoint.entitledBytes === null
+        ? undefined
+        : utilizationStatus(sharePoint.usedBytes, sharePoint.entitledBytes, STORAGE_THRESHOLDS),
+  }
 
   const remaining =
-    sharePoint.remainingBytes === null || sharePoint.usedPercentage === null
-      ? { value: COPY.unknownValue, sub: COPY.forecastUnavailableNote }
+    sharePoint.remainingBytes === null || sharePoint.headroomRatio === null
+      ? { value: COPY.kpi.unknown, sub: COPY.kpi.remainingUnknownHint }
       : {
           value: formatBytes(Math.max(0, sharePoint.remainingBytes)),
-          sub: [formatPercent(sharePoint.usedPercentage) + ' used', estimated]
-            .filter(Boolean)
-            .join(' · '),
+          sub: withEstimate(COPY.kpi.remainingHint(formatPercent(sharePoint.headroomRatio, 1))),
         }
 
   const billable =
     cost.growthBillableAnnual === null
-      ? { value: COPY.unknownValue, sub: COPY.forecastUnavailableNote }
+      ? { value: COPY.kpi.unknown, sub: COPY.kpi.costOfNothingHintUnknownQuota(rate) }
       : {
-          value: formatMoney(cost.growthBillableAnnual, cost.currency),
-          sub: [
-            COPY.costOfNothingHint(formatMoney(cost.ratePerGb, cost.currency)),
-            estimated,
-          ]
-            .filter(Boolean)
-            .join(' · '),
-        }
-
-  const forecast = caveats.historyTooShort
-    ? { value: COPY.notEnoughHistory, sub: COPY.forecastIndeterminateNote }
-    : growth.forecastExhaustionDate === null
-      ? {
-          value: COPY.unknownValue,
-          sub:
-            sharePoint.entitledBytes === null
-              ? COPY.forecastUnavailableNote
-              : COPY.noExhaustionNote(10),
-        }
-      : {
-          value: growth.forecastExhaustionDate,
-          sub: [`${growth.forecastMonthsToExhaustion} months of runway`, estimated]
-            .filter(Boolean)
-            .join(' · '),
+          value:
+            cost.growthBillableAnnual > 0
+              ? formatMoney(cost.growthBillableAnnual, cost.currency)
+              : COPY.kpi.costOfNothingNone,
+          sub: withEstimate(COPY.kpi.costOfNothingHint(rate)),
         }
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="Storage used"
+        label={COPY.kpi.used}
         value={formatBytes(sharePoint.usedBytes)}
-        sub="SharePoint pool"
-        status={
-          sharePoint.entitledBytes === null
-            ? undefined
-            : utilizationStatus(
-                sharePoint.usedBytes,
-                sharePoint.entitledBytes,
-                STORAGE_THRESHOLDS,
-              )
+        sub={
+          <>
+            {used.sub}
+            <br />
+            {COPY.kpi.usedTenantWide}
+          </>
         }
+        status={used.status}
       />
-      <StatCard label="Remaining" value={remaining.value} sub={remaining.sub} />
-      <StatCard label="Cost of doing nothing" value={billable.value} sub={billable.sub} />
-      <StatCard label="Forecast exhaustion" value={forecast.value} sub={forecast.sub} />
+      <StatCard label={COPY.kpi.remaining} value={remaining.value} sub={remaining.sub} />
+      <StatCard label={COPY.kpi.costOfNothing} value={billable.value} sub={billable.sub} />
+      <StatCard
+        label={COPY.kpi.forecast}
+        value={forecastHeadline(overview)}
+        sub={withEstimate(forecastHint(overview))}
+        status={quotaKnown ? RISK_TONE[growth.forecastStatus] : undefined}
+      />
     </div>
   )
 }

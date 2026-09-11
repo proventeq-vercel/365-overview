@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatBytes, formatNumber, formatPercent, formatSignedPercent } from './format'
+import { formatBytes, formatLongMonthYear, formatNumber, formatPercent, formatSignedPercent } from './format'
 
 describe('formatBytes', () => {
   it('formats units', () => {
@@ -43,5 +43,19 @@ describe('formatSignedPercent', () => {
   })
   it('keeps the minus for negative values', () => {
     expect(formatSignedPercent(-4.2)).toBe('-4.2%')
+  })
+})
+
+describe('formatLongMonthYear', () => {
+  it('renders an ISO date as its long month and year', () => {
+    expect(formatLongMonthYear('2027-08-11')).toBe('August 2027')
+  })
+
+  it('does not shift a first-of-month date across a timezone boundary', () => {
+    expect(formatLongMonthYear('2027-01-01')).toBe('January 2027')
+  })
+
+  it('returns the input untouched when it is not a date', () => {
+    expect(formatLongMonthYear('soon')).toBe('soon')
   })
 })

@@ -40,6 +40,8 @@ export interface StorageOverview {
     entitledBytes: number | null
     remainingBytes: number | null
     usedPercentage: number | null
+    headroomRatio: number | null
+    overageBytes: number | null
     entitlementIsMeasured: boolean
     byWorkload: Slice[]
     byTemplate: Slice[]
@@ -56,6 +58,7 @@ export interface StorageOverview {
 
   growth: {
     avgMonthlyGrowthBytes: number
+    addedInWindowBytes: number
     windowMonths: number
     seriesIsVolatile: boolean
     points: GrowthPoint[]

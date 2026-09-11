@@ -33,13 +33,23 @@ describe('GrowthSection', () => {
       },
     }
     render(<GrowthSection overview={critical} />)
-    expect(screen.getByText(/2026-12-01/)).toBeInTheDocument()
+    const callout = screen.getByRole('status')
+    expect(callout).toHaveTextContent('Critical')
+    expect(callout).toHaveTextContent('Capacity exhausts around December 2026')
+    expect(callout).toHaveTextContent(/Procurement or cleanup is needed before then/)
+  })
+
+  it('says no action is needed when the exhaustion is years out', () => {
+    render(<GrowthSection overview={withGrowth} />)
+    const callout = screen.getByRole('status')
+    expect(callout).toHaveTextContent('Healthy')
+    expect(callout).toHaveTextContent(/capacity needs no action today/)
   })
 
   it('refuses a forecast on short history and says it is not an all-clear', () => {
     render(<GrowthSection overview={{ ...shortHistory, growth: { ...shortHistory.growth, points } }} />)
     expect(screen.getByText(/not an all-clear/i)).toBeInTheDocument()
-    expect(screen.queryByText(/2030-01-01/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/January 2030/)).not.toBeInTheDocument()
   })
 
   it('says the tenant is already over its entitlement when runway is zero', () => {
@@ -48,13 +58,14 @@ describe('GrowthSection', () => {
       growth: {
         ...withGrowth.growth,
         forecastMonthsToExhaustion: 0,
+        forecastExhaustionDate: null,
         forecastStatus: 'Critical' as const,
       },
     }
     render(<GrowthSection overview={over} />)
-    expect(
-      screen.getByText(/already using more than its pooled entitlement/i),
-    ).toBeInTheDocument()
+    const callout = screen.getByRole('status')
+    expect(callout).toHaveTextContent('Entitlement already exceeded')
+    expect(callout).toHaveTextContent(/already using more than its pooled entitlement/)
   })
 
   it('qualifies a volatile series rather than hiding the figure', () => {
@@ -63,8 +74,8 @@ describe('GrowthSection', () => {
       growth: { ...withGrowth.growth, seriesIsVolatile: true },
     }
     render(<GrowthSection overview={volatile} />)
-    expect(screen.getByText(/treat the projection as indicative/i)).toBeInTheDocument()
-    expect(screen.getByText(/Average growth/i)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(/Treat the projection as indicative/)
+    expect(screen.getByText('Avg growth / mo')).toBeInTheDocument()
   })
 
   it('appends the estimated-quota note while the entitlement is estimated', () => {
@@ -83,7 +94,9 @@ describe('GrowthSection', () => {
         }}
       />,
     )
-    expect(screen.getByText(/notional/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Projected value of growth' })).toBeInTheDocument()
+    expect(screen.getByText(/this is not billable spend/)).toBeInTheDocument()
+    expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('Unknown')
   })
 
   it('shows the billable cost when the entitlement is known', () => {
@@ -95,7 +108,10 @@ describe('GrowthSection', () => {
 
   it('reports the mini-stats the model measured', () => {
     render(<GrowthSection overview={withGrowth} />)
-    expect(screen.getByText(/months of history/i)).toBeInTheDocument()
-    expect(screen.getByText(/drives near their cap/i)).toBeInTheDocument()
+    expect(screen.getByText('Added last 6 mo').nextElementSibling).toHaveTextContent('50 GB')
+    expect(screen.getByText('Drives near cap').nextElementSibling).toHaveTextContent('3')
+    expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
+    expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
+    expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('0 B')
   })
 })
