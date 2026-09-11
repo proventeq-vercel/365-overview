@@ -31,8 +31,8 @@ describe('consentErrorFor', () => {
     expect(consentErrorFor(new ApiError(403, 'Forbidden'))).toBe('permission')
   })
 
-  it('treats a 401 as a role failure rather than a generic one', () => {
-    expect(consentErrorFor(new ApiError(401, 'Unauthorized'))).toBe('permission')
+  it('does not read a rejected token as a missing role', () => {
+    expect(consentErrorFor(new ApiError(401, 'Unauthorized'))).toBe('other')
   })
 
   it('treats anything else as a generic failure', () => {

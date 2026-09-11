@@ -1,10 +1,7 @@
 import { STATUS_COLORS } from '@/components/charts/chartTheme'
 import type { ForecastCallout } from './forecastCopy'
 
-const GREY = '#9ca3af'
-
 export function GrowthImpactCallout({ callout }: { callout: ForecastCallout }) {
-  const pillColor = callout.pillStatus === null ? GREY : STATUS_COLORS[callout.pillStatus]
   return (
     <div
       role="status"
@@ -13,8 +10,10 @@ export function GrowthImpactCallout({ callout }: { callout: ForecastCallout }) {
       }`}
     >
       <span
-        className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-        style={{ background: pillColor }}
+        className="w-fit rounded-full bg-muted-foreground px-2 py-0.5 text-xs font-semibold text-white"
+        style={
+          callout.pillStatus === null ? undefined : { background: STATUS_COLORS[callout.pillStatus] }
+        }
       >
         {callout.pillLabel}
       </span>

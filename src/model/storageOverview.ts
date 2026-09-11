@@ -18,9 +18,9 @@ import {
   monthsToExhaustion,
 } from '@/lib/forecast'
 
-export const NEAR_CAP_RATIO = 0.9
+const NEAR_CAP_RATIO = 0.9
 
-export const TOP_CONSUMERS = 10
+const TOP_CONSUMERS = 10
 
 const TOP_TEMPLATE_SLICES = 8
 
