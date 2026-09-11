@@ -12,6 +12,12 @@ test('renders all three report sections', async ({ page }) => {
   await expect(main.getByRole('heading', { name: /main offenders/i })).toBeVisible()
 })
 
+test('the trend chart draws the entitlement line', async ({ page }) => {
+  await page.goto('/')
+  const chart = page.getByRole('img', { name: /storage trend/i })
+  await expect(chart.getByText('Entitlement', { exact: true })).toBeVisible()
+})
+
 test('every chart has an accessible name', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()

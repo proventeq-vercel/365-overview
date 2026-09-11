@@ -1,9 +1,10 @@
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 import { CHART_COLORS, AXIS_INK, GRID_STROKE, TICK } from './chartTheme'
 
 interface Series { key: string; name: string }
+interface ReferenceLevel { value: number; label: string }
 interface Props {
   data: Record<string, unknown>[]
   xKey: string
@@ -12,9 +13,12 @@ interface Props {
   height?: number
   ariaLabel?: string
   valueFormatter?: (v: number) => string
+  referenceLine?: ReferenceLevel
 }
 
-export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel, valueFormatter }: Props) {
+export function AreaTrend({
+  data, xKey, series, stack, height = 240, ariaLabel, valueFormatter, referenceLine,
+}: Props) {
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -38,6 +42,15 @@ export function AreaTrend({ data, xKey, series, stack, height = 240, ariaLabel, 
             formatter={valueFormatter ? (v) => valueFormatter(Number(v)) : undefined}
           />
           {series.length > 1 && <Legend />}
+          {referenceLine && (
+            <ReferenceLine
+              y={referenceLine.value}
+              stroke={AXIS_INK}
+              strokeDasharray="4 4"
+              ifOverflow="extendDomain"
+              label={{ value: referenceLine.label, position: 'insideTopRight', fill: AXIS_INK, fontSize: 12 }}
+            />
+          )}
           {series.map((s, i) => {
             const c = CHART_COLORS[i % CHART_COLORS.length]
             return (

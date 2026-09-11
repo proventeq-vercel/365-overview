@@ -48,6 +48,11 @@ export function GrowthSection({ overview }: Props) {
               valueFormatter={formatBytes}
               ariaLabel={COPY.growth.trendTitle}
               height={300}
+              referenceLine={
+                sharePoint.entitledBytes === null
+                  ? undefined
+                  : { value: sharePoint.entitledBytes, label: COPY.growth.entitlement }
+              }
             />
             <MiniStatRow>
               <MiniStat
