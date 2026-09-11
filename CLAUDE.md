@@ -33,7 +33,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/sections/StorageOptimization/` — shell (`index.tsx`), `ReportHeader`
   (settings popover), `KpiRow`, `DistributionSection`, `GrowthSection`,
   `OffendersSection`, `AccessFailure` (consent vs role screens), `copy.ts`
-  (every user-facing string, P365 wording verbatim).
+  (every user-facing string, P365 wording verbatim), `forecastCopy.ts` (P365's
+  forecast headline/hint/callout logic).
 - `src/components/` — shared UI: `StatCard`, `SiteTable` (generic `StorageRow` +
   `columns`), `CaveatBanner`, `ErrorState`, `SkeletonCard`, `InsightCallout`;
   `charts/` (themed Recharts wrappers); `ui/` (shadcn primitives).
@@ -55,10 +56,20 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Growth is measured from the trend report, never reconstructed from site rows.
   Under six months of history → no forecast, and the copy says that is not an
   all-clear.
-- `subscribedSkus` carries sentinel seat counts (10,000 / 1,000,000 / 10,000,000)
-  on free, viral and trial self-service SKUs. On a real tenant 12 of 30 SKUs had
-  one, and billing them at 10 GB each produced a 127,743 TiB "entitlement".
-  `SELF_SERVICE_UNIT_SENTINEL` in `lib/entitlement.ts` skips them; keep it.
+- The entitlement estimate is P365's `TenantEntitlementCalculator`, ported to
+  `lib/entitlement.ts`: a SKU contributes storage only by the **service plans**
+  it carries (`SHAREPOINTSTANDARD`/`ENTERPRISE` family and Visio/Project
+  companions → 10 GiB, `SHAREPOINTSTORAGE` add-on → 1 GiB, OneDrive standalone
+  → 0.5 GiB). Never fall back to "10 GB per SKU": `subscribedSkus` carries
+  sentinel seat counts (10,000 / 1,000,000 / 10,000,000) on free and trial
+  SKUs, and pricing them by part number produced a 127,743 TiB "entitlement"
+  on a real tenant. Those SKUs carry no storage plan, so the allowlist alone
+  handles them.
+- Every user-facing string, colour rule and card state comes from P365's
+  `features/storageOptimization` (`storageFormat.ts`, `forecastCallout.ts`,
+  `intl/en.json` under `storageOverview.*`). Change the wording there first, or
+  not at all; `copy.ts` mirrors it and the cost rate default is P365's
+  `StorageOptimisationOptions.DefaultCostRatePerGbPerMonth` (0.16 GBP).
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.

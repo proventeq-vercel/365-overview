@@ -20,8 +20,9 @@ monthly growth. SharePoint and OneDrive are reported as two separate pools — O
 never counted against the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
-> The report estimates it from the tenant's subscribed licences (1 TiB + 10 GB per eligible
-> licence) and marks every dependent figure *Estimated* until the administrator enters the real
+> The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service
+> plans include SharePoint storage (1 GB per Extra File Storage unit, 0.5 GB per OneDrive standalone
+> licence) — and marks every dependent figure *Estimated* until the administrator enters the real
 > figure from the SharePoint admin centre in the report settings. The entered value is kept in
 > the browser's `localStorage` only.
 
