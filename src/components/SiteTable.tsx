@@ -134,9 +134,11 @@ export function SiteTable({
             <span className="block truncate font-medium text-ink">
               {rowName(row.url, row.ownerDisplayName)}
             </span>
-            <span className="block truncate text-xs text-muted-foreground" title={row.url}>
-              {row.url}
-            </span>
+            {row.url !== '' && (
+              <span className="block truncate text-xs text-muted-foreground" title={row.url}>
+                {row.url}
+              </span>
+            )}
           </span>
         )
       case 'owner':

@@ -24,12 +24,12 @@ describe('namesAreConcealed', () => {
     expect(namesAreConcealed([...concealed, ...clear.slice(0, 2)])).toBe(true)
   })
 
-  it('detects concealment from blank URLs alone, with readable owner names', () => {
+  it('does not read blank URLs as concealment: Graph omits siteUrl on tenants with readable names', () => {
     const blankUrls = Array.from({ length: 10 }, (_, i) => ({
       url: '',
-      ownerDisplayName: `Person ${i}`,
+      ownerDisplayName: `CPSDemo Owners ${i}`,
     }))
-    expect(namesAreConcealed(blankUrls)).toBe(true)
+    expect(namesAreConcealed(blankUrls)).toBe(false)
   })
 
   it('detects concealment from hashed owner names alone, with readable URLs', () => {

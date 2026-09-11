@@ -19,7 +19,7 @@ const ONE_DRIVE_CAP_BYTES = 1024 * GB
 
 export const MOCK_REFRESH_DATE = '2026-08-30'
 
-const TEMPLATES = ['STS#3', 'GROUP#0', 'TEAMCHANNEL#0', 'SITEPAGEPUBLISHING#0', 'STS#0']
+const TEMPLATES = ['Team Site', 'Group', 'Team Channel', 'Site Page Publishing', 'Publishing Site']
 
 function monthEnds(count: number): string[] {
   const out: string[] = []
@@ -73,10 +73,10 @@ function generateSites(count: number, concealed = false): StorageRow[] {
 
 function namedSites(concealed: boolean): StorageRow[] {
   const named = [
-    ['site-1', 'marketing', 'Alice Marketing', 50, 4200, 380, 'STS#3'],
-    ['site-2', 'engineering', 'Bob Engineering', 150, 18_900, 2140, 'TEAMCHANNEL#0'],
-    ['site-3', 'hr', 'Carol HR', 10, 1350, 96, 'GROUP#0'],
-    ['site-4', 'sales', 'Dan Sales', 80, 7640, 905, 'STS#3'],
+    ['site-1', 'marketing', 'Alice Marketing', 50, 4200, 380, 'Team Site'],
+    ['site-2', 'engineering', 'Bob Engineering', 150, 18_900, 2140, 'Team Channel'],
+    ['site-3', 'hr', 'Carol HR', 10, 1350, 96, 'Group'],
+    ['site-4', 'sales', 'Dan Sales', 80, 7640, 905, 'Team Site'],
   ] as const
   return named.map(([id, slug, owner, gb, files, active, template], i) => ({
     pool: 'SharePoint' as const,

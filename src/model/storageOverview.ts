@@ -20,7 +20,7 @@ export const NEAR_CAP_RATIO = 0.9
 
 const TOP_TEMPLATE_SLICES = 8
 
-const TEAMS_TEMPLATE_MARKERS = ['TEAMCHANNEL', 'GROUP#']
+const TEAMS_TEMPLATE_MARKERS = ['TEAMCHANNEL', 'TEAM CHANNEL', 'GROUP']
 
 export interface OverviewInputs {
   sites: StorageRow[]
