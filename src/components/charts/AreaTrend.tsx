@@ -22,7 +22,7 @@ export function AreaTrend({
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
+        <AreaChart data={data} margin={{ top: 12, right: 12, bottom: 4, left: 4 }}>
           <defs>
             {series.map((s, i) => {
               const c = CHART_COLORS[i % CHART_COLORS.length]
@@ -36,7 +36,7 @@ export function AreaTrend({
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
           <XAxis dataKey={xKey} tick={TICK} stroke={AXIS_INK} tickLine={false} />
-          <YAxis tick={TICK} stroke={AXIS_INK} tickLine={false} width={48} tickFormatter={valueFormatter} />
+          <YAxis tick={TICK} stroke={AXIS_INK} tickLine={false} width={60} tickFormatter={valueFormatter} />
           <Tooltip
             contentStyle={{ borderRadius: 12, border: `1px solid ${GRID_STROKE}`, fontFamily: 'Open Sans' }}
             formatter={valueFormatter ? (v) => valueFormatter(Number(v)) : undefined}
