@@ -20,7 +20,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'VITE_USE_MOCK=true npm run dev',
+    command: 'npm run dev',
+    env: { VITE_USE_MOCK: 'true' },
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

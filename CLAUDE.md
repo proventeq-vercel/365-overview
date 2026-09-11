@@ -1,42 +1,74 @@
 # CLAUDE.md
 
 Guidance for working in this repo. See `README.md` for setup/permissions and
-`docs/superpowers/` for specs and plans.
+`docs/superpowers/specs/` for the approved design.
 
 ## What this is
 
-A browser-only React 19 + TypeScript + Vite 8 SPA that surfaces Microsoft 365
-and Azure operational data for tenant admins. Six sections: Overview,
-SharePoint, Licensing, Estate, Exchange, Azure. The UI is a light,
-**Proventeq-branded**, chart-led dashboard built on **Tailwind v4 + shadcn/ui**.
+A browser-only React 19 + TypeScript + Vite 8 SPA that renders **one report** —
+a sneak-peek of the Proventeq 365 storage-optimisation report — from a Microsoft
+365 tenant's own Graph usage reports. Three sections (Current storage
+distribution · Future state & growth impact · Main offenders) under a KPI row.
+Nothing leaves the browser: no backend, no lead capture, no telemetry. The UI is
+a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/ui**.
 
 ## Architecture (layers)
 
 - `src/auth/` — MSAL (getMsalInstance singleton, redirect login, token acquire).
-- `src/clients/` — `graphClient` / `armClient` fetch wrappers + `apiError`.
-- `src/data/` — `DataSource` interface; `fixtures.ts` (mock) + `live.ts` (real).
-- `src/hooks/useReports.ts` — React Query hooks per report; the ONLY data entry
-  point for pages.
-- `src/reports/` — pure parsers per API response shape.
-- `src/types/reports.ts` — shared types (`ReportPeriod`, `UsagePoint`, etc.).
-- `src/lib/` — `format` (bytes/number/percent), `thresholds`, `trend`,
-  `usePrefersReducedMotion`.
-- `src/components/` — shared UI: `StatCard`, `StatusBadge`, `DeltaIndicator`,
-  `UtilizationMeter`, `InsightCallout`, `SectionHeader`, `HealthTile`,
-  `DataTable`, `PeriodSelector`, `ErrorState`, `SkeletonCard`; `charts/` (themed
-  Recharts wrappers); `ui/` (shadcn primitives).
-- `src/sections/*/index.tsx` — the six page components.
+  One token audience: `GRAPH_SCOPES` only.
+- `src/clients/` — `graphClient` fetch wrapper + `apiError`.
+- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
+  tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
+  `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
+- `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
+  `oneDriveAccounts`, `storageTrend`, `licensing`, `org`).
+- `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
+  derivation of every figure on screen. Pure, table-tested.
+- `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,
+  `topNWithOther`, `format`, `thresholds`.
+- `src/hooks/useStorageOverview.ts` — fetches the inputs once under
+  `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
+  The ONLY data entry point for the page.
+- `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
+- `src/sections/StorageOptimization/` — shell (`index.tsx`), `ReportHeader`
+  (settings popover), `KpiRow`, `DistributionSection`, `GrowthSection`,
+  `OffendersSection`, `AccessFailure` (consent vs role screens), `copy.ts`
+  (every user-facing string, P365 wording verbatim).
+- `src/components/` — shared UI: `StatCard`, `SiteTable` (generic `StorageRow` +
+  `columns`), `CaveatBanner`, `ErrorState`, `SkeletonCard`, `InsightCallout`;
+  `charts/` (themed Recharts wrappers); `ui/` (shadcn primitives).
 - `src/app/` — `Layout` (shell), `UserMenu`, `queryClient`.
 
-**Redesign scope rule:** the auth/clients/data/hooks/reports/types/config layers
-are stable — treat them as read-only unless the task is specifically about them.
-Pages consume `useReports` hooks + the `DataSource` interface only.
+## Rules most likely to be broken by a future change
+
+- **SharePoint per-site `storageAllocatedInBytes` is the 25 TB site-collection
+  maximum. Never sum it, never take a percentage of it. OneDrive per-drive
+  allocation IS the real per-user cap and a percentage of it is meaningful — do
+  not "fix" one by analogy with the other.**
+- **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
+  `entitledBytes`, `remainingBytes`, `usedPercentage`, `growthBillableAnnual` or
+  `cumulativeBillableYear3` is a defect.**
+- **Components do no arithmetic. If a section needs a number, add it to
+  `buildStorageOverview`.**
+- SharePoint and OneDrive are two pools. Never put a OneDrive-inclusive numerator
+  over a SharePoint-only denominator.
+- Growth is measured from the trend report, never reconstructed from site rows.
+  Under six months of history → no forecast, and the copy says that is not an
+  all-clear.
+- `subscribedSkus` carries sentinel seat counts (10,000 / 1,000,000 / 10,000,000)
+  on free, viral and trial self-service SKUs. On a real tenant 12 of 30 SKUs had
+  one, and billing them at 10 GB each produced a 127,743 TiB "entitlement".
+  `SELF_SERVICE_UNIT_SENTINEL` in `lib/entitlement.ts` skips them; keep it.
+- Settings (rate, currency, override) are **not** part of the React Query key.
+  Putting them there refetches five Graph reports and unmounts the header on
+  every keystroke; the integration test pins this.
 
 ## Commands
 
 - `npm run dev` — live mode (needs Entra config).
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
-  data. Fastest way to see/verify the UI. This is also what the e2e webServer runs.
+  data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
+  `short-history`) for the other tenants. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a
@@ -50,10 +82,11 @@ Pages consume `useReports` hooks + the `DataSource` interface only.
   `#f7f8f9`. Typeface **Open Sans** (self-hosted, `@fontsource/open-sans`). Light
   theme only.
 - Chart palette + shared config live in `src/components/charts/chartTheme.ts`
-  (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across pages).
-- Health signals: `src/lib/thresholds.ts` — storage watch ≥85% / attention ≥95%;
-  license watch ≥90% / attention ≥98%. `utilizationStatus()` returns
-  `healthy|watch|attention`; `STATUS_COLORS` maps them to teal/amber/coral.
+  (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
+- Two gradings, kept apart on purpose: `src/lib/thresholds.ts` grades
+  *utilisation* (watch ≥85% / attention ≥95%) and colours the gauge;
+  `src/lib/forecast.ts` grades *runway* (Critical <12 months / Warning <36) and
+  drives the forecast badge. They answer different questions.
 
 ## Tailwind v4 + shadcn gotchas (learned the hard way)
 
@@ -62,8 +95,8 @@ Pages consume `useReports` hooks + the `DataSource` interface only.
   - `Select.Root` `onValueChange` is `(value: string | null, eventDetails) => void`
     — wrap it: `onValueChange={(v) => setX(v ?? '')}`.
   - `Progress` (Base UI) manages its own `role="progressbar"`/`aria-*`. Do NOT
-    spread `role`/`aria-valuenow` onto it. For custom meters (`UtilizationMeter`)
-    render a plain `<div role="progressbar" aria-valuenow=... aria-label=...>`.
+    spread `role`/`aria-valuenow` onto it. For custom meters render a plain
+    `<div role="progressbar" aria-valuenow=... aria-label=...>`.
 - **Tailwind v4 only emits a color utility if the token is registered under
   `--color-*` in `@theme`.** shadcn's `:root` tokens (`--muted`, `--primary`,
   `--card`, `--accent`, `--popover`, `--secondary`, `--destructive`, `--border`…)
@@ -89,28 +122,28 @@ legacy CSS, keep any class still referenced by `src/auth/*`.
 ## Chart data typing
 
 Recharts wrapper `data` props are typed `Record<string, unknown>[]`. TS
-**interfaces** (`UsagePoint`, `EmailActivityPoint`) are NOT assignable to that
-(no implicit index signature). Convert with `data={points.map(p => ({ ...p }))}`
-(anonymous objects) — no cast. `.map`-produced and inline-literal arrays are fine
-as-is. Wrappers accept an optional `valueFormatter?: (v:number)=>string` for
-byte/number axis + tooltip formatting; the number axis is `XAxis` when
+**interfaces** (`GrowthPoint`) are NOT assignable to that (no implicit index
+signature). Convert with `data={points.map(p => ({ ...p }))}` (anonymous
+objects) — no cast. Wrappers accept an optional `valueFormatter?: (v:number)=>string`
+for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 `horizontal` (BarBreakdown default), else `YAxis`.
 
 ## Testing / e2e conventions
 
 - shadcn `Card` renders `data-slot="card"`. `StatCard` nests label and value as
-  **siblings**, so the old `getByText(label).parentElement` value assertion
-  breaks — scope with `getByText(label).closest('[data-slot="card"]')`.
+  **siblings** — scope assertions with `getByText(label).closest('[data-slot="card"]')`.
 - Every chart wrapper takes an `ariaLabel` and renders `role="img"` — always pass
-  it from call sites (unnamed `role="img"` = a11y gap).
-- Playwright: `getByRole('link', { name: /Section/ })` collides between the
-  sidebar nav link and an on-page tile — scope page-tile assertions to
-  `getByRole('main')`. `getByRole` excludes `display:none` nodes, so the
-  `md:hidden` mobile nav doesn't collide with the desktop `<nav aria-label="Sections">`
-  at Playwright's 1280px default.
-- Keep these ARIA hooks (tests depend on them): `<nav aria-label="Sections">`,
-  `role="progressbar"` on meters, real table semantics, SKU part number in a
-  plain table cell, `role="group"`/`aria-label="Report period"` on PeriodSelector.
+  it from call sites; the e2e suite asserts every `role="img"` has a name.
+- `SiteTable` is windowed with `@tanstack/react-virtual`; jsdom reports zero
+  `offsetHeight`/`offsetWidth`, so tests that need rows to render stub both on
+  `HTMLElement.prototype` (see `StorageOptimization.test.tsx`).
+- Controlled inputs (`ReportHeader`) need a stateful harness in tests — a bare
+  `vi.fn()` parent never re-renders, so the input never takes the typed value.
+- Every new test is proven red by mutating the production line it names before
+  it is committed. A test that survives the mutation is replaced, not kept.
+- Keep these ARIA hooks (tests depend on them): `role="status"` on caveat
+  banners, `role="alert"` on the two failure screens, `role="progressbar"` on
+  meters, real table semantics in `SiteTable`.
 
 ## Known deferred items
 
