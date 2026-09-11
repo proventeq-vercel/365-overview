@@ -15,14 +15,6 @@ interface JsonReport<T> {
   value: T[]
 }
 
-/**
- * Base for the `/reports/*` functions. These only return JSON on the `/beta`
- * endpoint — on `/v1.0` they return CSV (via a 302 redirect) and reject
- * `$format=application/json` with "JSON format is not supported." The graph
- * client passes absolute URLs through unchanged, so report calls use this base
- * while non-report calls (`/organization`, `/subscribedSkus`) stay on the
- * client's default `/v1.0` base, where JSON is native.
- */
 const REPORTS_BASE = 'https://graph.microsoft.com/beta/reports'
 
 const PERIOD = 'D180'
@@ -33,7 +25,12 @@ const reportUrl = (fn: string) =>
 export function createLiveDataSource(graph: GraphClient): DataSource {
   let sitePages: Promise<RawSiteRow[]> | null = null
   const rawSites = () => {
-    sitePages ??= graph.getAllPages<RawSiteRow>(reportUrl('getSharePointSiteUsageDetail'))
+    sitePages ??= graph
+      .getAllPages<RawSiteRow>(reportUrl('getSharePointSiteUsageDetail'))
+      .catch((error: unknown) => {
+        sitePages = null
+        throw error
+      })
     return sitePages
   }
 

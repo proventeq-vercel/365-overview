@@ -56,6 +56,17 @@ describe('createLiveDataSource', () => {
     expect(urls).toEqual(['/subscribedSkus'])
   })
 
+  it('fetches the site report again after a failed attempt instead of replaying the failure', async () => {
+    const { graph } = recordingGraph()
+    const getAllPages = graph.getAllPages as ReturnType<typeof vi.fn>
+    getAllPages.mockRejectedValueOnce(new Error('503 from Graph'))
+    const ds = createLiveDataSource(graph)
+
+    await expect(ds.getSites()).rejects.toThrow('503 from Graph')
+    await expect(ds.getSites()).resolves.toEqual([])
+    expect(graph.getAllPages).toHaveBeenCalledTimes(2)
+  })
+
   it('shares one paged site fetch between the rows and the refresh date', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)
