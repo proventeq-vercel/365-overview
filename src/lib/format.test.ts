@@ -19,10 +19,8 @@ describe('formatBytes', () => {
 })
 
 describe('formatNumber', () => {
-  it('adds thousands separators', () => {
-    const result = formatNumber(1000000)
-    // Accept locale-specific separators (comma or period)
-    expect(result).toMatch(/1[,.]000[,.]000/)
+  it('adds thousands separators the same way on every machine', () => {
+    expect(formatNumber(1000000)).toBe('1,000,000')
   })
 
   it('handles small numbers', () => {

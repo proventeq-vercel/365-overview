@@ -1,4 +1,5 @@
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
+const REPORT_LOCALE = 'en-GB'
 
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -13,7 +14,7 @@ export function formatBytes(bytes: number): string {
 }
 
 export function formatNumber(n: number): string {
-  return new Intl.NumberFormat().format(n)
+  return new Intl.NumberFormat(REPORT_LOCALE).format(n)
 }
 
 export function formatPercent(ratio: number, digits = 0): string {
@@ -28,5 +29,5 @@ export function formatSignedPercent(pct: number, digits = 1): string {
 export function formatLongMonthYear(isoDate: string): string {
   const date = new Date(isoDate)
   if (Number.isNaN(date.getTime())) return isoDate
-  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
+  return new Intl.DateTimeFormat(REPORT_LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
