@@ -24,12 +24,15 @@ export function DistributionSection({ overview }: Props) {
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title={COPY.quota.title}>
-          {sharePoint.usedPercentage === null || sharePoint.remainingBytes === null ? (
+          {sharePoint.usedPercentage === null ||
+          sharePoint.remainingBytes === null ||
+          sharePoint.utilization === null ? (
             <p className="text-sm text-muted-foreground">{COPY.quota.entitlementUnknown}</p>
           ) : (
             <>
               <RadialGauge
                 value={sharePoint.usedPercentage * 100}
+                status={sharePoint.utilization}
                 label={COPY.quota.used}
                 ariaLabel={COPY.quota.title}
               />

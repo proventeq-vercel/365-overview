@@ -26,8 +26,15 @@ describe('chart wrappers', () => {
     expect(getByRole('img', { name: 'donut' })).toBeInTheDocument()
   })
   it('RadialGauge shows the rounded percent', () => {
-    const { getByText } = render(<RadialGauge value={83.4} label="Utilization" />)
+    const { getByText } = render(<RadialGauge value={83.4} status="healthy" label="Utilization" />)
     expect(getByText('83%')).toBeInTheDocument()
+  })
+  it('RadialGauge states a figure past the cap rather than capping it', () => {
+    const { getByText, getByRole } = render(
+      <RadialGauge value={132.6} status="attention" label="Used" />,
+    )
+    expect(getByText('133%')).toBeInTheDocument()
+    expect(getByRole('img')).toHaveAccessibleName('Used: 133 percent')
   })
   it('Sparkline renders', () => {
     const { getByRole } = render(<Sparkline data={points} dataKey="value" ariaLabel="spark" />)

@@ -112,9 +112,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Chart palette + shared config live in `src/components/charts/chartTheme.ts`
   (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
 - Two gradings, kept apart on purpose: `src/lib/thresholds.ts` grades
-  *utilisation* (watch ≥85% / attention ≥95%) and colours the gauge;
-  `src/lib/forecast.ts` grades *runway* (Critical <12 months / Warning <36) and
-  drives the forecast badge. They answer different questions.
+  *utilisation* (watch ≥85% / attention ≥95%) once, in the model
+  (`sharePoint.utilization`), and both the used-KPI dot and the quota gauge
+  take that grade — the gauge never grades itself; `src/lib/forecast.ts`
+  grades *runway* (Critical <12 months / Warning <36) and drives the forecast
+  badge. They answer different questions.
 
 ## Tailwind v4 + shadcn gotchas (learned the hard way)
 

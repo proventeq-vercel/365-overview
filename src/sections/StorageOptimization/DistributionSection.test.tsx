@@ -68,6 +68,15 @@ describe('DistributionSection', () => {
     expect(screen.getByText(/will not match the SharePoint admin centre/i)).toBeInTheDocument()
   })
 
+  it('colours the gauge by the grade the model assigned, not its own thresholds', () => {
+    const watch = {
+      ...withSlices,
+      sharePoint: { ...withSlices.sharePoint, usedPercentage: 0.92, utilization: 'watch' as const },
+    }
+    render(<DistributionSection overview={watch} />)
+    expect(screen.getByRole('img', { name: /quota usage/i })).toHaveAttribute('data-status', 'watch')
+  })
+
   it('renders the gauge as a percentage of the SharePoint pool alone', () => {
     render(<DistributionSection overview={withSlices} />)
     expect(screen.getByRole('img', { name: /quota usage/i })).toHaveTextContent('50%')
