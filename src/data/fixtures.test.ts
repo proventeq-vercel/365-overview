@@ -43,6 +43,24 @@ describe('mock data source', () => {
     expect(drives.every((d) => d.template === undefined)).toBe(true)
   })
 
+  it.each(['healthy', 'over-entitlement', 'concealed', 'short-history'] as const)(
+    '%s: each pool trend ends at the sum of its own rows',
+    async (scenario) => {
+      const ds = createMockDataSource(scenario)
+      const [sites, drives, sharePointTrend, oneDriveTrend] = await Promise.all([
+        ds.getSites(),
+        ds.getDrives(),
+        ds.getSharePointTrend(),
+        ds.getOneDriveTrend(),
+      ])
+      const sum = (rows: { storageUsedBytes: number }[]) =>
+        rows.reduce((total, row) => total + row.storageUsedBytes, 0)
+      expect(sharePointTrend.at(-1)?.value).toBe(sum(sites))
+      expect(oneDriveTrend.at(-1)?.value).toBe(sum(drives))
+      expect(sharePointTrend.at(0)?.value).toBeLessThan(sum(sites))
+    },
+  )
+
   it('is deterministic, so e2e assertions stay stable', async () => {
     const first = await createMockDataSource().getSites()
     const second = await createMockDataSource().getSites()

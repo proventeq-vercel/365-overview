@@ -13,14 +13,14 @@ export interface DataSource {
   getReportRefreshDate(): Promise<string>
 }
 
-const GB = 1_073_741_824
+const MB = 1_048_576
+const GB = 1024 * MB
 const ONE_DRIVE_CAP_BYTES = 1024 * GB
 
 export const MOCK_REFRESH_DATE = '2026-08-30'
 
 const TEMPLATES = ['STS#3', 'GROUP#0', 'TEAMCHANNEL#0', 'SITEPAGEPUBLISHING#0', 'STS#0']
 
-/** Month ends counting back from the refresh date, oldest first. */
 function monthEnds(count: number): string[] {
   const out: string[] = []
   const [year, month] = MOCK_REFRESH_DATE.split('-').map(Number)
@@ -53,14 +53,14 @@ function generateSites(count: number, concealed = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
     const fileCount = (i % 900) * 10 + 50
-    let gb = 1 + ((i * 37) % 200)
-    if (i % 250 === 0) gb += 2000
+    let mb = 100 + ((i * 37) % 3900)
+    if (i % 250 === 0) mb += 100 * 1024
     out.push({
       pool: 'SharePoint',
       id: `gen-${i}`,
       url: concealed ? '' : `https://contoso.sharepoint.com/sites/team-${i}`,
       ownerDisplayName: concealed ? hashName(i) : `Owner ${i}`,
-      storageUsedBytes: gb * GB,
+      storageUsedBytes: mb * MB,
       fileCount,
       activeFileCount: Math.round(fileCount * 0.1),
       lastActivityDate: i % 17 === 0 ? null : `2026-0${(i % 8) + 1}-1${i % 10}`,
@@ -95,14 +95,14 @@ function namedSites(concealed: boolean): StorageRow[] {
 function generateDrives(count: number, concealed = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
-    const nearCap = i % 40 === 0
-    const gb = nearCap ? 950 + (i % 40) : 5 + ((i * 13) % 400)
+    const nearCap = i % 200 === 0
+    const mb = nearCap ? (950 + (i % 40)) * 1024 : 200 + ((i * 13) % 8000)
     out.push({
       pool: 'OneDrive',
       id: concealed ? hashName(2000 + i) : `user${i}@contoso.com`,
       url: concealed ? '' : `https://contoso-my.sharepoint.com/personal/user${i}`,
       ownerDisplayName: concealed ? hashName(3000 + i) : `User ${i}`,
-      storageUsedBytes: gb * GB,
+      storageUsedBytes: mb * MB,
       fileCount: (i % 300) * 5 + 20,
       activeFileCount: (i % 30) * 2,
       lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
@@ -133,11 +133,23 @@ const org: OrgInfo = {
   country: 'GB',
 }
 
-const SIX_MONTH_SHAREPOINT = [5200, 5340, 5495, 5610, 5780, 5900].map((gb) => gb * GB)
-const SIX_MONTH_ONEDRIVE = [2100, 2140, 2170, 2210, 2240, 2280].map((gb) => gb * GB)
-const OVER_ENTITLEMENT_SHAREPOINT = [8100, 8420, 8780, 9100, 9460, 9820].map((gb) => gb * GB)
-const SHORT_SHAREPOINT = [5780, 5900].map((gb) => gb * GB)
-const SHORT_ONEDRIVE = [2240, 2280].map((gb) => gb * GB)
+const HEALTHY_SHAREPOINT_CURVE = [0.881, 0.905, 0.931, 0.951, 0.98, 1]
+const HEALTHY_ONEDRIVE_CURVE = [0.921, 0.939, 0.952, 0.969, 0.982, 1]
+const OVER_ENTITLEMENT_CURVE = [0.825, 0.857, 0.894, 0.927, 0.963, 1]
+const OVER_ENTITLEMENT_SCALE = 1.7
+
+function sumBytes(rows: StorageRow[]): number {
+  return rows.reduce((total, row) => total + row.storageUsedBytes, 0)
+}
+
+function trendFor(rows: StorageRow[], curve: number[]): UsagePoint[] {
+  const latest = sumBytes(rows)
+  return series(curve.map((fraction) => Math.round(latest * fraction)))
+}
+
+function scaled(rows: StorageRow[], factor: number): StorageRow[] {
+  return rows.map((row) => ({ ...row, storageUsedBytes: Math.round(row.storageUsedBytes * factor) }))
+}
 
 interface ScenarioData {
   sites: StorageRow[]
@@ -148,25 +160,19 @@ interface ScenarioData {
 
 function scenarioData(scenario: MockScenario): ScenarioData {
   const concealed = scenario === 'concealed'
-  const sites = [...namedSites(concealed), ...generateSites(2500, concealed)]
+  const baseSites = [...namedSites(concealed), ...generateSites(2500, concealed)]
+  const sites =
+    scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites
   const drives = generateDrives(400, concealed)
-
-  if (scenario === 'short-history') {
-    return {
-      sites,
-      drives,
-      sharePointTrend: series(SHORT_SHAREPOINT),
-      oneDriveTrend: series(SHORT_ONEDRIVE),
-    }
-  }
+  const sharePointCurve =
+    scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
+  const months = scenario === 'short-history' ? 2 : 6
 
   return {
     sites,
     drives,
-    sharePointTrend: series(
-      scenario === 'over-entitlement' ? OVER_ENTITLEMENT_SHAREPOINT : SIX_MONTH_SHAREPOINT,
-    ),
-    oneDriveTrend: series(SIX_MONTH_ONEDRIVE),
+    sharePointTrend: trendFor(sites, sharePointCurve.slice(-months)),
+    oneDriveTrend: trendFor(drives, HEALTHY_ONEDRIVE_CURVE.slice(-months)),
   }
 }
 
