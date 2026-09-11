@@ -55,7 +55,19 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `entitledBytes`, `remainingBytes`, `usedPercentage`, `growthBillableAnnual` or
   `cumulativeBillableYear3` is a defect.**
 - **Components do no arithmetic. If a section needs a number, add it to
-  `buildStorageOverview`.**
+  `buildStorageOverview`.** That includes clamps (`remainingBytes` is already
+  ≥ 0, as P365's backend returns it), grades (`sharePoint.utilization`), the
+  offenders' top-N and retained totals (`overview.offenders`), and display
+  names (`lib/rowName.ts`, shared with `SiteTable`).
+- **Exhausted is a state, not a date.** Used ≥ entitled ⇒ `forecastStatus`
+  `Critical`, `forecastMonthsToExhaustion` `0`, `forecastExhaustionDate`
+  `null` — decided before the history check, exactly as P365's
+  `ForecastExhaustion` does. A date of "today" for an over-entitlement tenant
+  is the bug this rule exists to stop; the "already exceeded" copy only renders
+  on that triple.
+- `growth.windowMonths` counts the month-to-month deltas the rate was measured
+  over (`buckets - 1`), which is what "Added last N mo" labels; the six-month
+  history gate still counts buckets.
 - SharePoint and OneDrive are two pools. Never put a OneDrive-inclusive numerator
   over a SharePoint-only denominator.
 - Growth is measured from the trend report, never reconstructed from site rows.

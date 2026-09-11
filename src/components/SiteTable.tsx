@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { rowName } from '@/lib/rowName'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 
@@ -22,10 +23,6 @@ interface SiteTableProps {
 }
 
 type SortDir = 'asc' | 'desc'
-
-function rowName(url: string, fallback: string): string {
-  return url.replace(/\/$/, '').split('/').pop() || fallback
-}
 
 interface ColumnSpec {
   label: string

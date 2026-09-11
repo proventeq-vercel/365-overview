@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { formatBytes, formatLongMonthYear, formatNumber, formatPercent, formatSignedPercent } from './format'
+import {
+  formatBytes,
+  formatLongMonthYear,
+  formatNumber,
+  formatPercent,
+  formatSignedBytes,
+  formatSignedPercent,
+} from './format'
 
 describe('formatBytes', () => {
   it('formats units', () => {
@@ -11,6 +18,10 @@ describe('formatBytes', () => {
   it('trims trailing .0', () => {
     expect(formatBytes(1024)).toBe('1 KB')
     expect(formatBytes(1024 * 1024)).toBe('1 MB')
+  })
+
+  it('keeps the unit and the sign on a negative figure', () => {
+    expect(formatBytes(-1.5 * 1024 * 1024 * 1024)).toBe('-1.5 GB')
   })
 
   it('handles TB', () => {
@@ -32,6 +43,14 @@ describe('formatPercent', () => {
   it('formats a 0–1 ratio as a percent', () => {
     expect(formatPercent(0.856)).toBe('86%')
     expect(formatPercent(0.5, 1)).toBe('50.0%')
+  })
+})
+
+describe('formatSignedBytes', () => {
+  it('prefixes growth with a plus and keeps the minus on shrinkage', () => {
+    expect(formatSignedBytes(2 * 1024 * 1024)).toBe('+2 MB')
+    expect(formatSignedBytes(-2 * 1024 * 1024)).toBe('-2 MB')
+    expect(formatSignedBytes(0)).toBe('0 B')
   })
 })
 

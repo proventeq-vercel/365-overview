@@ -1,5 +1,5 @@
 import { AreaTrend } from '@/components/charts/AreaTrend'
-import { formatBytes, formatNumber } from '@/lib/format'
+import { formatBytes, formatNumber, formatSignedBytes } from '@/lib/format'
 import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import type { StorageOverview } from '@/types/storage'
 import { COPY } from './copy'
@@ -52,11 +52,11 @@ export function GrowthSection({ overview }: Props) {
             <MiniStatRow>
               <MiniStat
                 label={COPY.growth.avgMonthlyGrowth}
-                value={`+${formatBytes(growth.avgMonthlyGrowthBytes)}`}
+                value={formatSignedBytes(growth.avgMonthlyGrowthBytes)}
               />
               <MiniStat
                 label={COPY.growth.addedInWindow(growth.windowMonths)}
-                value={formatBytes(growth.addedInWindowBytes)}
+                value={formatSignedBytes(growth.addedInWindowBytes)}
               />
               <MiniStat label={COPY.growth.sites} value={formatNumber(sharePoint.sites.length)} />
               <MiniStat

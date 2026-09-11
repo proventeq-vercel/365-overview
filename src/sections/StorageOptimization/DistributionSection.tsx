@@ -35,7 +35,7 @@ export function DistributionSection({ overview }: Props) {
               />
               <p className="text-sm text-muted-foreground">
                 {COPY.quota.used} {formatBytes(sharePoint.usedBytes)} · {COPY.quota.remaining}{' '}
-                {formatBytes(Math.max(0, sharePoint.remainingBytes))}
+                {formatBytes(sharePoint.remainingBytes)}
                 {caveats.entitlementIsEstimated ? ` · ${COPY.estimatedMarker}` : ''}
               </p>
               <p className="text-xs text-muted-foreground">{COPY.quota.scopeNote}</p>

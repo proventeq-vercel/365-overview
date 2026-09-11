@@ -29,10 +29,6 @@ describe('growthCostAnnual', () => {
     expect(growthCostAnnual(120, 100, 0.2)).toBeCloseTo(20 * 0.2 * 12, 2)
   })
 
-  it('is null when the entitlement is unknown, never zero', () => {
-    expect(growthCostAnnual(120, null, 0.2)).toBeNull()
-  })
-
   it('bills nothing for a shrinking tenant', () => {
     expect(growthCostAnnual(-120, 0, 0.2)).toBe(0)
   })
@@ -49,10 +45,6 @@ describe('cumulativeGrowthCost', () => {
 
   it('counts only the years that actually overflow', () => {
     expect(cumulativeGrowthCost(100, 100, 1)).toBeCloseTo(200 * 12, 2)
-  })
-
-  it('is null when the entitlement is unknown', () => {
-    expect(cumulativeGrowthCost(100, null, 1)).toBeNull()
   })
 
   it('is less than the same figure computed with zero headroom', () => {

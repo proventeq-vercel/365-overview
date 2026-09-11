@@ -11,6 +11,7 @@ export const base: StorageOverview = {
     usedPercentage: 0.5,
     headroomRatio: 0.5,
     overageBytes: 0,
+    utilization: 'healthy',
     entitlementIsMeasured: false,
     byWorkload: [],
     byTemplate: [],
@@ -23,10 +24,16 @@ export const base: StorageOverview = {
     drivesNearCap: 3,
     deletedButBilling: { bytes: 0, count: 0 },
   },
+  offenders: {
+    rows: [],
+    totalUsedBytes: 620 * GB,
+    topConsumers: [],
+    retained: { bytes: 0, count: 0 },
+  },
   growth: {
     avgMonthlyGrowthBytes: 10 * GB,
     addedInWindowBytes: 50 * GB,
-    windowMonths: 6,
+    windowMonths: 5,
     seriesIsVolatile: false,
     points: [],
     forecastStatus: 'Healthy',
@@ -58,6 +65,7 @@ export const unknownEntitlement: StorageOverview = {
     usedPercentage: null,
     headroomRatio: null,
     overageBytes: null,
+    utilization: null,
   },
   growth: {
     ...base.growth,

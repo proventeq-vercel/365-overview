@@ -82,8 +82,10 @@ describe('mock scenarios reach every caveat state', () => {
 
   it('over-entitlement: no headroom, zero runway, Critical', async () => {
     const overview = await overviewFor('over-entitlement')
-    expect(overview.sharePoint.remainingBytes).toBeLessThan(0)
+    expect(overview.sharePoint.remainingBytes).toBe(0)
+    expect(overview.sharePoint.overageBytes).toBeGreaterThan(0)
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastExhaustionDate).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Critical')
   })
 

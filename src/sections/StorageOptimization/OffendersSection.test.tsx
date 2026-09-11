@@ -49,14 +49,20 @@ const drive = (id: string, bytes: number): StorageRow => ({
   allocatedBytes: 1000,
 })
 
+const rows = [site('alpha', 300), site('beta', 700), drive('dana', 500)]
+
 const withSites = {
   ...base,
-  sharePoint: {
-    ...base.sharePoint,
-    sites: [site('alpha', 300), site('beta', 700)],
-    deletedButBilling: { bytes: 42, count: 2 },
+  offenders: {
+    rows,
+    totalUsedBytes: 1500,
+    topConsumers: [
+      { name: 'beta', value: 700 },
+      { name: 'dana', value: 500 },
+      { name: 'alpha', value: 300 },
+    ],
+    retained: { bytes: 42, count: 2 },
   },
-  oneDrive: { ...base.oneDrive, drives: [drive('dana', 500)] },
 }
 
 describe('OffendersSection', () => {
@@ -76,21 +82,20 @@ describe('OffendersSection', () => {
   it('omits the deleted panel when nothing is retained', () => {
     const none = {
       ...withSites,
-      sharePoint: { ...withSites.sharePoint, deletedButBilling: { bytes: 0, count: 0 } },
-      oneDrive: { ...withSites.oneDrive, deletedButBilling: { bytes: 0, count: 0 } },
+      offenders: { ...withSites.offenders, retained: { bytes: 0, count: 0 } },
     }
     render(<OffendersSection overview={none} />)
     expect(screen.queryByText(/deleted but still billing/i)).not.toBeInTheDocument()
   })
 
-  it('counts deleted sites and drives together in the retained total', () => {
+  it('shows the retained total the model counted', () => {
     const both = {
       ...withSites,
-      sharePoint: { ...withSites.sharePoint, deletedButBilling: { bytes: 42, count: 2 } },
-      oneDrive: { ...withSites.oneDrive, deletedButBilling: { bytes: 8, count: 1 } },
+      offenders: { ...withSites.offenders, retained: { bytes: 50, count: 3 } },
     }
     render(<OffendersSection overview={both} />)
     expect(screen.getByText(/3 sites and drives/i)).toBeInTheDocument()
+    expect(screen.getByText('50 B')).toBeInTheDocument()
   })
 
   it('renders the detail table with a last-activity column', () => {

@@ -1,3 +1,5 @@
+import type { HealthStatus } from '@/lib/thresholds'
+
 export type StoragePool = 'SharePoint' | 'OneDrive'
 
 export interface StorageRow {
@@ -42,6 +44,7 @@ export interface StorageOverview {
     usedPercentage: number | null
     headroomRatio: number | null
     overageBytes: number | null
+    utilization: HealthStatus | null
     entitlementIsMeasured: boolean
     byWorkload: Slice[]
     byTemplate: Slice[]
@@ -54,6 +57,13 @@ export interface StorageOverview {
     drives: StorageRow[]
     drivesNearCap: number
     deletedButBilling: RetainedTotal
+  }
+
+  offenders: {
+    rows: StorageRow[]
+    totalUsedBytes: number
+    topConsumers: Slice[]
+    retained: RetainedTotal
   }
 
   growth: {

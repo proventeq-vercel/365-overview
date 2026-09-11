@@ -1,6 +1,5 @@
 import { StatCard } from '@/components/StatCard'
 import { formatBytes, formatPercent } from '@/lib/format'
-import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import type { StorageOverview } from '@/types/storage'
 import { COPY } from './copy'
 import { RISK_TONE, forecastHeadline, forecastHint } from './forecastCopy'
@@ -27,17 +26,14 @@ export function KpiRow({ overview }: Props) {
               formatBytes(sharePoint.entitledBytes),
             ),
           ),
-    status:
-      sharePoint.entitledBytes === null
-        ? undefined
-        : utilizationStatus(sharePoint.usedBytes, sharePoint.entitledBytes, STORAGE_THRESHOLDS),
+    status: sharePoint.utilization ?? undefined,
   }
 
   const remaining =
     sharePoint.remainingBytes === null || sharePoint.headroomRatio === null
       ? { value: COPY.kpi.unknown, sub: COPY.kpi.remainingUnknownHint }
       : {
-          value: formatBytes(Math.max(0, sharePoint.remainingBytes)),
+          value: formatBytes(sharePoint.remainingBytes),
           sub: withEstimate(COPY.kpi.remainingHint(formatPercent(sharePoint.headroomRatio, 1))),
         }
 

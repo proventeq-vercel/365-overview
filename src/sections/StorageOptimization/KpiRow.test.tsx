@@ -106,6 +106,20 @@ describe('KpiRow', () => {
     expect(card('Cost of doing nothing')).not.toHaveTextContent(/estimated/i)
   })
 
+  it('colours the used card by the utilisation grade the model assigned', () => {
+    const attention = {
+      ...base,
+      sharePoint: { ...base.sharePoint, utilization: 'attention' as const },
+    }
+    render(<KpiRow overview={attention} />)
+    expect(card('Storage used')).toHaveTextContent('attention')
+  })
+
+  it('shows no utilisation grade on the used card without an entitlement', () => {
+    render(<KpiRow overview={unknownEntitlement} />)
+    expect(card('Storage used')).not.toHaveTextContent(/healthy|watch|attention/)
+  })
+
   it('renders exactly four cards', () => {
     const { container } = render(<KpiRow overview={base} />)
     expect(container.querySelectorAll('[data-slot="card"]')).toHaveLength(4)

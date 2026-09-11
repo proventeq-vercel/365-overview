@@ -291,7 +291,7 @@ describe('buildStorageOverview growth and cost', () => {
       inputs({ sharePointTrend: monthly([100 * GB, 110 * GB]) }),
     )
     expect(overview.caveats.historyTooShort).toBe(true)
-    expect(overview.growth.windowMonths).toBe(2)
+    expect(overview.growth.windowMonths).toBe(1)
     expect(overview.growth.forecastStatus).toBe('Unknown')
     expect(overview.growth.forecastExhaustionDate).toBeNull()
     expect(overview.growth.forecastMonthsToExhaustion).toBeNull()
@@ -301,11 +301,51 @@ describe('buildStorageOverview growth and cost', () => {
     expect(buildStorageOverview(inputs()).caveats.historyTooShort).toBe(false)
   })
 
-  it('reports zero runway for a tenant already over its entitlement', () => {
+  it('reports zero runway and no exhaustion date for a tenant already over its entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastExhaustionDate).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Critical')
     expect(overview.sharePoint.overageBytes).toBe(140 * GB)
+    expect(overview.sharePoint.remainingBytes).toBe(0)
+  })
+
+  it('treats exactly-at-entitlement as exhausted, not as a date within days', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 150 * GB }))
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastExhaustionDate).toBeNull()
+  })
+
+  it('still calls an over-entitlement tenant exhausted when the history is too short', () => {
+    const overview = buildStorageOverview(
+      inputs({ entitlementOverrideBytes: 10 * GB, sharePointTrend: monthly([140 * GB, 150 * GB]) }),
+    )
+    expect(overview.caveats.historyTooShort).toBe(true)
+    expect(overview.growth.forecastStatus).toBe('Critical')
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastExhaustionDate).toBeNull()
+  })
+
+  it('keeps an exhaustion date for a tenant that runs out within the current month', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 155 * GB }))
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
+    expect(overview.growth.forecastExhaustionDate).toBe('2026-09-02')
+    expect(overview.growth.forecastStatus).toBe('Critical')
+  })
+
+  it('ignores a zero entitlement override instead of reporting an exceeded entitlement', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 0 }))
+    const estimated = buildStorageOverview(inputs())
+    expect(overview.sharePoint.entitledBytes).toBe(estimated.sharePoint.entitledBytes)
+    expect(overview.sharePoint.entitlementIsMeasured).toBe(false)
+    expect(overview.caveats.entitlementIsEstimated).toBe(true)
+    expect(overview.growth.forecastMonthsToExhaustion).not.toBe(0)
+  })
+
+  it('grades utilisation against the entitlement, and not at all without one', () => {
+    expect(buildStorageOverview(inputs({ entitlementOverrideBytes: 160 * GB })).sharePoint.utilization).toBe('watch')
+    expect(buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB })).sharePoint.utilization).toBe('healthy')
+    expect(buildStorageOverview(unknownEntitlement()).sharePoint.utilization).toBeNull()
   })
 
   it('reports zero overage, not a negative one, inside the entitlement', () => {
@@ -322,7 +362,7 @@ describe('buildStorageOverview growth and cost', () => {
   it('reports the measured growth rate and the window it was measured over', () => {
     const overview = buildStorageOverview(inputs())
     expect(overview.growth.avgMonthlyGrowthBytes).toBe(10 * GB)
-    expect(overview.growth.windowMonths).toBe(6)
+    expect(overview.growth.windowMonths).toBe(5)
     expect(overview.growth.addedInWindowBytes).toBe(50 * GB)
   })
 
@@ -372,6 +412,30 @@ describe('buildStorageOverview growth and cost', () => {
     const overview = buildStorageOverview(inputs({ ratePerGb: 0.17, currency: 'EUR' }))
     expect(overview.cost.ratePerGb).toBe(0.17)
     expect(overview.cost.currency).toBe('EUR')
+  })
+
+  it('ranks the ten biggest sites and drives together by storage, named by URL leaf', () => {
+    const sites = Array.from({ length: 12 }, (_, i) =>
+      site({ id: `s${i}`, url: `https://c.sharepoint.com/sites/site-${i}`, storageUsedBytes: (i + 1) * GB }),
+    )
+    const drives = [drive({ url: '', ownerDisplayName: 'Dana Drive', storageUsedBytes: 100 * GB })]
+    const { offenders } = buildStorageOverview(inputs({ sites, drives }))
+    expect(offenders.rows).toHaveLength(13)
+    expect(offenders.topConsumers).toHaveLength(10)
+    expect(offenders.topConsumers[0]).toEqual({ name: 'Dana Drive', value: 100 * GB })
+    expect(offenders.topConsumers[1]).toEqual({ name: 'site-11', value: 12 * GB })
+    expect(offenders.topConsumers[9]).toEqual({ name: 'site-3', value: 4 * GB })
+  })
+
+  it('totals the offender pool across SharePoint and OneDrive and counts every retained row', () => {
+    const { offenders } = buildStorageOverview(
+      inputs({
+        sites: [site(), site({ id: 'gone', isDeleted: true, storageUsedBytes: 3 * GB })],
+        drives: [drive(), drive({ id: 'left', isDeleted: true, storageUsedBytes: 2 * GB })],
+      }),
+    )
+    expect(offenders.totalUsedBytes).toBe(210 * GB)
+    expect(offenders.retained).toEqual({ bytes: 5 * GB, count: 2 })
   })
 
   it('does not divide by zero on an empty tenant', () => {
