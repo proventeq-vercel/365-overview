@@ -3,113 +3,146 @@ import type { LicenseSku } from '@/types/reports'
 import {
   BASE_ENTITLEMENT_BYTES,
   GB_IN_BYTES,
-  SELF_SERVICE_UNIT_SENTINEL,
-  contributionGbFor,
+  ONEDRIVE_STANDALONE_BYTES_PER_LICENCE,
+  PER_LICENCE_STORAGE_BYTES,
+  STORAGE_ADD_ON_BYTES_PER_UNIT,
+  estimateEntitlement,
   estimateEntitlementBytes,
-  isSelfServiceUnitCount,
+  skuStorageBytesPerLicence,
+  unmatchedSharePointPlans,
 } from './entitlement'
 
-const sku = (skuPartNumber: string, enabled: number): LicenseSku => ({
+const sku = (skuPartNumber: string, enabled: number, servicePlans: string[]): LicenseSku => ({
   skuId: skuPartNumber,
   skuPartNumber,
   consumed: enabled,
   enabled,
   available: 0,
+  servicePlans,
 })
 
-describe('contributionGbFor', () => {
-  it('gives 10 GB to a standard enterprise SKU', () => {
-    expect(contributionGbFor('ENTERPRISEPACK')).toBe(10)
-    expect(contributionGbFor('SPE_E5')).toBe(10)
+describe('skuStorageBytesPerLicence', () => {
+  it('grants 10 GiB for a SKU carrying a full SharePoint plan', () => {
+    expect(skuStorageBytesPerLicence(['SHAREPOINTENTERPRISE', 'SHAREPOINTWAC'])).toBe(
+      PER_LICENCE_STORAGE_BYTES,
+    )
+    expect(skuStorageBytesPerLicence(['SHAREPOINTSTANDARD'])).toBe(PER_LICENCE_STORAGE_BYTES)
   })
 
-  it('gives 0 GB to frontline SKUs, which add no per-licence storage', () => {
-    expect(contributionGbFor('SPE_F1')).toBe(0)
-    expect(contributionGbFor('DESKLESSPACK')).toBe(0)
-    expect(contributionGbFor('Microsoft_365_F3')).toBe(0)
+  it('grants 10 GiB for Visio and Project companions that carry no SHAREPOINT plan', () => {
+    expect(skuStorageBytesPerLicence(['VISIOCLIENT', 'ONEDRIVE_BASIC'])).toBe(
+      PER_LICENCE_STORAGE_BYTES,
+    )
+    expect(skuStorageBytesPerLicence(['PROJECT_PROFESSIONAL'])).toBe(PER_LICENCE_STORAGE_BYTES)
   })
 
-  it('gives 0.5 GB to OneDrive standalone SKUs', () => {
-    expect(contributionGbFor('WACONEDRIVESTANDARD')).toBe(0.5)
-    expect(contributionGbFor('ONEDRIVESTANDARD')).toBe(0.5)
+  it('grants 1 GiB per unit for the Extra File Storage add-on, even beside a full plan', () => {
+    expect(skuStorageBytesPerLicence(['SHAREPOINTSTORAGE', 'SHAREPOINTENTERPRISE'])).toBe(
+      STORAGE_ADD_ON_BYTES_PER_UNIT,
+    )
   })
 
-  it('is case-insensitive', () => {
-    expect(contributionGbFor('spe_f1')).toBe(0)
-    expect(contributionGbFor('waconedrivestandard')).toBe(0.5)
+  it('grants 0.5 GiB for OneDrive standalone plans', () => {
+    expect(skuStorageBytesPerLicence(['ONEDRIVESTANDARD'])).toBe(
+      ONEDRIVE_STANDALONE_BYTES_PER_LICENCE,
+    )
+    expect(skuStorageBytesPerLicence(['WACONEDRIVEENTERPRISE'])).toBe(
+      ONEDRIVE_STANDALONE_BYTES_PER_LICENCE,
+    )
   })
 
-  it('falls back to the 10 GB default for an unrecognised SKU', () => {
-    expect(contributionGbFor('SOME_SKU_MICROSOFT_HAS_NOT_SHIPPED_YET')).toBe(10)
+  it('grants nothing for Office for the Web, frontline and OneDrive Basic plans', () => {
+    expect(skuStorageBytesPerLicence(['SHAREPOINTWAC'])).toBe(0)
+    expect(skuStorageBytesPerLicence(['SHAREPOINTDESKLESS'])).toBe(0)
+    expect(skuStorageBytesPerLicence(['ONEDRIVE_BASIC_P2', 'SHAREPOINTWAC'])).toBe(0)
+    expect(skuStorageBytesPerLicence([])).toBe(0)
+  })
+
+  it('is case-insensitive and ignores blank plan names', () => {
+    expect(skuStorageBytesPerLicence(['sharepointenterprise', ' '])).toBe(
+      PER_LICENCE_STORAGE_BYTES,
+    )
   })
 })
 
-describe('estimateEntitlementBytes', () => {
+describe('unmatchedSharePointPlans', () => {
+  it('surfaces SHAREPOINT-prefixed plans no rule knows about', () => {
+    expect(
+      unmatchedSharePointPlans(['SHAREPOINTENTERPRISE_A365', 'SHAREPOINTWAC', 'SHAREPOINT_PROJECT']),
+    ).toEqual(['SHAREPOINTENTERPRISE_A365', 'SHAREPOINT_PROJECT'])
+  })
+
+  it('does not report known plans or non-SharePoint plans', () => {
+    expect(unmatchedSharePointPlans(['SHAREPOINTENTERPRISE', 'SHAREPOINTSTORAGE', 'EXCHANGE_S_ENTERPRISE'])).toEqual([])
+  })
+})
+
+describe('estimateEntitlement', () => {
   it('is the 1 TiB base when no licences are purchased', () => {
     expect(estimateEntitlementBytes([])).toBe(BASE_ENTITLEMENT_BYTES)
   })
 
-  it('adds 10 GB per purchased licence, not per consumed licence', () => {
-    const skus = [{ ...sku('ENTERPRISEPACK', 100), consumed: 40 }]
-    expect(estimateEntitlementBytes(skus)).toBe(
-      BASE_ENTITLEMENT_BYTES + 100 * 10 * GB_IN_BYTES,
-    )
+  it('multiplies by purchased units, not consumed units', () => {
+    const skus = [{ ...sku('SPE_E5', 100, ['SHAREPOINTENTERPRISE']), consumed: 40 }]
+    expect(estimateEntitlementBytes(skus)).toBe(BASE_ENTITLEMENT_BYTES + 100 * 10 * GB_IN_BYTES)
   })
 
-  it('sums mixed SKUs at their own rates', () => {
-    const skus = [
-      sku('ENTERPRISEPACK', 100),
-      sku('SPE_F1', 500),
-      sku('WACONEDRIVESTANDARD', 200),
-    ]
-    expect(estimateEntitlementBytes(skus)).toBe(
-      BASE_ENTITLEMENT_BYTES + 1100 * GB_IN_BYTES,
-    )
+  it('skips SKUs with no enabled units, including their unmatched plans', () => {
+    const estimate = estimateEntitlement([
+      sku('DYN365_SANDBOX', 0, ['SHAREPOINTENTERPRISE', 'SHAREPOINT_DYN365']),
+    ])
+    expect(estimate.entitlementBytes).toBe(BASE_ENTITLEMENT_BYTES)
+    expect(estimate.unmatchedPlans).toEqual([])
   })
 
   it('uses binary GB, matching Microsoft storage accounting', () => {
     expect(GB_IN_BYTES).toBe(1_073_741_824)
     expect(BASE_ENTITLEMENT_BYTES).toBe(1024 * GB_IN_BYTES)
   })
-})
 
-describe('isSelfServiceUnitCount', () => {
-  it('recognises the sentinel seat counts Microsoft reports for free plans', () => {
-    expect(isSelfServiceUnitCount(10_000)).toBe(true)
-    expect(isSelfServiceUnitCount(1_000_000)).toBe(true)
-    expect(isSelfServiceUnitCount(10_000_000)).toBe(true)
-  })
-
-  it('leaves a purchased seat count alone', () => {
-    expect(isSelfServiceUnitCount(200)).toBe(false)
-    expect(isSelfServiceUnitCount(SELF_SERVICE_UNIT_SENTINEL - 1)).toBe(false)
+  it('collects unmatched SharePoint plans across SKUs, deduplicated and sorted', () => {
+    const skus = [
+      sku('A', 1, ['SHAREPOINT_PROJECT']),
+      sku('B', 1, ['SHAREPOINTENTERPRISE_A365', 'SHAREPOINT_PROJECT']),
+    ]
+    expect(estimateEntitlement(skus).unmatchedPlans).toEqual([
+      'SHAREPOINTENTERPRISE_A365',
+      'SHAREPOINT_PROJECT',
+    ])
   })
 })
 
-describe('estimateEntitlementBytes on a real tenant shape', () => {
+describe('estimateEntitlement on the real tenant shape', () => {
   const realTenantSkus: LicenseSku[] = [
-    sku('MCOPSTNC', 10_000_000),
-    sku('STREAM', 1_000_000),
-    sku('FORMS_PRO', 1_000_000),
-    sku('POWER_BI_STANDARD', 1_000_000),
-    sku('FLOW_FREE', 10_000),
-    sku('POWERAPPS_VIRAL', 10_000),
-    sku('Microsoft_Teams_Enterprise_New', 225),
-    sku('Microsoft_365_E5_(no_Teams)', 200),
-    sku('Microsoft_365_Copilot', 80),
-    sku('VISIOCLIENT', 15),
+    sku('MCOPSTNC', 10_000_000, []),
+    sku('STREAM', 1_000_000, []),
+    sku('FORMS_PRO', 1_000_000, []),
+    sku('POWER_BI_STANDARD', 1_000_000, []),
+    sku('FLOW_FREE', 10_000, []),
+    sku('POWERAPPS_VIRAL', 10_000, []),
+    sku('Microsoft_Teams_Enterprise_New', 225, ['ONEDRIVE_BASIC_P2', 'SHAREPOINTWAC']),
+    sku('Microsoft_365_E5_(no_Teams)', 200, ['SHAREPOINTENTERPRISE', 'SHAREPOINTWAC']),
+    sku('Microsoft_365_Copilot', 80, ['M365_COPILOT_SHAREPOINT']),
+    sku('PROJECTPREMIUM', 40, ['PROJECT_PROFESSIONAL', 'SHAREPOINTWAC', 'SHAREPOINT_PROJECT', 'SHAREPOINTENTERPRISE']),
+    sku('VISIOCLIENT', 15, ['VISIOCLIENT', 'ONEDRIVE_BASIC']),
+    sku('MICROSOFT_AGENT_365_TIER_3', 25, ['ONEDRIVE_BASIC_P2', 'SHAREPOINTENTERPRISE_A365', 'SHAREPOINTWAC']),
   ]
 
-  it('ignores free and viral SKUs reported with a sentinel seat count', () => {
-    const purchasedSeats = 225 + 200 + 80 + 15
+  it('counts only the 255 seats that carry a storage-granting plan', () => {
     expect(estimateEntitlementBytes(realTenantSkus)).toBe(
-      BASE_ENTITLEMENT_BYTES + purchasedSeats * 10 * GB_IN_BYTES,
+      BASE_ENTITLEMENT_BYTES + (200 + 40 + 15) * 10 * GB_IN_BYTES,
     )
   })
 
-  it('stays inside a plausible range instead of reporting petabytes', () => {
+  it('ignores sentinel-count free SKUs by their plans alone, with no seat-count heuristic', () => {
     const tib = estimateEntitlementBytes(realTenantSkus) / (1024 * GB_IN_BYTES)
-    expect(tib).toBeLessThan(100)
-    expect(tib).toBeGreaterThan(1)
+    expect(tib).toBeCloseTo(3.49, 2)
+  })
+
+  it('reports the two SharePoint plans the allowlist has not learned about', () => {
+    expect(estimateEntitlement(realTenantSkus).unmatchedPlans).toEqual([
+      'SHAREPOINTENTERPRISE_A365',
+      'SHAREPOINT_PROJECT',
+    ])
   })
 })

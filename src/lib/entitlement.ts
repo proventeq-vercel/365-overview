@@ -3,50 +3,84 @@ import type { LicenseSku } from '@/types/reports'
 export const GB_IN_BYTES = 1_073_741_824
 
 export const BASE_ENTITLEMENT_BYTES = 1024 * GB_IN_BYTES
+export const PER_LICENCE_STORAGE_BYTES = 10 * GB_IN_BYTES
+export const STORAGE_ADD_ON_BYTES_PER_UNIT = GB_IN_BYTES
+export const ONEDRIVE_STANDALONE_BYTES_PER_LICENCE = GB_IN_BYTES / 2
 
-const DEFAULT_CONTRIBUTION_GB = 10
-const ONEDRIVE_STANDALONE_CONTRIBUTION_GB = 0.5
-const FRONTLINE_CONTRIBUTION_GB = 0
+const STORAGE_ADD_ON_PLAN = 'SHAREPOINTSTORAGE'
 
-const FRONTLINE_MARKERS = [
-  'SPE_F1',
-  'SPE_F5',
-  'DESKLESS',
-  'M365_F1',
-  'F1_COMM',
-  '_F3',
-  'FIRSTLINE',
-]
-export const SELF_SERVICE_UNIT_SENTINEL = 10_000
+const FULL_STORAGE_PLANS = new Set([
+  'SHAREPOINTSTANDARD',
+  'SHAREPOINTENTERPRISE',
+  'SHAREPOINTENTERPRISE_EDU',
+  'SHAREPOINTSTANDARD_EDU',
+  'SHAREPOINTENTERPRISE_MIDMARKET',
+  'SHAREPOINTENTERPRISE_GOV',
+  'SHAREPOINTSTANDARD_GOV',
+  'VISIOCLIENT',
+  'VISIO_CLIENT_SUBSCRIPTION',
+  'VISIOONLINE_PLAN1',
+  'PROJECT_PROFESSIONAL',
+  'PROJECT_PREMIUM',
+  'PROJECTPROFESSIONAL',
+  'PROJECTPREMIUM',
+])
 
-const ONEDRIVE_STANDALONE_MARKERS = [
+const ONEDRIVE_STANDALONE_PLANS = new Set([
   'ONEDRIVESTANDARD',
   'ONEDRIVEENTERPRISE',
-  'ONEDRIVEBASIC',
-]
+  'WACONEDRIVESTANDARD',
+  'WACONEDRIVEENTERPRISE',
+])
 
-export function contributionGbFor(skuPartNumber: string): number {
-  const sku = skuPartNumber.toUpperCase()
-  if (FRONTLINE_MARKERS.some((marker) => sku.includes(marker))) {
-    return FRONTLINE_CONTRIBUTION_GB
-  }
-  if (ONEDRIVE_STANDALONE_MARKERS.some((marker) => sku.includes(marker))) {
-    return ONEDRIVE_STANDALONE_CONTRIBUTION_GB
-  }
-  return DEFAULT_CONTRIBUTION_GB
+const KNOWN_NON_CONTRIBUTING_PLANS = new Set([
+  'SHAREPOINTWAC',
+  'SHAREPOINTWAC_EDU',
+  'SHAREPOINTWAC_DEVELOPER',
+  'SHAREPOINTWAC_GOV',
+  'SHAREPOINTDESKLESS',
+  'SHAREPOINTDESKLESS_GOV',
+  'SHAREPOINTLITE',
+])
+
+export interface EntitlementEstimate {
+  entitlementBytes: number
+  unmatchedPlans: string[]
 }
 
-export function isSelfServiceUnitCount(enabled: number): boolean {
-  return enabled >= SELF_SERVICE_UNIT_SENTINEL
+export function skuStorageBytesPerLicence(servicePlans: string[]): number {
+  const plans = servicePlans.map((plan) => plan.trim().toUpperCase()).filter((plan) => plan !== '')
+  if (plans.includes(STORAGE_ADD_ON_PLAN)) return STORAGE_ADD_ON_BYTES_PER_UNIT
+  if (plans.some((plan) => FULL_STORAGE_PLANS.has(plan))) return PER_LICENCE_STORAGE_BYTES
+  if (plans.some((plan) => ONEDRIVE_STANDALONE_PLANS.has(plan))) {
+    return ONEDRIVE_STANDALONE_BYTES_PER_LICENCE
+  }
+  return 0
+}
+
+export function unmatchedSharePointPlans(servicePlans: string[]): string[] {
+  return servicePlans
+    .map((plan) => plan.trim().toUpperCase())
+    .filter(
+      (plan) =>
+        plan.startsWith('SHAREPOINT') &&
+        plan !== STORAGE_ADD_ON_PLAN &&
+        !FULL_STORAGE_PLANS.has(plan) &&
+        !KNOWN_NON_CONTRIBUTING_PLANS.has(plan),
+    )
+}
+
+export function estimateEntitlement(skus: LicenseSku[]): EntitlementEstimate {
+  const unmatched = new Set<string>()
+  let entitlementBytes = BASE_ENTITLEMENT_BYTES
+  for (const sku of skus) {
+    if (sku.enabled <= 0) continue
+    entitlementBytes += skuStorageBytesPerLicence(sku.servicePlans) * sku.enabled
+    for (const plan of unmatchedSharePointPlans(sku.servicePlans)) unmatched.add(plan)
+  }
+  return { entitlementBytes, unmatchedPlans: [...unmatched].sort() }
 }
 
 export function estimateEntitlementBytes(skus: LicenseSku[]): number {
-  const perLicenceGb = skus.reduce(
-    (sum, sku) =>
-      isSelfServiceUnitCount(sku.enabled)
-        ? sum
-        : sum + sku.enabled * contributionGbFor(sku.skuPartNumber),
-    0,
-  )
-  return BASE_ENTITLEMENT_BYTES + perLicenceGb * GB_IN_BYTES
+  return estimateEntitlement(skus).entitlementBytes
 }

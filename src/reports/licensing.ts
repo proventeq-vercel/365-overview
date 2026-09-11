@@ -5,6 +5,7 @@ export interface RawSku {
   skuPartNumber: string
   consumedUnits: number
   prepaidUnits: { enabled: number }
+  servicePlans?: { servicePlanName: string }[]
 }
 
 export function parseSubscribedSkus(raw: RawSku[]): LicenseSku[] {
@@ -14,5 +15,6 @@ export function parseSubscribedSkus(raw: RawSku[]): LicenseSku[] {
     consumed: s.consumedUnits,
     enabled: s.prepaidUnits.enabled,
     available: s.prepaidUnits.enabled - s.consumedUnits,
+    servicePlans: (s.servicePlans ?? []).map((plan) => plan.servicePlanName),
   }))
 }

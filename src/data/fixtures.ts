@@ -115,15 +115,37 @@ function generateDrives(count: number, concealed = false): StorageRow[] {
 }
 
 const licenses: LicenseSku[] = [
-  { skuId: 'sku-e5', skuPartNumber: 'SPE_E5', consumed: 184, enabled: 200, available: 16 },
-  { skuId: 'sku-e3', skuPartNumber: 'SPE_E3', consumed: 412, enabled: 500, available: 88 },
-  { skuId: 'sku-f3', skuPartNumber: 'SPE_F3', consumed: 95, enabled: 150, available: 55 },
+  {
+    skuId: 'sku-e5',
+    skuPartNumber: 'SPE_E5',
+    consumed: 184,
+    enabled: 200,
+    available: 16,
+    servicePlans: ['SHAREPOINTENTERPRISE', 'SHAREPOINTWAC', 'EXCHANGE_S_ENTERPRISE'],
+  },
+  {
+    skuId: 'sku-e3',
+    skuPartNumber: 'SPE_E3',
+    consumed: 412,
+    enabled: 500,
+    available: 88,
+    servicePlans: ['SHAREPOINTENTERPRISE', 'SHAREPOINTWAC', 'EXCHANGE_S_ENTERPRISE'],
+  },
+  {
+    skuId: 'sku-f3',
+    skuPartNumber: 'SPE_F3',
+    consumed: 95,
+    enabled: 150,
+    available: 55,
+    servicePlans: ['SHAREPOINTDESKLESS', 'SHAREPOINTWAC'],
+  },
   {
     skuId: 'sku-flow',
     skuPartNumber: 'FLOW_FREE',
     consumed: 116,
     enabled: 10_000,
     available: 9884,
+    servicePlans: ['FLOW_P2_VIRAL'],
   },
 ]
 

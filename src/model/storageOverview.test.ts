@@ -44,6 +44,7 @@ const sku = (partNumber: string, enabled: number): LicenseSku => ({
   consumed: enabled,
   enabled,
   available: 0,
+  servicePlans: ['SHAREPOINTENTERPRISE', 'SHAREPOINTWAC'],
 })
 
 const inputs = (over: Partial<OverviewInputs> = {}): OverviewInputs => ({

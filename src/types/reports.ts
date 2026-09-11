@@ -25,6 +25,7 @@ export interface LicenseSku {
   consumed: number;
   enabled: number;
   available: number;
+  servicePlans: string[];
 }
 
 export interface OrgInfo {
