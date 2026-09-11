@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { ErrorState } from '@/components/ErrorState'
+import { CaveatBanner } from '@/components/CaveatBanner'
 import { SkeletonCard } from '@/components/SkeletonCard'
+import { Button } from '@/components/ui/button'
 import { useOrg, useStorageOverview } from '@/hooks/useStorageOverview'
 import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
+import { AccessFailure } from './AccessFailure'
 import { DistributionSection } from './DistributionSection'
 import { GrowthSection } from './GrowthSection'
 import { KpiRow } from './KpiRow'
@@ -12,6 +14,7 @@ import { COPY } from './copy'
 
 export function StorageOptimization() {
   const [settings, setSettings] = useState<ReportSettings>(() => loadSettings())
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const { data, error, isPending } = useStorageOverview(settings)
   const org = useOrg()
 
@@ -23,7 +26,7 @@ export function StorageOptimization() {
   if (error) {
     return (
       <div className="flex flex-col gap-6">
-        <ErrorState error={error} />
+        <AccessFailure error={error} />
       </div>
     )
   }
@@ -45,7 +48,26 @@ export function StorageOptimization() {
         tenantName={org.data?.displayName ?? 'Your tenant'}
         settings={settings}
         onSettingsChange={applySettings}
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
+      <div className="flex flex-col gap-3">
+        {data.caveats.entitlementIsEstimated && (
+          <CaveatBanner
+            tone="warning"
+            action={
+              <Button type="button" variant="outline" onClick={() => setSettingsOpen(true)}>
+                Enter the real figure
+              </Button>
+            }
+          >
+            {COPY.estimatedQuotaNote}
+          </CaveatBanner>
+        )}
+        {data.caveats.namesAreConcealed && (
+          <CaveatBanner tone="info">{COPY.concealedNamesNote}</CaveatBanner>
+        )}
+      </div>
       <KpiRow overview={data} />
       <DistributionSection overview={data} />
       <GrowthSection overview={data} />

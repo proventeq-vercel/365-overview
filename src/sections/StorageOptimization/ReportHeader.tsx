@@ -12,10 +12,21 @@ interface Props {
   tenantName: string
   settings: ReportSettings
   onSettingsChange: (settings: ReportSettings) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ReportHeader({ overview, tenantName, settings, onSettingsChange }: Props) {
-  const [open, setOpen] = useState(false)
+export function ReportHeader({
+  overview,
+  tenantName,
+  settings,
+  onSettingsChange,
+  open: openProp,
+  onOpenChange,
+}: Props) {
+  const [openState, setOpenState] = useState(false)
+  const open = openProp ?? openState
+  const setOpen = onOpenChange ?? setOpenState
   const rateId = useId()
   const currencyId = useId()
   const entitlementId = useId()
@@ -38,7 +49,7 @@ export function ReportHeader({ overview, tenantName, settings, onSettingsChange 
           type="button"
           variant="outline"
           aria-expanded={open}
-          onClick={() => setOpen((wasOpen) => !wasOpen)}
+          onClick={() => setOpen(!open)}
         >
           Settings
         </Button>
