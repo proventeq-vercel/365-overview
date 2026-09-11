@@ -45,6 +45,7 @@ export function OffendersSection({ overview }: Props) {
     <SectionShell
       title="Main offenders"
       subtitle="The sites and drives driving the most storage"
+      className="delay-200"
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

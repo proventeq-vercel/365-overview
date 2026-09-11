@@ -92,6 +92,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+@utility enter-rise {
+  --tw-enter-opacity: 0;
+  --tw-enter-translate-y: 6px;
+  animation: enter 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
 /* Auth screens — consumed by src/auth/* (cannot be Tailwind-classed there) */
 .error-state { background:#fff; border:1px solid #e3e6ea; border-left:3px solid #f98d50; border-radius:12px; padding:1.1rem 1.25rem; }
 .error-state__message { font-weight:600; color:#0c2340; }

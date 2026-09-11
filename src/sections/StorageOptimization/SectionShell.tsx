@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { CHART_COLORS } from '@/components/charts/chartTheme'
+import { cn } from '@/lib/utils'
 
 export function SectionShell({
   title,
   subtitle,
   children,
+  className,
 }: {
   title: string
   subtitle: string
   children: ReactNode
+  className?: string
 }) {
   return (
-    <section className="flex flex-col gap-4">
+    <section className={cn('enter-rise flex flex-col gap-4', className)}>
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-bold text-ink">{title}</h2>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
@@ -24,8 +27,8 @@ export function SectionShell({
 
 export function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card className="border-hairline shadow-none">
-      <CardContent className="flex flex-col gap-3 p-5">
+    <Card className="h-full border-hairline shadow-none">
+      <CardContent className="flex flex-1 flex-col gap-3 p-5">
         <h3 className="text-sm font-semibold text-ink-soft">{title}</h3>
         {children}
       </CardContent>
@@ -68,7 +71,11 @@ export function SliceLegend({
 }
 
 export function MiniStatRow({ children }: { children: ReactNode }) {
-  return <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">{children}</dl>
+  return (
+    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(7rem,1fr))]">
+      {children}
+    </dl>
+  )
 }
 
 export function MiniStat({ label, value }: { label: string; value: string }) {

@@ -20,6 +20,7 @@ export function DistributionSection({ overview }: Props) {
     <SectionShell
       title="Current storage distribution"
       subtitle="Where storage sits today — quota usage, workload split, and which site types drive the volume"
+      className="delay-75"
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title={COPY.quota.title}>

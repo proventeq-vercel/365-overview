@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { CaveatBanner } from '@/components/CaveatBanner'
-import { SkeletonCard } from '@/components/SkeletonCard'
 import { Button } from '@/components/ui/button'
 import { useOrg, useStorageOverview } from '@/hooks/useStorageOverview'
 import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
@@ -10,6 +9,7 @@ import { GrowthSection } from './GrowthSection'
 import { KpiRow } from './KpiRow'
 import { OffendersSection } from './OffendersSection'
 import { ReportHeader } from './ReportHeader'
+import { ReportSkeleton } from './ReportSkeleton'
 import { COPY } from './copy'
 
 export function StorageOptimization() {
@@ -32,13 +32,7 @@ export function StorageOptimization() {
   }
 
   if (isPending || !data) {
-    return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonCard key={i} />
-        ))}
-      </div>
-    )
+    return <ReportSkeleton />
   }
 
   return (
@@ -51,7 +45,7 @@ export function StorageOptimization() {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
       />
-      <div className="flex flex-col gap-3">
+      <div className="enter-rise flex flex-col gap-3 empty:hidden">
         {data.caveats.entitlementIsEstimated && (
           <CaveatBanner
             tone="warning"
@@ -72,7 +66,7 @@ export function StorageOptimization() {
       <DistributionSection overview={data} />
       <GrowthSection overview={data} />
       <OffendersSection overview={data} />
-      <footer className="rounded-lg border border-hairline bg-surface px-5 py-4 text-sm text-muted-foreground">
+      <footer className="enter-rise delay-300 rounded-lg border border-hairline bg-surface px-5 py-4 text-sm text-muted-foreground">
         {COPY.reportFooter}
       </footer>
     </div>

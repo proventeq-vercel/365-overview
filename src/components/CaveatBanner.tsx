@@ -21,7 +21,7 @@ export function CaveatBanner({ tone, action, children }: Props) {
         TONE_CLASS[tone],
       )}
     >
-      <p className="min-w-0 flex-1 text-sm text-ink">{children}</p>
+      <p className="min-w-0 flex-1 basis-64 text-sm text-ink">{children}</p>
       {action}
     </div>
   )

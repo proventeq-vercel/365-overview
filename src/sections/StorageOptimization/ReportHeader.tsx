@@ -39,8 +39,8 @@ export function ReportHeader({
 
   return (
     <header className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h1 className="text-2xl font-bold text-ink">{tenantName}</h1>
           <p className="text-sm text-muted-foreground">
             Data as of {overview.reportRefreshDate}. {COPY.reportLagNote}
@@ -59,7 +59,7 @@ export function ReportHeader({
       </div>
 
       {open && (
-        <div className="grid gap-4 rounded-lg border border-hairline bg-surface p-4 sm:grid-cols-3">
+        <div className="enter-rise grid gap-4 rounded-lg border border-hairline bg-surface p-4 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm" htmlFor={rateId}>
             <span className="font-medium text-ink">Rate per GB per month</span>
             <input

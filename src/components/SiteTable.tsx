@@ -202,7 +202,7 @@ export function SiteTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="flex-1">
           <span className="sr-only">Search {label}</span>
           <input
@@ -211,7 +211,7 @@ export function SiteTable({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or owner"
             aria-label={`Search ${label}`}
-            className="w-full max-w-sm rounded-md border border-hairline bg-transparent px-3 py-2 text-sm text-ink outline-none focus:border-ink-soft"
+            className="w-full max-w-sm rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-ink outline-none transition-colors duration-150 ease-out focus:border-brand"
           />
         </label>
         <span className="text-sm text-muted-foreground tabular">
@@ -219,57 +219,63 @@ export function SiteTable({
         </span>
       </div>
 
-      <div role="table" aria-label={label} className="rounded-lg border border-hairline">
-        <div
-          role="row"
-          className="grid items-center gap-2 border-b border-hairline px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-          style={{ gridTemplateColumns: gridCols }}
-        >
-          {columns.map((key) =>
-            COLUMNS[key].sortable ? (
-              <button
-                key={key}
-                type="button"
-                role="columnheader"
-                onClick={() => toggleSort(key)}
-                className="flex items-center text-left uppercase tracking-wide hover:text-ink"
-              >
-                {COLUMNS[key].label}
-                {sortIndicator(key)}
-              </button>
-            ) : (
-              <span key={key} role="columnheader">
-                {COLUMNS[key].label}
-              </span>
-            ),
-          )}
-        </div>
-
-        <div ref={parentRef} style={{ height: 480, overflow: 'auto' }}>
+      <div
+        role="table"
+        aria-label={label}
+        className="overflow-x-auto rounded-lg border border-hairline bg-surface"
+      >
+        <div className="min-w-[56rem]">
           <div
-            style={{
-              height: virtualizer.getTotalSize(),
-              position: 'relative',
-              width: '100%',
-            }}
+            role="row"
+            className="grid items-center gap-2 border-b border-hairline bg-muted/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+            style={{ gridTemplateColumns: gridCols }}
           >
-            {virtualizer.getVirtualItems().map((item) => {
-              const row = visible[item.index]
-              return (
-                <div
-                  key={row.id}
-                  role="row"
-                  className="absolute left-0 top-0 grid w-full items-center gap-2 border-b border-hairline px-4 text-sm"
-                  style={{
-                    height: item.size,
-                    transform: `translateY(${item.start}px)`,
-                    gridTemplateColumns: gridCols,
-                  }}
+            {columns.map((key) =>
+              COLUMNS[key].sortable ? (
+                <button
+                  key={key}
+                  type="button"
+                  role="columnheader"
+                  onClick={() => toggleSort(key)}
+                  className="flex items-center text-left uppercase tracking-wide transition-colors duration-150 ease-out hover:text-ink"
                 >
-                  {columns.map((key) => renderCell(key, row))}
-                </div>
-              )
-            })}
+                  {COLUMNS[key].label}
+                  {sortIndicator(key)}
+                </button>
+              ) : (
+                <span key={key} role="columnheader">
+                  {COLUMNS[key].label}
+                </span>
+              ),
+            )}
+          </div>
+
+          <div ref={parentRef} style={{ height: 480, overflow: 'auto' }}>
+            <div
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: 'relative',
+                width: '100%',
+              }}
+            >
+              {virtualizer.getVirtualItems().map((item) => {
+                const row = visible[item.index]
+                return (
+                  <div
+                    key={row.id}
+                    role="row"
+                    className="absolute left-0 top-0 grid w-full items-center gap-2 border-b border-hairline px-4 text-sm transition-colors duration-150 ease-out hover:bg-muted/40"
+                    style={{
+                      height: item.size,
+                      transform: `translateY(${item.start}px)`,
+                      gridTemplateColumns: gridCols,
+                    }}
+                  >
+                    {columns.map((key) => renderCell(key, row))}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>

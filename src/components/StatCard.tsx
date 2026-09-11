@@ -14,8 +14,8 @@ interface Props {
 
 export function StatCard({ label, value, sub, delta, status }: Props) {
   return (
-    <Card className="border-hairline shadow-none">
-      <CardContent className="flex flex-col gap-1 p-5">
+    <Card className="h-full border-hairline shadow-none">
+      <CardContent className="flex flex-1 flex-col gap-1 p-5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
           {status && <span className="size-2.5 rounded-full" style={{ background: STATUS_COLORS[status] }} aria-hidden="true" />}

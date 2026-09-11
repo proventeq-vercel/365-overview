@@ -33,6 +33,7 @@ export function GrowthSection({ overview }: Props) {
     <SectionShell
       title="Future state & growth impact"
       subtitle="Where storage is heading at the current growth rate — and what it costs if nothing changes"
+      className="delay-150"
     >
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="lg:col-span-7">
@@ -46,6 +47,7 @@ export function GrowthSection({ overview }: Props) {
               ]}
               valueFormatter={formatBytes}
               ariaLabel={COPY.growth.trendTitle}
+              height={300}
             />
             <MiniStatRow>
               <MiniStat

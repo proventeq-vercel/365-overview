@@ -88,7 +88,8 @@ describe('StorageOptimization report', () => {
 
   it('shows skeletons before the data arrives, never a zero-filled report', () => {
     const { container } = renderReport()
-    expect(container.querySelectorAll('[data-slot="card"]').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('[data-slot="card"]').length).toBeGreaterThan(4)
+    expect(screen.getByLabelText('Loading report')).toHaveAttribute('aria-busy', 'true')
     expect(screen.queryByRole('heading', { name: /main offenders/i })).not.toBeInTheDocument()
   })
 
