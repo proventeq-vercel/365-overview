@@ -17,6 +17,16 @@ describe('consentErrorFor', () => {
     )
   })
 
+  it('recognises the MSAL consent failure that never becomes an ApiError', () => {
+    expect(
+      consentErrorFor(
+        Object.assign(new Error('AADSTS65001: not consented'), {
+          name: 'InteractionRequiredAuthError',
+        }),
+      ),
+    ).toBe('consent')
+  })
+
   it('recognises a role failure as distinct from consent', () => {
     expect(consentErrorFor(new ApiError(403, 'Forbidden'))).toBe('permission')
   })

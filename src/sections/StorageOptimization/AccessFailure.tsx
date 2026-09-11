@@ -1,16 +1,6 @@
 import { ErrorState } from '@/components/ErrorState'
-import { getConfig } from '@/config/appConfig'
+import { adminConsentUrl } from '@/config/adminConsent'
 import { consentErrorFor } from './consentError'
-
-function adminConsentUrl(): string | null {
-  try {
-    const clientId = getConfig().VITE_CLIENT_ID
-    if (!clientId) return null
-    return `https://login.microsoftonline.com/organizations/adminconsent?client_id=${clientId}`
-  } catch {
-    return null
-  }
-}
 
 export function AccessFailure({ error }: { error: unknown }) {
   const kind = consentErrorFor(error)

@@ -15,7 +15,12 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 ## Architecture (layers)
 
 - `src/auth/` — MSAL (getMsalInstance singleton, redirect login, token acquire).
-  One token audience: `GRAPH_SCOPES` only.
+  One token audience: `GRAPH_SCOPES` only. `MsalAuthHandler` keeps the auth
+  error **object** and `AuthErrorScreen` turns `AADSTS65001` into the
+  admin-consent screen — the consent round-trip happens on the first
+  `acquireTokenRedirect`, before any Graph call, so `AccessFailure` alone
+  would never see it. Shared byte-for-byte with the `365-oversharing` sibling
+  (`src/auth/*`, `src/clients/*`, `src/config/*`); fix there and here together.
 - `src/clients/` — `graphClient` fetch wrapper + `apiError`.
 - `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
