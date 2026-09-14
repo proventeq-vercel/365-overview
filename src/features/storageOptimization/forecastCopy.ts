@@ -3,7 +3,7 @@ import type { HealthStatus } from '@/lib/thresholds'
 import type { ForecastStatus, StorageOverview } from '@/types/storage'
 import type { TranslateFn } from '@/hooks/useTranslation'
 
-export const FORECAST_HORIZON_YEARS = 10
+const FORECAST_HORIZON_YEARS = 10
 
 export const RISK_TONE: Record<ForecastStatus, HealthStatus | undefined> = {
   Healthy: 'healthy',
