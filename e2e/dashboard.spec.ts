@@ -127,3 +127,45 @@ test.describe('before any script runs', () => {
     expect(logo.width).not.toBe('0px')
   })
 })
+
+test.describe('modes from the URL', () => {
+  const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
+
+  test('?features= enables reports for the tab, ?modes=reset forgets them', async ({ page }) => {
+    await page.goto(`/?features=${BOTH}`)
+    await reportLoaded(page)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
+
+    await page.goto('/onedrive-usage')
+    await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
+
+    await page.goto('/?modes=reset')
+    await reportLoaded(page)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden()
+  })
+
+  test('?scenario= switches the fixture tenant for the tab', async ({ page }) => {
+    await page.goto('/?scenario=concealed')
+    await reportLoaded(page)
+    await expect(page.getByText(/appear as hashes/i)).toBeVisible()
+    await page.goto('/?scenario=')
+    await reportLoaded(page)
+    await expect(page.getByText(/appear as hashes/i)).toHaveCount(0)
+  })
+
+  test('a new tab starts from the env again', async ({ browser }) => {
+    const first = await browser.newContext()
+    const page = await first.newPage()
+    await page.goto(`/?features=${BOTH}`)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
+    await first.close()
+
+    const second = await browser.newContext()
+    const fresh = await second.newPage()
+    await fresh.goto('/')
+    await reportLoaded(fresh)
+    await expect(fresh.getByRole('button', { name: 'Open menu' })).toBeHidden()
+    await second.close()
+  })
+})

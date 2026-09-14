@@ -115,6 +115,27 @@ link to grant it.
 
 ---
 
+## Modes: env by default, URL per tab, lockable
+
+The app has three runtime switches — which reports are enabled, whether it runs on
+fixture data, and which fixture tenant. The env (`VITE_FEATURES`, `VITE_USE_MOCK`,
+`VITE_MOCK_SCENARIO`) is the default, and the deployed default is the Storage
+Optimisation report alone, live data, no menu. Each switch can also be set for one
+browser tab with a search param:
+
+| Param | Values | Example |
+|---|---|---|
+| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive` (both reports + menu) |
+| `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` | `/?mock=true&scenario=concealed` |
+| `modes` | `reset` | `/?modes=reset` (forget every override) |
+
+A param present in the URL is remembered for the tab (sessionStorage), so in-app
+navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
+that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
+the app ignore the URL entirely — it is the one variable the URL can never touch, and
+the production deployment should set it.
+
 ## Localisation
 
 Every user-facing string comes from `src/intl/en.json` through `react-intl`, the same
@@ -199,7 +220,7 @@ src/
   app/           # Shell: AppShell, Header, HeaderActions, AccountChip, FloatingMenu, SettingsDialog, SettingsProvider
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
-  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES), featureFlags.ts, appConfig.ts (VITE_* auth config)
+  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES + URL overrides), modes.ts, featureFlags.ts, appConfig.ts
   data/          # live.ts (the five Graph calls), fixtures.ts (four mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen

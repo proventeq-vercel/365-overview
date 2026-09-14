@@ -42,3 +42,36 @@ describe('readEnv mock scenario', () => {
     expect(readEnv({ VITE_MOCK_SCENARIO: 'nonsense' }).mockScenario).toBe('healthy')
   })
 })
+
+describe('readEnv with mode overrides', () => {
+  const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
+
+  it('lets an override replace each env value', () => {
+    const env = readEnv(
+      { VITE_USE_MOCK: 'false', VITE_MOCK_SCENARIO: 'healthy', VITE_FEATURES: 'optimization.storage.report.overview' },
+      { useMock: 'true', mockScenario: 'concealed', features: BOTH },
+    )
+    expect(env.useMock).toBe(true)
+    expect(env.mockScenario).toBe('concealed')
+    expect([...env.features]).toEqual(BOTH.split(','))
+    expect(env.modesLocked).toBe(false)
+  })
+
+  it('falls back to the env for whatever the overrides leave out', () => {
+    const env = readEnv({ VITE_USE_MOCK: 'true', VITE_FEATURES: BOTH }, { mockScenario: 'short-history' })
+    expect(env.useMock).toBe(true)
+    expect([...env.features]).toEqual(BOTH.split(','))
+    expect(env.mockScenario).toBe('short-history')
+  })
+
+  it('ignores every override when VITE_MODES_LOCKED is true', () => {
+    const env = readEnv(
+      { VITE_MODES_LOCKED: 'true', VITE_USE_MOCK: 'false', VITE_FEATURES: 'optimization.storage.report.overview' },
+      { useMock: 'true', mockScenario: 'concealed', features: BOTH },
+    )
+    expect(env.useMock).toBe(false)
+    expect(env.mockScenario).toBe('healthy')
+    expect([...env.features]).toEqual(['optimization.storage.report.overview'])
+    expect(env.modesLocked).toBe(true)
+  })
+})

@@ -91,7 +91,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   styled), `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button,
   select, dropdown-menu, dialog, skeleton, …).
 - `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`
-  (parsed once into `env.features`).
+  (parsed once into `env.features`), overlaid with `src/config/modes.ts`: the
+  search params `features`, `mock`, `scenario` (persisted per tab in
+  sessionStorage under `m365-overview:modes`; empty value clears one,
+  `?modes=reset` clears all). `VITE_MODES_LOCKED=true` ignores the overrides —
+  it is the only switch the URL cannot change, and `readEnv(source, overrides)`
+  applies the lock, so a test can never sneak past it. `env` is still a module
+  constant evaluated once at load.
 
 ## Rules most likely to be broken by a future change
 
