@@ -1,4 +1,4 @@
-export const MODE_PARAMS = {
+const MODE_PARAMS = {
   features: 'features',
   useMock: 'mock',
   mockScenario: 'scenario',

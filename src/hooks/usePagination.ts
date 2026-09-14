@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 
 export const PAGE_SIZE_OPTIONS = [50, 100, 250, 500] as const
 export type PageSize = (typeof PAGE_SIZE_OPTIONS)[number]
-export const DEFAULT_PAGE_SIZE: PageSize = PAGE_SIZE_OPTIONS[0]
+const DEFAULT_PAGE_SIZE: PageSize = PAGE_SIZE_OPTIONS[0]
 
 export function parsePageSize(value: string | null): PageSize | null {
   return PAGE_SIZE_OPTIONS.find((size) => String(size) === value) ?? null
