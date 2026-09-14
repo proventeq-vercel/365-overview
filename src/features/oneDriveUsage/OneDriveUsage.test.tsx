@@ -65,6 +65,17 @@ describe('OneDriveUsage', () => {
     ).toBeInTheDocument()
   })
 
+  it('adds nothing to the subtitle when no drive is under retention', async () => {
+    const live = createMockDataSource('healthy')
+    renderReport('healthy', {
+      getDrives: async () => (await live.getDrives()).filter((drive) => !drive.isDeleted),
+    })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(
+      screen.getByText('Every personal drive in the usage report, with how much of its own allocation it uses'),
+    ).toBeInTheDocument()
+  })
+
   it('never lists a SharePoint site among the drives', async () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })

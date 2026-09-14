@@ -188,7 +188,7 @@
   "oneDrive.top.subtitle": "The five largest personal drives",
   "oneDrive.top.empty": "No results",
   "oneDrive.table.title": "All OneDrives",
-  "oneDrive.table.subtitle": "Every personal drive in the usage report, {retained, plural, =0 {none deleted} one {including # deleted drive still under retention} other {including # deleted drives still under retention}}, with how much of its own allocation it uses",
+  "oneDrive.table.subtitle": "Every personal drive in the usage report, with how much of its own allocation it uses{retained, plural, =0 {} one { — including # deleted drive still under retention} other { — including # deleted drives still under retention}}",
   "oneDrive.table.label": "OneDrives",
   "oneDrive.table.driveHeader": "Drive",
   "oneDrive.allocationNote": "Each OneDrive has its own allocation, so capacity is meaningful per drive. It is not pooled with SharePoint."
