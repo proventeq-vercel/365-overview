@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Outlet } from 'react-router-dom'
 import { env } from '@/config/env'
 import { UserMenu } from './UserMenu'
+import { ViewSwitch } from './ViewSwitch'
 
 export function Layout({ children }: { children?: ReactNode }) {
   return (
@@ -13,7 +14,10 @@ export function Layout({ children }: { children?: ReactNode }) {
           </span>
           <span className="text-lg font-bold text-ink">Proventeq</span>
         </div>
-        <div className="flex items-center gap-3">{!env.useMock && <UserMenu />}</div>
+        <div className="flex items-center gap-4">
+          <ViewSwitch />
+          {!env.useMock && <UserMenu />}
+        </div>
       </header>
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-6 py-6">
         {children ?? <Outlet />}

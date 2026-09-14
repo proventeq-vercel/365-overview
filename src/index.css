@@ -19,6 +19,23 @@
   --color-canvas: #f7f8f9;
   --color-surface: #ffffff;
   --color-hairline: #e3e6ea;
+
+  --color-p365-navy: #0f2c3d;
+  --color-p365-blue: #16475c;
+  --color-p365-teal: #34a1a0;
+  --color-p365-red: #f94545;
+  --color-p365-orange: #f97f50;
+  --color-p365-yellow: #edba20;
+  --color-p365-green: #82bc17;
+  --color-p365-page: #f9fafb;
+  --color-p365-grey-50: #f0f0f0;
+  --color-p365-grey-100: #dedede;
+  --color-p365-grey-400: #a6a6a6;
+  --color-p365-grey-500: #808080;
+  --color-p365-grey-600: #535353;
+  --color-p365-grey-700: #434343;
+  --color-p365-soft-green: #e1f1f1;
+  --color-p365-soft-orange: #fef2ee;
 }
 
 :root {

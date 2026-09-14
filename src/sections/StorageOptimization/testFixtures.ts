@@ -28,6 +28,8 @@ export const base: StorageOverview = {
     rows: [],
     totalUsedBytes: 620 * GB,
     topConsumers: [],
+    topSites: [],
+    topDrives: [],
     retained: { bytes: 0, count: 0 },
   },
   growth: {

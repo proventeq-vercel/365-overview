@@ -61,6 +61,11 @@ const withSites = {
       { name: 'dana', value: 500 },
       { name: 'alpha', value: 300 },
     ],
+    topSites: [
+      { name: 'beta', value: 700 },
+      { name: 'alpha', value: 300 },
+    ],
+    topDrives: [{ name: 'dana', value: 500 }],
     retained: { bytes: 42, count: 2 },
   },
 }

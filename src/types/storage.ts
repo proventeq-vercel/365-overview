@@ -63,6 +63,8 @@ export interface StorageOverview {
     rows: StorageRow[]
     totalUsedBytes: number
     topConsumers: Slice[]
+    topSites: Slice[]
+    topDrives: Slice[]
     retained: RetainedTotal
   }
 

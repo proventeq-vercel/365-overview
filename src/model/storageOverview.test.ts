@@ -427,6 +427,22 @@ describe('buildStorageOverview growth and cost', () => {
     expect(offenders.topConsumers[9]).toEqual({ name: 'site-3', value: 4 * GB })
   })
 
+  it('ranks the five biggest sites and the five biggest drives separately', () => {
+    const sites = Array.from({ length: 7 }, (_, i) =>
+      site({ id: `s${i}`, url: `https://c.sharepoint.com/sites/site-${i}`, storageUsedBytes: (i + 1) * GB }),
+    )
+    const drives = Array.from({ length: 6 }, (_, i) =>
+      drive({ id: `d${i}`, url: '', ownerDisplayName: `Owner ${i}`, storageUsedBytes: (i + 1) * 100 * GB }),
+    )
+    const { offenders } = buildStorageOverview(inputs({ sites, drives }))
+    expect(offenders.topSites).toHaveLength(5)
+    expect(offenders.topSites[0]).toEqual({ name: 'site-6', value: 7 * GB })
+    expect(offenders.topSites[4]).toEqual({ name: 'site-2', value: 3 * GB })
+    expect(offenders.topDrives).toHaveLength(5)
+    expect(offenders.topDrives[0]).toEqual({ name: 'Owner 5', value: 600 * GB })
+    expect(offenders.topDrives[4]).toEqual({ name: 'Owner 1', value: 200 * GB })
+  })
+
   it('totals the offender pool across SharePoint and OneDrive and counts every retained row', () => {
     const { offenders } = buildStorageOverview(
       inputs({

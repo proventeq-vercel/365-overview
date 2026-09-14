@@ -43,9 +43,30 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/components/` — shared UI: `StatCard`, `SiteTable` (generic `StorageRow` +
   `columns`), `CaveatBanner`, `ErrorState`, `SkeletonCard`, `InsightCallout`;
   `charts/` (themed Recharts wrappers); `ui/` (shadcn primitives).
-- `src/app/` — `Layout` (shell), `UserMenu`, `queryClient`.
+- `src/app/` — `Layout` (shell), `UserMenu`, `ViewSwitch` (Sneak peek ↔
+  Product view), `queryClient`.
+- `src/product/` — the **product view** (`/product`): the same `StorageOverview`
+  rendered to look like P365's Storage Optimisation page. `ProductShell` (navy
+  sidebar + breadcrumb bar, mirrors P365's `NavBar`), `ProductStatCard` (P365
+  `StatCard`: coloured left rail, value in the rail colour), `primitives.tsx`
+  (P365 `Panel` / `SectionHeader` / `MiniStat` / `SoftCallout` / `Pill` /
+  `Legend`), `charts.tsx` (monochrome Recharts doughnut, line, bar + P365
+  `FacetPanel`-style bars), `theme.ts` (P365 tokens, `monoColor` = P365's
+  `monoColorByIndex`, `facetFill` = its teal tint cycle), and one section per
+  P365 section. Copy comes from `sections/StorageOptimization/copy.ts` — never a
+  second copy table. Settings are read from localStorage (the cog lives in the
+  sneak-peek view; P365 has no per-report settings).
 
 ## Rules most likely to be broken by a future change
+
+- **Both views consume `buildStorageOverview` and nothing else.** A number the
+  product view needs (e.g. `offenders.topSites` / `topDrives`) is added to the
+  model with a test, never derived in `src/product/`.
+- **The product view copies P365, it does not restyle it.** Colours, sizes and
+  layout come from `Frontend/src/components/styles/themes.ts` and
+  `features/storageOptimization/styles.ts` in the P365 repo (tokens mirrored as
+  `--color-p365-*` in `index.css`); check the live page on dev-p365 before
+  "improving" anything.
 
 - **SharePoint per-site `storageAllocatedInBytes` is the 25 TB site-collection
   maximum. Never sum it, never take a percentage of it. OneDrive per-drive

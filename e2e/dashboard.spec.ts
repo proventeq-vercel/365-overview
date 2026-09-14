@@ -35,3 +35,21 @@ test('the site table stays windowed on a large estate', async ({ page }) => {
   await expect(rows.first()).toBeVisible()
   expect(await rows.count()).toBeLessThan(100)
 })
+
+test('the product view renders the same report inside the product shell', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Product view' }).click()
+  await expect(page).toHaveURL(/\/product$/)
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Storage Optimisation',
+  )
+  await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeVisible()
+  const charts = await page.getByRole('img').all()
+  for (const chart of charts) {
+    await expect(chart).toHaveAccessibleName(/\S/)
+  }
+  await page.getByRole('link', { name: 'Sneak peek' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('row').first()).toBeVisible()
+})

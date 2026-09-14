@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   formatBytes,
   formatLongMonthYear,
+  formatShortMonthYear,
   formatNumber,
   formatPercent,
   formatSignedBytes,
@@ -60,6 +61,17 @@ describe('formatSignedPercent', () => {
   })
   it('keeps the minus for negative values', () => {
     expect(formatSignedPercent(-4.2)).toBe('-4.2%')
+  })
+})
+
+describe('formatShortMonthYear', () => {
+  it('renders a YYYY-MM bucket as its abbreviated month and year', () => {
+    expect(formatShortMonthYear('2026-03')).toBe('Mar 2026')
+    expect(formatShortMonthYear('2027-12')).toBe('Dec 2027')
+  })
+
+  it('returns an unparseable label untouched', () => {
+    expect(formatShortMonthYear('n/a')).toBe('n/a')
   })
 })
 

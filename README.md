@@ -115,6 +115,15 @@ link to grant it.
 
 ---
 
+## Two views of the same report
+
+- `/` — the **sneak peek**: the standalone report with its own header, settings cog
+  (rate, currency, entitlement override) and the full site table.
+- `/product` — the **product view**: the same figures rendered inside a Proventeq 365
+  shell (sidebar, breadcrumb, KPI rails, panels, monochrome charts) so it can be shown
+  next to the real Storage Optimisation page. Settings entered in the sneak peek apply
+  here too. Switch with the toggle in either top bar.
+
 ## Running the app
 
 ### Development (live tenant)
@@ -167,7 +176,7 @@ npm run preview
 
 ```
 src/
-  app/           # App shell: Layout, UserMenu, query client
+  app/           # App shell: Layout, UserMenu, ViewSwitch, query client
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO) + appConfig.ts (VITE_* auth config)
@@ -176,6 +185,7 @@ src/
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format
   hooks/         # useStorageOverview — fetches the inputs once, rebuilds the model on settings change
+  product/       # Product view (/product): P365-styled shell, cards, panels, charts, sections
   sections/      # StorageOptimization: shell, header, KPI row, the three sections, failure screens
   types/         # StorageOverview, StorageRow and the other shared types
   components/    # Shared UI (StatCard, SiteTable, CaveatBanner, charts, shadcn primitives)

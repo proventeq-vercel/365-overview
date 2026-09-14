@@ -1,14 +1,21 @@
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './app/Layout'
+import { ProductStorageOptimization } from './product/ProductStorageOptimization'
 import { StorageOptimization } from './sections/StorageOptimization'
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="*" element={<StorageOptimization />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      <Route path="/product/*" element={<ProductStorageOptimization />} />
+      <Route
+        path="*"
+        element={
+          <Layout>
+            <StorageOptimization />
+          </Layout>
+        }
+      />
+    </Routes>
   )
 }
 

@@ -1,5 +1,5 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
-import type { Slice, StorageOverview, StorageRow } from '@/types/storage'
+import type { Slice, StoragePool, StorageOverview, StorageRow } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
@@ -21,6 +21,7 @@ import {
 const NEAR_CAP_RATIO = 0.9
 
 const TOP_CONSUMERS = 10
+const TOP_PER_POOL = 5
 
 const TOP_TEMPLATE_SLICES = 8
 
@@ -67,11 +68,18 @@ function totalsBy(rows: StorageRow[], key: (row: StorageRow) => string) {
   return [...totals.entries()]
 }
 
-function topConsumers(rows: StorageRow[]): Slice[] {
+function topConsumers(rows: StorageRow[], limit = TOP_CONSUMERS): Slice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
-    .slice(0, TOP_CONSUMERS)
+    .slice(0, limit)
     .map((row) => ({ name: rowName(row.url, row.ownerDisplayName), value: row.storageUsedBytes }))
+}
+
+function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
+  return topConsumers(
+    rows.filter((row) => row.pool === pool),
+    TOP_PER_POOL,
+  )
 }
 
 const positiveOrNull = (bytes: number | null): number | null =>
@@ -168,6 +176,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       rows,
       totalUsedBytes: sharePointUsed + oneDriveUsed,
       topConsumers: topConsumers(rows),
+      topSites: topByPool(rows, 'SharePoint'),
+      topDrives: topByPool(rows, 'OneDrive'),
       retained: retainedTotal(rows),
     },
 
