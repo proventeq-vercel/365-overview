@@ -5,9 +5,9 @@ import { SettingsProvider } from './app/SettingsProvider'
 import { env } from './config/env'
 import { enabledReports } from './features/registry'
 
-function RedirectKeepingQuery({ to }: { to: string }) {
+function HomeRedirect() {
   const { search } = useLocation()
-  return <Navigate to={{ pathname: to, search }} replace />
+  return <Navigate to={{ pathname: '/', search }} replace />
 }
 
 function App() {
@@ -18,13 +18,11 @@ function App() {
     <SettingsProvider>
       <AppShell reports={reports}>
         <Routes>
+          <Route path="/" element={fallback ? <fallback.Component /> : <NoReports />} />
           {reports.map((report) => (
             <Route key={report.id} path={report.path} element={<report.Component />} />
           ))}
-          <Route
-            path="*"
-            element={fallback ? <RedirectKeepingQuery to={fallback.path} /> : <NoReports />}
-          />
+          <Route path="*" element={fallback ? <HomeRedirect /> : <NoReports />} />
         </Routes>
       </AppShell>
     </SettingsProvider>

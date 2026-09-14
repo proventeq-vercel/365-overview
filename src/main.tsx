@@ -2,7 +2,6 @@ import { StrictMode, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
-import { getConfig } from './config/appConfig'
 import { env } from './config/env'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
 import { AppIntlProvider } from './app/AppIntlProvider'
@@ -46,7 +45,6 @@ function bootstrap() {
     return
   }
 
-  getConfig()
   render(
     <AppIntlProvider>
       <MsalAuthProvider>{appTree}</MsalAuthProvider>

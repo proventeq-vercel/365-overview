@@ -18,7 +18,7 @@ test('runs as a single report: no menu button, no breadcrumb, no footer, and the
   await page.goto('/onedrive-usage')
   await reportLoaded(page)
   await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
-  await expect(page).toHaveURL(/\/storage-optimisation$/)
+  await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   await expect(page.getByRole('banner').getByRole('navigation')).toHaveCount(0)
   await expect(page.getByRole('contentinfo')).toHaveCount(0)
@@ -191,16 +191,20 @@ test.describe('modes from the URL', () => {
     await expect(page.getByText(/appear as hashes/i)).toHaveCount(0)
   })
 
-  test('?mock=false on a mock-only build cannot start, and the reset link brings the tab back', async ({ page }) => {
+  test('?mock=false with no auth env at all goes to Microsoft sign-in on the built-in registration', async ({ page, baseURL }) => {
+    const signIn = page.waitForRequest((request) =>
+      request.url().startsWith('https://login.microsoftonline.com/'),
+    )
+    await page.route('https://login.microsoftonline.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<title>stub</title>' }),
+    )
     await page.goto('/?mock=false')
-    const alert = page.getByRole('alert')
-    await expect(alert).toContainText("Couldn't start the dashboard")
-    await expect(alert).toContainText(/this tab overrides the deployed modes/i)
-    await page.goto('/')
-    await expect(page.getByRole('alert')).toContainText("Couldn't start the dashboard")
-    await page.getByRole('link', { name: 'Reset the modes for this tab' }).click()
-    await reportLoaded(page)
-    await page.goto('/')
+    const url = new URL((await signIn).url())
+    expect(url.pathname).toBe('/d3d3b20f-00ce-4a0f-9975-d79117daa055/oauth2/v2.0/authorize')
+    expect(url.searchParams.get('client_id')).toBe('a6036483-bd4e-44d4-896f-33d6547eb66d')
+    expect(url.searchParams.get('redirect_uri')).toBe(`${new URL(baseURL!).origin}/`)
+
+    await page.goto('/?modes=reset')
     await reportLoaded(page)
   })
 

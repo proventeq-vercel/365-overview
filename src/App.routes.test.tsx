@@ -74,27 +74,20 @@ describe('App routes', () => {
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
-  it('redirects the root and unknown paths to the default report so the URL matches the menu', () => {
-    const { unmount } = renderAt('/')
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
-    expect(screen.getByTestId('location')).toHaveTextContent('/storage')
-    unmount()
-
-    renderAt('/nowhere')
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
-    expect(screen.getByTestId('location')).toHaveTextContent('/storage')
-  })
-
-  it('replaces the history entry so Back does not bounce through the redirect', () => {
-    renderAt('/nowhere')
-    expect(screen.getByTestId('navigation-type')).toHaveTextContent('REPLACE')
-  })
-
-  it('keeps the query string, where the per-tab modes travel, across the redirect', () => {
+  it('serves the default report at the root itself, without redirecting', () => {
     renderAt('/?features=flag.storage&scenario=concealed')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
     expect(screen.getByTestId('location')).toHaveTextContent(
-      '/storage?features=flag.storage&scenario=concealed',
+      '/?features=flag.storage&scenario=concealed',
     )
+    expect(screen.getByTestId('navigation-type')).toHaveTextContent('POP')
+  })
+
+  it('sends an unknown path home, replacing the history entry and keeping the query string', () => {
+    renderAt('/nowhere?scenario=concealed')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
+    expect(screen.getByTestId('location')).toHaveTextContent('/?scenario=concealed')
+    expect(screen.getByTestId('navigation-type')).toHaveTextContent('REPLACE')
   })
 
   it('keeps an enabled report on its own path', () => {
