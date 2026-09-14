@@ -436,7 +436,7 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.cost.currency).toBe('EUR')
   })
 
-  it('ranks the ten biggest sites and drives together by storage, named by URL leaf', () => {
+  it('ranks the ten biggest sites and drives together by storage, named by URL leaf or owner and id', () => {
     const sites = Array.from({ length: 12 }, (_, i) =>
       site({ id: `s${i}`, url: `https://c.sharepoint.com/sites/site-${i}`, storageUsedBytes: (i + 1) * GB }),
     )
@@ -444,7 +444,7 @@ describe('buildStorageOverview growth and cost', () => {
     const { offenders } = buildStorageOverview(inputs({ sites, drives }))
     expect(offenders.rows).toHaveLength(13)
     expect(offenders.topConsumers).toHaveLength(10)
-    expect(offenders.topConsumers[0]).toEqual({ name: 'Dana Drive', value: 100 * GB })
+    expect(offenders.topConsumers[0]).toEqual({ name: 'Dana Drive · u1', value: 100 * GB })
     expect(offenders.topConsumers[1]).toEqual({ name: 'site-11', value: 12 * GB })
     expect(offenders.topConsumers[9]).toEqual({ name: 'site-3', value: 4 * GB })
   })
@@ -461,8 +461,8 @@ describe('buildStorageOverview growth and cost', () => {
     expect(offenders.topSites[0]).toEqual({ name: 'site-6', value: 7 * GB })
     expect(offenders.topSites[4]).toEqual({ name: 'site-2', value: 3 * GB })
     expect(offenders.topDrives).toHaveLength(5)
-    expect(offenders.topDrives[0]).toEqual({ name: 'Owner 5', value: 600 * GB })
-    expect(offenders.topDrives[4]).toEqual({ name: 'Owner 1', value: 200 * GB })
+    expect(offenders.topDrives[0]).toEqual({ name: 'Owner 5 · d5', value: 600 * GB })
+    expect(offenders.topDrives[4]).toEqual({ name: 'Owner 1 · d1', value: 200 * GB })
   })
 
   it('totals the offender pool across SharePoint and OneDrive and counts every retained row', () => {

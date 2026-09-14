@@ -7,7 +7,7 @@ const SOURCES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   eager: true,
 })
 const KEY_USE = /(?:\bt\(|titleKey: |label: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
-const DYNAMIC_PREFIXES = ['storageOptimisation.growth.risk.']
+const DYNAMIC_PREFIXES = ['storageOptimisation.growth.risk.', 'pagination.jump.']
 
 function usedKeys(): Set<string> {
   const keys = new Set<string>()

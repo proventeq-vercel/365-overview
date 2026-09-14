@@ -13,7 +13,7 @@ Built with React 19, TypeScript, and Vite.
 |---|---|
 | **Current storage distribution** | Pooled SharePoint usage against the tenant's entitlement, and usage split by workload and by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
-| **Main offenders** | The largest sites and OneDrive drives, every site in a windowed detail table, and deleted sites and drives that still consume quota |
+| **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
 Four KPI cards sit above the sections: storage used, entitlement, remaining headroom and average
 monthly growth. SharePoint and OneDrive are reported as two separate pools — OneDrive volume is

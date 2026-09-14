@@ -19,7 +19,7 @@ test('runs as a single report: no menu button, no breadcrumb, no footer, and the
   await reportLoaded(page)
   await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
-  await expect(page.getByRole('navigation')).toHaveCount(0)
+  await expect(page.getByRole('banner').getByRole('navigation')).toHaveCount(0)
   await expect(page.getByRole('contentinfo')).toHaveCount(0)
 })
 
@@ -39,12 +39,48 @@ test('every chart has an accessible name', async ({ page }) => {
   }
 })
 
-test('the site table stays windowed on a large estate', async ({ page }) => {
-  await page.goto('/')
-  await reportLoaded(page)
-  const rows = page.getByRole('row')
-  await expect(rows.first()).toBeVisible()
-  expect(await rows.count()).toBeLessThan(100)
+test.describe('the offenders table pages through a large estate', () => {
+  const bodyRows = (page: Page) => page.getByRole('table', { name: 'Sites and drives' }).getByRole('row').filter({ has: page.getByRole('cell') })
+
+  test('shows fifty rows a page with the range and disables the back buttons on page one', async ({ page }) => {
+    await page.goto('/')
+    await reportLoaded(page)
+    await expect(bodyRows(page)).toHaveCount(50)
+    await expect(page.getByText(/^1–50 of [\d,]+$/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'First page' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Previous page' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Next page' })).toBeEnabled()
+  })
+
+  test('next, last and first move through the pages', async ({ page }) => {
+    await page.goto('/')
+    await reportLoaded(page)
+    const firstName = (await bodyRows(page).first().getByRole('cell').first().textContent()) ?? ''
+    await page.getByRole('button', { name: 'Next page' }).click()
+    await expect(page.getByText(/^51–100 of [\d,]+$/)).toBeVisible()
+    await expect(bodyRows(page).first().getByRole('cell').first()).not.toHaveText(firstName)
+    await page.getByRole('button', { name: 'Last page' }).click()
+    await expect(page.getByRole('button', { name: 'Next page' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Last page' })).toBeDisabled()
+    await page.getByRole('button', { name: 'First page' }).click()
+    await expect(bodyRows(page).first().getByRole('cell').first()).toHaveText(firstName)
+  })
+
+  test('the page size can be raised and a search starts again from page one', async ({ page }) => {
+    await page.goto('/')
+    await reportLoaded(page)
+    await page.getByRole('combobox', { name: 'Rows per page' }).click()
+    await page.getByRole('option', { name: '100' }).click()
+    await expect(bodyRows(page)).toHaveCount(100)
+    await expect(page.getByText(/^1–100 of [\d,]+$/)).toBeVisible()
+    await page.getByRole('button', { name: 'Next page' }).click()
+    await expect(page.getByText(/^101–200 of [\d,]+$/)).toBeVisible()
+    await page.getByRole('searchbox', { name: 'Search Sites and drives' }).fill('team-1')
+    await expect(page.getByText(/^1–100 of [\d,]+$/)).toBeVisible()
+    await page.getByRole('searchbox', { name: 'Search Sites and drives' }).fill('no such site')
+    await expect(page.getByText('No rows')).toBeVisible()
+    await expect(bodyRows(page)).toHaveCount(0)
+  })
 })
 
 async function chooseOption(page: Page, name: RegExp) {

@@ -1,28 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import type { StorageRow } from '@/types/storage'
 import { SiteTable } from './SiteTable'
-
-// jsdom reports 0 for layout boxes; @tanstack/react-virtual measures its scroll
-// container via offsetWidth/offsetHeight and renders no rows when they are 0.
-const heightDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
-const widthDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
-beforeAll(() => {
-  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-    configurable: true,
-    get: () => 480,
-  })
-  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-    configurable: true,
-    get: () => 800,
-  })
-})
-afterAll(() => {
-  if (heightDesc) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', heightDesc)
-  if (widthDesc) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', widthDesc)
-})
 
 const rows: StorageRow[] = [
   {
@@ -133,13 +114,93 @@ describe('SiteTable', () => {
     expect(screen.getAllByRole('row').length).toBeGreaterThan(3)
   })
 
-  it('stays windowed on a large estate', () => {
-    const many: StorageRow[] = Array.from({ length: 2500 }, (_, i) => ({
+  it('names a URL-less site by its owner and shows the site id underneath', () => {
+    const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
+    render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)
+    expect(screen.getAllByRole('cell')[0]).toHaveTextContent('Ada')
+    expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
+  })
+
+  it('finds a URL-less site by its id', async () => {
+    const user = userEvent.setup()
+    const twins: StorageRow[] = [
+      { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' },
+      { ...rows[0], id: 'e5f60718-1234-4f60-a1b2-000000000000', url: '' },
+    ]
+    render(<SiteTable rows={twins} totalUsedBytes={600} columns={['name']} />)
+    await user.type(screen.getByRole('searchbox'), '8f3c1a2b')
+    expect(screen.getByText('1 of 2')).toBeInTheDocument()
+    expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
+  })
+
+  describe('pagination', () => {
+    const many: StorageRow[] = Array.from({ length: 120 }, (_, i) => ({
       ...rows[0],
       id: `gen-${i}`,
       url: `https://c.sharepoint.com/sites/team-${i}`,
+      ownerDisplayName: i < 60 ? 'Early Owner' : 'Late Owner',
+      storageUsedBytes: 1000 - i,
     }))
-    render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
-    expect(screen.getAllByRole('row').length).toBeLessThan(100)
+    const firstCell = () => screen.getAllByRole('cell')[0]
+    const bodyRows = () => screen.getAllByRole('row').length - 1
+
+    it('shows the first fifty rows of a large estate with the range', () => {
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      expect(bodyRows()).toBe(50)
+      expect(firstCell()).toHaveTextContent('team-0')
+      expect(screen.getByText('1–50 of 120')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled()
+    })
+
+    it('pages forward, to the end, and back to the start', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      await user.click(screen.getByRole('button', { name: 'Next page' }))
+      expect(firstCell()).toHaveTextContent('team-50')
+      expect(screen.getByText('51–100 of 120')).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Last page' }))
+      expect(bodyRows()).toBe(20)
+      expect(screen.getByText('101–120 of 120')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()
+      await user.click(screen.getByRole('button', { name: 'First page' }))
+      expect(firstCell()).toHaveTextContent('team-0')
+    })
+
+    it('changes the page size and starts again from the first page', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      await user.click(screen.getByRole('button', { name: 'Next page' }))
+      await user.click(screen.getByRole('combobox', { name: 'Rows per page' }))
+      await user.click(await screen.findByRole('option', { name: '100' }))
+      expect(bodyRows()).toBe(100)
+      expect(screen.getByText('1–100 of 120')).toBeInTheDocument()
+    })
+
+    it('returns to the first page when the search changes', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'owner']} />)
+      await user.click(screen.getByRole('button', { name: 'Next page' }))
+      await user.type(screen.getByRole('searchbox'), 'Early')
+      expect(screen.getByText('1–50 of 60')).toBeInTheDocument()
+      expect(firstCell()).toHaveTextContent('team-0')
+    })
+
+    it('returns to the first page when the sort changes', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      await user.click(screen.getByRole('button', { name: 'Next page' }))
+      await user.click(screen.getByRole('columnheader', { name: /storage used/i }))
+      expect(screen.getByText('1–50 of 120')).toBeInTheDocument()
+      expect(firstCell()).toHaveTextContent('team-119')
+    })
+
+    it('says so when nothing matches', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name']} />)
+      await user.type(screen.getByRole('searchbox'), 'nobody')
+      expect(screen.getByText('No rows')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()
+    })
   })
 })

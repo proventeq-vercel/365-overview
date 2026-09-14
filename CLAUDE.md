@@ -52,7 +52,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
-  windowed `SiteTable` and the concealed-names note), `AccessFailure` (consent
+  paginated `SiteTable` and the concealed-names note), `AccessFailure` (consent
   vs role screens), `forecastCopy.ts` (P365's forecast headline/hint/callout
   logic; takes `t` because it runs outside React).
 - `src/intl/en.json` + `src/hooks/useTranslation.ts` + `src/app/AppIntlProvider.tsx`
@@ -230,9 +230,14 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   **siblings** — scope assertions with `getByText(label).closest('[data-slot="stat-card"]')`.
 - Every chart wrapper takes an `ariaLabel` and renders `role="img"` — always pass
   it from call sites; the e2e suite asserts every `role="img"` has a name.
-- `SiteTable` is windowed with `@tanstack/react-virtual`; jsdom reports zero
-  `offsetHeight`/`offsetWidth`, so tests that need rows to render stub both on
-  `HTMLElement.prototype` (see `StorageOptimization.test.tsx`).
+- `SiteTable` is paginated (`hooks/usePagination.ts` owns the page window maths,
+  `design/Pagination.tsx` is the generic footer; 50/100/250/500 rows like P365).
+  Search and sort changes go back to page one. Rows render plainly, so no jsdom
+  layout stubs are needed in tests.
+- Graph's site usage report can return an empty Site URL for every site (the
+  proventeqe5 tenant does). `lib/rowName.ts` then names the row by its owner and
+  shows the site id underneath (`rowDetail`), and chart labels append the short id
+  (`rowLabel`) so same-owner sites stay distinguishable; search matches the id too.
 - Component tests import `render` from `@/test/render`, not from
   `@testing-library/react`: it wraps the tree in `AppIntlProvider` (a bare
   render of anything that calls `useTranslation()` throws). The same module

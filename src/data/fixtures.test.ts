@@ -96,6 +96,13 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.oneDrive.usedBytes).toBeGreaterThan(0)
   })
 
+  it('concealed: every hashed row keeps a unique id and a 32-hex owner hash', async () => {
+    const overview = await overviewFor('concealed')
+    const rows = [...overview.sharePoint.sites, ...overview.oneDrive.drives]
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length)
+    expect(rows[0].ownerDisplayName).toMatch(/^[0-9A-F]{32}$/)
+  })
+
   it('short-history: no forecast at all', async () => {
     const overview = await overviewFor('short-history')
     expect(overview.caveats.historyTooShort).toBe(true)

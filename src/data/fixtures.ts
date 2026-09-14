@@ -37,9 +37,14 @@ function series(values: number[]): UsagePoint[] {
 }
 
 function hashName(seed: number): string {
+  let word = Math.imul(seed + 1, 2654435761) >>> 0
   let hex = ''
-  for (let i = 0; i < 32; i++) {
-    hex += ((seed * 31 + i * 7) % 16).toString(16).toUpperCase()
+  for (let block = 0; block < 4; block++) {
+    word ^= word << 13
+    word ^= word >>> 17
+    word ^= word << 5
+    word >>>= 0
+    hex += word.toString(16).padStart(8, '0').toUpperCase()
   }
   return hex
 }

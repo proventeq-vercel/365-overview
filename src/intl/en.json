@@ -56,7 +56,7 @@
 
   "table.sites": "Sites",
   "table.search": "Search {label}",
-  "table.searchPlaceholder": "Search name or owner",
+  "table.searchPlaceholder": "Search name, owner or id",
   "table.count": "{visible} of {total}",
   "table.never": "Never",
   "table.column.site": "Site",
@@ -68,6 +68,14 @@
   "table.column.lastActivity": "Last activity",
   "table.column.template": "Template",
   "table.column.capacity": "Capacity used",
+  "pagination.label": "{label} pages",
+  "pagination.rowsPerPage": "Rows per page",
+  "pagination.range": "{from}–{to} of {total}",
+  "pagination.none": "No rows",
+  "pagination.jump.first": "First page",
+  "pagination.jump.previous": "Previous page",
+  "pagination.jump.next": "Next page",
+  "pagination.jump.last": "Last page",
 
   "reports.storageOptimisation.title": "Storage Optimisation",
   "reports.oneDriveUsage.title": "OneDrive Usage",

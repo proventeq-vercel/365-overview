@@ -3,7 +3,7 @@ import type { Slice, StoragePool, StorageOverview, StorageRow } from '@/types/st
 import { GB_IN_BYTES, estimateEntitlementBytes } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
-import { rowName } from '@/lib/rowName'
+import { rowLabel } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
@@ -72,7 +72,7 @@ function topConsumers(rows: StorageRow[], limit = TOP_CONSUMERS): Slice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
     .slice(0, limit)
-    .map((row) => ({ name: rowName(row.url, row.ownerDisplayName), value: row.storageUsedBytes }))
+    .map((row) => ({ name: rowLabel(row), value: row.storageUsedBytes }))
 }
 
 function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {

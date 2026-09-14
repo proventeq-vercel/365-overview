@@ -1,11 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { rowName } from '@/lib/rowName'
+import { rowDetail, rowName } from '@/lib/rowName'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
+import { usePagination } from '@/hooks/usePagination'
+import { Pagination } from '@/design/Pagination'
 
 export type ColumnKey =
   | 'name'
@@ -92,7 +93,6 @@ export function SiteTable({
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<ColumnKey>(DEFAULT_SORT)
   const [sortDir, setSortDir] = useState<SortDir>('desc')
-  const parentRef = useRef<HTMLDivElement>(null)
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -100,7 +100,8 @@ export function SiteTable({
       ? rows.filter(
           (row) =>
             row.url.toLowerCase().includes(query) ||
-            row.ownerDisplayName.toLowerCase().includes(query),
+            row.ownerDisplayName.toLowerCase().includes(query) ||
+            row.id.toLowerCase().includes(query),
         )
       : rows
     const sortValue = COLUMNS[sortKey].sortValue ?? COLUMNS[DEFAULT_SORT].sortValue!
@@ -110,14 +111,16 @@ export function SiteTable({
     })
   }, [rows, search, sortKey, sortDir])
 
-  const virtualizer = useVirtualizer({
-    count: visible.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
-    overscan: 8,
-  })
+  const pagination = usePagination(visible.length)
+  const pageRows = visible.slice(pagination.start, pagination.end)
+
+  function changeSearch(value: string) {
+    setSearch(value)
+    pagination.reset()
+  }
 
   function toggleSort(key: ColumnKey) {
+    pagination.reset()
     if (key === sortKey) {
       setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -141,13 +144,11 @@ export function SiteTable({
         return (
           <span role="cell" key={key} className="min-w-0">
             <span className="block truncate font-semibold text-p365-navy">
-              {rowName(row.url, row.ownerDisplayName)}
+              {rowName(row)}
             </span>
-            {row.url !== '' && (
-              <span className="block truncate text-xs text-p365-grey-500" title={row.url}>
-                {row.url}
-              </span>
-            )}
+            <span className="block truncate text-xs text-p365-grey-500" title={rowDetail(row)}>
+              {rowDetail(row)}
+            </span>
           </span>
         )
       case 'owner':
@@ -223,7 +224,7 @@ export function SiteTable({
           <input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => changeSearch(e.target.value)}
             placeholder={t('table.searchPlaceholder')}
             aria-label={t('table.search', { label: tableLabel })}
             className="h-9 w-full max-w-sm rounded-lg border border-p365-grey-100 bg-white pr-3 pl-9 text-sm text-p365-navy outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-p365-grey-400 focus:border-p365-teal focus:ring-3 focus:ring-p365-teal/20"
@@ -271,35 +272,20 @@ export function SiteTable({
             )}
           </div>
 
-          <div ref={parentRef} style={{ height: 480, overflow: 'auto' }}>
+          {pageRows.map((row) => (
             <div
-              style={{
-                height: virtualizer.getTotalSize(),
-                position: 'relative',
-                width: '100%',
-              }}
+              key={row.id}
+              role="row"
+              className="grid items-center gap-2 border-b border-p365-grey-50 px-4 py-3 text-sm transition-colors duration-150 ease-out last:border-b-0 hover:bg-p365-page"
+              style={{ gridTemplateColumns: gridCols }}
             >
-              {virtualizer.getVirtualItems().map((item) => {
-                const row = visible[item.index]
-                return (
-                  <div
-                    key={row.id}
-                    role="row"
-                    className="absolute top-0 left-0 grid w-full items-center gap-2 border-b border-p365-grey-50 px-4 text-sm transition-colors duration-150 ease-out hover:bg-p365-page"
-                    style={{
-                      height: item.size,
-                      transform: `translateY(${item.start}px)`,
-                      gridTemplateColumns: gridCols,
-                    }}
-                  >
-                    {columns.map((key) => renderCell(key, row))}
-                  </div>
-                )
-              })}
+              {columns.map((key) => renderCell(key, row))}
             </div>
-          </div>
+          ))}
         </div>
       </div>
+
+      <Pagination pagination={pagination} label={tableLabel} />
     </div>
   )
 }
