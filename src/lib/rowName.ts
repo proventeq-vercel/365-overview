@@ -12,6 +12,11 @@ export function rowDetail(row: NamedRow): string {
   return row.url || row.id
 }
 
+function shortId(id: string): string {
+  const at = id.indexOf('@')
+  return at > 0 ? id.slice(0, at) : id.slice(0, SHORT_ID_LENGTH)
+}
+
 export function rowLabel(row: NamedRow): string {
-  return row.url ? rowName(row) : `${row.ownerDisplayName} · ${row.id.slice(0, SHORT_ID_LENGTH)}`
+  return row.url ? rowName(row) : `${row.ownerDisplayName} · ${shortId(row.id)}`
 }

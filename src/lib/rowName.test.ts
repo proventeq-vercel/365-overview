@@ -36,4 +36,8 @@ describe('rowLabel', () => {
   it('appends the short id to the owner when the URL is blank', () => {
     expect(rowLabel(withoutUrl)).toBe('Ada Lovelace · 8f3c1a2b')
   })
+
+  it('uses the account name of a UPN id, as a OneDrive row carries', () => {
+    expect(rowLabel({ ...withoutUrl, id: 'ada.lovelace@contoso.com' })).toBe('Ada Lovelace · ada.lovelace')
+  })
 })

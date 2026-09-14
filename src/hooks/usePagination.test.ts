@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pageWindow } from './usePagination'
+import { pageWindow, parsePageSize } from './usePagination'
 
 describe('pageWindow', () => {
   it('slices the first page of a large estate', () => {
@@ -38,5 +38,17 @@ describe('pageWindow', () => {
 
   it('fits an exact multiple without an empty trailing page', () => {
     expect(pageWindow(100, 1, 50)).toMatchObject({ pageCount: 2, from: 51, to: 100 })
+  })
+})
+
+describe('parsePageSize', () => {
+  it('accepts a listed size as the select hands it back', () => {
+    expect(parsePageSize('250')).toBe(250)
+  })
+
+  it('rejects a cleared select and anything off the list, so the page count can never blow up', () => {
+    expect(parsePageSize(null)).toBeNull()
+    expect(parsePageSize('0')).toBeNull()
+    expect(parsePageSize('49')).toBeNull()
   })
 })

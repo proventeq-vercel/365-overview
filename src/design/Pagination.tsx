@@ -9,7 +9,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useTranslation } from '@/hooks/useTranslation'
-import { PAGE_SIZE_OPTIONS, type PageSize, type Pagination as PaginationState } from '@/hooks/usePagination'
+import {
+  PAGE_SIZE_OPTIONS,
+  parsePageSize,
+  type Pagination as PaginationState,
+} from '@/hooks/usePagination'
 import { formatNumber } from '@/lib/format'
 
 interface PaginationProps {
@@ -50,7 +54,10 @@ export function Pagination({ pagination, label }: PaginationProps) {
         <label htmlFor={sizeId}>{t('pagination.rowsPerPage')}</label>
         <Select
           value={String(pageSize)}
-          onValueChange={(value) => setPageSize(Number(value) as PageSize)}
+          onValueChange={(value) => {
+            const size = parsePageSize(value)
+            if (size !== null) setPageSize(size)
+          }}
         >
           <SelectTrigger id={sizeId} size="sm" className="bg-white">
             <SelectValue />
