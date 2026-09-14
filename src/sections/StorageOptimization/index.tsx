@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { CaveatBanner } from '@/components/CaveatBanner'
-import { Button } from '@/components/ui/button'
 import { useOrg, useStorageOverview } from '@/hooks/useStorageOverview'
 import { loadSettings, saveSettings, type ReportSettings } from '@/lib/settings'
 import { AccessFailure } from './AccessFailure'
@@ -14,7 +13,6 @@ import { COPY } from './copy'
 
 export function StorageOptimization() {
   const [settings, setSettings] = useState<ReportSettings>(() => loadSettings())
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const { data, error, isPending } = useStorageOverview(settings)
   const org = useOrg()
 
@@ -42,33 +40,16 @@ export function StorageOptimization() {
         tenantName={org.data?.displayName ?? 'Your tenant'}
         settings={settings}
         onSettingsChange={applySettings}
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
       />
-      <div className="enter-rise flex flex-col gap-3 empty:hidden">
-        {data.caveats.entitlementIsEstimated && (
-          <CaveatBanner
-            tone="warning"
-            action={
-              <Button type="button" variant="outline" onClick={() => setSettingsOpen(true)}>
-                Enter the real figure
-              </Button>
-            }
-          >
-            {COPY.growth.estimatedQuotaNote}
-          </CaveatBanner>
-        )}
-        {data.caveats.namesAreConcealed && (
+      {data.caveats.namesAreConcealed && (
+        <div className="enter-rise">
           <CaveatBanner tone="info">{COPY.concealedNamesNote}</CaveatBanner>
-        )}
-      </div>
+        </div>
+      )}
       <KpiRow overview={data} />
       <DistributionSection overview={data} />
       <GrowthSection overview={data} />
       <OffendersSection overview={data} />
-      <footer className="enter-rise delay-300 rounded-lg border border-hairline bg-surface px-5 py-4 text-sm text-muted-foreground">
-        {COPY.reportFooter}
-      </footer>
     </div>
   )
 }

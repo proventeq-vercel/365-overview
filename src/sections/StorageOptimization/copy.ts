@@ -81,7 +81,5 @@ export const COPY = {
     'Grouped by site template, which is what Microsoft Graph reports. These counts will not match the SharePoint admin centre, which groups differently.',
   offendersFooter:
     'Full discovery finds the duplicates, version overhead and trivial content underneath these numbers.',
-  reportFooter:
-    'This report is five calls to Microsoft Graph, read in your browser. A full P365 discovery reveals what sits underneath these numbers — duplicate files, version-history overhead, trivial content and per-person attribution.',
   estimatedMarker: 'Estimated entitlement',
 } as const

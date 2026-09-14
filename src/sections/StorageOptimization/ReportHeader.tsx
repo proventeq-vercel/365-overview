@@ -13,8 +13,6 @@ interface Props {
   tenantName: string
   settings: ReportSettings
   onSettingsChange: (settings: ReportSettings) => void
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
 }
 
 export function ReportHeader({
@@ -22,13 +20,9 @@ export function ReportHeader({
   tenantName,
   settings,
   onSettingsChange,
-  open: openProp,
-  onOpenChange,
 }: Props) {
-  const [openState, setOpenState] = useState(false)
+  const [open, setOpen] = useState(false)
   const [currencyDraft, setCurrencyDraft] = useState(settings.currency)
-  const open = openProp ?? openState
-  const setOpen = onOpenChange ?? setOpenState
   const commit = (next: Partial<ReportSettings>) =>
     onSettingsChange(sanitizeSettings({ ...settings, ...next }))
   const rateId = useId()

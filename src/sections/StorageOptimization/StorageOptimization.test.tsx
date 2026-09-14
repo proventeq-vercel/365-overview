@@ -54,13 +54,13 @@ describe('StorageOptimization report', () => {
     expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
   })
 
-  it('warns that the entitlement is estimated, and offers the override', async () => {
+  it('keeps the estimated-entitlement caveat inside the growth callout, not a banner', async () => {
     renderReport()
-    const banners = await screen.findAllByRole('status')
-    expect(banners.some((b) => /estimated from licence counts/i.test(b.textContent ?? ''))).toBe(
-      true,
-    )
-    expect(screen.getByRole('button', { name: /enter the real figure/i })).toBeInTheDocument()
+    await screen.findByRole('heading', { name: /main offenders/i })
+    const statuses = screen.getAllByRole('status')
+    expect(statuses).toHaveLength(1)
+    expect(statuses[0]).toHaveTextContent(/estimated from licence counts/i)
+    expect(screen.queryByRole('button', { name: /enter the real figure/i })).not.toBeInTheDocument()
   })
 
   it('does not warn about concealed names on a tenant that reports them', async () => {
@@ -80,10 +80,10 @@ describe('StorageOptimization report', () => {
     expect((await screen.findAllByText(/not an all-clear/i)).length).toBeGreaterThan(0)
   })
 
-  it('closes with the full-discovery message', async () => {
+  it('ends with the offenders section, no closing footer', async () => {
     renderReport()
     await screen.findByRole('heading', { name: /main offenders/i })
-    expect(screen.getByText(/five calls to Microsoft Graph/i)).toBeInTheDocument()
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   })
 
   it('shows skeletons before the data arrives, never a zero-filled report', () => {
@@ -99,7 +99,7 @@ describe('StorageOptimization report', () => {
     renderReport()
     await screen.findByRole('heading', { name: /main offenders/i })
 
-    await user.click(screen.getByRole('button', { name: /enter the real figure/i }))
+    await user.click(screen.getByRole('button', { name: /settings/i }))
     await user.type(screen.getByLabelText(/entitlement/i), '40')
 
     await waitFor(() =>
