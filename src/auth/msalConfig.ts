@@ -3,12 +3,6 @@ import { getConfig } from '../config/appConfig'
 
 let _msalInstance: PublicClientApplication | null = null
 
-/**
- * Lazy singleton MSAL instance, built from the build-time config read via
- * `getConfig()` (`import.meta.env.VITE_*`). Mirrors the ProventeqCloud
- * `getMsalInstance()` pattern: `cacheLocation: 'localStorage'` and a full-URI
- * authority. Only call this in live mode — mock mode never touches MSAL.
- */
 export function getMsalInstance(): PublicClientApplication {
   if (!_msalInstance) {
     const c = getConfig()

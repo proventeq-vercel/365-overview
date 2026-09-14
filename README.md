@@ -45,9 +45,14 @@ npm install
 
 ## Environment configuration
 
-All configuration is via **build-time Vite env vars** (`import.meta.env.VITE_*`),
-baked into the bundle at build time. For local dev, copy the example and fill in
-your values:
+**No configuration is required.** With no env at all the app runs on real data
+(live mode) with the Storage Optimisation report only, signing in through the
+built-in Entra registration (`DEFAULT_AUTH` in `src/config/appConfig.ts`, the
+proventeqe5 tenant) with the page's own origin as the redirect URI. Everything
+below changes that default; each value is a **build-time Vite env var**
+(`import.meta.env.VITE_*`) baked into the bundle, and the three modes can also
+be switched per tab from the URL. For local dev, copy the example if you want
+to change anything:
 
 ```bash
 cp .env.example .env
@@ -62,11 +67,13 @@ app instead of Vercel's 404.
 
 ### Auth config (live mode only)
 
-| Var | Required | Description |
+| Var | Default | Description |
 |---|---|---|
-| `VITE_CLIENT_ID` | Yes (live) | Application (client) ID of the multi-tenant Entra ID app registration |
-| `VITE_AUTHORITY_URI` | Yes (live) | `https://login.microsoftonline.com/organizations` — any work or school tenant. A tenant GUID here pins the app to one tenant and defeats multi-tenancy |
-| `VITE_REDIRECT_URI` | Yes (live) | OAuth redirect URI (SPA), e.g. `http://localhost:5173/` for dev |
+| `VITE_CLIENT_ID` | the built-in registration | Application (client) ID of the Entra ID app registration |
+| `VITE_AUTHORITY_URI` | the built-in registration's tenant | `https://login.microsoftonline.com/organizations` opens the app to any work or school tenant (the registration must be multi-tenant); a tenant GUID pins it to one tenant |
+| `VITE_REDIRECT_URI` | the page's own origin + `/` | OAuth redirect URI (SPA); it must be registered on the app registration, which is why localhost and the production host are |
+
+An empty value counts as unset.
 
 MSAL is configured with `cacheLocation: localStorage` and uses **redirect-based**
 login and token acquisition (`acquireTokenSilent` → `acquireTokenRedirect` on
@@ -75,8 +82,7 @@ interaction-required / browser-auth errors).
 ### Mock flag — `VITE_USE_MOCK`
 
 When `VITE_USE_MOCK=true`, the app runs on built-in fixture data with **no MSAL
-and no auth config** — no Entra ID tenant required, and the three `VITE_*` auth
-vars above are not needed. This is the mode used by the unit tests and Playwright
+and no auth config** — no Entra ID tenant required. This is the mode used by the unit tests and Playwright
 e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
@@ -97,7 +103,8 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 ## Entra ID app registration
 
 The app uses **MSAL with authorization-code + PKCE** and acquires a single Microsoft Graph token.
-One registration serves every tenant that consents to it.
+One registration serves every tenant that consents to it. The built-in registration already
+exists; these steps are for pointing the app at a registration of your own through the auth env.
 
 1. In the [Azure portal](https://portal.azure.com), go to **Entra ID > App registrations > New registration**.
 2. Enter a name (e.g. `M365 Storage Overview`).
@@ -105,7 +112,7 @@ One registration serves every tenant that consents to it.
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
 6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All` and `Organization.Read.All`.
-7. Copy the **Application (client) ID** into `VITE_CLIENT_ID`. Leave `VITE_AUTHORITY_URI` at `https://login.microsoftonline.com/organizations`.
+7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
 `Reports.Read.All` and `Organization.Read.All` require **admin consent** in each tenant that uses
 the app; a signed-in administrator who has not yet consented is shown the consent screen with a
