@@ -44,7 +44,11 @@ export function OneDriveUsage() {
           <PanelDescription>{t('oneDrive.allocationNote')}</PanelDescription>
         </Panel>
       </Section>
-      <Section title={t('oneDrive.table.title')} subtitle={t('oneDrive.table.subtitle')} delay={160}>
+      <Section
+        title={t('oneDrive.table.title')}
+        subtitle={t('oneDrive.table.subtitle', { retained: oneDrive.deletedButBilling.count })}
+        delay={160}
+      >
         {caveats.namesAreConcealed && (
           <CaveatBanner tone="info">{t('storageOptimisation.concealedNamesNote')}</CaveatBanner>
         )}

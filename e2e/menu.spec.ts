@@ -52,9 +52,12 @@ test('the OneDrive report is reachable from the menu and renders its own cards a
   await expect(page.getByRole('link', { name: 'OneDrive Usage' })).toHaveAttribute('aria-current', 'page')
 })
 
-test('an unknown path falls back to the first enabled report', async ({ page }) => {
+test('an unknown path redirects to the first enabled report', async ({ page }) => {
   await page.goto('/nowhere')
   await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
+  await expect(page).toHaveURL(/\/storage-optimisation$/)
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await expect(page.getByRole('link', { name: 'Storage Optimisation' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('VITE_MODES_LOCKED keeps the URL from changing the modes', async ({ page }) => {

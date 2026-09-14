@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, screen } from '@testing-library/react'
 import { render } from '@/test/render'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation, useNavigationType } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource } from '@/data/fixtures'
@@ -11,7 +11,7 @@ import App from './App'
 const envState = vi.hoisted(() => ({ features: new Set<string>() }))
 
 vi.mock('@/config/env', () => ({
-  env: { useMock: true, mockScenario: 'healthy', features: envState.features },
+  env: { useMock: true, mockScenario: 'healthy', features: envState.features, overrides: {} },
 }))
 
 vi.mock('@/features/registry', async () => {
@@ -23,6 +23,17 @@ vi.mock('@/features/registry', async () => {
   return { REPORTS, enabledReports: (features: ReadonlySet<string>) => REPORTS.filter((r) => features.has(r.requireFeature)) }
 })
 
+function LocationProbe() {
+  const { pathname, search } = useLocation()
+  const navigationType = useNavigationType()
+  return (
+    <>
+      <output data-testid="location">{pathname + search}</output>
+      <output data-testid="navigation-type">{navigationType}</output>
+    </>
+  )
+}
+
 function renderAt(path: string, features = ['flag.storage', 'flag.sharing']) {
   envState.features.clear()
   for (const flag of features) envState.features.add(flag)
@@ -31,7 +42,10 @@ function renderAt(path: string, features = ['flag.storage', 'flag.sharing']) {
     return (
       <QueryClientProvider client={queryClient}>
         <DataSourceContext value={createMockDataSource('healthy')}>
-          <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>
+          <MemoryRouter initialEntries={[path]}>
+            {children}
+            <LocationProbe />
+          </MemoryRouter>
         </DataSourceContext>
       </QueryClientProvider>
     )
@@ -60,12 +74,31 @@ describe('App routes', () => {
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
-  it('falls back to the default report for the root and unknown paths', () => {
+  it('redirects the root and unknown paths to the default report so the URL matches the menu', () => {
     const { unmount } = renderAt('/')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
+    expect(screen.getByTestId('location')).toHaveTextContent('/storage')
     unmount()
 
     renderAt('/nowhere')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
+    expect(screen.getByTestId('location')).toHaveTextContent('/storage')
+  })
+
+  it('replaces the history entry so Back does not bounce through the redirect', () => {
+    renderAt('/nowhere')
+    expect(screen.getByTestId('navigation-type')).toHaveTextContent('REPLACE')
+  })
+
+  it('keeps the query string, where the per-tab modes travel, across the redirect', () => {
+    renderAt('/?features=flag.storage&scenario=concealed')
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/storage?features=flag.storage&scenario=concealed',
+    )
+  })
+
+  it('keeps an enabled report on its own path', () => {
+    renderAt('/sharing')
+    expect(screen.getByTestId('location')).toHaveTextContent('/sharing')
   })
 })

@@ -215,6 +215,12 @@ rules MUST remain in `src/index.css` — a full index.css rewrite once dropped
 `.auth-screen*` and left the live-mode loading screen unstyled. If you prune
 legacy CSS, keep any class still referenced by `src/auth/*`.
 
+`index.html` carries a copy of the `.auth-screen*` rules inline (the boot card
+that shows before the JS bundle arrives, with the vertical loading dots and the
+logo). It cannot import `index.css`, so a change to those rules — colours,
+sizes, the dot animation — has to be made in both places, and the boot-shell
+e2e (`javaScriptEnabled: false`) is what catches a drift in the markup.
+
 ## Chart data typing
 
 Recharts wrapper `data` props are typed `Record<string, unknown>[]`. TS

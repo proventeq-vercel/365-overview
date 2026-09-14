@@ -1,12 +1,13 @@
 import type { MockScenario } from '../data/fixtures'
 import { readFeatures, type FeatureFlag } from './featureFlags'
-import { isModesLocked, readModeOverrides, type ModeOverrides } from './modes'
+import { isModesLocked, readModeOverrides, tabStorage, type ModeOverrides } from './modes'
 
 export interface AppEnv {
   useMock: boolean
   mockScenario: MockScenario
   features: ReadonlySet<FeatureFlag>
   modesLocked: boolean
+  overrides: ModeOverrides
 }
 
 const SCENARIOS: MockScenario[] = [
@@ -31,12 +32,13 @@ export function readEnv(
     mockScenario: readScenario(active.mockScenario ?? source.VITE_MOCK_SCENARIO),
     features: readFeatures(active.features ?? source.VITE_FEATURES),
     modesLocked: locked,
+    overrides: active,
   }
 }
 
 function browserOverrides(source: Record<string, string | undefined>): ModeOverrides {
   if (typeof window === 'undefined' || isModesLocked(source)) return {}
-  return readModeOverrides(window.location.search, window.sessionStorage)
+  return readModeOverrides(window.location.search, tabStorage())
 }
 
 const source = import.meta.env as unknown as Record<string, string | undefined>

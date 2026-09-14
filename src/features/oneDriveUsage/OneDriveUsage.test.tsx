@@ -55,6 +55,16 @@ describe('OneDriveUsage', () => {
     expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
   })
 
+  it('says how many deleted-but-retained drives the table includes, so it can exceed the active count', async () => {
+    renderReport()
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(card('OneDrives')).toHaveTextContent('398')
+    expect(screen.getByText('400 of 400')).toBeInTheDocument()
+    expect(
+      screen.getByText(/including 2 deleted drives still under retention/),
+    ).toBeInTheDocument()
+  })
+
   it('never lists a SharePoint site among the drives', async () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })

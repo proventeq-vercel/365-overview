@@ -18,6 +18,7 @@ test('runs as a single report: no menu button, no breadcrumb, no footer, and the
   await page.goto('/onedrive-usage')
   await reportLoaded(page)
   await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
+  await expect(page).toHaveURL(/\/storage-optimisation$/)
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   await expect(page.getByRole('banner').getByRole('navigation')).toHaveCount(0)
   await expect(page.getByRole('contentinfo')).toHaveCount(0)
@@ -188,6 +189,19 @@ test.describe('modes from the URL', () => {
     await page.goto('/?scenario=')
     await reportLoaded(page)
     await expect(page.getByText(/appear as hashes/i)).toHaveCount(0)
+  })
+
+  test('?mock=false on a mock-only build cannot start, and the reset link brings the tab back', async ({ page }) => {
+    await page.goto('/?mock=false')
+    const alert = page.getByRole('alert')
+    await expect(alert).toContainText("Couldn't start the dashboard")
+    await expect(alert).toContainText(/this tab overrides the deployed modes/i)
+    await page.goto('/')
+    await expect(page.getByRole('alert')).toContainText("Couldn't start the dashboard")
+    await page.getByRole('link', { name: 'Reset the modes for this tab' }).click()
+    await reportLoaded(page)
+    await page.goto('/')
+    await reportLoaded(page)
   })
 
   test('a new tab starts from the env again', async ({ browser }) => {

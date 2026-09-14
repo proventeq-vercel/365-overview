@@ -13,10 +13,18 @@ export type ModeOverrides = Partial<Record<ModeKey, string>>
 
 type OverrideStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
-function stored(storage: OverrideStore | null): ModeOverrides {
-  const raw = storage?.getItem(MODES_STORAGE_KEY)
-  if (!raw) return {}
+export function tabStorage(): OverrideStore | null {
   try {
+    return window.sessionStorage
+  } catch {
+    return null
+  }
+}
+
+function stored(storage: OverrideStore | null): ModeOverrides {
+  try {
+    const raw = storage?.getItem(MODES_STORAGE_KEY)
+    if (!raw) return {}
     const parsed: unknown = JSON.parse(raw)
     if (typeof parsed !== 'object' || parsed === null) return {}
     const overrides: ModeOverrides = {}
@@ -32,8 +40,12 @@ function stored(storage: OverrideStore | null): ModeOverrides {
 
 function persist(storage: OverrideStore | null, overrides: ModeOverrides) {
   if (!storage) return
-  if (Object.keys(overrides).length === 0) storage.removeItem(MODES_STORAGE_KEY)
-  else storage.setItem(MODES_STORAGE_KEY, JSON.stringify(overrides))
+  try {
+    if (Object.keys(overrides).length === 0) storage.removeItem(MODES_STORAGE_KEY)
+    else storage.setItem(MODES_STORAGE_KEY, JSON.stringify(overrides))
+  } catch {
+    return
+  }
 }
 
 export function isModesLocked(source: Record<string, string | undefined>): boolean {

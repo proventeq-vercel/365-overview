@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides } from './modes'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides, tabStorage } from './modes'
 
 const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
 
@@ -52,6 +52,43 @@ describe('readModeOverrides', () => {
 
   it('works without any storage at all', () => {
     expect(readModeOverrides('?mock=true', null)).toEqual({ useMock: 'true' })
+  })
+
+  it('still honours the URL when the storage refuses every call', () => {
+    const blocked = {
+      getItem: () => {
+        throw new DOMException('blocked', 'SecurityError')
+      },
+      setItem: () => {
+        throw new DOMException('quota', 'QuotaExceededError')
+      },
+      removeItem: () => {
+        throw new DOMException('blocked', 'SecurityError')
+      },
+    }
+    expect(readModeOverrides('?mock=true', blocked)).toEqual({ useMock: 'true' })
+    expect(readModeOverrides('?modes=reset', blocked)).toEqual({})
+  })
+})
+
+describe('tabStorage', () => {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'sessionStorage')
+  afterEach(() => {
+    if (descriptor) Object.defineProperty(window, 'sessionStorage', descriptor)
+  })
+
+  it('hands out the session storage when the browser allows it', () => {
+    expect(tabStorage()).toBe(window.sessionStorage)
+  })
+
+  it('is null when the browser blocks storage access instead of throwing at boot', () => {
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('blocked', 'SecurityError')
+      },
+    })
+    expect(tabStorage()).toBeNull()
   })
 })
 

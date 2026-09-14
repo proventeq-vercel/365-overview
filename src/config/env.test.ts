@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { readEnv } from './env'
 
 describe('readEnv', () => {
@@ -55,6 +55,11 @@ describe('readEnv with mode overrides', () => {
     expect(env.mockScenario).toBe('concealed')
     expect([...env.features]).toEqual(BOTH.split(','))
     expect(env.modesLocked).toBe(false)
+    expect(env.overrides).toEqual({ useMock: 'true', mockScenario: 'concealed', features: BOTH })
+  })
+
+  it('reports no overrides when none were given', () => {
+    expect(readEnv({ VITE_USE_MOCK: 'true' }).overrides).toEqual({})
   })
 
   it('falls back to the env for whatever the overrides leave out', () => {
@@ -73,5 +78,28 @@ describe('readEnv with mode overrides', () => {
     expect(env.mockScenario).toBe('healthy')
     expect([...env.features]).toEqual(['optimization.storage.report.overview'])
     expect(env.modesLocked).toBe(true)
+    expect(env.overrides).toEqual({})
+  })
+})
+
+describe('env at module load', () => {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'sessionStorage')
+  afterEach(() => {
+    if (descriptor) Object.defineProperty(window, 'sessionStorage', descriptor)
+    vi.resetModules()
+  })
+
+  it('boots when the browser blocks sessionStorage, still reading the URL', async () => {
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('blocked', 'SecurityError')
+      },
+    })
+    window.history.replaceState(null, '', '/?scenario=concealed')
+    vi.resetModules()
+    const { env } = await import('./env')
+    window.history.replaceState(null, '', '/')
+    expect(env.mockScenario).toBe('concealed')
   })
 })

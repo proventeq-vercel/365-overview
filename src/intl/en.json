@@ -9,6 +9,10 @@
   "app.close": "Close",
   "app.noReports.title": "No report is enabled in this build",
   "app.noReports.body": "VITE_FEATURES names no report this app knows. Enable at least one feature flag and rebuild.",
+  "app.modes.overridden": "This tab overrides the deployed modes from the URL, which may be why.",
+  "app.modes.reset": "Reset the modes for this tab",
+  "app.bootstrap.title": "Couldn't start the dashboard",
+  "app.bootstrap.body": "Check the app configuration or refresh to try again.",
   "app.dataAsOf": "Data as of {date}.",
   "app.reportLagNote": "Microsoft usage reports lag by two to three days.",
 
@@ -184,7 +188,7 @@
   "oneDrive.top.subtitle": "The five largest personal drives",
   "oneDrive.top.empty": "No results",
   "oneDrive.table.title": "All OneDrives",
-  "oneDrive.table.subtitle": "Every personal drive in the usage report, with how much of its own allocation it uses",
+  "oneDrive.table.subtitle": "Every personal drive in the usage report, {retained, plural, =0 {none deleted} one {including # deleted drive still under retention} other {including # deleted drives still under retention}}, with how much of its own allocation it uses",
   "oneDrive.table.label": "OneDrives",
   "oneDrive.table.driveHeader": "Drive",
   "oneDrive.allocationNote": "Each OneDrive has its own allocation, so capacity is meaningful per drive. It is not pooled with SharePoint."
