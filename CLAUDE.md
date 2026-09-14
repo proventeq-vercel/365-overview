@@ -35,10 +35,20 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   The ONLY data entry point for the page.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
+- `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
+  `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),
+  `readFeatures(VITE_FEATURES)` (comma list, unknown flags dropped, unset =
+  `DEFAULT_FEATURES` = the storage overview only). No backend, so the build
+  config is the "licence".
 - `src/features/registry.ts` — the **report registry**: `REPORTS` (id, path,
-  title, icon, Component) and `DEFAULT_REPORT`. `App.tsx` mounts one route per
-  entry plus a `*` fallback to the default. Adding a report = one entry here and
-  one folder under `src/features/`; the shell, menu and routes pick it up.
+  title, icon, `requireFeature`, Component) and `enabledReports(features)`.
+  `App.tsx` mounts one route per *enabled* entry plus a `*` fallback to the first
+  enabled one (`NoReports` if none); `AppShell` shows the hamburger + menu only
+  when more than one report is enabled. Adding a report = a flag in
+  `FeatureFlags`, one entry here and one folder under `src/features/`.
+- `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards,
+  top drives, drive table with the per-drive capacity column). Same
+  `useStorageOverview` query, so switching reports never refetches.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
@@ -64,9 +74,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
   styled), `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button,
   select, popover, skeleton, …).
-- `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_SHOW_MENU`
-  (`'true'` shows the hamburger + floating report menu; off = the app runs as a
-  single report with no navigation at all).
+- `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`
+  (parsed once into `env.features`).
 
 ## Rules most likely to be broken by a future change
 
@@ -208,9 +217,10 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 - Base UI `Select` and `Popover` work under jsdom with `userEvent`: click the
   `combobox`, then the `option`; the popover content is portalled, so query by
   `screen`, never by `container`.
-- `env` is a module constant — tests that need the menu on mock `@/config/env`
-  (see `AppShell.menu.test.tsx`); the e2e config runs two dev servers (5006 menu
-  off, 5007 menu on) as two Playwright projects.
+- `env` is a module constant — tests that need other flags mock `@/config/env`
+  (see `App.routes.test.tsx`); `AppShell` takes `reports` as a prop so shell tests
+  pass a list directly. The e2e config runs two dev servers (5006 default flags =
+  one report, 5007 with both flags = menu) as two Playwright projects.
 - Every new test is proven red by mutating the production line it names before
   it is committed. A test that survives the mutation is replaced, not kept.
 - Keep these ARIA hooks (tests depend on them): `role="status"` on caveat

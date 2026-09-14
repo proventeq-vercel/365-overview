@@ -14,9 +14,10 @@ test('renders the header with the tenant and all three report sections', async (
   await expect(main.getByRole('heading', { name: /main offenders/i })).toBeVisible()
 })
 
-test('runs as a single report: no menu button, no breadcrumb, no footer', async ({ page }) => {
-  await page.goto('/')
+test('runs as a single report: no menu button, no breadcrumb, no footer, and the flagged-off report falls back', async ({ page }) => {
+  await page.goto('/onedrive-usage')
   await reportLoaded(page)
+  await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   await expect(page.getByRole('navigation')).toHaveCount(0)
   await expect(page.getByRole('contentinfo')).toHaveCount(0)

@@ -22,6 +22,7 @@ interface SiteTableProps {
   totalUsedBytes: number
   columns: ColumnKey[]
   label?: string
+  nameHeader?: string
 }
 
 type SortDir = 'asc' | 'desc'
@@ -82,6 +83,7 @@ export function SiteTable({
   totalUsedBytes,
   columns,
   label = 'Sites',
+  nameHeader = 'Site',
 }: SiteTableProps) {
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<ColumnKey>(DEFAULT_SORT)
@@ -127,6 +129,7 @@ export function SiteTable({
   }
 
   const gridCols = columns.map((key) => COLUMNS[key].width).join(' ')
+  const headerOf = (key: ColumnKey) => (key === 'name' ? nameHeader : COLUMNS[key].label)
 
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
@@ -253,12 +256,12 @@ export function SiteTable({
                     key === sortKey && 'text-p365-navy',
                   )}
                 >
-                  {COLUMNS[key].label}
+                  {headerOf(key)}
                   {sortIndicator(key)}
                 </button>
               ) : (
                 <span key={key} role="columnheader">
-                  {COLUMNS[key].label}
+                  {headerOf(key)}
                 </span>
               ),
             )}

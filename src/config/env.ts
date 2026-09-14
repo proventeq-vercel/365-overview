@@ -1,9 +1,10 @@
 import type { MockScenario } from '../data/fixtures'
+import { readFeatures, type FeatureFlag } from './featureFlags'
 
 export interface AppEnv {
   useMock: boolean
   mockScenario: MockScenario
-  showMenu: boolean
+  features: ReadonlySet<FeatureFlag>
 }
 
 const SCENARIOS: MockScenario[] = [
@@ -21,7 +22,7 @@ export function readEnv(source: Record<string, string | undefined>): AppEnv {
   return {
     useMock: source.VITE_USE_MOCK === 'true',
     mockScenario: readScenario(source.VITE_MOCK_SCENARIO),
-    showMenu: source.VITE_SHOW_MENU === 'true',
+    features: readFeatures(source.VITE_FEATURES),
   }
 }
 

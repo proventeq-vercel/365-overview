@@ -3,14 +3,22 @@ import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/design/Logo'
-import { DEFAULT_REPORT, REPORTS, type ReportDefinition } from '@/features/registry'
+import type { ReportDefinition } from '@/features/registry'
 import { cn } from '@/lib/utils'
 
-function isCurrent(report: ReportDefinition, pathname: string): boolean {
-  return pathname === report.path || (pathname === '/' && report.id === DEFAULT_REPORT.id)
+function isCurrent(report: ReportDefinition, pathname: string, fallback: ReportDefinition): boolean {
+  return pathname === report.path || (pathname === '/' && report.id === fallback.id)
 }
 
-export function FloatingMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function FloatingMenu({
+  reports,
+  open,
+  onClose,
+}: {
+  reports: readonly ReportDefinition[]
+  open: boolean
+  onClose: () => void
+}) {
   const [rendered, setRendered] = useState(open)
   const [visible, setVisible] = useState(false)
   const closeButton = useRef<HTMLButtonElement>(null)
@@ -78,9 +86,9 @@ export function FloatingMenu({ open, onClose }: { open: boolean; onClose: () => 
           Reports
         </p>
         <ul className="mt-1 flex flex-col gap-0.5">
-          {REPORTS.map((report) => {
+          {reports.map((report) => {
             const Icon = report.icon
-            const current = isCurrent(report, pathname)
+            const current = isCurrent(report, pathname, reports[0])
             return (
               <li key={report.id}>
                 <Link

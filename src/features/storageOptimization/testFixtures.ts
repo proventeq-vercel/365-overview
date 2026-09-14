@@ -22,6 +22,7 @@ export const base: StorageOverview = {
   oneDrive: {
     usedBytes: 120 * GB,
     drives: [],
+    driveCount: 40,
     drivesNearCap: 3,
     deletedButBilling: { bytes: 0, count: 0 },
   },

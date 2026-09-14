@@ -122,9 +122,13 @@ header (logo, tenant name, refresh, settings cog, and in live mode the signed-in
 with **Switch account** and **Sign out**), KPI rails, panels, monochrome charts and
 the full site table. There is no navigation by default — it runs as a single report.
 
-Reports are declared in `src/features/registry.ts`. Set `VITE_SHOW_MENU=true` to add a
-hamburger to the header that opens a floating menu listing every registered report;
-each report is mounted on its own path and the root falls back to the default one.
+Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
+way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,
+`optimization.storage.report.onedrive`). `VITE_FEATURES` lists the enabled flags; only
+those reports are built in and routable. With one report enabled there is no menu at
+all; with two or more, a hamburger in the header opens a floating menu of the enabled
+reports. The root path falls back to the first enabled report. The OneDrive Usage report
+is the proof of concept for a second report and reuses the same model and data.
 
 The settings cog holds the cost per GB per month (with the currency picked from a
 list), and the SharePoint entitlement in TB — the licence estimate is shown as the
@@ -186,14 +190,14 @@ src/
   app/           # Shell: AppShell, Header, FloatingMenu, SettingsPopover, SettingsProvider, UserMenu
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
-  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_SHOW_MENU) + appConfig.ts (VITE_* auth config)
+  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES), featureFlags.ts, appConfig.ts (VITE_* auth config)
   data/          # live.ts (the five Graph calls), fixtures.ts (four mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format
   hooks/         # useStorageOverview — fetches the inputs once, rebuilds the model on settings change
   design/        # P365 design system: theme tokens, StatCard, panels, charts, AlertPanel, skeleton, logo
-  features/      # registry.ts (the report registry) + one folder per report (storageOptimization)
+  features/      # registry.ts (reports + their feature flags) + one folder per report (storageOptimization, oneDriveUsage)
   types/         # StorageOverview, StorageRow and the other shared types
   components/    # Shared UI (SiteTable, CaveatBanner, ErrorState, shadcn primitives)
   test/          # Test utilities and setup

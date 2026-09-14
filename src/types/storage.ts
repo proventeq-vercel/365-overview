@@ -56,6 +56,7 @@ export interface StorageOverview {
   oneDrive: {
     usedBytes: number
     drives: StorageRow[]
+    driveCount: number
     drivesNearCap: number
     deletedButBilling: RetainedTotal
   }

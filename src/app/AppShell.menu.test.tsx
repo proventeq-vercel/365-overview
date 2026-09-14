@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -9,24 +9,33 @@ import { createMockDataSource } from '@/data/fixtures'
 import { AppShell } from './AppShell'
 import { SettingsProvider } from './SettingsProvider'
 
-vi.mock('@/config/env', () => ({
-  env: { useMock: true, mockScenario: 'healthy', showMenu: true },
-}))
+import { HardDrive, Users } from 'lucide-react'
+import type { ReportDefinition } from '@/features/registry'
 
-vi.mock('@/features/registry', async () => {
-  const { HardDrive, Users } = await import('lucide-react')
-  const REPORTS = [
-    { id: 'storage', path: '/storage', title: 'Storage Optimisation', icon: HardDrive, Component: () => null },
-    { id: 'sharing', path: '/sharing', title: 'Oversharing', icon: Users, Component: () => null },
-  ]
-  return { REPORTS, DEFAULT_REPORT: REPORTS[0] }
-})
+const TWO_REPORTS: ReportDefinition[] = [
+  {
+    id: 'storage',
+    path: '/storage',
+    title: 'Storage Optimisation',
+    icon: HardDrive,
+    requireFeature: 'optimization.storage.report.overview',
+    Component: () => null,
+  },
+  {
+    id: 'sharing',
+    path: '/sharing',
+    title: 'Oversharing',
+    icon: Users,
+    requireFeature: 'optimization.storage.report.onedrive',
+    Component: () => null,
+  },
+]
 
 function Location() {
   return <output>{useLocation().pathname}</output>
 }
 
-function renderShell(path = '/') {
+function renderShell(path = '/', reports: ReportDefinition[] = TWO_REPORTS) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function Wrapper({ children }: { children: ReactNode }) {
     return (
@@ -40,7 +49,7 @@ function renderShell(path = '/') {
     )
   }
   return render(
-    <AppShell>
+    <AppShell reports={reports}>
       <Routes>
         <Route path="*" element={<Location />} />
       </Routes>
@@ -51,7 +60,13 @@ function renderShell(path = '/') {
 
 afterEach(cleanup)
 
-describe('AppShell with the menu flag on', () => {
+describe('AppShell', () => {
+  it('has no menu button and no menu at all when a single report is enabled', () => {
+    renderShell('/', [TWO_REPORTS[0]])
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Reports' })).not.toBeInTheDocument()
+  })
+
   it('keeps the menu closed and out of the tree until the hamburger is pressed', () => {
     renderShell()
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()

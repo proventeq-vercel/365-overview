@@ -226,6 +226,20 @@ describe('buildStorageOverview composition', () => {
     expect(overview.oneDrive.drivesNearCap).toBe(0)
   })
 
+  it('counts live drives only, leaving deleted ones to the retained total', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        drives: [
+          drive({ id: 'a' }),
+          drive({ id: 'b' }),
+          drive({ id: 'c', isDeleted: true }),
+        ],
+      }),
+    )
+    expect(overview.oneDrive.driveCount).toBe(2)
+    expect(overview.oneDrive.deletedButBilling.count).toBe(1)
+  })
+
   it('never counts a drive whose allocation is reported as zero', () => {
     const overview = buildStorageOverview(
       inputs({ drives: [drive({ storageUsedBytes: 900 * GB, allocatedBytes: 0 })] }),

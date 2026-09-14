@@ -13,10 +13,13 @@ describe('readEnv', () => {
     expect(readEnv({}).useMock).toBe(false)
   })
 
-  it('shows the report menu only when VITE_SHOW_MENU is exactly true', () => {
-    expect(readEnv({ VITE_SHOW_MENU: 'true' }).showMenu).toBe(true)
-    expect(readEnv({ VITE_SHOW_MENU: 'yes' }).showMenu).toBe(false)
-    expect(readEnv({}).showMenu).toBe(false)
+  it('enables only the storage overview report unless VITE_FEATURES says otherwise', () => {
+    expect([...readEnv({}).features]).toEqual(['optimization.storage.report.overview'])
+    expect([
+      ...readEnv({
+        VITE_FEATURES: 'optimization.storage.report.overview, optimization.storage.report.onedrive',
+      }).features,
+    ]).toEqual(['optimization.storage.report.overview', 'optimization.storage.report.onedrive'])
   })
 })
 

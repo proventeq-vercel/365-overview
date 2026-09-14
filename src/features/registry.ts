@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
-import { HardDrive, type LucideIcon } from 'lucide-react'
+import { Cloud, HardDrive, type LucideIcon } from 'lucide-react'
+import { FeatureFlags, type FeatureFlag } from '@/config/featureFlags'
+import { OneDriveUsage } from './oneDriveUsage/OneDriveUsage'
 import { StorageOptimization } from './storageOptimization/StorageOptimization'
 
 export interface ReportDefinition {
@@ -7,6 +9,7 @@ export interface ReportDefinition {
   path: string
   title: string
   icon: LucideIcon
+  requireFeature: FeatureFlag
   Component: ComponentType
 }
 
@@ -16,8 +19,19 @@ export const REPORTS: readonly ReportDefinition[] = [
     path: '/storage-optimisation',
     title: 'Storage Optimisation',
     icon: HardDrive,
+    requireFeature: FeatureFlags.OptimizationStorageReportOverview,
     Component: StorageOptimization,
+  },
+  {
+    id: 'onedrive-usage',
+    path: '/onedrive-usage',
+    title: 'OneDrive Usage',
+    icon: Cloud,
+    requireFeature: FeatureFlags.OptimizationStorageReportOneDrive,
+    Component: OneDriveUsage,
   },
 ]
 
-export const DEFAULT_REPORT = REPORTS[0]
+export function enabledReports(features: ReadonlySet<FeatureFlag>): ReportDefinition[] {
+  return REPORTS.filter((report) => features.has(report.requireFeature))
+}

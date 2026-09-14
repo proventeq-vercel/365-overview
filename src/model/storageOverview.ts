@@ -163,6 +163,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     oneDrive: {
       usedBytes: oneDriveUsed,
       drives,
+      driveCount: drives.filter((drive) => !drive.isDeleted).length,
       drivesNearCap: drives.filter(
         (drive) =>
           drive.allocatedBytes !== undefined &&

@@ -43,7 +43,9 @@ export default defineConfig({
     },
   ],
   webServer: [
-    devServer(MENU_OFF_PORT, { VITE_SHOW_MENU: 'false' }),
-    devServer(MENU_ON_PORT, { VITE_SHOW_MENU: 'true' }),
+    devServer(MENU_OFF_PORT, {}),
+    devServer(MENU_ON_PORT, {
+      VITE_FEATURES: 'optimization.storage.report.overview,optimization.storage.report.onedrive',
+    }),
   ],
 })
