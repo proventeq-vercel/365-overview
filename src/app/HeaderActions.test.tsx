@@ -11,6 +11,7 @@ import { SettingsProvider } from './SettingsProvider'
 
 const msal = vi.hoisted(() => ({
   accounts: [] as { name?: string; username: string }[],
+  active: null as { name?: string; username: string } | null,
   logoutRedirect: vi.fn(),
   loginRedirect: vi.fn(),
 }))
@@ -18,7 +19,11 @@ const envState = vi.hoisted(() => ({ useMock: false }))
 
 vi.mock('@azure/msal-react', () => ({
   useMsal: () => ({
-    instance: { logoutRedirect: msal.logoutRedirect, loginRedirect: msal.loginRedirect },
+    instance: {
+      logoutRedirect: msal.logoutRedirect,
+      loginRedirect: msal.loginRedirect,
+      getActiveAccount: () => msal.active,
+    },
     accounts: msal.accounts,
   }),
 }))
@@ -54,6 +59,7 @@ async function openOptions(user: ReturnType<typeof userEvent.setup>) {
 beforeEach(() => {
   vi.clearAllMocks()
   msal.accounts = [{ name: 'Gov360 Automation', username: 'gov360@example.com' }]
+  msal.active = null
   envState.useMock = false
 })
 afterEach(() => {
@@ -127,6 +133,20 @@ describe('HeaderActions', () => {
     await openOptions(user)
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }))
     expect(msal.logoutRedirect).toHaveBeenCalledTimes(1)
+    expect(msal.logoutRedirect).toHaveBeenCalledWith({ account: msal.accounts[0] })
     expect(msal.loginRedirect).not.toHaveBeenCalled()
+  })
+
+  it('signs out the active account when the cache holds more than one', async () => {
+    const user = userEvent.setup()
+    msal.accounts = [
+      { name: 'Gov360 Automation', username: 'gov360@example.com' },
+      { name: 'Adele Vance', username: 'adele@example.com' },
+    ]
+    msal.active = msal.accounts[1]
+    renderActions()
+    await openOptions(user)
+    await user.click(screen.getByRole('menuitem', { name: /sign out/i }))
+    expect(msal.logoutRedirect).toHaveBeenCalledWith({ account: msal.accounts[1] })
   })
 })

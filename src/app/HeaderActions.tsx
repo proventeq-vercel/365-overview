@@ -54,7 +54,7 @@ function AccountItems() {
         label={t('header.signOut')}
         description={t('header.signOutHint')}
         onClick={() => {
-          void instance.logoutRedirect()
+          void instance.logoutRedirect({ account: instance.getActiveAccount() ?? accounts[0] })
         }}
       />
     </>

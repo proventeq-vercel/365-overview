@@ -10,8 +10,8 @@ function initialsOf(name: string): string {
 }
 
 export function AccountChip() {
-  const { accounts } = useMsal()
-  const account = accounts[0]
+  const { instance, accounts } = useMsal()
+  const account = instance.getActiveAccount() ?? accounts[0]
   if (!account) return null
   const name = account.name ?? account.username
 
