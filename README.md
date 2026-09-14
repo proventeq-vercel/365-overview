@@ -115,14 +115,21 @@ link to grant it.
 
 ---
 
-## Two views of the same report
+## One report, or a menu of reports
 
-- `/` — the **sneak peek**: the standalone report with its own header, settings cog
-  (rate, currency, entitlement override) and the full site table.
-- `/product` — the **product view**: the same figures rendered inside a Proventeq 365
-  shell (sidebar, breadcrumb, KPI rails, panels, monochrome charts) so it can be shown
-  next to the real Storage Optimisation page. Settings entered in the sneak peek apply
-  here too. Switch with the toggle in either top bar.
+The app renders the Storage Optimisation report in the Proventeq 365 look: a sticky
+header (logo, tenant name, refresh, settings cog, and in live mode the signed-in user
+with **Switch account** and **Sign out**), KPI rails, panels, monochrome charts and
+the full site table. There is no navigation by default — it runs as a single report.
+
+Reports are declared in `src/features/registry.ts`. Set `VITE_SHOW_MENU=true` to add a
+hamburger to the header that opens a floating menu listing every registered report;
+each report is mounted on its own path and the root falls back to the default one.
+
+The settings cog holds the cost per GB per month (with the currency picked from a
+list), and the SharePoint entitlement in TB — the licence estimate is shown as the
+hint so the admin knows what they are replacing. Settings live in the browser's
+localStorage only.
 
 ## Running the app
 
@@ -176,19 +183,19 @@ npm run preview
 
 ```
 src/
-  app/           # App shell: Layout, UserMenu, ViewSwitch, query client
+  app/           # Shell: AppShell, Header, FloatingMenu, SettingsPopover, SettingsProvider, UserMenu
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
-  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO) + appConfig.ts (VITE_* auth config)
+  config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_SHOW_MENU) + appConfig.ts (VITE_* auth config)
   data/          # live.ts (the five Graph calls), fixtures.ts (four mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format
   hooks/         # useStorageOverview — fetches the inputs once, rebuilds the model on settings change
-  product/       # Product view (/product): P365-styled shell, cards, panels, charts, sections
-  sections/      # StorageOptimization: shell, header, KPI row, the three sections, failure screens
+  design/        # P365 design system: theme tokens, StatCard, panels, charts, AlertPanel, skeleton, logo
+  features/      # registry.ts (the report registry) + one folder per report (storageOptimization)
   types/         # StorageOverview, StorageRow and the other shared types
-  components/    # Shared UI (StatCard, SiteTable, CaveatBanner, charts, shadcn primitives)
+  components/    # Shared UI (SiteTable, CaveatBanner, ErrorState, shadcn primitives)
   test/          # Test utilities and setup
 e2e/             # Playwright end-to-end tests
 ```

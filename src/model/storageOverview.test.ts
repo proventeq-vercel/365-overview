@@ -135,6 +135,14 @@ describe('buildStorageOverview entitlement', () => {
     expect(overview.caveats.entitlementIsEstimated).toBe(false)
   })
 
+  it('keeps the licence estimate available while an override is in force', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 5000 * GB }))
+    expect(overview.sharePoint.licenceEstimateBytes).toBe(
+      buildStorageOverview(inputs()).sharePoint.entitledBytes,
+    )
+    expect(overview.sharePoint.licenceEstimateBytes).not.toBe(5000 * GB)
+  })
+
   it('still yields the 1 TiB base for a tenant with no licences at all', () => {
     expect(buildStorageOverview(inputs({ skus: [] })).sharePoint.entitledBytes).toBe(
       1024 * GB,

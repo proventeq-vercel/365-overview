@@ -101,9 +101,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
-  const entitledBytes = forceUnknownEntitlement
-    ? null
-    : (override ?? estimateEntitlementBytes(skus))
+  const licenceEstimateBytes = estimateEntitlementBytes(skus)
+  const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 
   const sharePointUsed = latest(sharePointTrend)
@@ -147,6 +146,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       overageBytes,
       utilization,
       entitlementIsMeasured,
+      licenceEstimateBytes,
       byWorkload: totalsBy(liveSites, (site) => classifyWorkload(site.template)).map(
         ([name, value]) => ({ name, value }),
       ),

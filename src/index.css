@@ -13,12 +13,12 @@
   --color-sky: #2e9cc7;
   --color-amber: #eab000;
   --color-lime: #b1eb46;
-  --color-ink: #0c2340;
+  --color-ink: #0f2c3d;
   --color-ink-soft: #16475c;
 
-  --color-canvas: #f7f8f9;
+  --color-canvas: #f9fafb;
   --color-surface: #ffffff;
-  --color-hairline: #e3e6ea;
+  --color-hairline: #dedede;
 
   --color-p365-navy: #0f2c3d;
   --color-p365-blue: #16475c;
@@ -36,27 +36,30 @@
   --color-p365-grey-700: #434343;
   --color-p365-soft-green: #e1f1f1;
   --color-p365-soft-orange: #fef2ee;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-float: 0 12px 32px rgba(15, 44, 61, 0.18);
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: #f7f8f9;
-  --foreground: #0c2340;
+  --radius: 0.5rem;
+  --background: #f9fafb;
+  --foreground: #0f2c3d;
   --card: #ffffff;
-  --card-foreground: #0c2340;
+  --card-foreground: #0f2c3d;
   --popover: #ffffff;
-  --popover-foreground: #0c2340;
+  --popover-foreground: #0f2c3d;
   --primary: #34a1a0;
   --primary-foreground: #ffffff;
-  --secondary: #f1f2f5;
-  --secondary-foreground: #0c2340;
-  --muted: #f1f2f5;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #0f2c3d;
+  --muted: #f0f0f0;
   --muted-foreground: #6b7280;
   --accent: #eef6f6;
-  --accent-foreground: #0c2340;
+  --accent-foreground: #0f2c3d;
   --destructive: #dc2626;
-  --border: #e3e6ea;
-  --input: #e3e6ea;
+  --border: #dedede;
+  --input: #dedede;
   --ring: #34a1a0;
 }
 
@@ -109,20 +112,40 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  [role='combobox']:not(:disabled),
+  a[href],
+  label[for],
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role='combobox']:disabled {
+    cursor: not-allowed;
+  }
+}
+
 @utility enter-rise {
   --tw-enter-opacity: 0;
   --tw-enter-translate-y: 6px;
   animation: enter 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* Auth screens — consumed by src/auth/* (cannot be Tailwind-classed there) */
-.error-state { background:#fff; border:1px solid #e3e6ea; border-left:3px solid #f98d50; border-radius:12px; padding:1.1rem 1.25rem; }
-.error-state__message { font-weight:600; color:#0c2340; }
-.error-state__hint { margin-top:.35rem; font-size:.85rem; color:#6b7280; }
-.auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f7f8f9; }
-.auth-screen__card { display:flex; flex-direction:column; align-items:center; gap:1rem; }
-.auth-screen__title { color:#6b7280; font-size:.95rem; }
-.auth-screen__spinner { width:36px; height:36px; border-radius:50%; border:3px solid #e3e6ea; border-top-color:#34a1a0; animation:auth-spin .8s linear infinite; }
+/* Auth screens — consumed by src/auth/* (shared foundation, kept free of Tailwind classes) */
+.error-state { background:#fff; border:1px solid #dedede; border-left:3px solid #f97f50; border-radius:8px; padding:1rem 1.25rem; }
+.error-state__message { font-weight:600; color:#0f2c3d; }
+.error-state__hint { margin-top:.35rem; font-size:.8rem; color:#535353; }
+.error-state a { color:#34a1a0; font-weight:600; }
+.auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f9fafb; }
+.auth-screen__card { display:flex; flex-direction:column; align-items:center; gap:1.25rem; animation: enter .3s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.auth-screen__card::before { content:''; width:11rem; height:2.1rem; background:#0f2c3d; -webkit-mask:url(/proventeq-logo.svg) no-repeat center / contain; mask:url(/proventeq-logo.svg) no-repeat center / contain; }
+.auth-screen__title { color:#808080; font-size:.875rem; }
+.auth-screen__spinner { width:2.25rem; height:2.25rem; border-radius:50%; border:4px solid #dedede; border-top-color:#34a1a0; animation:auth-spin .8s linear infinite; }
 @keyframes auth-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .auth-screen__spinner { animation: none; }

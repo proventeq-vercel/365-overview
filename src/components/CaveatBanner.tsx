@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 const TONE_CLASS = {
-  info: 'border-l-sky',
-  warning: 'border-l-amber',
+  info: 'border-l-p365-teal',
+  warning: 'border-l-p365-orange',
 } as const
 
 interface Props {
@@ -17,11 +17,11 @@ export function CaveatBanner({ tone, action, children }: Props) {
     <div
       role="status"
       className={cn(
-        'flex flex-wrap items-center justify-between gap-3 rounded-lg border border-hairline border-l-4 bg-surface px-4 py-3',
+        'flex flex-wrap items-center justify-between gap-3 rounded-lg border border-p365-grey-100 border-l-[3px] bg-white px-4 py-3',
         TONE_CLASS[tone],
       )}
     >
-      <p className="min-w-0 flex-1 basis-64 text-sm text-ink">{children}</p>
+      <p className="min-w-0 flex-1 basis-64 text-sm text-p365-grey-700">{children}</p>
       {action}
     </div>
   )

@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { ChevronDown, ChevronUp, Search } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
@@ -118,8 +120,11 @@ export function SiteTable({
     }
   }
 
-  const sortIndicator = (key: ColumnKey) =>
-    key === sortKey ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
+  const sortIndicator = (key: ColumnKey) => {
+    if (key !== sortKey) return null
+    const Icon = sortDir === 'asc' ? ChevronUp : ChevronDown
+    return <Icon className="size-3.5" aria-hidden="true" />
+  }
 
   const gridCols = columns.map((key) => COLUMNS[key].width).join(' ')
 
@@ -128,11 +133,11 @@ export function SiteTable({
       case 'name':
         return (
           <span role="cell" key={key} className="min-w-0">
-            <span className="block truncate font-medium text-ink">
+            <span className="block truncate font-semibold text-p365-navy">
               {rowName(row.url, row.ownerDisplayName)}
             </span>
             {row.url !== '' && (
-              <span className="block truncate text-xs text-muted-foreground" title={row.url}>
+              <span className="block truncate text-xs text-p365-grey-500" title={row.url}>
                 {row.url}
               </span>
             )}
@@ -140,43 +145,43 @@ export function SiteTable({
         )
       case 'owner':
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-ink-soft">
+          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
             {row.ownerDisplayName}
           </span>
         )
       case 'files':
         return (
-          <span role="cell" key={key} className="tabular text-ink-soft">
+          <span role="cell" key={key} className="tabular text-p365-grey-600">
             {formatNumber(row.fileCount)}
           </span>
         )
       case 'active':
         return (
-          <span role="cell" key={key} className="tabular text-ink-soft">
+          <span role="cell" key={key} className="tabular text-p365-grey-600">
             {formatNumber(row.activeFileCount)}
           </span>
         )
       case 'used':
         return (
-          <span role="cell" key={key} className="tabular text-ink">
+          <span role="cell" key={key} className="tabular font-semibold text-p365-navy">
             {formatBytes(row.storageUsedBytes)}
           </span>
         )
       case 'lastActivity':
         return (
-          <span role="cell" key={key} className="tabular text-ink-soft">
+          <span role="cell" key={key} className="tabular text-p365-grey-600">
             {row.lastActivityDate ?? 'Never'}
           </span>
         )
       case 'template':
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-ink-soft">
+          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
             {row.template ?? ''}
           </span>
         )
       case 'capacity':
         return (
-          <span role="cell" key={key} className="tabular text-ink-soft">
+          <span role="cell" key={key} className="tabular text-p365-grey-600">
             {row.allocatedBytes !== undefined && row.allocatedBytes > 0
               ? formatPercent(capacityRatio(row))
               : ''}
@@ -186,10 +191,10 @@ export function SiteTable({
         const share = totalUsedBytes ? row.storageUsedBytes / totalUsedBytes : 0
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
-            <span className="tabular text-ink-soft">{formatPercent(share, 1)}</span>
-            <span className="h-1.5 flex-1 rounded-full bg-hairline">
+            <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
+            <span className="h-1.5 flex-1 rounded-full bg-p365-grey-50">
               <span
-                className="block h-full rounded-full bg-brand"
+                className="block h-full rounded-full bg-p365-teal transition-[width] duration-300 ease-out"
                 style={{ width: `${Math.min(100, share * 100)}%` }}
               />
             </span>
@@ -202,18 +207,22 @@ export function SiteTable({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex-1">
+        <label className="relative flex-1">
           <span className="sr-only">Search {label}</span>
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-p365-grey-400"
+            aria-hidden="true"
+          />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or owner"
             aria-label={`Search ${label}`}
-            className="w-full max-w-sm rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-ink outline-none transition-colors duration-150 ease-out focus:border-brand"
+            className="h-9 w-full max-w-sm rounded-lg border border-p365-grey-100 bg-white pr-3 pl-9 text-sm text-p365-navy outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-p365-grey-400 focus:border-p365-teal focus:ring-3 focus:ring-p365-teal/20"
           />
         </label>
-        <span className="text-sm text-muted-foreground tabular">
+        <span className="tabular text-sm text-p365-grey-500">
           {formatNumber(visible.length)} of {formatNumber(rows.length)}
         </span>
       </div>
@@ -221,12 +230,12 @@ export function SiteTable({
       <div
         role="table"
         aria-label={label}
-        className="overflow-x-auto rounded-lg border border-hairline bg-surface"
+        className="overflow-x-auto rounded-lg border border-p365-grey-100 bg-white"
       >
         <div className="min-w-[56rem]">
           <div
             role="row"
-            className="grid items-center gap-2 border-b border-hairline bg-muted/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+            className="grid items-center gap-2 border-b border-p365-grey-100 bg-p365-page px-4 py-2.5 text-xs font-semibold text-p365-grey-600"
             style={{ gridTemplateColumns: gridCols }}
           >
             {columns.map((key) =>
@@ -236,7 +245,13 @@ export function SiteTable({
                   type="button"
                   role="columnheader"
                   onClick={() => toggleSort(key)}
-                  className="flex items-center text-left uppercase tracking-wide transition-colors duration-150 ease-out hover:text-ink"
+                  aria-sort={
+                    key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
+                  }
+                  className={cn(
+                    'flex items-center gap-1 text-left transition-colors duration-150 ease-out hover:text-p365-navy',
+                    key === sortKey && 'text-p365-navy',
+                  )}
                 >
                   {COLUMNS[key].label}
                   {sortIndicator(key)}
@@ -263,7 +278,7 @@ export function SiteTable({
                   <div
                     key={row.id}
                     role="row"
-                    className="absolute left-0 top-0 grid w-full items-center gap-2 border-b border-hairline px-4 text-sm transition-colors duration-150 ease-out hover:bg-muted/40"
+                    className="absolute top-0 left-0 grid w-full items-center gap-2 border-b border-p365-grey-50 px-4 text-sm transition-colors duration-150 ease-out hover:bg-p365-page"
                     style={{
                       height: item.size,
                       transform: `translateY(${item.start}px)`,

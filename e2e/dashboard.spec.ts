@@ -1,15 +1,25 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
-test('renders all three report sections', async ({ page }) => {
+async function reportLoaded(page: Page) {
+  await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
+}
+
+test('renders the header with the tenant and all three report sections', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByRole('banner')).toContainText('Contoso Ltd')
   const main = page.getByRole('main')
-  await expect(
-    main.getByRole('heading', { name: /current storage distribution/i }),
-  ).toBeVisible()
-  await expect(
-    main.getByRole('heading', { name: /future state & growth impact/i }),
-  ).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
+  await expect(main.getByRole('heading', { name: /current storage distribution/i })).toBeVisible()
+  await expect(main.getByRole('heading', { name: /future state & growth impact/i })).toBeVisible()
   await expect(main.getByRole('heading', { name: /main offenders/i })).toBeVisible()
+})
+
+test('runs as a single report: no menu button, no breadcrumb, no footer', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
+  await expect(page.getByRole('navigation')).toHaveCount(0)
+  await expect(page.getByRole('contentinfo')).toHaveCount(0)
 })
 
 test('the trend chart draws the entitlement line', async ({ page }) => {
@@ -20,7 +30,7 @@ test('the trend chart draws the entitlement line', async ({ page }) => {
 
 test('every chart has an accessible name', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
+  await reportLoaded(page)
   const charts = await page.getByRole('img').all()
   expect(charts.length).toBeGreaterThan(0)
   for (const chart of charts) {
@@ -30,26 +40,65 @@ test('every chart has an accessible name', async ({ page }) => {
 
 test('the site table stays windowed on a large estate', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
+  await reportLoaded(page)
   const rows = page.getByRole('row')
   await expect(rows.first()).toBeVisible()
   expect(await rows.count()).toBeLessThan(100)
 })
 
-test('the product view renders the same report inside the product shell', async ({ page }) => {
+test('the settings cog re-prices the report in the chosen currency', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Product view' }).click()
-  await expect(page).toHaveURL(/\/product$/)
-  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
-    'Storage Optimisation',
+  await reportLoaded(page)
+  const costCard = page.locator('[data-slot="stat-card"]', { hasText: 'Cost of doing nothing' })
+  await expect(costCard).toContainText('£')
+
+  await page.getByRole('button', { name: 'Settings' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Report settings' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText(/estimated from licences: 7\.8 TB/i)).toBeVisible()
+  await dialog.getByRole('combobox', { name: 'Currency' }).click()
+  await page.getByRole('option', { name: /EUR/ }).click()
+  await expect(costCard).toContainText('€')
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await page.reload()
+  await reportLoaded(page)
+  await expect(costCard).toContainText('€')
+})
+
+test('an entitlement override replaces the licence estimate everywhere', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByLabel('SharePoint entitlement').fill('40')
+  await expect(page.getByText(/estimated from licence counts/i)).toHaveCount(0)
+  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Storage used' })).toContainText(
+    'of 40 TB entitlement',
   )
+})
+
+test('refresh re-runs the report without a blank flash', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await page.getByRole('button', { name: 'Refresh' }).click()
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeVisible()
-  const charts = await page.getByRole('img').all()
-  for (const chart of charts) {
-    await expect(chart).toHaveAccessibleName(/\S/)
-  }
-  await page.getByRole('link', { name: 'Sneak peek' }).click()
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('row').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Refresh' })).toBeEnabled()
+})
+
+test('every button and link shows a pointer cursor', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await page.getByRole('button', { name: 'Settings' }).click()
+  await expect(page.getByRole('dialog', { name: 'Report settings' })).toBeVisible()
+  const cursors = await page.evaluate(() =>
+    [...document.querySelectorAll('button:not(:disabled), a[href], [role="combobox"]')].map((el) => ({
+      label: el.getAttribute('aria-label') ?? el.textContent?.trim() ?? '',
+      cursor: getComputedStyle(el).cursor,
+    })),
+  )
+  expect(cursors.length).toBeGreaterThan(3)
+  expect(cursors.filter((c) => c.cursor !== 'pointer')).toEqual([])
 })

@@ -46,6 +46,7 @@ export interface StorageOverview {
     overageBytes: number | null
     utilization: HealthStatus | null
     entitlementIsMeasured: boolean
+    licenceEstimateBytes: number
     byWorkload: Slice[]
     byTemplate: Slice[]
     sites: StorageRow[]

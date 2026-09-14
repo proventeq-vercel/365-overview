@@ -1,34 +1,30 @@
+import type { ReactNode } from 'react'
 import { ApiError } from '../clients/apiError'
+import { AlertPanel } from '../design/AlertPanel'
 
 interface ErrorStateProps {
   error: unknown
+  action?: ReactNode
 }
 
-export function ErrorState({ error }: ErrorStateProps) {
+function describe(error: unknown): { title: string; detail?: string } {
   if (error instanceof ApiError) {
-    return (
-      <div className="rounded-xl border border-hairline border-l-4 border-l-coral bg-surface px-5 py-4" role="alert">
-        <p className="font-semibold text-ink">{error.message}</p>
-        {error.isAuth && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            Insufficient permissions — admin consent or the required role may be needed for this report.
-          </p>
-        )}
-      </div>
-    )
+    return {
+      title: error.message,
+      detail: error.isAuth
+        ? 'Insufficient permissions — admin consent or the required role may be needed for this report.'
+        : undefined,
+    }
   }
+  if (error instanceof Error) return { title: error.message }
+  return { title: 'An unexpected error occurred.' }
+}
 
-  if (error instanceof Error) {
-    return (
-      <div className="rounded-xl border border-hairline border-l-4 border-l-coral bg-surface px-5 py-4" role="alert">
-        <p className="font-semibold text-ink">{error.message}</p>
-      </div>
-    )
-  }
-
+export function ErrorState({ error, action }: ErrorStateProps) {
+  const { title, detail } = describe(error)
   return (
-    <div className="rounded-xl border border-hairline border-l-4 border-l-coral bg-surface px-5 py-4" role="alert">
-      <p className="font-semibold text-ink">An unexpected error occurred.</p>
-    </div>
+    <AlertPanel tone="error" title={title} action={action}>
+      {detail && <p className="text-sm text-p365-grey-600">{detail}</p>}
+    </AlertPanel>
   )
 }

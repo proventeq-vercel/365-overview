@@ -35,38 +35,52 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   The ONLY data entry point for the page.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
-- `src/sections/StorageOptimization/` — shell (`index.tsx`), `ReportHeader`
-  (settings popover), `KpiRow`, `DistributionSection`, `GrowthSection`,
-  `OffendersSection`, `AccessFailure` (consent vs role screens), `copy.ts`
-  (every user-facing string, P365 wording verbatim), `forecastCopy.ts` (P365's
-  forecast headline/hint/callout logic).
-- `src/components/` — shared UI: `StatCard`, `SiteTable` (generic `StorageRow` +
-  `columns`), `CaveatBanner`, `ErrorState`, `SkeletonCard`, `InsightCallout`;
-  `charts/` (themed Recharts wrappers); `ui/` (shadcn primitives).
-- `src/app/` — `Layout` (shell), `UserMenu`, `ViewSwitch` (Sneak peek ↔
-  Product view), `queryClient`.
-- `src/product/` — the **product view** (`/product`): the same `StorageOverview`
-  rendered to look like P365's Storage Optimisation page. `ProductShell` (navy
-  sidebar + breadcrumb bar, mirrors P365's `NavBar`), `ProductStatCard` (P365
-  `StatCard`: coloured left rail, value in the rail colour), `primitives.tsx`
-  (P365 `Panel` / `SectionHeader` / `MiniStat` / `SoftCallout` / `Pill` /
-  `Legend`), `charts.tsx` (monochrome Recharts doughnut, line, bar + P365
-  `FacetPanel`-style bars), `theme.ts` (P365 tokens, `monoColor` = P365's
-  `monoColorByIndex`, `facetFill` = its teal tint cycle), and one section per
-  P365 section. Copy comes from `sections/StorageOptimization/copy.ts` — never a
-  second copy table. Settings are read from localStorage (the cog lives in the
-  sneak-peek view; P365 has no per-report settings).
+- `src/features/registry.ts` — the **report registry**: `REPORTS` (id, path,
+  title, icon, Component) and `DEFAULT_REPORT`. `App.tsx` mounts one route per
+  entry plus a `*` fallback to the default. Adding a report = one entry here and
+  one folder under `src/features/`; the shell, menu and routes pick it up.
+- `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
+  (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
+  `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
+  windowed `SiteTable` and the concealed-names note), `AccessFailure` (consent
+  vs role screens), `copy.ts` (every user-facing string, P365 wording verbatim),
+  `forecastCopy.ts` (P365's forecast headline/hint/callout logic).
+- `src/design/` — the P365 design system: `theme.ts` (tokens mirrored as
+  `--color-p365-*` in `index.css`, `monoColor` = P365's `monoColorByIndex`,
+  `facetFill` = its teal tint cycle), `StatCard` (coloured left rail, value in
+  the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
+  `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
+  (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
+  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo`.
+- `src/app/` — the shell: `AppShell` (sticky `Header` + optional `FloatingMenu`
+  + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
+  from `useOrg` with skeleton / "Your tenant" fallback, `RefreshButton`,
+  `SettingsPopover`, `UserMenu` in live mode), `SettingsPopover` (Base UI
+  popover: currency `Select`, cost per GB with symbol prefix, entitlement in TB
+  with the licence estimate as hint), `SettingsProvider` / `useSettings`
+  (localStorage-backed `ReportSettings` context), `FloatingMenu` (navy overlay
+  drawer listing `REPORTS`, Escape/backdrop close), `UserMenu` (initials, name,
+  switch account via `prompt: 'select_account'`, sign out), `queryClient`.
+- `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
+  styled), `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button,
+  select, popover, skeleton, …).
+- `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_SHOW_MENU`
+  (`'true'` shows the hamburger + floating report menu; off = the app runs as a
+  single report with no navigation at all).
 
 ## Rules most likely to be broken by a future change
 
-- **Both views consume `buildStorageOverview` and nothing else.** A number the
-  product view needs (e.g. `offenders.topSites` / `topDrives`) is added to the
-  model with a test, never derived in `src/product/`.
-- **The product view copies P365, it does not restyle it.** Colours, sizes and
-  layout come from `Frontend/src/components/styles/themes.ts` and
+- **Sections consume `buildStorageOverview` and nothing else.** A number a
+  section needs (e.g. `offenders.topSites`, `sharePoint.licenceEstimateBytes`)
+  is added to the model with a test, never derived in a component.
+- **The UI copies P365, it does not restyle it.** Colours, sizes and layout come
+  from `Frontend/src/components/styles/themes.ts` and
   `features/storageOptimization/styles.ts` in the P365 repo (tokens mirrored as
   `--color-p365-*` in `index.css`); check the live page on dev-p365 before
-  "improving" anything.
+  "improving" anything. Nothing mirrored from P365 may be decorative: no
+  placeholder navigation, no fake entries — the menu lists `REPORTS` only.
+- **Every clickable shows a pointer** — `index.css` sets it in `@layer base` for
+  buttons, links, options and comboboxes; do not add `cursor-default` back.
 
 - **SharePoint per-site `storageAllocatedInBytes` is the 25 TB site-collection
   maximum. Never sum it, never take a percentage of it. OneDrive per-drive
@@ -182,19 +196,27 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 ## Testing / e2e conventions
 
 - shadcn `Card` renders `data-slot="card"`. `StatCard` nests label and value as
-  **siblings** — scope assertions with `getByText(label).closest('[data-slot="card"]')`.
+  **siblings** — scope assertions with `getByText(label).closest('[data-slot="stat-card"]')`.
 - Every chart wrapper takes an `ariaLabel` and renders `role="img"` — always pass
   it from call sites; the e2e suite asserts every `role="img"` has a name.
 - `SiteTable` is windowed with `@tanstack/react-virtual`; jsdom reports zero
   `offsetHeight`/`offsetWidth`, so tests that need rows to render stub both on
   `HTMLElement.prototype` (see `StorageOptimization.test.tsx`).
-- Controlled inputs (`ReportHeader`) need a stateful harness in tests — a bare
-  `vi.fn()` parent never re-renders, so the input never takes the typed value.
+- `SettingsPopover` reads and writes through `useSettings()` — tests wrap it in
+  `SettingsProvider` (+ `QueryClientProvider` + `DataSourceContext`, it shows the
+  licence estimate) and observe via a probe component or `localStorage`.
+- Base UI `Select` and `Popover` work under jsdom with `userEvent`: click the
+  `combobox`, then the `option`; the popover content is portalled, so query by
+  `screen`, never by `container`.
+- `env` is a module constant — tests that need the menu on mock `@/config/env`
+  (see `AppShell.menu.test.tsx`); the e2e config runs two dev servers (5006 menu
+  off, 5007 menu on) as two Playwright projects.
 - Every new test is proven red by mutating the production line it names before
   it is committed. A test that survives the mutation is replaced, not kept.
 - Keep these ARIA hooks (tests depend on them): `role="status"` on caveat
-  banners, `role="alert"` on the two failure screens, `role="progressbar"` on
-  meters, real table semantics in `SiteTable`.
+  banners and `SoftCallout`, `role="alert"` on `AlertPanel`, `aria-busy` on
+  `ReportSkeleton`, `role="dialog"` on the menu and the settings popover, real
+  table semantics in `SiteTable`.
 
 ## Known deferred items
 

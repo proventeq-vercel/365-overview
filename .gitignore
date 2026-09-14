@@ -30,3 +30,4 @@ dist-ssr
 *.sw?
 .superpowers/
 .temp/
+test-results/

@@ -12,6 +12,12 @@ describe('readEnv', () => {
     expect(readEnv({ VITE_USE_MOCK: '1' }).useMock).toBe(false)
     expect(readEnv({}).useMock).toBe(false)
   })
+
+  it('shows the report menu only when VITE_SHOW_MENU is exactly true', () => {
+    expect(readEnv({ VITE_SHOW_MENU: 'true' }).showMenu).toBe(true)
+    expect(readEnv({ VITE_SHOW_MENU: 'yes' }).showMenu).toBe(false)
+    expect(readEnv({}).showMenu).toBe(false)
+  })
 })
 
 describe('readEnv mock scenario', () => {

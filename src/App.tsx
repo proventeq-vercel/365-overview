@@ -1,21 +1,20 @@
 import { Route, Routes } from 'react-router-dom'
-import { Layout } from './app/Layout'
-import { ProductStorageOptimization } from './product/ProductStorageOptimization'
-import { StorageOptimization } from './sections/StorageOptimization'
+import { AppShell } from './app/AppShell'
+import { SettingsProvider } from './app/SettingsProvider'
+import { DEFAULT_REPORT, REPORTS } from './features/registry'
 
 function App() {
   return (
-    <Routes>
-      <Route path="/product/*" element={<ProductStorageOptimization />} />
-      <Route
-        path="*"
-        element={
-          <Layout>
-            <StorageOptimization />
-          </Layout>
-        }
-      />
-    </Routes>
+    <SettingsProvider>
+      <AppShell>
+        <Routes>
+          {REPORTS.map((report) => (
+            <Route key={report.id} path={report.path} element={<report.Component />} />
+          ))}
+          <Route path="*" element={<DEFAULT_REPORT.Component />} />
+        </Routes>
+      </AppShell>
+    </SettingsProvider>
   )
 }
 
