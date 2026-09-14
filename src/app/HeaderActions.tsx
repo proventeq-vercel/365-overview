@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { Ellipsis, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
+import { EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
 import { GRAPH_SCOPES } from '@/auth/msalConfig'
 import { Button } from '@/components/ui/button'
 import {
@@ -69,7 +69,7 @@ export function HeaderActions() {
             <Button type="button" variant="ghost" size="icon" aria-label="Options" title="Options" />
           }
         >
-          <Ellipsis aria-hidden="true" />
+          <EllipsisVertical aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent aria-label="Options" className="w-72">
           <RefreshItem />

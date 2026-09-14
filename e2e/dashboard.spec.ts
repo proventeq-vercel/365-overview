@@ -110,3 +110,20 @@ test('every button, link and menu item shows a pointer cursor', async ({ page })
   expect(cursors.length).toBeGreaterThan(3)
   expect(cursors.filter((c) => c.cursor !== 'pointer')).toEqual([])
 })
+
+test.describe('before any script runs', () => {
+  test.use({ javaScriptEnabled: false })
+
+  test('the HTML shell already shows the branded loading card', async ({ page }) => {
+    await page.goto('/')
+    const status = page.getByRole('status')
+    await expect(status).toContainText('Loading…')
+    await expect(status.locator('.auth-screen__spinner')).toBeVisible()
+    const logo = await status.locator('.auth-screen__card').evaluate((card) => {
+      const before = getComputedStyle(card, '::before')
+      return { mask: before.maskImage || before.webkitMaskImage, width: before.width }
+    })
+    expect(logo.mask).toContain('proventeq-logo.svg')
+    expect(logo.width).not.toBe('0px')
+  })
+})
