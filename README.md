@@ -54,8 +54,11 @@ cp .env.example .env
 ```
 
 `.env` is git-ignored (it holds real local values). On **Vercel**, set these in
-**Project Settings > Environment Variables** — no config file is deployed, and
-the same repo builds cleanly for any environment.
+**Project Settings > Environment Variables** — no env file is deployed, and
+the same repo builds cleanly for any environment. `vercel.json` carries the one
+piece of hosting config the app needs: a rewrite of every path to `index.html`,
+so a reload on `/onedrive-usage` (or any client-side route) is served by the
+app instead of Vercel's 404.
 
 ### Auth config (live mode only)
 

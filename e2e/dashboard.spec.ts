@@ -18,7 +18,7 @@ test('runs as a single report: no menu button, no breadcrumb, no footer, and the
   await page.goto('/onedrive-usage')
   await reportLoaded(page)
   await expect(page.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeVisible()
-  await expect(page).toHaveURL(/\/storage-optimisation$/)
+  await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('button', { name: 'Open menu' })).toHaveCount(0)
   await expect(page.getByRole('banner').getByRole('navigation')).toHaveCount(0)
   await expect(page.getByRole('contentinfo')).toHaveCount(0)
