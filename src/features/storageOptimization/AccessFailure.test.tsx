@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { screen, cleanup, fireEvent } from '@testing-library/react'
+import { render } from '@/test/render'
 import { ApiError } from '@/clients/apiError'
 import { AccessFailure } from './AccessFailure'
 

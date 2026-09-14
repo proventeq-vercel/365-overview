@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
+import { render } from '@/test/render'
 import { base, unknownEntitlement } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
 import { KpiCards } from './KpiCards'

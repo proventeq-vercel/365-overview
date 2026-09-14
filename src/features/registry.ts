@@ -1,13 +1,14 @@
 import type { ComponentType } from 'react'
 import { Cloud, HardDrive, type LucideIcon } from 'lucide-react'
 import { FeatureFlags, type FeatureFlag } from '@/config/featureFlags'
+import type { TranslateKey } from '@/hooks/useTranslation'
 import { OneDriveUsage } from './oneDriveUsage/OneDriveUsage'
 import { StorageOptimization } from './storageOptimization/StorageOptimization'
 
 export interface ReportDefinition {
   id: string
   path: string
-  title: string
+  titleKey: TranslateKey
   icon: LucideIcon
   requireFeature: FeatureFlag
   Component: ComponentType
@@ -17,7 +18,7 @@ export const REPORTS: readonly ReportDefinition[] = [
   {
     id: 'storage-optimisation',
     path: '/storage-optimisation',
-    title: 'Storage Optimisation',
+    titleKey: 'reports.storageOptimisation.title',
     icon: HardDrive,
     requireFeature: FeatureFlags.OptimizationStorageReportOverview,
     Component: StorageOptimization,
@@ -25,7 +26,7 @@ export const REPORTS: readonly ReportDefinition[] = [
   {
     id: 'onedrive-usage',
     path: '/onedrive-usage',
-    title: 'OneDrive Usage',
+    titleKey: 'reports.oneDriveUsage.title',
     icon: Cloud,
     requireFeature: FeatureFlags.OptimizationStorageReportOneDrive,
     Component: OneDriveUsage,

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
+import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 
 export type ColumnKey =
   | 'name'
@@ -28,7 +29,7 @@ interface SiteTableProps {
 type SortDir = 'asc' | 'desc'
 
 interface ColumnSpec {
-  label: string
+  label: TranslateKey
   sortable: boolean
   width: string
   sortValue?: (row: StorageRow) => number
@@ -40,36 +41,36 @@ const capacityRatio = (row: StorageRow): number =>
     : 0
 
 const COLUMNS: Record<ColumnKey, ColumnSpec> = {
-  name: { label: 'Site', sortable: false, width: 'minmax(0,2fr)' },
-  owner: { label: 'Owner', sortable: false, width: 'minmax(0,1.5fr)' },
-  files: { label: 'Files', sortable: true, width: '80px', sortValue: (r) => r.fileCount },
+  name: { label: 'table.column.site', sortable: false, width: 'minmax(0,2fr)' },
+  owner: { label: 'table.column.owner', sortable: false, width: 'minmax(0,1.5fr)' },
+  files: { label: 'table.column.files', sortable: true, width: '80px', sortValue: (r) => r.fileCount },
   active: {
-    label: 'Active files',
+    label: 'table.column.active',
     sortable: true,
     width: '96px',
     sortValue: (r) => r.activeFileCount,
   },
   used: {
-    label: 'Storage used',
+    label: 'table.column.used',
     sortable: true,
     width: '120px',
     sortValue: (r) => r.storageUsedBytes,
   },
   share: {
-    label: 'Share',
+    label: 'table.column.share',
     sortable: true,
     width: 'minmax(120px,1.4fr)',
     sortValue: (r) => r.storageUsedBytes,
   },
   lastActivity: {
-    label: 'Last activity',
+    label: 'table.column.lastActivity',
     sortable: true,
     width: '120px',
     sortValue: (r) => (r.lastActivityDate ? Date.parse(r.lastActivityDate) : 0),
   },
-  template: { label: 'Template', sortable: false, width: 'minmax(0,1fr)' },
+  template: { label: 'table.column.template', sortable: false, width: 'minmax(0,1fr)' },
   capacity: {
-    label: 'Capacity used',
+    label: 'table.column.capacity',
     sortable: true,
     width: '120px',
     sortValue: capacityRatio,
@@ -82,9 +83,12 @@ export function SiteTable({
   rows,
   totalUsedBytes,
   columns,
-  label = 'Sites',
-  nameHeader = 'Site',
+  label,
+  nameHeader,
 }: SiteTableProps) {
+  const t = useTranslation()
+  const tableLabel = label ?? t('table.sites')
+  const nameLabel = nameHeader ?? t('table.column.site')
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<ColumnKey>(DEFAULT_SORT)
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -129,7 +133,7 @@ export function SiteTable({
   }
 
   const gridCols = columns.map((key) => COLUMNS[key].width).join(' ')
-  const headerOf = (key: ColumnKey) => (key === 'name' ? nameHeader : COLUMNS[key].label)
+  const headerOf = (key: ColumnKey) => (key === 'name' ? nameLabel : t(COLUMNS[key].label))
 
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
@@ -173,7 +177,7 @@ export function SiteTable({
       case 'lastActivity':
         return (
           <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {row.lastActivityDate ?? 'Never'}
+            {row.lastActivityDate ?? t('table.never')}
           </span>
         )
       case 'template':
@@ -211,7 +215,7 @@ export function SiteTable({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="relative flex-1">
-          <span className="sr-only">Search {label}</span>
+          <span className="sr-only">{t('table.search', { label: tableLabel })}</span>
           <Search
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-p365-grey-400"
             aria-hidden="true"
@@ -220,19 +224,19 @@ export function SiteTable({
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name or owner"
-            aria-label={`Search ${label}`}
+            placeholder={t('table.searchPlaceholder')}
+            aria-label={t('table.search', { label: tableLabel })}
             className="h-9 w-full max-w-sm rounded-lg border border-p365-grey-100 bg-white pr-3 pl-9 text-sm text-p365-navy outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-p365-grey-400 focus:border-p365-teal focus:ring-3 focus:ring-p365-teal/20"
           />
         </label>
         <span className="tabular text-sm text-p365-grey-500">
-          {formatNumber(visible.length)} of {formatNumber(rows.length)}
+          {t('table.count', { visible: formatNumber(visible.length), total: formatNumber(rows.length) })}
         </span>
       </div>
 
       <div
         role="table"
-        aria-label={label}
+        aria-label={tableLabel}
         className="overflow-x-auto rounded-lg border border-p365-grey-100 bg-white"
       >
         <div className="min-w-[56rem]">

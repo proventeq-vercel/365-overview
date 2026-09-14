@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 import { AdornedInput } from '@/design/AdornedInput'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
+import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
 import { GB_IN_BYTES } from '@/lib/entitlement'
 import { formatBytes } from '@/lib/format'
@@ -45,6 +46,7 @@ export function SettingsDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const t = useTranslation()
   const { settings, update } = useSettings()
   const { data } = useStorageOverview(settings)
   const currencyId = useId()
@@ -60,12 +62,10 @@ export function SettingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>Report settings</DialogTitle>
-        <DialogDescription>
-          Cost assumptions and the tenant entitlement. Saved in this browser only.
-        </DialogDescription>
+        <DialogTitle>{t('settings.title')}</DialogTitle>
+        <DialogDescription>{t('settings.description')}</DialogDescription>
         <div className="mt-4 flex flex-col gap-4">
-          <Field id={currencyId} label="Currency">
+          <Field id={currencyId} label={t('settings.currency')}>
             <Select
               value={settings.currency}
               onValueChange={(value) => update({ currency: value ?? settings.currency })}
@@ -99,8 +99,8 @@ export function SettingsDialog({
 
           <Field
             id={rateId}
-            label="Cost per GB per month"
-            hint="Used for the cost of doing nothing and the growth cost."
+            label={t('settings.rate')}
+            hint={t('settings.rateHint')}
           >
             <AdornedInput
               id={rateId}
@@ -109,7 +109,7 @@ export function SettingsDialog({
               step="0.01"
               min="0"
               prefix={currencySymbol(settings.currency)}
-              suffix="/ GB / month"
+              suffix={t('settings.rateSuffix')}
               value={settings.ratePerGb}
               onChange={(e) => update({ ratePerGb: Number(e.target.value) })}
             />
@@ -117,11 +117,11 @@ export function SettingsDialog({
 
           <Field
             id={entitlementId}
-            label="SharePoint entitlement"
+            label={t('settings.entitlement')}
             hint={
               licenceEstimate
-                ? `Estimated from licences: ${licenceEstimate}. Enter the figure from the SharePoint admin centre to replace it; clear it to go back to the estimate.`
-                : 'Enter the figure from the SharePoint admin centre; clear it to use the licence estimate.'
+                ? t('settings.entitlementHint', { estimate: licenceEstimate })
+                : t('settings.entitlementHintNoEstimate')
             }
           >
             <AdornedInput
@@ -130,8 +130,8 @@ export function SettingsDialog({
               inputMode="decimal"
               step="0.5"
               min="0"
-              suffix="TB"
-              placeholder="Estimated from licences"
+              suffix={t('settings.entitlementUnit')}
+              placeholder={t('settings.entitlementPlaceholder')}
               value={overrideTb}
               onChange={(e) =>
                 update({

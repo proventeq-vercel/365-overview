@@ -53,8 +53,19 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
   windowed `SiteTable` and the concealed-names note), `AccessFailure` (consent
-  vs role screens), `copy.ts` (every user-facing string, P365 wording verbatim),
-  `forecastCopy.ts` (P365's forecast headline/hint/callout logic).
+  vs role screens), `forecastCopy.ts` (P365's forecast headline/hint/callout
+  logic; takes `t` because it runs outside React).
+- `src/intl/en.json` + `src/hooks/useTranslation.ts` + `src/app/AppIntlProvider.tsx`
+  — localisation exactly the way P365 does it: `react-intl`, one flat English
+  catalogue with dotted keys and ICU `{values}`, `IntlProvider` at the root
+  (mounted in `main.tsx` above the auth screens, muting MISSING_TRANSLATION),
+  and `const t = useTranslation()` → `t('storageOptimisation.kpi.used')`.
+  `TranslateKey` is `keyof typeof en.json`, so a typo is a type error. English
+  only, no language switcher yet. `src/intl/catalogue.test.ts` fails on a key
+  the source asks for but the catalogue lacks, and on a dead catalogue key —
+  add the key and its use together. Non-component code (`forecastCopy.ts`,
+  `ErrorState.describe`) receives `t` as an argument; the registry stores
+  `titleKey`s and the menu resolves them.
 - `src/design/` — the P365 design system: `theme.ts` (tokens mirrored as
   `--color-p365-*` in `index.css`, `monoColor` = P365's `monoColorByIndex`,
   `facetFill` = its teal tint cycle), `StatCard` (coloured left rail, value in
@@ -134,7 +145,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Every user-facing string, colour rule and card state comes from P365's
   `features/storageOptimization` (`storageFormat.ts`, `forecastCallout.ts`,
   `intl/en.json` under `storageOverview.*`). Change the wording there first, or
-  not at all; `copy.ts` mirrors it and the cost rate default is P365's
+  not at all; `src/intl/en.json` mirrors it and the cost rate default is P365's
   `StorageOptimisationOptions.DefaultCostRatePerGbPerMonth` (0.16 GBP).
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
@@ -216,6 +227,10 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 - `SiteTable` is windowed with `@tanstack/react-virtual`; jsdom reports zero
   `offsetHeight`/`offsetWidth`, so tests that need rows to render stub both on
   `HTMLElement.prototype` (see `StorageOptimization.test.tsx`).
+- Component tests import `render` from `@/test/render`, not from
+  `@testing-library/react`: it wraps the tree in `AppIntlProvider` (a bare
+  render of anything that calls `useTranslation()` throws). The same module
+  exports `translate`, a non-hook `t` for pure helpers (`forecastCopy.test.ts`).
 - `SettingsDialog` reads and writes through `useSettings()` — tests render it
   with `open` inside `SettingsProvider` (+ `QueryClientProvider` +
   `DataSourceContext`, it shows the licence estimate) and observe via a probe

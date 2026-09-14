@@ -1,7 +1,9 @@
 import { formatLongMonthYear } from '@/lib/format'
 import type { HealthStatus } from '@/lib/thresholds'
 import type { ForecastStatus, StorageOverview } from '@/types/storage'
-import { COPY, FORECAST_HORIZON_YEARS } from './copy'
+import type { TranslateFn } from '@/hooks/useTranslation'
+
+export const FORECAST_HORIZON_YEARS = 10
 
 export const RISK_TONE: Record<ForecastStatus, HealthStatus | undefined> = {
   Healthy: 'healthy',
@@ -19,27 +21,27 @@ export function exhaustionLabel(overview: StorageOverview): string | null {
   return date === null ? null : formatLongMonthYear(date)
 }
 
-export function forecastHeadline(overview: StorageOverview): string {
+export function forecastHeadline(overview: StorageOverview, t: TranslateFn): string {
   const { sharePoint, growth } = overview
-  if (sharePoint.entitledBytes === null) return COPY.kpi.unknown
+  if (sharePoint.entitledBytes === null) return t('storageOptimisation.kpi.unknown')
   const date = exhaustionLabel(overview)
   if (date !== null) return date
-  if (growth.forecastMonthsToExhaustion === 0) return COPY.growth.alreadyExhausted
-  if (growth.forecastStatus === 'Unknown') return COPY.kpi.forecastInsufficient
+  if (growth.forecastMonthsToExhaustion === 0) return t('storageOptimisation.growth.alreadyExhausted')
+  if (growth.forecastStatus === 'Unknown') return t('storageOptimisation.kpi.forecastInsufficient')
   return growth.forecastMonthsToExhaustion !== null &&
     growth.forecastMonthsToExhaustion >= FORECAST_HORIZON_YEARS * 12
-    ? COPY.kpi.forecastBeyondHorizon(FORECAST_HORIZON_YEARS)
-    : COPY.kpi.forecastNone
+    ? t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS })
+    : t('storageOptimisation.kpi.forecastNone')
 }
 
-export function forecastHint(overview: StorageOverview): string {
+export function forecastHint(overview: StorageOverview, t: TranslateFn): string {
   const { sharePoint, growth } = overview
-  if (sharePoint.entitledBytes === null) return COPY.kpi.forecastUnknownHint
-  if (exhaustionLabel(overview) !== null) return COPY.kpi.forecastHint
-  if (growth.forecastMonthsToExhaustion === 0) return COPY.growth.alreadyExhaustedNote
+  if (sharePoint.entitledBytes === null) return t('storageOptimisation.kpi.forecastUnknownHint')
+  if (exhaustionLabel(overview) !== null) return t('storageOptimisation.kpi.forecastHint')
+  if (growth.forecastMonthsToExhaustion === 0) return t('storageOptimisation.growth.alreadyExhaustedNote')
   return growth.forecastStatus === 'Unknown'
-    ? COPY.kpi.forecastInsufficientHint
-    : COPY.kpi.forecastHint
+    ? t('storageOptimisation.kpi.forecastInsufficientHint')
+    : t('storageOptimisation.kpi.forecastHint')
 }
 
 export interface ForecastCallout {
@@ -50,39 +52,39 @@ export interface ForecastCallout {
   note: string
 }
 
-export function buildCallout(overview: StorageOverview): ForecastCallout {
+export function buildCallout(overview: StorageOverview, t: TranslateFn): ForecastCallout {
   const { sharePoint, growth, caveats } = overview
   const quotaKnown = sharePoint.entitledBytes !== null
   const status = growth.forecastStatus
   const date = exhaustionLabel(overview)
 
   const [headline, note] = !quotaKnown
-    ? [COPY.growth.forecastUnavailable, COPY.growth.forecastUnavailableNote]
+    ? [t('storageOptimisation.growth.forecastUnavailable'), t('storageOptimisation.growth.forecastUnavailableNote')]
     : date !== null
       ? [
-          COPY.growth.exhaustsOn(date),
+          t('storageOptimisation.growth.exhaustsOn', { date }),
           forecastNeedsAction(status)
-            ? COPY.growth.impactNote
-            : COPY.growth.impactNoteNoActionNeeded,
+            ? t('storageOptimisation.growth.impactNote')
+            : t('storageOptimisation.growth.impactNoteNoActionNeeded'),
         ]
       : status === 'Critical'
-        ? [COPY.growth.alreadyExhausted, COPY.growth.alreadyExhaustedNote]
+        ? [t('storageOptimisation.growth.alreadyExhausted'), t('storageOptimisation.growth.alreadyExhaustedNote')]
         : status === 'Unknown'
-          ? [COPY.growth.forecastIndeterminate, COPY.growth.forecastIndeterminateNote]
+          ? [t('storageOptimisation.growth.forecastIndeterminate'), t('storageOptimisation.growth.forecastIndeterminateNote')]
           : [
-              COPY.growth.noExhaustion(FORECAST_HORIZON_YEARS),
-              COPY.growth.noExhaustionNote(FORECAST_HORIZON_YEARS),
+              t('storageOptimisation.growth.noExhaustion', { years: FORECAST_HORIZON_YEARS }),
+              t('storageOptimisation.growth.noExhaustionNote', { years: FORECAST_HORIZON_YEARS }),
             ]
 
   return {
     tone: forecastNeedsAction(status) ? 'warn' : 'info',
-    pillLabel: quotaKnown ? COPY.growth.risk[status] : COPY.kpi.unknown,
+    pillLabel: quotaKnown ? t(`storageOptimisation.growth.risk.${status}`) : t('storageOptimisation.kpi.unknown'),
     pillStatus: quotaKnown ? (RISK_TONE[status] ?? null) : null,
     headline,
     note: [
       note,
-      caveats.entitlementIsEstimated ? COPY.growth.estimatedQuotaNote : null,
-      growth.seriesIsVolatile ? COPY.growth.volatileNote : null,
+      caveats.entitlementIsEstimated ? t('storageOptimisation.growth.estimatedQuotaNote') : null,
+      growth.seriesIsVolatile ? t('storageOptimisation.growth.volatileNote') : null,
     ]
       .filter((part) => part !== null)
       .join(' '),

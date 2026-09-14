@@ -1,40 +1,41 @@
 import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
+import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
 import type { StorageOverview } from '@/types/storage'
-import { COPY } from './copy'
 
 export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
+  const t = useTranslation()
   const { usedBytes, driveCount, drivesNearCap, deletedButBilling } = overview.oneDrive
 
   return (
     <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" style={{ animationDelay: '40ms' }}>
       <StatCard
-        label={COPY.kpi.used}
+        label={t('oneDrive.kpi.used')}
         value={formatBytes(usedBytes)}
         color={P365.navy}
-        information={COPY.kpi.usedHint}
+        information={t('oneDrive.kpi.usedHint')}
       />
       <StatCard
-        label={COPY.kpi.drives}
+        label={t('oneDrive.kpi.drives')}
         value={formatNumber(driveCount)}
         color={P365.blue}
-        information={COPY.kpi.drivesHint}
+        information={t('oneDrive.kpi.drivesHint')}
       />
       <StatCard
-        label={COPY.kpi.nearCap}
+        label={t('oneDrive.kpi.nearCap')}
         value={formatNumber(drivesNearCap)}
         color={drivesNearCap > 0 ? P365.orange : P365.green}
-        information={drivesNearCap > 0 ? COPY.kpi.nearCapHint : COPY.kpi.nearCapNone}
+        information={drivesNearCap > 0 ? t('oneDrive.kpi.nearCapHint') : t('oneDrive.kpi.nearCapNone')}
       />
       <StatCard
-        label={COPY.kpi.retained}
+        label={t('oneDrive.kpi.retained')}
         value={formatBytes(deletedButBilling.bytes)}
         color={deletedButBilling.count > 0 ? P365.yellow : P365.grey400}
         information={
           deletedButBilling.count > 0
-            ? COPY.kpi.retainedHint(formatNumber(deletedButBilling.count))
-            : COPY.kpi.retainedNone
+            ? t('oneDrive.kpi.retainedHint', { count: formatNumber(deletedButBilling.count) })
+            : t('oneDrive.kpi.retainedNone')
         }
       />
     </div>

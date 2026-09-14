@@ -8,6 +8,7 @@ import {
 } from '@azure/msal-browser'
 import { AuthLoadingScreen } from './AuthLoadingScreen'
 import { AuthErrorScreen } from './AuthErrorScreen'
+import { useTranslation } from '../hooks/useTranslation'
 
 /**
  * Drives the redirect-based MSAL login lifecycle. Ported from the ProventeqCloud
@@ -23,6 +24,7 @@ import { AuthErrorScreen } from './AuthErrorScreen'
  *   children (the authenticated app).
  */
 export function MsalAuthHandler({ children }: { children: ReactNode }) {
+  const t = useTranslation()
   const { instance, accounts, inProgress } = useMsal()
   const [activeAccount, setActiveAccount] = useState<AccountInfo | null>(
     instance.getActiveAccount(),
@@ -44,7 +46,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         event.interactionType === InteractionType.Redirect
       ) {
         console.error('Login error:', event.error)
-        setAuthError(event.error ?? new Error('An unknown authentication error occurred.'))
+        setAuthError(event.error ?? new Error(t('auth.unknownError')))
       }
     })
     return () => {
@@ -52,7 +54,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         instance.removeEventCallback(callbackId)
       }
     }
-  }, [instance])
+  }, [instance, t])
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -86,7 +88,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
   }
 
   if (inProgress !== InteractionStatus.None) {
-    return <AuthLoadingScreen title="Authenticating…" />
+    return <AuthLoadingScreen title={t('auth.authenticating')} />
   }
 
   return <>{children}</>

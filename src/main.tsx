@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { getConfig } from './config/appConfig'
 import { env } from './config/env'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
+import { AppIntlProvider } from './app/AppIntlProvider'
 import { queryClient } from './app/queryClient'
 import { DataProvider } from './data/DataProvider'
 import App from './App.tsx'
@@ -57,7 +58,7 @@ function bootstrap() {
   if (env.useMock) {
     // Mock mode: no auth config, no MSAL. Keeps mock mode MSAL-free for
     // unit tests and Playwright e2e.
-    render(appTree)
+    render(<AppIntlProvider>{appTree}</AppIntlProvider>)
     return
   }
 
@@ -67,7 +68,11 @@ function bootstrap() {
   // MsalAuthProvider, and DataProvider's LiveDataProvider runs inside
   // MsalProvider so useMsal() works.
   getConfig()
-  render(<MsalAuthProvider>{appTree}</MsalAuthProvider>)
+  render(
+    <AppIntlProvider>
+      <MsalAuthProvider>{appTree}</MsalAuthProvider>
+    </AppIntlProvider>,
+  )
 }
 
 try {

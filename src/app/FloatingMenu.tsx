@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/design/Logo'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { ReportDefinition } from '@/features/registry'
 import { cn } from '@/lib/utils'
 
@@ -19,6 +20,7 @@ export function FloatingMenu({
   open: boolean
   onClose: () => void
 }) {
+  const t = useTranslation()
   const [rendered, setRendered] = useState(open)
   const [visible, setVisible] = useState(false)
   const closeButton = useRef<HTMLButtonElement>(null)
@@ -59,7 +61,7 @@ export function FloatingMenu({
       <nav
         role="dialog"
         aria-modal="true"
-        aria-label="Reports"
+        aria-label={t('app.reports')}
         onTransitionEnd={() => {
           if (!open) setRendered(false)
         }}
@@ -75,7 +77,7 @@ export function FloatingMenu({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Close menu"
+            aria-label={t('app.closeMenu')}
             className="text-white/80 hover:bg-white/10 hover:text-white"
             onClick={onClose}
           >
@@ -83,7 +85,7 @@ export function FloatingMenu({
           </Button>
         </div>
         <p className="mt-6 px-2 text-xs font-semibold uppercase tracking-wide text-white/60">
-          Reports
+          {t('app.reports')}
         </p>
         <ul className="mt-1 flex flex-col gap-0.5">
           {reports.map((report) => {
@@ -101,7 +103,7 @@ export function FloatingMenu({
                   )}
                 >
                   <Icon className="size-4.5 shrink-0" aria-hidden="true" />
-                  {report.title}
+                  {t(report.titleKey)}
                 </Link>
               </li>
             )

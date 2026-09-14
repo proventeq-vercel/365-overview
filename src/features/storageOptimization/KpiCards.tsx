@@ -1,5 +1,5 @@
 import { formatBytes, formatPercent } from '@/lib/format'
-import { COPY } from './copy'
+import { useTranslation } from '@/hooks/useTranslation'
 import { forecastHeadline, forecastHint } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function KpiCards({ overview }: Props) {
+  const t = useTranslation()
   const { sharePoint, growth, cost } = overview
   const quotaKnown = sharePoint.entitledBytes !== null
   const rate = formatMoney(cost.ratePerGb, cost.currency)
@@ -18,64 +19,64 @@ export function KpiCards({ overview }: Props) {
   return (
     <div className="enter-rise flex flex-col gap-2" style={{ animationDelay: '40ms' }}>
       <div>
-        <p className="text-sm font-semibold text-p365-navy">Tenant capacity</p>
-        <p className="text-sm text-p365-grey-500">
-          Tenant-wide Microsoft 365 storage measured against your licensed entitlement
-        </p>
+        <p className="text-sm font-semibold text-p365-navy">{t('storageOptimisation.capacity.title')}</p>
+        <p className="text-sm text-p365-grey-500">{t('storageOptimisation.capacity.subtitle')}</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label={COPY.kpi.used}
+          label={t('storageOptimisation.kpi.used')}
           value={formatBytes(sharePoint.usedBytes)}
           color={P365.navy}
           information={
             <>
               {sharePoint.entitledBytes === null
-                ? COPY.kpi.usedEntitlementUnknown
-                : COPY.kpi.usedOfEntitled(
-                    formatBytes(sharePoint.usedBytes),
-                    formatBytes(sharePoint.entitledBytes),
-                  )}
+                ? t('storageOptimisation.kpi.usedEntitlementUnknown')
+                : t('storageOptimisation.kpi.usedOfEntitled', {
+                    used: formatBytes(sharePoint.usedBytes),
+                    entitled: formatBytes(sharePoint.entitledBytes),
+                  })}
               <br />
-              {COPY.kpi.usedTenantWide}
+              {t('storageOptimisation.kpi.usedTenantWide')}
             </>
           }
         />
         <StatCard
-          label={COPY.kpi.remaining}
+          label={t('storageOptimisation.kpi.remaining')}
           value={
             sharePoint.remainingBytes === null
-              ? COPY.kpi.unknown
+              ? t('storageOptimisation.kpi.unknown')
               : formatBytes(sharePoint.remainingBytes)
           }
           color={quotaKnown ? P365.green : P365.grey400}
           information={
             sharePoint.headroomRatio === null
-              ? COPY.kpi.remainingUnknownHint
-              : COPY.kpi.remainingHint(formatPercent(sharePoint.headroomRatio, 1))
+              ? t('storageOptimisation.kpi.remainingUnknownHint')
+              : t('storageOptimisation.kpi.remainingHint', {
+                  percent: formatPercent(sharePoint.headroomRatio, 1),
+                })
           }
         />
         <StatCard
-          label={COPY.kpi.costOfNothing}
+          label={t('storageOptimisation.kpi.costOfNothing')}
           value={
             cost.growthBillableAnnual === null
-              ? COPY.kpi.unknown
+              ? t('storageOptimisation.kpi.unknown')
               : cost.growthBillableAnnual > 0
                 ? formatMoney(cost.growthBillableAnnual, cost.currency)
-                : COPY.kpi.costOfNothingNone
+                : t('storageOptimisation.kpi.costOfNothingNone')
           }
           color={cost.growthBillableAnnual === null ? P365.grey400 : P365.yellow}
           information={
             cost.growthBillableAnnual === null
-              ? COPY.kpi.costOfNothingHintUnknownQuota(rate)
-              : COPY.kpi.costOfNothingHint(rate)
+              ? t('storageOptimisation.kpi.costOfNothingHintUnknownQuota', { rate })
+              : t('storageOptimisation.kpi.costOfNothingHint', { rate })
           }
         />
         <StatCard
-          label={COPY.kpi.forecast}
-          value={forecastHeadline(overview)}
+          label={t('storageOptimisation.kpi.forecast')}
+          value={forecastHeadline(overview, t)}
           color={quotaKnown ? RISK_COLOR[growth.forecastStatus] : P365.grey400}
-          information={forecastHint(overview)}
+          information={forecastHint(overview, t)}
         />
       </div>
     </div>

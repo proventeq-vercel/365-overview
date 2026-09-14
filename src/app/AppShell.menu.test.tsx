@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
@@ -16,7 +17,7 @@ const TWO_REPORTS: ReportDefinition[] = [
   {
     id: 'storage',
     path: '/storage',
-    title: 'Storage Optimisation',
+    titleKey: 'reports.storageOptimisation.title',
     icon: HardDrive,
     requireFeature: 'optimization.storage.report.overview',
     Component: () => null,
@@ -24,7 +25,7 @@ const TWO_REPORTS: ReportDefinition[] = [
   {
     id: 'sharing',
     path: '/sharing',
-    title: 'Oversharing',
+    titleKey: 'reports.oneDriveUsage.title',
     icon: Users,
     requireFeature: 'optimization.storage.report.onedrive',
     Component: () => null,
@@ -81,7 +82,7 @@ describe('AppShell', () => {
     const menu = await screen.findByRole('dialog', { name: 'Reports' })
     expect(menu).toBeInTheDocument()
     const links = screen.getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Storage Optimisation', 'Oversharing'])
+    expect(links.map((link) => link.textContent)).toEqual(['Storage Optimisation', 'OneDrive Usage'])
     expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('Storage Optimisation')
   })
 
@@ -90,14 +91,14 @@ describe('AppShell', () => {
     renderShell('/sharing')
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
     await screen.findByRole('dialog', { name: 'Reports' })
-    expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('Oversharing')
+    expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('OneDrive Usage')
   })
 
   it('navigates from a menu link and closes the menu', async () => {
     const user = userEvent.setup()
     renderShell('/')
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await user.click(await screen.findByRole('link', { name: 'Oversharing' }))
+    await user.click(await screen.findByRole('link', { name: 'OneDrive Usage' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('/sharing')
     act(() => {

@@ -115,6 +115,14 @@ link to grant it.
 
 ---
 
+## Localisation
+
+Every user-facing string comes from `src/intl/en.json` through `react-intl`, the same
+setup the Proventeq 365 frontend uses: a flat catalogue with dotted keys and ICU
+`{values}`, an `IntlProvider` at the root, and `const t = useTranslation()` in components.
+English is the only language shipped and there is no language switcher yet; adding a
+locale means adding another catalogue and a provider `locale` — no component changes.
+
 ## One report, or a menu of reports
 
 The app renders the Storage Optimisation report in the Proventeq 365 look: a sticky
@@ -196,7 +204,8 @@ src/
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format
-  hooks/         # useStorageOverview — fetches the inputs once, rebuilds the model on settings change
+  hooks/         # useStorageOverview — fetches the inputs once, rebuilds the model on settings change; useTranslation
+  intl/          # en.json — the single flat message catalogue (react-intl, ICU values), P365-style
   design/        # P365 design system: theme tokens, StatCard, panels, charts, AlertPanel, skeleton, logo
   features/      # registry.ts (reports + their feature flags) + one folder per report (storageOptimization, oneDriveUsage)
   types/         # StorageOverview, StorageRow and the other shared types

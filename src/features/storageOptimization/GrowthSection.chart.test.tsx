@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { screen, cleanup } from '@testing-library/react'
+import { render } from '@/test/render'
 import { GrowthSection } from './GrowthSection'
 import { base, unknownEntitlement } from './testFixtures'
 

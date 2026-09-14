@@ -1,5 +1,5 @@
 import { formatBytes, formatPercent } from '@/lib/format'
-import { COPY } from './copy'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { Slice, StorageOverview } from '@/types/storage'
 import { MonoDoughnut } from '@/design/charts'
 import {
@@ -41,30 +41,38 @@ function ShareDoughnut({ slices, ariaLabel }: { slices: Slice[]; ariaLabel: stri
 }
 
 export function DistributionSection({ overview, delay }: Props) {
+  const t = useTranslation()
   const { sharePoint, oneDrive, caveats } = overview
-  const workloadSlices = [...sharePoint.byWorkload, { name: 'OneDrive', value: oneDrive.usedBytes }]
+  const workloadSlices = [
+    ...sharePoint.byWorkload,
+    { name: t('storageOptimisation.workload.oneDrive'), value: oneDrive.usedBytes },
+  ]
 
   return (
     <Section
       delay={delay}
-      title="Current storage distribution"
-      subtitle="Where storage sits today — quota usage, workload split, and which site types drive the volume"
+      title={t('storageOptimisation.distribution.title')}
+      subtitle={t('storageOptimisation.distribution.subtitle')}
     >
       <SplitGrid className="lg:grid-cols-2">
         <Panel>
-          <PanelLabel>{COPY.quota.title}</PanelLabel>
-          <PanelDescription>{COPY.quota.scopeNote}</PanelDescription>
+          <PanelLabel>{t('storageOptimisation.quota.title')}</PanelLabel>
+          <PanelDescription>{t('storageOptimisation.quota.scopeNote')}</PanelDescription>
           {sharePoint.usedPercentage === null ||
           sharePoint.remainingBytes === null ||
           sharePoint.entitledBytes === null ? (
-            <EmptyBlock>{COPY.quota.entitlementUnknown}</EmptyBlock>
+            <EmptyBlock>{t('storageOptimisation.quota.entitlementUnknown')}</EmptyBlock>
           ) : (
             <MonoDoughnut
-              ariaLabel={COPY.quota.title}
+              ariaLabel={t('storageOptimisation.quota.title')}
               formatValue={formatBytes}
               slices={[
-                { name: COPY.quota.used, value: sharePoint.usedBytes, color: P365.blue },
-                { name: COPY.quota.remaining, value: sharePoint.remainingBytes, color: P365.grey100 },
+                { name: t('storageOptimisation.quota.used'), value: sharePoint.usedBytes, color: P365.blue },
+                {
+                  name: t('storageOptimisation.quota.remaining'),
+                  value: sharePoint.remainingBytes,
+                  color: P365.grey100,
+                },
               ]}
               center={
                 <>
@@ -79,28 +87,28 @@ export function DistributionSection({ overview, delay }: Props) {
             />
           )}
           {caveats.entitlementIsEstimated && sharePoint.entitledBytes !== null && (
-            <PanelDescription>{COPY.growth.estimatedQuotaNote}</PanelDescription>
+            <PanelDescription>{t('storageOptimisation.growth.estimatedQuotaNote')}</PanelDescription>
           )}
         </Panel>
 
         <Panel>
-          <PanelLabel>Storage by workload</PanelLabel>
-          <PanelDescription>SharePoint, Teams and OneDrive, as reported by Microsoft 365</PanelDescription>
-          <ShareDoughnut slices={workloadSlices} ariaLabel="Storage by workload" />
-          <p className="mt-3 text-xs text-p365-grey-500">{COPY.workloadGroupingNote}</p>
+          <PanelLabel>{t('storageOptimisation.workload.title')}</PanelLabel>
+          <PanelDescription>{t('storageOptimisation.workload.subtitle')}</PanelDescription>
+          <ShareDoughnut slices={workloadSlices} ariaLabel={t('storageOptimisation.workload.title')} />
+          <p className="mt-3 text-xs text-p365-grey-500">
+            {t('storageOptimisation.workload.groupingNote')}
+          </p>
         </Panel>
       </SplitGrid>
 
       <Panel>
-        <PanelLabel>Storage by site template</PanelLabel>
-        <PanelDescription>
-          SharePoint storage grouped by the template each site was created from
-        </PanelDescription>
+        <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
+        <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
         <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
           <MonoDoughnut
             slices={shaded(sharePoint.byTemplate)}
             formatValue={formatBytes}
-            ariaLabel="Storage by site template"
+            ariaLabel={t('storageOptimisation.template.title')}
           />
           <Legend
             className="max-w-3xl"

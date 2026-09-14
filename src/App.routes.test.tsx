@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
+import { render } from '@/test/render'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactNode } from 'react'
@@ -16,8 +17,8 @@ vi.mock('@/config/env', () => ({
 vi.mock('@/features/registry', async () => {
   const { HardDrive, Users } = await import('lucide-react')
   const REPORTS = [
-    { id: 'storage', path: '/storage', title: 'Storage', icon: HardDrive, requireFeature: 'flag.storage', Component: () => <h1>Storage report</h1> },
-    { id: 'sharing', path: '/sharing', title: 'Sharing', icon: Users, requireFeature: 'flag.sharing', Component: () => <h1>Sharing report</h1> },
+    { id: 'storage', path: '/storage', titleKey: 'reports.storageOptimisation.title', icon: HardDrive, requireFeature: 'flag.storage', Component: () => <h1>Storage report</h1> },
+    { id: 'sharing', path: '/sharing', titleKey: 'reports.oneDriveUsage.title', icon: Users, requireFeature: 'flag.sharing', Component: () => <h1>Sharing report</h1> },
   ]
   return { REPORTS, enabledReports: (features: ReadonlySet<string>) => REPORTS.filter((r) => features.has(r.requireFeature)) }
 })

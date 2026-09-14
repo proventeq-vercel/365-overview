@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_FEATURES, FeatureFlags, readFeatures } from '@/config/featureFlags'
+import { translate } from '@/test/render'
 import { REPORTS, enabledReports } from './registry'
 
 describe('report registry', () => {
@@ -26,5 +27,9 @@ describe('report registry', () => {
       'optimization.storage.report.overview',
       'optimization.storage.report.onedrive',
     ])
+  })
+
+  it('titles every report through the catalogue', () => {
+    expect(REPORTS.map((r) => translate(r.titleKey))).toEqual(['Storage Optimisation', 'OneDrive Usage'])
   })
 })

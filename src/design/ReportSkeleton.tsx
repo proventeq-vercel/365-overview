@@ -1,5 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Panel } from './primitives'
+import { useTranslation } from '@/hooks/useTranslation'
 
 function PanelSkeleton({ height }: { height: string }) {
   return (
@@ -12,8 +13,9 @@ function PanelSkeleton({ height }: { height: string }) {
 }
 
 export function ReportSkeleton() {
+  const t = useTranslation()
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Loading report">
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label={t('app.loadingReport')}>
       <div className="flex flex-col gap-2">
         <Skeleton className="h-5 w-56" />
         <Skeleton className="h-3.5 w-full max-w-2xl" />

@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { render } from '@/test/render'
 import { describe, expect, it } from 'vitest'
 import { AuthErrorScreen } from './AuthErrorScreen'
 

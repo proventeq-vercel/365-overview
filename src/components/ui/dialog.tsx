@@ -2,6 +2,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/hooks/useTranslation"
 import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
@@ -19,6 +20,7 @@ function DialogContent({
   children,
   ...props
 }: DialogPrimitive.Popup.Props) {
+  const t = useTranslation()
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
@@ -40,7 +42,7 @@ function DialogContent({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="Close"
+              aria-label={t('app.close')}
               className="absolute top-3 right-3 text-p365-grey-500"
             />
           }
