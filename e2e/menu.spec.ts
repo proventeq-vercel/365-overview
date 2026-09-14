@@ -26,13 +26,15 @@ test('a menu link routes to the report path and closes the menu', async ({ page 
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
 })
 
-test('the header keeps refresh, settings and the tenant next to the menu button', async ({ page }) => {
+test('the header keeps the options button and the tenant next to the menu button', async ({ page }) => {
   await page.goto('/')
   const banner = page.getByRole('banner')
   await expect(banner).toContainText('Contoso Ltd')
   await expect(banner.getByRole('button', { name: 'Open menu' })).toBeVisible()
-  await expect(banner.getByRole('button', { name: 'Refresh' })).toBeVisible()
-  await expect(banner.getByRole('button', { name: 'Settings' })).toBeVisible()
+  await expect(banner.getByRole('button', { name: 'Options' })).toBeVisible()
+  await banner.getByRole('button', { name: 'Options' }).click()
+  const menu = page.getByRole('menu', { name: 'Options' })
+  await expect(menu.getByRole('menuitem')).toHaveText([/Refresh data/, /Report settings/])
 })
 
 test('the OneDrive report is reachable from the menu and renders its own cards and table', async ({ page }) => {

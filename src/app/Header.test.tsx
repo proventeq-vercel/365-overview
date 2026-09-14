@@ -41,14 +41,16 @@ describe('Header', () => {
     expect(await screen.findByText('Your tenant')).toBeInTheDocument()
   })
 
-  it('carries the logo, refresh and settings controls and no breadcrumb', async () => {
+  it('carries the proventeq365 logo, one options button and no breadcrumb', async () => {
     renderHeader()
     await screen.findByText('Contoso Ltd')
-    expect(screen.getByRole('img', { name: 'Proventeq 365' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+    const logo = screen.getByRole('img', { name: 'Proventeq 365' })
+    expect(logo).toHaveClass('h-8')
+    expect(logo.querySelectorAll('path')).toHaveLength(14)
+    expect(screen.getAllByRole('button').map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Options',
+    ])
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
   it('offers the menu button only when the shell provides a menu', async () => {
@@ -71,14 +73,21 @@ describe('Header', () => {
           }
         }),
     })
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled()
+    const refreshItem = () => screen.getByRole('menuitem', { name: /refresh data/i })
+    await user.click(screen.getByRole('button', { name: 'Options' }))
+    await screen.findByRole('menu', { name: 'Options' })
+    expect(refreshItem()).toHaveAttribute('aria-disabled', 'true')
+    expect(refreshItem()).toHaveTextContent('Reloading from Microsoft Graph…')
     release()
     await screen.findByText('Contoso Ltd')
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled()
+    await waitFor(() => expect(refreshItem()).not.toHaveAttribute('aria-disabled'))
 
-    await user.click(screen.getByRole('button', { name: 'Refresh' }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled())
+    await user.click(refreshItem())
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Options' }))
+    await screen.findByRole('menu', { name: 'Options' })
+    expect(refreshItem()).toHaveAttribute('aria-disabled', 'true')
     release()
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled())
+    await waitFor(() => expect(refreshItem()).not.toHaveAttribute('aria-disabled'))
   })
 })

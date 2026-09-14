@@ -61,19 +61,24 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo`.
+  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo` (inline SVG of
+  the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
+  load), `DescribedMenuItem` (dropdown item with icon, label, description).
 - `src/app/` — the shell: `AppShell` (sticky `Header` + optional `FloatingMenu`
   + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
-  from `useOrg` with skeleton / "Your tenant" fallback, `RefreshButton`,
-  `SettingsPopover`, `UserMenu` in live mode), `SettingsPopover` (Base UI
-  popover: currency `Select`, cost per GB with symbol prefix, entitlement in TB
-  with the licence estimate as hint), `SettingsProvider` / `useSettings`
-  (localStorage-backed `ReportSettings` context), `FloatingMenu` (navy overlay
-  drawer listing `REPORTS`, Escape/backdrop close), `UserMenu` (initials, name,
-  switch account via `prompt: 'select_account'`, sign out), `queryClient`.
+  from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
+  mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
+  UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
+  fetching), Report settings (opens `SettingsDialog`), and in live mode Switch
+  account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
+  (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
+  entitlement in TB with the licence estimate as hint), `SettingsProvider` /
+  `useSettings` (localStorage-backed `ReportSettings` context), `FloatingMenu`
+  (navy overlay drawer listing `REPORTS`, Escape/backdrop close), `AccountChip`
+  (initials + name, username as title), `queryClient`.
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
   styled), `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button,
-  select, popover, skeleton, …).
+  select, dropdown-menu, dialog, skeleton, …).
 - `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`
   (parsed once into `env.features`).
 
@@ -211,12 +216,15 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 - `SiteTable` is windowed with `@tanstack/react-virtual`; jsdom reports zero
   `offsetHeight`/`offsetWidth`, so tests that need rows to render stub both on
   `HTMLElement.prototype` (see `StorageOptimization.test.tsx`).
-- `SettingsPopover` reads and writes through `useSettings()` — tests wrap it in
-  `SettingsProvider` (+ `QueryClientProvider` + `DataSourceContext`, it shows the
-  licence estimate) and observe via a probe component or `localStorage`.
-- Base UI `Select` and `Popover` work under jsdom with `userEvent`: click the
-  `combobox`, then the `option`; the popover content is portalled, so query by
-  `screen`, never by `container`.
+- `SettingsDialog` reads and writes through `useSettings()` — tests render it
+  with `open` inside `SettingsProvider` (+ `QueryClientProvider` +
+  `DataSourceContext`, it shows the licence estimate) and observe via a probe
+  component or `localStorage`. App-level tests reach it through the `Options`
+  button → `menuitem` "Report settings" (`chooseOption` helper).
+- Base UI `Select`, `Menu` and `Dialog` work under jsdom with `userEvent`: click
+  the trigger, then `await screen.findByRole('menu' | 'option' | 'dialog')` —
+  they mount asynchronously and are portalled, so query by `screen`, never by
+  `container`. Menu items report `aria-disabled`, not `disabled`.
 - `env` is a module constant — tests that need other flags mock `@/config/env`
   (see `App.routes.test.tsx`); `AppShell` takes `reports` as a prop so shell tests
   pass a list directly. The e2e config runs two dev servers (5006 default flags =
@@ -225,7 +233,7 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   it is committed. A test that survives the mutation is replaced, not kept.
 - Keep these ARIA hooks (tests depend on them): `role="status"` on caveat
   banners and `SoftCallout`, `role="alert"` on `AlertPanel`, `aria-busy` on
-  `ReportSkeleton`, `role="dialog"` on the menu and the settings popover, real
+  `ReportSkeleton`, `role="dialog"` on the reports menu and the settings dialog, `role="menu"` named "Options", real
   table semantics in `SiteTable`.
 
 ## Known deferred items

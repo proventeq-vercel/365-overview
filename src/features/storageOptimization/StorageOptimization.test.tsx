@@ -41,6 +41,10 @@ function renderApp(scenario: MockScenario = 'healthy', overrides: Partial<DataSo
 }
 
 const reportLoaded = () => screen.findByRole('heading', { name: /main offenders/i })
+async function chooseOption(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  await user.click(screen.getByRole('button', { name: 'Options' }))
+  await user.click(await screen.findByRole('menuitem', { name }))
+}
 const costCard = () =>
   screen.getByText('Cost of doing nothing').closest('[data-slot="stat-card"]') as HTMLElement
 
@@ -110,7 +114,7 @@ describe('Storage Optimisation app', () => {
     renderApp()
     await reportLoaded()
 
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    await chooseOption(user, /report settings/i)
     await user.type(screen.getByLabelText('SharePoint entitlement'), '40')
 
     await waitFor(() =>
@@ -127,7 +131,7 @@ describe('Storage Optimisation app', () => {
     await reportLoaded()
     expect(ds.getSites).toHaveBeenCalledTimes(1)
 
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    await chooseOption(user, /report settings/i)
     const rate = screen.getByLabelText('Cost per GB per month')
     await user.clear(rate)
     await user.type(rate, '0.5')
@@ -142,7 +146,7 @@ describe('Storage Optimisation app', () => {
     await reportLoaded()
     expect(costCard()).toHaveTextContent('£')
 
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    await chooseOption(user, /report settings/i)
     await user.click(screen.getByRole('combobox', { name: 'Currency' }))
     await user.click(await screen.findByRole('option', { name: /EUR/ }))
 
@@ -152,13 +156,13 @@ describe('Storage Optimisation app', () => {
     })
   })
 
-  it('refetches every query from the refresh button', async () => {
+  it('refetches every query from the refresh option', async () => {
     const user = userEvent.setup()
     const { ds } = renderApp()
     await reportLoaded()
     expect(ds.getSites).toHaveBeenCalledTimes(1)
 
-    await user.click(screen.getByRole('button', { name: 'Refresh' }))
+    await chooseOption(user, /refresh data/i)
     await waitFor(() => expect(ds.getSites).toHaveBeenCalledTimes(2))
   })
 

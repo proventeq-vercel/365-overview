@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource } from '@/data/fixtures'
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, type ReportSettings } from '@/lib/settings'
-import { SettingsPopover } from './SettingsPopover'
+import { SettingsDialog } from './SettingsDialog'
 import { SettingsProvider } from './SettingsProvider'
 import { useSettings } from './useSettings'
 
@@ -18,9 +18,10 @@ function Probe({ onChange }: { onChange: (settings: ReportSettings) => void }) {
   return null
 }
 
-function renderPopover(initial?: Partial<ReportSettings>) {
+function renderDialog(initial?: Partial<ReportSettings>, open = true) {
   if (initial) localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(initial))
   const onChange = vi.fn()
+  const onOpenChange = vi.fn()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function Wrapper({ children }: { children: ReactNode }) {
     return (
@@ -33,12 +34,12 @@ function renderPopover(initial?: Partial<ReportSettings>) {
   }
   render(
     <>
-      <SettingsPopover />
+      <SettingsDialog open={open} onOpenChange={onOpenChange} />
       <Probe onChange={onChange} />
     </>,
     { wrapper: Wrapper },
   )
-  return { onChange }
+  return { onChange, onOpenChange }
 }
 
 afterEach(() => {
@@ -46,24 +47,24 @@ afterEach(() => {
   localStorage.clear()
 })
 
-describe('SettingsPopover', () => {
-  it('keeps the settings panel closed until it is asked for', () => {
-    renderPopover()
+describe('SettingsDialog', () => {
+  it('renders nothing while closed', () => {
+    renderDialog(undefined, false)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('SharePoint entitlement')).not.toBeInTheDocument()
   })
 
-  it('renders the control as an icon button that still announces itself as Settings', () => {
-    renderPopover()
-    const button = screen.getByRole('button', { name: 'Settings' })
-    expect(button).toHaveAttribute('aria-label', 'Settings')
-    expect(button.querySelector('svg')).not.toBeNull()
-    expect(button).not.toHaveTextContent('Settings')
+  it('is a titled dialog with a close button', async () => {
+    const user = userEvent.setup()
+    const { onOpenChange } = renderDialog()
+    expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, expect.anything())
   })
 
   it('lifts an entitlement override in bytes, converted from TB', async () => {
     const user = userEvent.setup()
-    const { onChange } = renderPopover()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    const { onChange } = renderDialog()
     await user.type(screen.getByLabelText('SharePoint entitlement'), '5')
     expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ entitlementOverrideBytes: 5 * 1024 * GB }),
@@ -72,8 +73,7 @@ describe('SettingsPopover', () => {
 
   it('clears the override when the field is emptied, rather than reading it as zero', async () => {
     const user = userEvent.setup()
-    const { onChange } = renderPopover({ entitlementOverrideBytes: 5 * 1024 * GB })
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    const { onChange } = renderDialog({ entitlementOverrideBytes: 5 * 1024 * GB })
     expect(screen.getByLabelText('SharePoint entitlement')).toHaveValue(5)
     await user.clear(screen.getByLabelText('SharePoint entitlement'))
     expect(onChange).toHaveBeenLastCalledWith(
@@ -82,16 +82,13 @@ describe('SettingsPopover', () => {
   })
 
   it('tells the admin what the licence estimate is, so they know what they are replacing', async () => {
-    const user = userEvent.setup()
-    renderPopover()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    renderDialog()
     expect(await screen.findByText(/estimated from licences: 7\.8 TB/i)).toBeInTheDocument()
   })
 
   it('lifts a changed rate', async () => {
     const user = userEvent.setup()
-    const { onChange } = renderPopover()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    const { onChange } = renderDialog()
     const rate = screen.getByLabelText('Cost per GB per month')
     await user.clear(rate)
     await user.type(rate, '0.35')
@@ -99,9 +96,7 @@ describe('SettingsPopover', () => {
   })
 
   it('never lifts a negative rate', async () => {
-    const user = userEvent.setup()
-    const { onChange } = renderPopover()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    const { onChange } = renderDialog()
     fireEvent.change(screen.getByLabelText('Cost per GB per month'), { target: { value: '-2' } })
     expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ ratePerGb: DEFAULT_SETTINGS.ratePerGb }),
@@ -109,9 +104,7 @@ describe('SettingsPopover', () => {
   })
 
   it('prefixes the rate with the symbol of the chosen currency', async () => {
-    const user = userEvent.setup()
-    renderPopover({ currency: 'EUR' })
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    renderDialog({ currency: 'EUR' })
     const rate = screen.getByLabelText('Cost per GB per month')
     expect(rate.parentElement).toHaveTextContent('€')
     expect(rate.parentElement).toHaveTextContent('/ GB / month')
@@ -119,8 +112,7 @@ describe('SettingsPopover', () => {
 
   it('offers currencies by code and name and lifts the one picked', async () => {
     const user = userEvent.setup()
-    const { onChange } = renderPopover()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    const { onChange } = renderDialog()
     const currency = screen.getByRole('combobox', { name: 'Currency' })
     expect(currency).toHaveTextContent('GBP')
     expect(currency).toHaveTextContent('British Pound')
@@ -131,9 +123,7 @@ describe('SettingsPopover', () => {
   })
 
   it('keeps a stored currency that is not in the list selectable rather than dropping it', async () => {
-    const user = userEvent.setup()
-    renderPopover({ currency: 'BRL' })
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    renderDialog({ currency: 'BRL' })
     expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveTextContent('BRL')
   })
 })

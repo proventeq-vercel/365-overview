@@ -47,13 +47,18 @@ test('the site table stays windowed on a large estate', async ({ page }) => {
   expect(await rows.count()).toBeLessThan(100)
 })
 
-test('the settings cog re-prices the report in the chosen currency', async ({ page }) => {
+async function chooseOption(page: Page, name: RegExp) {
+  await page.getByRole('button', { name: 'Options' }).click()
+  await page.getByRole('menuitem', { name }).click()
+}
+
+test('the report settings option re-prices the report in the chosen currency', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
   const costCard = page.locator('[data-slot="stat-card"]', { hasText: 'Cost of doing nothing' })
   await expect(costCard).toContainText('£')
 
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await chooseOption(page, /report settings/i)
   const dialog = page.getByRole('dialog', { name: 'Report settings' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText(/estimated from licences: 7\.8 TB/i)).toBeVisible()
@@ -73,7 +78,7 @@ test('an entitlement override replaces the licence estimate everywhere', async (
   await reportLoaded(page)
   await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
 
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await chooseOption(page, /report settings/i)
   await page.getByLabel('SharePoint entitlement').fill('40')
   await expect(page.getByText(/estimated from licence counts/i)).toHaveCount(0)
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Storage used' })).toContainText(
@@ -84,18 +89,20 @@ test('an entitlement override replaces the licence estimate everywhere', async (
 test('refresh re-runs the report without a blank flash', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  await page.getByRole('button', { name: 'Refresh' }).click()
+  await chooseOption(page, /refresh data/i)
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Refresh' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Options' }).click()
+  await expect(page.getByRole('menuitem', { name: /refresh data/i })).not.toHaveAttribute('aria-disabled')
+  await page.keyboard.press('Escape')
 })
 
-test('every button and link shows a pointer cursor', async ({ page }) => {
+test('every button, link and menu item shows a pointer cursor', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  await page.getByRole('button', { name: 'Settings' }).click()
-  await expect(page.getByRole('dialog', { name: 'Report settings' })).toBeVisible()
+  await page.getByRole('button', { name: 'Options' }).click()
+  await expect(page.getByRole('menu', { name: 'Options' })).toBeVisible()
   const cursors = await page.evaluate(() =>
-    [...document.querySelectorAll('button:not(:disabled), a[href], [role="combobox"]')].map((el) => ({
+    [...document.querySelectorAll('button:not(:disabled), a[href], [role="combobox"], [role="menuitem"]')].map((el) => ({
       label: el.getAttribute('aria-label') ?? el.textContent?.trim() ?? '',
       cursor: getComputedStyle(el).cursor,
     })),

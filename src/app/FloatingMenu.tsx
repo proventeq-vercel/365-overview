@@ -69,7 +69,7 @@ export function FloatingMenu({
         )}
       >
         <div className="flex items-center justify-between px-1">
-          <Logo className="h-6 text-white" />
+          <Logo className="h-8 text-white" />
           <Button
             ref={closeButton}
             type="button"

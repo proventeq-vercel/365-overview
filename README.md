@@ -118,9 +118,10 @@ link to grant it.
 ## One report, or a menu of reports
 
 The app renders the Storage Optimisation report in the Proventeq 365 look: a sticky
-header (logo, tenant name, refresh, settings cog, and in live mode the signed-in user
-with **Switch account** and **Sign out**), KPI rails, panels, monochrome charts and
-the full site table. There is no navigation by default — it runs as a single report.
+header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
+one **⋯ Options** menu whose items each carry an icon and a one-line description:
+**Refresh data**, **Report settings**, and in live mode **Switch account** and
+**Sign out**), KPI rails, panels, monochrome charts and the full site table. There is no navigation by default — it runs as a single report.
 
 Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
 way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,
@@ -130,8 +131,8 @@ all; with two or more, a hamburger in the header opens a floating menu of the en
 reports. The root path falls back to the first enabled report. The OneDrive Usage report
 is the proof of concept for a second report and reuses the same model and data.
 
-The settings cog holds the cost per GB per month (with the currency picked from a
-list), and the SharePoint entitlement in TB — the licence estimate is shown as the
+**Report settings** opens a dialog with the cost per GB per month (with the currency
+picked from a list), and the SharePoint entitlement in TB — the licence estimate is shown as the
 hint so the admin knows what they are replacing. Settings live in the browser's
 localStorage only.
 
@@ -187,7 +188,7 @@ npm run preview
 
 ```
 src/
-  app/           # Shell: AppShell, Header, FloatingMenu, SettingsPopover, SettingsProvider, UserMenu
+  app/           # Shell: AppShell, Header, HeaderActions, AccountChip, FloatingMenu, SettingsDialog, SettingsProvider
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES), featureFlags.ts, appConfig.ts (VITE_* auth config)

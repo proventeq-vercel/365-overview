@@ -1,13 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { Settings } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverTitle,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -46,7 +38,13 @@ function Field({
   )
 }
 
-export function SettingsPopover() {
+export function SettingsDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const { settings, update } = useSettings()
   const { data } = useStorageOverview(settings)
   const currencyId = useId()
@@ -60,25 +58,12 @@ export function SettingsPopover() {
       : String(settings.entitlementOverrideBytes / TB_IN_BYTES)
 
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Settings"
-            title="Report settings"
-          />
-        }
-      >
-        <Settings aria-hidden="true" />
-      </PopoverTrigger>
-      <PopoverContent className="w-[min(22rem,calc(100vw-2rem))]" aria-label="Report settings">
-        <PopoverTitle>Report settings</PopoverTitle>
-        <PopoverDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogTitle>Report settings</DialogTitle>
+        <DialogDescription>
           Cost assumptions and the tenant entitlement. Saved in this browser only.
-        </PopoverDescription>
+        </DialogDescription>
         <div className="mt-4 flex flex-col gap-4">
           <Field id={currencyId} label="Currency">
             <Select
@@ -157,7 +142,7 @@ export function SettingsPopover() {
             />
           </Field>
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   )
 }
