@@ -7,7 +7,6 @@ export interface Thresholds {
 }
 
 export const STORAGE_THRESHOLDS: Thresholds = { watch: 0.85, attention: 0.95 }
-export const LICENSE_THRESHOLDS: Thresholds = { watch: 0.9, attention: 0.98 }
 
 export function utilizationStatus(
   used: number,

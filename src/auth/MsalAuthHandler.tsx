@@ -7,6 +7,8 @@ import {
   InteractionType,
 } from '@azure/msal-browser'
 import { AuthLoadingScreen } from './AuthLoadingScreen'
+import { AuthErrorScreen } from './AuthErrorScreen'
+import { useTranslation } from '../hooks/useTranslation'
 
 /**
  * Drives the redirect-based MSAL login lifecycle. Ported from the ProventeqCloud
@@ -22,11 +24,12 @@ import { AuthLoadingScreen } from './AuthLoadingScreen'
  *   children (the authenticated app).
  */
 export function MsalAuthHandler({ children }: { children: ReactNode }) {
+  const t = useTranslation()
   const { instance, accounts, inProgress } = useMsal()
   const [activeAccount, setActiveAccount] = useState<AccountInfo | null>(
     instance.getActiveAccount(),
   )
-  const [authError, setAuthError] = useState<string | null>(null)
+  const [authError, setAuthError] = useState<unknown>(null)
 
   useEffect(() => {
     const callbackId = instance.addEventCallback((event) => {
@@ -43,9 +46,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         event.interactionType === InteractionType.Redirect
       ) {
         console.error('Login error:', event.error)
-        setAuthError(
-          event.error?.message || 'An unknown authentication error occurred.',
-        )
+        setAuthError(event.error ?? new Error(t('auth.unknownError')))
       }
     })
     return () => {
@@ -53,7 +54,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         instance.removeEventCallback(callbackId)
       }
     }
-  }, [instance])
+  }, [instance, t])
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -83,18 +84,11 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
   }, [accounts, activeAccount, inProgress, instance])
 
   if (authError) {
-    return (
-      <div className="auth-screen">
-        <div className="error-state" style={{ maxWidth: '480px', width: '100%' }}>
-          <p className="error-state__message">Sign-in failed</p>
-          <p className="error-state__hint">{authError}</p>
-        </div>
-      </div>
-    )
+    return <AuthErrorScreen error={authError} />
   }
 
   if (inProgress !== InteractionStatus.None) {
-    return <AuthLoadingScreen title="Authenticating…" />
+    return <AuthLoadingScreen title={t('auth.authenticating')} />
   }
 
   return <>{children}</>

@@ -1,24 +1,33 @@
-import { Route, Routes } from 'react-router-dom'
-import { Layout } from './app/Layout'
-import { Overview } from './sections/Overview'
-import { SharePoint } from './sections/SharePoint'
-import { Licensing } from './sections/Licensing'
-import { Estate } from './sections/Estate'
-import { Exchange } from './sections/Exchange'
-import { Azure } from './sections/Azure'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { AppShell } from './app/AppShell'
+import { NoReports } from './app/NoReports'
+import { SettingsProvider } from './app/SettingsProvider'
+import { env } from './config/env'
+import { enabledReports } from './features/registry'
+
+function RedirectKeepingQuery({ to }: { to: string }) {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: to, search }} replace />
+}
 
 function App() {
+  const reports = enabledReports(env.features)
+  const fallback = reports[0]
+
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Overview />} />
-        <Route path="/sharepoint" element={<SharePoint />} />
-        <Route path="/licensing" element={<Licensing />} />
-        <Route path="/estate" element={<Estate />} />
-        <Route path="/exchange" element={<Exchange />} />
-        <Route path="/azure" element={<Azure />} />
-      </Routes>
-    </Layout>
+    <SettingsProvider>
+      <AppShell reports={reports}>
+        <Routes>
+          {reports.map((report) => (
+            <Route key={report.id} path={report.path} element={<report.Component />} />
+          ))}
+          <Route
+            path="*"
+            element={fallback ? <RedirectKeepingQuery to={fallback.path} /> : <NoReports />}
+          />
+        </Routes>
+      </AppShell>
+    </SettingsProvider>
   )
 }
 

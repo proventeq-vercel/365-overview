@@ -1,13 +1,46 @@
+import type { MockScenario } from '../data/fixtures'
+import { readFeatures, type FeatureFlag } from './featureFlags'
+import { isModesLocked, readModeOverrides, tabStorage, type ModeOverrides } from './modes'
+
 export interface AppEnv {
   useMock: boolean
+  mockScenario: MockScenario
+  features: ReadonlySet<FeatureFlag>
+  modesLocked: boolean
+  overrides: ModeOverrides
 }
 
-export function readEnv(source: Record<string, string | undefined>): AppEnv {
+const SCENARIOS: MockScenario[] = [
+  'healthy',
+  'over-entitlement',
+  'concealed',
+  'short-history',
+]
+
+function readScenario(value: string | undefined): MockScenario {
+  return SCENARIOS.find((scenario) => scenario === value) ?? 'healthy'
+}
+
+export function readEnv(
+  source: Record<string, string | undefined>,
+  overrides: ModeOverrides = {},
+): AppEnv {
+  const locked = isModesLocked(source)
+  const active = locked ? {} : overrides
   return {
-    useMock: source.VITE_USE_MOCK === 'true',
+    useMock: (active.useMock ?? source.VITE_USE_MOCK) === 'true',
+    mockScenario: readScenario(active.mockScenario ?? source.VITE_MOCK_SCENARIO),
+    features: readFeatures(active.features ?? source.VITE_FEATURES),
+    modesLocked: locked,
+    overrides: active,
   }
 }
 
-export const env: AppEnv = readEnv(
-  import.meta.env as unknown as Record<string, string | undefined>,
-)
+function browserOverrides(source: Record<string, string | undefined>): ModeOverrides {
+  if (typeof window === 'undefined' || isModesLocked(source)) return {}
+  return readModeOverrides(window.location.search, tabStorage())
+}
+
+const source = import.meta.env as unknown as Record<string, string | undefined>
+
+export const env: AppEnv = readEnv(source, browserOverrides(source))

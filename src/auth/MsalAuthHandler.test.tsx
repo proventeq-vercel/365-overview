@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { render } from '@/test/render'
 import { InteractionStatus, type AccountInfo } from '@azure/msal-browser'
 import { MsalAuthHandler } from './MsalAuthHandler'
 

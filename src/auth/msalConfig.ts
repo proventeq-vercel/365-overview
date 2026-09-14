@@ -28,4 +28,3 @@ export function getMsalInstance(): PublicClientApplication {
 }
 
 export const GRAPH_SCOPES = ['User.Read', 'Reports.Read.All', 'Organization.Read.All']
-export const ARM_SCOPES = ['https://management.azure.com/user_impersonation']

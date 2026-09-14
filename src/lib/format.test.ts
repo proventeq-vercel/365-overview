@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { formatBytes, formatNumber, formatPercent, formatSignedPercent } from './format'
+import {
+  formatBytes,
+  formatLongMonthYear,
+  formatShortMonthYear,
+  formatNumber,
+  formatPercent,
+  formatSignedBytes,
+  formatSignedPercent,
+} from './format'
 
 describe('formatBytes', () => {
   it('formats units', () => {
@@ -13,16 +21,18 @@ describe('formatBytes', () => {
     expect(formatBytes(1024 * 1024)).toBe('1 MB')
   })
 
+  it('keeps the unit and the sign on a negative figure', () => {
+    expect(formatBytes(-1.5 * 1024 * 1024 * 1024)).toBe('-1.5 GB')
+  })
+
   it('handles TB', () => {
     expect(formatBytes(1024 ** 4)).toBe('1 TB')
   })
 })
 
 describe('formatNumber', () => {
-  it('adds thousands separators', () => {
-    const result = formatNumber(1000000)
-    // Accept locale-specific separators (comma or period)
-    expect(result).toMatch(/1[,.]000[,.]000/)
+  it('adds thousands separators the same way on every machine', () => {
+    expect(formatNumber(1000000)).toBe('1,000,000')
   })
 
   it('handles small numbers', () => {
@@ -37,11 +47,44 @@ describe('formatPercent', () => {
   })
 })
 
+describe('formatSignedBytes', () => {
+  it('prefixes growth with a plus and keeps the minus on shrinkage', () => {
+    expect(formatSignedBytes(2 * 1024 * 1024)).toBe('+2 MB')
+    expect(formatSignedBytes(-2 * 1024 * 1024)).toBe('-2 MB')
+    expect(formatSignedBytes(0)).toBe('0 B')
+  })
+})
+
 describe('formatSignedPercent', () => {
   it('prefixes a plus for positive values', () => {
     expect(formatSignedPercent(12.34)).toBe('+12.3%')
   })
   it('keeps the minus for negative values', () => {
     expect(formatSignedPercent(-4.2)).toBe('-4.2%')
+  })
+})
+
+describe('formatShortMonthYear', () => {
+  it('renders a YYYY-MM bucket as its abbreviated month and year', () => {
+    expect(formatShortMonthYear('2026-03')).toBe('Mar 2026')
+    expect(formatShortMonthYear('2027-12')).toBe('Dec 2027')
+  })
+
+  it('returns an unparseable label untouched', () => {
+    expect(formatShortMonthYear('n/a')).toBe('n/a')
+  })
+})
+
+describe('formatLongMonthYear', () => {
+  it('renders an ISO date as its long month and year', () => {
+    expect(formatLongMonthYear('2027-08-11')).toBe('August 2027')
+  })
+
+  it('does not shift a first-of-month date across a timezone boundary', () => {
+    expect(formatLongMonthYear('2027-01-01')).toBe('January 2027')
+  })
+
+  it('returns the input untouched when it is not a date', () => {
+    expect(formatLongMonthYear('soon')).toBe('soon')
   })
 })
