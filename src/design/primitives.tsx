@@ -130,8 +130,8 @@ export function Legend({
       className={cn('grid gap-x-4 gap-y-1.5 text-xs text-p365-grey-700', className)}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
-      {items.map((item) => (
-        <li key={item.name} className="flex min-w-0 items-start gap-1.5">
+      {items.map((item, index) => (
+        <li key={`${index}-${item.name}`} className="flex min-w-0 items-start gap-1.5">
           <i
             className="mt-1 size-2.5 shrink-0 rounded-sm"
             style={{ background: item.color }}

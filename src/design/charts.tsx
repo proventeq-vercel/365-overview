@@ -59,8 +59,8 @@ export function MonoDoughnut({
             stroke="none"
             isAnimationActive={false}
           >
-            {slices.map((slice) => (
-              <Cell key={slice.name} fill={slice.color} />
+            {slices.map((slice, index) => (
+              <Cell key={`${index}-${slice.name}`} fill={slice.color} />
             ))}
           </Pie>
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => formatValue(Number(v))} />
@@ -228,7 +228,7 @@ export function FacetBars({
   return (
     <ul className="flex flex-col gap-2.5">
       {items.map((item, index) => (
-        <li key={item.name} className="flex items-center gap-3">
+        <li key={`${index}-${item.name}`} className="flex items-center gap-3">
           <div className="relative flex h-7 min-w-0 flex-1 items-center">
             <span
               className="absolute inset-y-0 left-0 rounded-sm"
