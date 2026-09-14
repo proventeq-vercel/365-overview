@@ -1,26 +1,18 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import messages from './en.json'
 
-const SRC = join(__dirname, '..')
+const SOURCES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
 const KEY_USE = /(?:\bt\(|titleKey: |label: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
 const DYNAMIC_PREFIXES = ['storageOptimisation.growth.risk.']
 
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name)
-    if (statSync(path).isDirectory()) return sourceFiles(path)
-    return /\.(ts|tsx)$/.test(name) && !/\.test\.tsx?$/.test(name) && !path.includes(`${join('src', 'test')}`)
-      ? [path]
-      : []
-  })
-}
-
 function usedKeys(): Set<string> {
   const keys = new Set<string>()
-  for (const file of sourceFiles(SRC)) {
-    const source = readFileSync(file, 'utf-8')
+  for (const [file, source] of Object.entries(SOURCES)) {
+    if (/\.test\.tsx?$/.test(file) || file.startsWith('/src/test/')) continue
     for (const match of source.matchAll(KEY_USE)) keys.add(match[1])
     for (const match of source.matchAll(/t\(`([a-z][A-Za-z0-9.]*\.)\$\{/g)) keys.add(`${match[1]}*`)
   }
