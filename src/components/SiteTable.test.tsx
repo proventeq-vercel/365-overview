@@ -164,6 +164,34 @@ describe('SiteTable', () => {
     expect(getSiteDetails).toHaveBeenCalledWith([blank.id])
   })
 
+  it('finds a site by the name resolved for a page the user has already viewed', async () => {
+    const user = userEvent.setup()
+    const blank: StorageRow[] = Array.from({ length: 60 }, (_, i) => ({
+      ...rows[0],
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+      url: '',
+      ownerDisplayName: 'Unknown Owner',
+      storageUsedBytes: 1000 - i,
+    }))
+    const onPageTwo = blank[55]
+    const getSiteDetails = vi.fn(async (ids: string[]) => {
+      const found: SiteDirectory = new Map()
+      if (ids.includes(onPageTwo.id)) {
+        found.set(onPageTwo.id, { name: 'Payroll', url: 'https://c.sharepoint.com/sites/payroll' })
+      }
+      return found
+    })
+    render(<SiteTable rows={blank} totalUsedBytes={1e6} columns={['name']} />, getSiteDetails)
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
+    expect(await screen.findByTitle('Payroll')).toBeInTheDocument()
+
+    await user.type(screen.getByRole('searchbox'), 'payroll')
+    expect(await screen.findByText('1 of 60')).toBeInTheDocument()
+    expect(screen.getByTitle('Payroll')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '/sites/payroll' })).toBeInTheDocument()
+  })
+
   it('does not look up rows that already carry a name', () => {
     const getSiteDetails = vi.fn(async () => new Map())
     render(<SiteTable rows={[{ ...rows[0], name: 'Alpha' }]} totalUsedBytes={300} columns={['name']} />, getSiteDetails)

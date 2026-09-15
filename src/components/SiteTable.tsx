@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
+import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
+import type { SortDirection } from '@/lib/rowSearch'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
-import { useSiteDetails } from '@/hooks/useSiteDetails'
+import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
@@ -30,8 +32,6 @@ interface SiteTableProps {
   label?: string
   nameHeader?: string
 }
-
-type SortDir = 'asc' | 'desc'
 
 interface ColumnSpec {
   label: TranslateKey
@@ -96,29 +96,28 @@ export function SiteTable({
   const nameLabel = nameHeader ?? t('table.column.site')
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<ColumnKey>(DEFAULT_SORT)
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [sortDir, setSortDir] = useState<SortDirection>('desc')
 
-  const visible = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    const filtered = query
-      ? rows.filter(
-          (row) =>
-            (row.name ?? '').toLowerCase().includes(query) ||
-            row.url.toLowerCase().includes(query) ||
-            row.ownerDisplayName.toLowerCase().includes(query) ||
-            row.id.toLowerCase().includes(query),
-        )
-      : rows
+  const known = useKnownSites()
+  const query = useDeferredValue(normaliseQuery(search))
+  const searching = query !== normaliseQuery(search)
+
+  const index = useMemo(() => buildSearchIndex(rows), [rows])
+  const order = useMemo(() => {
     const sortValue = COLUMNS[sortKey].sortValue ?? COLUMNS[DEFAULT_SORT].sortValue!
-    return [...filtered].sort((a, b) => {
-      const diff = sortValue(a) - sortValue(b)
-      return sortDir === 'asc' ? diff : -diff
-    })
-  }, [rows, search, sortKey, sortDir])
+    return sortOrder(rows, sortValue, sortDir)
+  }, [rows, sortKey, sortDir])
+  const visible = useMemo(
+    () => searchOrder(order, index, query, known),
+    [order, index, query, known],
+  )
 
   const pagination = usePagination(visible.length)
   const { start, end } = pagination
-  const pageSlice = useMemo(() => visible.slice(start, end), [visible, start, end])
+  const pageSlice = useMemo(
+    () => visible.slice(start, end).map((i) => rows[i]),
+    [visible, rows, start, end],
+  )
   const { rows: pageRows, isPending: namesPending } = useSiteDetails(pageSlice)
 
   function changeSearch(value: string) {
@@ -261,7 +260,11 @@ export function SiteTable({
       <div
         role="table"
         aria-label={tableLabel}
-        className="overflow-x-auto rounded-lg border border-p365-grey-100 bg-white"
+        aria-busy={searching || undefined}
+        className={cn(
+          'overflow-x-auto rounded-lg border border-p365-grey-100 bg-white transition-opacity duration-150 ease-out',
+          searching && 'opacity-60',
+        )}
       >
         <div className="min-w-[56rem]">
           <div

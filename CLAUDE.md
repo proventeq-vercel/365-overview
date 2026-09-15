@@ -40,10 +40,17 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the default first page are right), and `hooks/useSiteDetails` names the rows
   of whatever table page is on screen (skeleton while pending). Unresolved
   rows keep the owner-name / id fallback `rowName` / `rowLabel` provide.
+  `useKnownSites` merges every `['siteDetails', …]` result already in the
+  React Query cache, so a name the user has seen on any page is searchable.
 - `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
   derivation of every figure on screen. Pure, table-tested.
 - `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,
-  `topNWithOther`, `format`, `thresholds`.
+  `topNWithOther`, `format`, `thresholds`, `rowSearch` (the table's search and
+  sort, sized for millions of rows: one lower-cased key per row built once per
+  data load, an index permutation per sort change, one `includes` per row per
+  keystroke — `SiteTable` feeds it a `useDeferredValue` query so typing never
+  waits on the filter; never put a `toLowerCase`, `Date.parse` or a sort back
+  inside the per-keystroke path).
 - `src/hooks/useStorageOverview.ts` — fetches the inputs once under
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   The ONLY data entry point for the page.
