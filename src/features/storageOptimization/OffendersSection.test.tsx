@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
-import { render } from '@/test/render'
+import { renderWithData as render } from '@/test/render'
 import type { StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
 import { base } from './testFixtures'

@@ -6,6 +6,8 @@ import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
+import { useSiteDetails } from '@/hooks/useSiteDetails'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
 import { PoolIcon } from '@/design/PoolIcon'
@@ -115,7 +117,9 @@ export function SiteTable({
   }, [rows, search, sortKey, sortDir])
 
   const pagination = usePagination(visible.length)
-  const pageRows = visible.slice(pagination.start, pagination.end)
+  const { start, end } = pagination
+  const pageSlice = useMemo(() => visible.slice(start, end), [visible, start, end])
+  const { rows: pageRows, isPending: namesPending } = useSiteDetails(pageSlice)
 
   function changeSearch(value: string) {
     setSearch(value)
@@ -145,14 +149,21 @@ export function SiteTable({
     switch (key) {
       case 'name': {
         const name = rowName(row)
+        const resolving = namesPending && row.pool === 'SharePoint' && !row.name && !row.url
         return (
           <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
             <PoolIcon pool={row.pool} />
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="block truncate font-semibold text-p365-navy" title={name}>
-                {name}
-              </span>
-              {row.url ? (
+              {resolving ? (
+                <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
+              ) : (
+                <span className="block truncate font-semibold text-p365-navy" title={name}>
+                  {name}
+                </span>
+              )}
+              {resolving ? (
+                <Skeleton className="h-3 w-2/3" />
+              ) : row.url ? (
                 <ExternalUrlLink href={row.url} />
               ) : (
                 <span className="block truncate text-xs text-p365-grey-500" title={row.id}>

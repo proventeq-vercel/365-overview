@@ -72,6 +72,7 @@
   "table.column.lastActivity": "Last activity",
   "table.column.template": "Template",
   "table.column.capacity": "Capacity used",
+  "table.resolvingName": "Looking up the site name",
   "table.pool.SharePoint": "SharePoint",
   "table.pool.OneDrive": "OneDrive",
   "pagination.label": "{label} pages",

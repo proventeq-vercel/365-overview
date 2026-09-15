@@ -120,10 +120,12 @@ screen with a link to grant it. A tenant that consented before `Sites.Read.All` 
 to consent again.
 
 `Sites.Read.All` exists because the SharePoint site usage report returns a blank `siteUrl` for
-every site (a known Microsoft-side issue), so the app resolves each site's display name and URL
-from the tenant site directory (`GET /sites?search=*`) by site-collection id. A site the
-directory does not return — a deleted site, or one the signed-in user cannot open — falls back to
-its owner's name and its id.
+every site (a known Microsoft-side issue), so the app looks each site up by the id the report
+carries (`GET /sites/{id}?$select=id,displayName,webUrl`, twenty at a time through `$batch`) —
+only for the fifty largest sites up front and then for whichever page of the table is on screen,
+so the cost is a few requests per page however many sites the tenant has. A site the lookup does
+not return — a deleted site, or one the signed-in user cannot open — falls back to its owner's
+name and its id.
 
 > **Role requirement:** consent alone is not enough. `Reports.Read.All` additionally requires the
 > signed-in user to hold **Global Reader**, **Reports Reader** or an equivalent directory role. A

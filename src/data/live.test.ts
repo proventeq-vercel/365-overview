@@ -13,14 +13,21 @@ function recordingGraph() {
       urls.push(path)
       return [] as unknown[]
     }) as GraphClient['getAllPages'],
+    batchGet: vi.fn(async (paths: string[]) => {
+      urls.push(...paths)
+      return paths.map(() => ({ status: 404 }))
+    }) as GraphClient['batchGet'],
   }
   return { graph, urls }
 }
 
-const BETA = 'https://graph.microsoft.com/beta/reports/'
-const SITE_DIRECTORY = '/sites?search=*'
+const FINANCE_ID = '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718'
+const finance = {
+  status: 200,
+  body: { displayName: 'Finance', webUrl: 'https://contoso.sharepoint.com/sites/finance' },
+}
 
-const reportUrls = (urls: string[]) => urls.filter((url) => url !== SITE_DIRECTORY)
+const BETA = 'https://graph.microsoft.com/beta/reports/'
 
 describe('createLiveDataSource', () => {
   it.each([
@@ -32,9 +39,8 @@ describe('createLiveDataSource', () => {
     const { graph, urls } = recordingGraph()
     await call(createLiveDataSource(graph))
 
-    const reports = reportUrls(urls)
-    expect(reports.length).toBeGreaterThan(0)
-    for (const url of reports) {
+    expect(urls.length).toBeGreaterThan(0)
+    for (const url of urls) {
       expect(url.startsWith(BETA)).toBe(true)
       expect(url).toContain('$format=application/json')
     }
@@ -49,46 +55,8 @@ describe('createLiveDataSource', () => {
       ds.getSharePointTrend(),
       ds.getOneDriveTrend(),
     ])
-    const reports = reportUrls(urls)
-    expect(reports).toHaveLength(4)
-    for (const url of reports) expect(url).toContain("(period='D180')")
-  })
-
-  it('resolves site names and URLs from the tenant site directory, which the usage report leaves blank', async () => {
-    const { graph, urls } = recordingGraph()
-    const getAllPages = graph.getAllPages as ReturnType<typeof vi.fn>
-    getAllPages.mockImplementation(async (path: string) => {
-      urls.push(path)
-      if (path === SITE_DIRECTORY) {
-        return [
-          {
-            id: 'contoso.sharepoint.com,8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718,web',
-            displayName: 'Finance',
-            webUrl: 'https://contoso.sharepoint.com/sites/finance',
-          },
-        ]
-      }
-      return [
-        {
-          siteId: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718',
-          siteUrl: '',
-          ownerDisplayName: 'SharePoint Admin',
-          storageUsedInBytes: '10',
-        },
-        { siteId: 'gone', siteUrl: '', ownerDisplayName: 'SharePoint Admin', isDeleted: 'True' },
-      ]
-    })
-
-    const sites = await createLiveDataSource(graph).getSites()
-
-    expect(urls).toContain(SITE_DIRECTORY)
-    expect(sites[0]).toMatchObject({
-      name: 'Finance',
-      url: 'https://contoso.sharepoint.com/sites/finance',
-      ownerDisplayName: 'SharePoint Admin',
-    })
-    expect(sites[1]).toMatchObject({ url: '', isDeleted: true })
-    expect(sites[1].name).toBeUndefined()
+    expect(urls).toHaveLength(4)
+    for (const url of urls) expect(url).toContain("(period='D180')")
   })
 
   it('leaves the non-report calls on the v1.0 base', async () => {
@@ -106,15 +74,73 @@ describe('createLiveDataSource', () => {
 
     await expect(ds.getSites()).rejects.toThrow('503 from Graph')
     await expect(ds.getSites()).resolves.toEqual([])
-    const requested = getAllPages.mock.calls.map(([path]) => path as string)
-    expect(reportUrls(requested)).toHaveLength(2)
+    expect(graph.getAllPages).toHaveBeenCalledTimes(2)
   })
 
   it('shares one paged site fetch between the rows and the refresh date', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)
     await Promise.all([ds.getSites(), ds.getReportRefreshDate()])
-    expect(reportUrls(urls)).toHaveLength(1)
+    expect(urls).toHaveLength(1)
+    expect(graph.getAllPages).toHaveBeenCalledTimes(1)
+  })
+
+  describe('getSiteDetails', () => {
+    it('resolves each site by the id the usage report carries, through one batch, never a tenant-wide walk', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance, { status: 404 }])
+      const ds = createLiveDataSource(graph)
+
+      const found = await ds.getSiteDetails([FINANCE_ID, 'gone'])
+
+      expect(batchGet).toHaveBeenCalledTimes(1)
+      expect(graph.getAllPages).not.toHaveBeenCalled()
+      expect(batchGet.mock.calls[0][0]).toEqual([
+        `/sites/${FINANCE_ID}?$select=id,displayName,webUrl`,
+        '/sites/gone?$select=id,displayName,webUrl',
+      ])
+      expect([...found.entries()]).toEqual([
+        [FINANCE_ID, { name: 'Finance', url: 'https://contoso.sharepoint.com/sites/finance' }],
+      ])
+    })
+
+    it('remembers found and definitively missing sites, so paging back costs no request', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance, { status: 404 }, { status: 403 }])
+      const ds = createLiveDataSource(graph)
+
+      await ds.getSiteDetails([FINANCE_ID, 'gone', 'forbidden'])
+      const again = await ds.getSiteDetails([FINANCE_ID.toUpperCase(), 'gone', 'forbidden'])
+
+      expect(batchGet).toHaveBeenCalledTimes(1)
+      expect(again.get(FINANCE_ID)?.name).toBe('Finance')
+      expect(again.size).toBe(1)
+    })
+
+    it('asks again for a site whose lookup was throttled or failed', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([{ status: 429 }]).mockResolvedValueOnce([finance])
+      const ds = createLiveDataSource(graph)
+
+      expect((await ds.getSiteDetails([FINANCE_ID])).size).toBe(0)
+      expect((await ds.getSiteDetails([FINANCE_ID])).get(FINANCE_ID)?.name).toBe('Finance')
+      expect(batchGet).toHaveBeenCalledTimes(2)
+    })
+
+    it('only fetches the ids it has not seen, de-duplicated', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance]).mockResolvedValueOnce([{ status: 404 }])
+      const ds = createLiveDataSource(graph)
+
+      await ds.getSiteDetails([FINANCE_ID])
+      await ds.getSiteDetails([FINANCE_ID, 'new', 'NEW'])
+
+      expect(batchGet.mock.calls[1][0]).toEqual(['/sites/new?$select=id,displayName,webUrl'])
+    })
   })
 })
 

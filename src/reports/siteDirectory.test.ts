@@ -1,18 +1,30 @@
 import { describe, expect, it } from 'vitest'
 import type { StorageRow } from '@/types/storage'
-import { parseSiteDirectory, siteCollectionIdOf, withSiteDirectory } from './siteDirectory'
+import {
+  parseSiteDetails,
+  siteDetailsPath,
+  unresolvedSiteIds,
+  withSiteDirectory,
+} from './siteDirectory'
 
 const FINANCE_ID = '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718'
+const GONE_ID = 'e5f60718-1234-4f60-a1b2-000000000000'
 
-const directory = parseSiteDirectory([
-  {
-    id: `contoso.sharepoint.com,${FINANCE_ID.toUpperCase()},0a1b2c3d-1111-2222-3333-444455556666`,
-    displayName: 'Finance',
-    webUrl: 'https://contoso.sharepoint.com/sites/finance',
-  },
-  { id: 'contoso.sharepoint.com,ffffffff-0000-0000-0000-000000000000,1', webUrl: 'https://x' },
-  { displayName: 'no id' },
-])
+const directory = parseSiteDetails(
+  [FINANCE_ID.toUpperCase(), GONE_ID, 'no-body'],
+  [
+    {
+      status: 200,
+      body: {
+        id: `contoso.sharepoint.com,${FINANCE_ID},0a1b2c3d-1111-2222-3333-444455556666`,
+        displayName: 'Finance',
+        webUrl: 'https://contoso.sharepoint.com/sites/finance',
+      },
+    },
+    { status: 404, body: { id: 'ignored', displayName: 'Ignored' } },
+    { status: 200 },
+  ],
+)
 
 const reportRow = (over: Partial<StorageRow>): StorageRow => ({
   pool: 'SharePoint',
@@ -27,30 +39,43 @@ const reportRow = (over: Partial<StorageRow>): StorageRow => ({
   ...over,
 })
 
-describe('siteCollectionIdOf', () => {
-  it('takes the middle segment of a composite Graph site id, lower-cased', () => {
-    expect(siteCollectionIdOf('contoso.sharepoint.com,ABC-123,web-1')).toBe('abc-123')
-  })
-
-  it('keeps a bare id as is', () => {
-    expect(siteCollectionIdOf('ABC-123')).toBe('abc-123')
+describe('siteDetailsPath', () => {
+  it('asks for one site by the id the usage report carries, selecting only what the cell shows', () => {
+    expect(siteDetailsPath(FINANCE_ID)).toBe(
+      `/sites/${FINANCE_ID}?$select=id,displayName,webUrl`,
+    )
   })
 })
 
-describe('parseSiteDirectory', () => {
-  it('keys each site by its site-collection id and skips rows without one', () => {
-    expect(directory.size).toBe(2)
+describe('parseSiteDetails', () => {
+  it('keys a 200 response by the requested id, lower-cased', () => {
     expect(directory.get(FINANCE_ID)).toEqual({
       name: 'Finance',
       url: 'https://contoso.sharepoint.com/sites/finance',
     })
   })
 
+  it('drops a non-200 response and a response without a body', () => {
+    expect(directory.size).toBe(1)
+    expect(directory.has(GONE_ID)).toBe(false)
+  })
+
   it('leaves a missing display name empty rather than undefined', () => {
-    expect(directory.get('ffffffff-0000-0000-0000-000000000000')).toEqual({
-      name: '',
-      url: 'https://x',
-    })
+    const [site] = [
+      ...parseSiteDetails(['x'], [{ status: 200, body: { webUrl: 'https://x' } }]).values(),
+    ]
+    expect(site).toEqual({ name: '', url: 'https://x' })
+  })
+})
+
+describe('unresolvedSiteIds', () => {
+  it('lists SharePoint rows without a name and skips drives and named rows', () => {
+    const rows = [
+      reportRow({}),
+      reportRow({ id: 'named', name: 'Named' }),
+      reportRow({ id: 'drive', pool: 'OneDrive' }),
+    ]
+    expect(unresolvedSiteIds(rows)).toEqual([FINANCE_ID])
   })
 })
 
@@ -75,8 +100,13 @@ describe('withSiteDirectory', () => {
   })
 
   it('leaves a row alone when the directory does not know it, such as a deleted site', () => {
-    const unknown = reportRow({ id: 'deleted-site', isDeleted: true })
+    const unknown = reportRow({ id: GONE_ID, isDeleted: true })
     const [row] = withSiteDirectory([unknown], directory)
     expect(row).toBe(unknown)
+  })
+
+  it('hands back the same array when there is nothing to merge', () => {
+    const rows = [reportRow({})]
+    expect(withSiteDirectory(rows, new Map())).toBe(rows)
   })
 })

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDataSource } from '../data/useDataSource'
+import { nameTopSites } from '../data/namedSites'
 import { buildStorageOverview } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
 import type { StorageOverview } from '../types/storage'
@@ -12,7 +13,7 @@ export function useStorageOverview(settings: ReportSettings) {
     queryFn: async () => {
       const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
         await Promise.all([
-          ds.getSites(),
+          ds.getSites().then((sites) => nameTopSites(ds, sites)),
           ds.getDrives(),
           ds.getSharePointTrend(),
           ds.getOneDriveTrend(),
