@@ -114,6 +114,31 @@ describe('SiteTable', () => {
     expect(screen.getAllByRole('row').length).toBeGreaterThan(3)
   })
 
+  it('shows the resolved display name over a link to the site that opens in a new tab', () => {
+    const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
+    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name']} />)
+    expect(screen.getByTitle('Alpha Finance')).toHaveTextContent('Alpha Finance')
+    const link = screen.getByRole('link', { name: '/sites/alpha' })
+    expect(link).toHaveAttribute('href', 'https://c.sharepoint.com/sites/alpha')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('marks each row with its pool icon', () => {
+    render(<SiteTable rows={[rows[0], drive]} totalUsedBytes={800} columns={['name']} />)
+    expect(screen.getByRole('img', { name: 'SharePoint' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'OneDrive' })).toBeInTheDocument()
+  })
+
+  it('finds a site by its resolved display name', async () => {
+    const user = userEvent.setup()
+    const named: StorageRow[] = [{ ...rows[0], name: 'Finance' }, rows[1]]
+    render(<SiteTable rows={named} totalUsedBytes={1000} columns={['name']} />)
+    await user.type(screen.getByRole('searchbox'), 'finan')
+    expect(screen.getByText('1 of 2')).toBeInTheDocument()
+    expect(screen.getByTitle('Finance')).toBeInTheDocument()
+  })
+
   it('names a URL-less site by its owner and shows the site id underneath', () => {
     const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
     render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)

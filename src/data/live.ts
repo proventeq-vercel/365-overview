@@ -3,6 +3,8 @@ import { parseOneDriveAccounts } from '../reports/oneDriveAccounts'
 import type { RawDriveRow } from '../reports/oneDriveAccounts'
 import { parseSharePointSites, reportRefreshDateOf } from '../reports/sharePointSites'
 import type { RawSiteRow } from '../reports/sharePointSites'
+import { parseSiteDirectory, withSiteDirectory } from '../reports/siteDirectory'
+import type { RawDirectorySite } from '../reports/siteDirectory'
 import { parseStorageTrend } from '../reports/storageTrend'
 import type { RawTrendRow } from '../reports/storageTrend'
 import { parseSubscribedSkus } from '../reports/licensing'
@@ -22,6 +24,8 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
+const SITE_DIRECTORY_URL = '/sites?search=*'
+
 export function createLiveDataSource(graph: GraphClient): DataSource {
   let sitePages: Promise<RawSiteRow[]> | null = null
   const rawSites = () => {
@@ -36,7 +40,11 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
 
   return {
     async getSites() {
-      return parseSharePointSites(await rawSites())
+      const [rows, directory] = await Promise.all([
+        rawSites(),
+        graph.getAllPages<RawDirectorySite>(SITE_DIRECTORY_URL),
+      ])
+      return withSiteDirectory(parseSharePointSites(rows), parseSiteDirectory(directory))
     },
 
     async getDrives() {

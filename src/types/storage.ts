@@ -5,6 +5,7 @@ export type StoragePool = 'SharePoint' | 'OneDrive'
 export interface StorageRow {
   pool: StoragePool
   id: string
+  name?: string
   url: string
   ownerDisplayName: string
   storageUsedBytes: number

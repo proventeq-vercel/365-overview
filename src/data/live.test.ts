@@ -18,6 +18,9 @@ function recordingGraph() {
 }
 
 const BETA = 'https://graph.microsoft.com/beta/reports/'
+const SITE_DIRECTORY = '/sites?search=*'
+
+const reportUrls = (urls: string[]) => urls.filter((url) => url !== SITE_DIRECTORY)
 
 describe('createLiveDataSource', () => {
   it.each([
@@ -29,8 +32,9 @@ describe('createLiveDataSource', () => {
     const { graph, urls } = recordingGraph()
     await call(createLiveDataSource(graph))
 
-    expect(urls.length).toBeGreaterThan(0)
-    for (const url of urls) {
+    const reports = reportUrls(urls)
+    expect(reports.length).toBeGreaterThan(0)
+    for (const url of reports) {
       expect(url.startsWith(BETA)).toBe(true)
       expect(url).toContain('$format=application/json')
     }
@@ -45,8 +49,46 @@ describe('createLiveDataSource', () => {
       ds.getSharePointTrend(),
       ds.getOneDriveTrend(),
     ])
-    expect(urls).toHaveLength(4)
-    for (const url of urls) expect(url).toContain("(period='D180')")
+    const reports = reportUrls(urls)
+    expect(reports).toHaveLength(4)
+    for (const url of reports) expect(url).toContain("(period='D180')")
+  })
+
+  it('resolves site names and URLs from the tenant site directory, which the usage report leaves blank', async () => {
+    const { graph, urls } = recordingGraph()
+    const getAllPages = graph.getAllPages as ReturnType<typeof vi.fn>
+    getAllPages.mockImplementation(async (path: string) => {
+      urls.push(path)
+      if (path === SITE_DIRECTORY) {
+        return [
+          {
+            id: 'contoso.sharepoint.com,8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718,web',
+            displayName: 'Finance',
+            webUrl: 'https://contoso.sharepoint.com/sites/finance',
+          },
+        ]
+      }
+      return [
+        {
+          siteId: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718',
+          siteUrl: '',
+          ownerDisplayName: 'SharePoint Admin',
+          storageUsedInBytes: '10',
+        },
+        { siteId: 'gone', siteUrl: '', ownerDisplayName: 'SharePoint Admin', isDeleted: 'True' },
+      ]
+    })
+
+    const sites = await createLiveDataSource(graph).getSites()
+
+    expect(urls).toContain(SITE_DIRECTORY)
+    expect(sites[0]).toMatchObject({
+      name: 'Finance',
+      url: 'https://contoso.sharepoint.com/sites/finance',
+      ownerDisplayName: 'SharePoint Admin',
+    })
+    expect(sites[1]).toMatchObject({ url: '', isDeleted: true })
+    expect(sites[1].name).toBeUndefined()
   })
 
   it('leaves the non-report calls on the v1.0 base', async () => {
@@ -64,15 +106,15 @@ describe('createLiveDataSource', () => {
 
     await expect(ds.getSites()).rejects.toThrow('503 from Graph')
     await expect(ds.getSites()).resolves.toEqual([])
-    expect(graph.getAllPages).toHaveBeenCalledTimes(2)
+    const requested = getAllPages.mock.calls.map(([path]) => path as string)
+    expect(reportUrls(requested)).toHaveLength(2)
   })
 
   it('shares one paged site fetch between the rows and the refresh date', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)
     await Promise.all([ds.getSites(), ds.getReportRefreshDate()])
-    expect(urls).toHaveLength(1)
-    expect(graph.getAllPages).toHaveBeenCalledTimes(1)
+    expect(reportUrls(urls)).toHaveLength(1)
   })
 })
 

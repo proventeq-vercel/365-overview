@@ -111,12 +111,19 @@ exists; these steps are for pointing the app at a registration of your own throu
 3. Under **Supported account types**, choose **Accounts in any organizational directory** (`AzureADMultipleOrgs`).
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
-6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All` and `Organization.Read.All`.
+6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All`.
 7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
-`Reports.Read.All` and `Organization.Read.All` require **admin consent** in each tenant that uses
-the app; a signed-in administrator who has not yet consented is shown the consent screen with a
-link to grant it.
+`Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All` require **admin consent** in each
+tenant that uses the app; a signed-in administrator who has not yet consented is shown the consent
+screen with a link to grant it. A tenant that consented before `Sites.Read.All` was added is asked
+to consent again.
+
+`Sites.Read.All` exists because the SharePoint site usage report returns a blank `siteUrl` for
+every site (a known Microsoft-side issue), so the app resolves each site's display name and URL
+from the tenant site directory (`GET /sites?search=*`) by site-collection id. A site the
+directory does not return — a deleted site, or one the signed-in user cannot open — falls back to
+its owner's name and its id.
 
 > **Role requirement:** consent alone is not enough. `Reports.Read.All` additionally requires the
 > signed-in user to hold **Global Reader**, **Reports Reader** or an equivalent directory role. A

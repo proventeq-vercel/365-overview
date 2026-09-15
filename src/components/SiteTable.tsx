@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { rowDetail, rowName } from '@/lib/rowName'
+import { rowName } from '@/lib/rowName'
 import type { StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
+import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
+import { PoolIcon } from '@/design/PoolIcon'
 
 export type ColumnKey =
   | 'name'
@@ -99,6 +101,7 @@ export function SiteTable({
     const filtered = query
       ? rows.filter(
           (row) =>
+            (row.name ?? '').toLowerCase().includes(query) ||
             row.url.toLowerCase().includes(query) ||
             row.ownerDisplayName.toLowerCase().includes(query) ||
             row.id.toLowerCase().includes(query),
@@ -140,17 +143,26 @@ export function SiteTable({
 
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
-      case 'name':
+      case 'name': {
+        const name = rowName(row)
         return (
-          <span role="cell" key={key} className="min-w-0">
-            <span className="block truncate font-semibold text-p365-navy">
-              {rowName(row)}
-            </span>
-            <span className="block truncate text-xs text-p365-grey-500" title={rowDetail(row)}>
-              {rowDetail(row)}
+          <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
+            <PoolIcon pool={row.pool} />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="block truncate font-semibold text-p365-navy" title={name}>
+                {name}
+              </span>
+              {row.url ? (
+                <ExternalUrlLink href={row.url} />
+              ) : (
+                <span className="block truncate text-xs text-p365-grey-500" title={row.id}>
+                  {row.id}
+                </span>
+              )}
             </span>
           </span>
         )
+      }
       case 'owner':
         return (
           <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">

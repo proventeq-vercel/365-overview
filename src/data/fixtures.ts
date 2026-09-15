@@ -63,6 +63,7 @@ function generateSites(count: number, concealed = false): StorageRow[] {
     out.push({
       pool: 'SharePoint',
       id: `gen-${i}`,
+      name: concealed ? undefined : `Team ${i}`,
       url: concealed ? '' : `https://contoso.sharepoint.com/sites/team-${i}`,
       ownerDisplayName: concealed ? hashName(i) : `Owner ${i}`,
       storageUsedBytes: mb * MB,
@@ -78,14 +79,15 @@ function generateSites(count: number, concealed = false): StorageRow[] {
 
 function namedSites(concealed: boolean): StorageRow[] {
   const named = [
-    ['site-1', 'marketing', 'Alice Marketing', 50, 4200, 380, 'Team Site'],
-    ['site-2', 'engineering', 'Bob Engineering', 150, 18_900, 2140, 'Team Channel'],
-    ['site-3', 'hr', 'Carol HR', 10, 1350, 96, 'Group'],
-    ['site-4', 'sales', 'Dan Sales', 80, 7640, 905, 'Team Site'],
+    ['site-1', 'marketing', 'Marketing', 'Alice Marketing', 50, 4200, 380, 'Team Site'],
+    ['site-2', 'engineering', 'Engineering', 'Bob Engineering', 150, 18_900, 2140, 'Team Channel'],
+    ['site-3', 'hr', 'Human Resources', 'Carol HR', 10, 1350, 96, 'Group'],
+    ['site-4', 'sales', 'Sales', 'Dan Sales', 80, 7640, 905, 'Team Site'],
   ] as const
-  return named.map(([id, slug, owner, gb, files, active, template], i) => ({
+  return named.map(([id, slug, name, owner, gb, files, active, template], i) => ({
     pool: 'SharePoint' as const,
     id,
+    name: concealed ? undefined : name,
     url: concealed ? '' : `https://contoso.sharepoint.com/sites/${slug}`,
     ownerDisplayName: concealed ? hashName(1000 + i) : owner,
     storageUsedBytes: gb * GB,

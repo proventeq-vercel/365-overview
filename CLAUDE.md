@@ -26,7 +26,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
-  `oneDriveAccounts`, `storageTrend`, `licensing`, `org`).
+  `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
+  The usage report returns a **blank `siteUrl` for every site** (Microsoft-side
+  known issue), so `live.getSites()` also pages `GET /sites?search=*`
+  (`Sites.Read.All`) and `withSiteDirectory` joins display name + `webUrl`
+  onto each row by site-collection id (the middle segment of the composite
+  Graph site id). Unresolved rows (deleted sites, sites the user cannot open)
+  keep the owner-name / id fallback `rowName` / `rowLabel` provide.
 - `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
   derivation of every figure on screen. Pure, table-tested.
 - `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,
@@ -74,7 +80,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
   `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
-  load), `DescribedMenuItem` (dropdown item with icon, label, description).
+  load), `DescribedMenuItem` (dropdown item with icon, label, description),
+  `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
+  1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab).
 - `src/app/` — the shell: `AppShell` (sticky `Header` + optional `FloatingMenu`
   + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
@@ -88,8 +96,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (navy overlay drawer listing `REPORTS`, Escape/backdrop close), `AccountChip`
   (initials + name, username as title), `queryClient`.
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
-  styled), `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button,
-  select, dropdown-menu, dialog, skeleton, …).
+  styled; the name cell is P365's `EntityNameCell`: `PoolIcon` + bold name +
+  `ExternalUrlLink` showing the URL path, opening the site in a new tab),
+  `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button, select,
+  dropdown-menu, dialog, skeleton, …).
 - `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`
   (parsed once into `env.features`), overlaid with `src/config/modes.ts`: the
   search params `features`, `mock`, `scenario` (persisted per tab in
