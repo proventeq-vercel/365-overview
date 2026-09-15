@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, screen } from '@testing-library/react'
 import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -61,26 +61,45 @@ function renderShell(path = '/', reports: ReportDefinition[] = TWO_REPORTS) {
 
 afterEach(cleanup)
 
+function viewport(pushesContent: boolean) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: pushesContent,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
+}
+
+const menuPanel = () => screen.getByRole('navigation', { name: 'Reports' }).parentElement
+
 describe('AppShell', () => {
+  beforeEach(() => viewport(true))
+
   it('has no menu button and no menu at all when a single report is enabled', () => {
     renderShell('/', [TWO_REPORTS[0]])
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: 'Reports' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Reports' })).not.toBeInTheDocument()
   })
 
-  it('keeps the menu closed and out of the tree until the hamburger is pressed', () => {
+  it('mounts the menu closed and inert until the hamburger is pressed', () => {
     renderShell()
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: 'Reports' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false')
+    expect(menuPanel()).toHaveAttribute('data-state', 'closed')
+    expect(menuPanel()).toHaveAttribute('inert')
   })
 
-  it('opens the floating menu, lists every registered report and marks the current one', async () => {
+  it('opens the side menu, lists every registered report and marks the current one', async () => {
     const user = userEvent.setup()
     renderShell('/')
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
 
-    const menu = await screen.findByRole('dialog', { name: 'Reports' })
-    expect(menu).toBeInTheDocument()
+    expect(menuPanel()).toHaveAttribute('data-state', 'open')
+    expect(menuPanel()).not.toHaveAttribute('inert')
+    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute('aria-expanded', 'true')
     const links = screen.getAllByRole('link')
     expect(links.map((link) => link.textContent)).toEqual(['Storage Optimisation', 'OneDrive Usage'])
     expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('Storage Optimisation')
@@ -90,35 +109,43 @@ describe('AppShell', () => {
     const user = userEvent.setup()
     renderShell('/sharing')
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await screen.findByRole('dialog', { name: 'Reports' })
     expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('OneDrive Usage')
   })
 
-  it('navigates from a menu link and closes the menu', async () => {
+  it('navigates from a menu link and keeps the menu open where it pushes the content', async () => {
     const user = userEvent.setup()
     renderShell('/')
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    await user.click(await screen.findByRole('link', { name: 'OneDrive Usage' }))
+    await user.click(screen.getByRole('link', { name: 'OneDrive Usage' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('/sharing')
-    act(() => {
-      fireEvent.transitionEnd(screen.getByRole('dialog', { name: 'Reports' }))
-    })
-    expect(screen.queryByRole('dialog', { name: 'Reports' })).not.toBeInTheDocument()
+    expect(menuPanel()).toHaveAttribute('data-state', 'open')
+    expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent('OneDrive Usage')
   })
 
-  it('closes on Escape and on the close button', async () => {
+  it('closes after navigating where it overlays the content', async () => {
+    viewport(false)
+    const user = userEvent.setup()
+    renderShell('/')
+    await user.click(screen.getByRole('button', { name: 'Open menu' }))
+    await user.click(screen.getByRole('link', { name: 'OneDrive Usage' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('/sharing')
+    expect(menuPanel()).toHaveAttribute('data-state', 'closed')
+  })
+
+  it('closes on Escape and on the same header button', async () => {
     const user = userEvent.setup()
     renderShell()
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Reports' })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Close menu' })).toHaveFocus())
+    expect(menuPanel()).toHaveAttribute('data-state', 'open')
 
     await user.keyboard('{Escape}')
-    expect(dialog.parentElement).toHaveAttribute('data-state', 'closed')
+    expect(menuPanel()).toHaveAttribute('data-state', 'closed')
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }))
     await user.click(screen.getByRole('button', { name: 'Close menu' }))
-    expect(dialog.parentElement).toHaveAttribute('data-state', 'closed')
+    expect(menuPanel()).toHaveAttribute('data-state', 'closed')
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
   })
 })
