@@ -1,9 +1,15 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
-import { render } from '@/test/render'
+import type { ReactNode } from 'react'
+import { NO_SITE_DETAILS, renderWithData } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import type { StorageRow } from '@/types/storage'
+import type { DataSource } from '@/data/fixtures'
+import type { SiteDirectory } from '@/reports/siteDirectory'
 import { SiteTable } from './SiteTable'
+
+const render = (ui: ReactNode, getSiteDetails: DataSource['getSiteDetails'] = NO_SITE_DETAILS) =>
+  renderWithData(ui, { getSiteDetails })
 
 const rows: StorageRow[] = [
   {
@@ -114,10 +120,60 @@ describe('SiteTable', () => {
     expect(screen.getAllByRole('row').length).toBeGreaterThan(3)
   })
 
-  it('names a URL-less site by its owner and shows the site id underneath', () => {
+  it('shows the resolved display name over a link to the site that opens in a new tab', () => {
+    const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
+    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name']} />)
+    expect(screen.getByTitle('Alpha Finance')).toHaveTextContent('Alpha Finance')
+    const link = screen.getByRole('link', { name: '/sites/alpha' })
+    expect(link).toHaveAttribute('href', 'https://c.sharepoint.com/sites/alpha')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('marks each row with its pool icon', () => {
+    render(<SiteTable rows={[rows[0], drive]} totalUsedBytes={800} columns={['name']} />)
+    expect(screen.getByRole('img', { name: 'SharePoint' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'OneDrive' })).toBeInTheDocument()
+  })
+
+  it('finds a site by its resolved display name', async () => {
+    const user = userEvent.setup()
+    const named: StorageRow[] = [{ ...rows[0], name: 'Finance' }, rows[1]]
+    render(<SiteTable rows={named} totalUsedBytes={1000} columns={['name']} />)
+    await user.type(screen.getByRole('searchbox'), 'finan')
+    expect(screen.getByText('1 of 2')).toBeInTheDocument()
+    expect(screen.getByTitle('Finance')).toBeInTheDocument()
+  })
+
+  it('looks up the names of the sites on the visible page, showing a skeleton meanwhile', async () => {
+    const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
+    const directory: SiteDirectory = new Map([
+      [blank.id, { name: 'Finance', url: 'https://c.sharepoint.com/sites/finance' }],
+    ])
+    const getSiteDetails = vi.fn(async (ids: string[]) => {
+      const found: SiteDirectory = new Map()
+      for (const id of ids) if (directory.has(id)) found.set(id, directory.get(id)!)
+      return found
+    })
+    render(<SiteTable rows={[blank, drive]} totalUsedBytes={800} columns={['name']} />, getSiteDetails)
+
+    expect(screen.getByLabelText('Looking up the site name')).toBeInTheDocument()
+    expect(await screen.findByTitle('Finance')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '/sites/finance' })).toBeInTheDocument()
+    expect(getSiteDetails).toHaveBeenCalledTimes(1)
+    expect(getSiteDetails).toHaveBeenCalledWith([blank.id])
+  })
+
+  it('does not look up rows that already carry a name', () => {
+    const getSiteDetails = vi.fn(async () => new Map())
+    render(<SiteTable rows={[{ ...rows[0], name: 'Alpha' }]} totalUsedBytes={300} columns={['name']} />, getSiteDetails)
+    expect(getSiteDetails).not.toHaveBeenCalled()
+  })
+
+  it('names a URL-less site by its owner and shows the site id underneath', async () => {
     const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
     render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)
-    expect(screen.getAllByRole('cell')[0]).toHaveTextContent('Ada')
+    expect(await screen.findByTitle('Ada')).toBeInTheDocument()
     expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
   })
 

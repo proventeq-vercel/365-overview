@@ -1,15 +1,13 @@
 import type { StorageRow } from '@/types/storage'
 
-export type NamedRow = Pick<StorageRow, 'id' | 'url' | 'ownerDisplayName'>
+export type NamedRow = Pick<StorageRow, 'id' | 'name' | 'url' | 'ownerDisplayName'>
 
 const SHORT_ID_LENGTH = 8
 
-export function rowName(row: NamedRow): string {
-  return row.url.replace(/\/$/, '').split('/').pop() || row.ownerDisplayName
-}
+const lastUrlSegment = (url: string): string => url.replace(/\/$/, '').split('/').pop() ?? ''
 
-export function rowDetail(row: NamedRow): string {
-  return row.url || row.id
+export function rowName(row: NamedRow): string {
+  return row.name || lastUrlSegment(row.url) || row.ownerDisplayName
 }
 
 function shortId(id: string): string {

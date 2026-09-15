@@ -79,8 +79,8 @@ describe('OneDriveUsage', () => {
   it('never lists a SharePoint site among the drives', async () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(screen.queryByText(/sharepoint\.com\/sites\//)).not.toBeInTheDocument()
-    expect(screen.getAllByText(/-my\.sharepoint\.com\/personal\//).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('link', { name: /^\/sites\// })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /^\/personal\// }).length).toBeGreaterThan(0)
   })
 
   it('explains concealed names only on a tenant that conceals them', async () => {

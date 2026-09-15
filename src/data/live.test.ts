@@ -13,8 +13,18 @@ function recordingGraph() {
       urls.push(path)
       return [] as unknown[]
     }) as GraphClient['getAllPages'],
+    batchGet: vi.fn(async (paths: string[]) => {
+      urls.push(...paths)
+      return paths.map(() => ({ status: 404 }))
+    }) as GraphClient['batchGet'],
   }
   return { graph, urls }
+}
+
+const FINANCE_ID = '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718'
+const finance = {
+  status: 200,
+  body: { displayName: 'Finance', webUrl: 'https://contoso.sharepoint.com/sites/finance' },
 }
 
 const BETA = 'https://graph.microsoft.com/beta/reports/'
@@ -73,6 +83,64 @@ describe('createLiveDataSource', () => {
     await Promise.all([ds.getSites(), ds.getReportRefreshDate()])
     expect(urls).toHaveLength(1)
     expect(graph.getAllPages).toHaveBeenCalledTimes(1)
+  })
+
+  describe('getSiteDetails', () => {
+    it('resolves each site by the id the usage report carries, through one batch, never a tenant-wide walk', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance, { status: 404 }])
+      const ds = createLiveDataSource(graph)
+
+      const found = await ds.getSiteDetails([FINANCE_ID, 'gone'])
+
+      expect(batchGet).toHaveBeenCalledTimes(1)
+      expect(graph.getAllPages).not.toHaveBeenCalled()
+      expect(batchGet.mock.calls[0][0]).toEqual([
+        `/sites/${FINANCE_ID}?$select=id,displayName,webUrl`,
+        '/sites/gone?$select=id,displayName,webUrl',
+      ])
+      expect([...found.entries()]).toEqual([
+        [FINANCE_ID, { name: 'Finance', url: 'https://contoso.sharepoint.com/sites/finance' }],
+      ])
+    })
+
+    it('remembers found and definitively missing sites, so paging back costs no request', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance, { status: 404 }, { status: 403 }])
+      const ds = createLiveDataSource(graph)
+
+      await ds.getSiteDetails([FINANCE_ID, 'gone', 'forbidden'])
+      const again = await ds.getSiteDetails([FINANCE_ID.toUpperCase(), 'gone', 'forbidden'])
+
+      expect(batchGet).toHaveBeenCalledTimes(1)
+      expect(again.get(FINANCE_ID)?.name).toBe('Finance')
+      expect(again.size).toBe(1)
+    })
+
+    it('asks again for a site whose lookup was throttled or failed', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([{ status: 429 }]).mockResolvedValueOnce([finance])
+      const ds = createLiveDataSource(graph)
+
+      expect((await ds.getSiteDetails([FINANCE_ID])).size).toBe(0)
+      expect((await ds.getSiteDetails([FINANCE_ID])).get(FINANCE_ID)?.name).toBe('Finance')
+      expect(batchGet).toHaveBeenCalledTimes(2)
+    })
+
+    it('only fetches the ids it has not seen, de-duplicated', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance]).mockResolvedValueOnce([{ status: 404 }])
+      const ds = createLiveDataSource(graph)
+
+      await ds.getSiteDetails([FINANCE_ID])
+      await ds.getSiteDetails([FINANCE_ID, 'new', 'NEW'])
+
+      expect(batchGet.mock.calls[1][0]).toEqual(['/sites/new?$select=id,displayName,webUrl'])
+    })
   })
 })
 

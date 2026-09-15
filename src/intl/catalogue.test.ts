@@ -7,7 +7,12 @@ const SOURCES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   eager: true,
 })
 const KEY_USE = /(?:\bt\(|titleKey: |label: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
-const DYNAMIC_PREFIXES = ['storageOptimisation.growth.risk.', 'pagination.jump.']
+const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
+  'storageOptimisation.growth.risk.': 4,
+  'pagination.jump.': 4,
+  'table.pool.': 2,
+}
+const DYNAMIC_PREFIXES = Object.keys(DYNAMIC_PREFIX_SIZES)
 
 function usedKeys(): Set<string> {
   const keys = new Set<string>()
@@ -36,9 +41,9 @@ describe('en.json catalogue', () => {
   })
 
   it('covers every dynamic prefix the source builds keys from', () => {
-    for (const prefix of DYNAMIC_PREFIXES) {
+    for (const [prefix, size] of Object.entries(DYNAMIC_PREFIX_SIZES)) {
       expect(used.has(`${prefix}*`)).toBe(true)
-      expect([...catalogue].filter((key) => key.startsWith(prefix))).toHaveLength(4)
+      expect([...catalogue].filter((key) => key.startsWith(prefix))).toHaveLength(size)
     }
   })
 

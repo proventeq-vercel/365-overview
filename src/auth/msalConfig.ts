@@ -21,4 +21,9 @@ export function getMsalInstance(): PublicClientApplication {
   return _msalInstance
 }
 
-export const GRAPH_SCOPES = ['User.Read', 'Reports.Read.All', 'Organization.Read.All']
+export const GRAPH_SCOPES = [
+  'User.Read',
+  'Reports.Read.All',
+  'Organization.Read.All',
+  'Sites.Read.All',
+]

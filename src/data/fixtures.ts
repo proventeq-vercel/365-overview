@@ -1,10 +1,12 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
+import type { SiteDirectory } from '../reports/siteDirectory'
 
 export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short-history'
 
 export interface DataSource {
   getSites(): Promise<StorageRow[]>
+  getSiteDetails(ids: string[]): Promise<SiteDirectory>
   getDrives(): Promise<StorageRow[]>
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
@@ -63,6 +65,7 @@ function generateSites(count: number, concealed = false): StorageRow[] {
     out.push({
       pool: 'SharePoint',
       id: `gen-${i}`,
+      name: concealed ? undefined : `Team ${i}`,
       url: concealed ? '' : `https://contoso.sharepoint.com/sites/team-${i}`,
       ownerDisplayName: concealed ? hashName(i) : `Owner ${i}`,
       storageUsedBytes: mb * MB,
@@ -78,14 +81,15 @@ function generateSites(count: number, concealed = false): StorageRow[] {
 
 function namedSites(concealed: boolean): StorageRow[] {
   const named = [
-    ['site-1', 'marketing', 'Alice Marketing', 50, 4200, 380, 'Team Site'],
-    ['site-2', 'engineering', 'Bob Engineering', 150, 18_900, 2140, 'Team Channel'],
-    ['site-3', 'hr', 'Carol HR', 10, 1350, 96, 'Group'],
-    ['site-4', 'sales', 'Dan Sales', 80, 7640, 905, 'Team Site'],
+    ['site-1', 'marketing', 'Marketing', 'Alice Marketing', 50, 4200, 380, 'Team Site'],
+    ['site-2', 'engineering', 'Engineering', 'Bob Engineering', 150, 18_900, 2140, 'Team Channel'],
+    ['site-3', 'hr', 'Human Resources', 'Carol HR', 10, 1350, 96, 'Group'],
+    ['site-4', 'sales', 'Sales', 'Dan Sales', 80, 7640, 905, 'Team Site'],
   ] as const
-  return named.map(([id, slug, owner, gb, files, active, template], i) => ({
+  return named.map(([id, slug, name, owner, gb, files, active, template], i) => ({
     pool: 'SharePoint' as const,
     id,
+    name: concealed ? undefined : name,
     url: concealed ? '' : `https://contoso.sharepoint.com/sites/${slug}`,
     ownerDisplayName: concealed ? hashName(1000 + i) : owner,
     storageUsedBytes: gb * GB,
@@ -180,16 +184,27 @@ function scaled(rows: StorageRow[], factor: number): StorageRow[] {
 
 interface ScenarioData {
   sites: StorageRow[]
+  directory: SiteDirectory
   drives: StorageRow[]
   sharePointTrend: UsagePoint[]
   oneDriveTrend: UsagePoint[]
 }
 
+function splitDirectory(rows: StorageRow[]): Pick<ScenarioData, 'sites' | 'directory'> {
+  const directory: SiteDirectory = new Map()
+  const sites = rows.map(({ name, ...row }) => {
+    if (name && !row.isDeleted) directory.set(row.id.toLowerCase(), { name, url: row.url })
+    return row
+  })
+  return { sites, directory }
+}
+
 function scenarioData(scenario: MockScenario): ScenarioData {
   const concealed = scenario === 'concealed'
   const baseSites = [...namedSites(concealed), ...generateSites(2500, concealed)]
-  const sites =
-    scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites
+  const { sites, directory } = splitDirectory(
+    scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites,
+  )
   const drives = generateDrives(400, concealed)
   const sharePointCurve =
     scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
@@ -197,6 +212,7 @@ function scenarioData(scenario: MockScenario): ScenarioData {
 
   return {
     sites,
+    directory,
     drives,
     sharePointTrend: trendFor(sites, sharePointCurve.slice(-months)),
     oneDriveTrend: trendFor(drives, HEALTHY_ONEDRIVE_CURVE.slice(-months)),
@@ -207,6 +223,14 @@ export function createMockDataSource(scenario: MockScenario = 'healthy'): DataSo
   const data = scenarioData(scenario)
   return {
     getSites: async () => data.sites,
+    getSiteDetails: async (ids) => {
+      const found: SiteDirectory = new Map()
+      for (const id of ids) {
+        const site = data.directory.get(id.toLowerCase())
+        if (site) found.set(id.toLowerCase(), site)
+      }
+      return found
+    },
     getDrives: async () => data.drives,
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
