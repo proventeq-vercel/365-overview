@@ -10,7 +10,11 @@ import { createMockDataSource, type DataSource } from '@/data/fixtures'
 import { Header } from './Header'
 import { SettingsProvider } from './SettingsProvider'
 
-function renderHeader(overrides: Partial<DataSource> = {}, onOpenMenu?: () => void) {
+function renderHeader(
+  overrides: Partial<DataSource> = {},
+  onToggleMenu?: () => void,
+  menuOpen = false,
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const ds = { ...createMockDataSource('healthy'), ...overrides }
   function Wrapper({ children }: { children: ReactNode }) {
@@ -24,7 +28,9 @@ function renderHeader(overrides: Partial<DataSource> = {}, onOpenMenu?: () => vo
       </QueryClientProvider>
     )
   }
-  return render(<Header onOpenMenu={onOpenMenu} />, { wrapper: Wrapper })
+  return render(<Header menuOpen={onToggleMenu && menuOpen} onToggleMenu={onToggleMenu} />, {
+    wrapper: Wrapper,
+  })
 }
 
 afterEach(cleanup)
@@ -54,12 +60,22 @@ describe('Header', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
-  it('offers the menu button only when the shell provides a menu', async () => {
-    const onOpenMenu = vi.fn()
+  it('offers the menu toggle only when the shell provides a menu', async () => {
+    const onToggleMenu = vi.fn()
     const user = userEvent.setup()
-    renderHeader({}, onOpenMenu)
-    await user.click(screen.getByRole('button', { name: 'Open menu' }))
-    expect(onOpenMenu).toHaveBeenCalledTimes(1)
+    renderHeader({}, onToggleMenu)
+    const toggle = screen.getByRole('button', { name: 'Open menu' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveAttribute('aria-controls', 'reports-menu')
+    await user.click(toggle)
+    expect(onToggleMenu).toHaveBeenCalledTimes(1)
+  })
+
+  it('labels the same button Close menu while the menu is open', () => {
+    renderHeader({}, vi.fn(), true)
+    const toggle = screen.getByRole('button', { name: 'Close menu' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
 
   it('disables refresh while data is being fetched and re-enables it afterwards', async () => {

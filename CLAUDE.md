@@ -100,7 +100,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
-- `src/app/` — the shell: `AppShell` (sticky `Header` + optional `FloatingMenu`
+- `src/app/` — the shell: `AppShell` (sticky `Header` + optional `SideMenu`
   + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
@@ -109,8 +109,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB with the licence estimate as hint), `SettingsProvider` /
-  `useSettings` (localStorage-backed `ReportSettings` context), `FloatingMenu`
-  (navy overlay drawer listing `REPORTS`, Escape/backdrop close), `AccountChip`
+  `useSettings` (localStorage-backed `ReportSettings` context), `SideMenu`
+  (P365's `NavBarComponent` pattern: a navy panel that is always mounted and
+  animates `width` 0 ↔ 17.5rem in 260ms `cubic-bezier(0.4,0,0.2,1)` with a
+  fixed-width inner so it slides rather than reflows; the header hamburger
+  toggles it with `aria-expanded`/`aria-controls`; from `lg` it is sticky and
+  pushes `<main>`, below `lg` it overlays with a backdrop and closes after a
+  link; `visibility` flips hidden after the slide so a closed menu is hidden
+  to Playwright and assistive tech, and `inert` while closed), `AccountChip`
   (initials + name, username as title), `queryClient`.
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
   styled; the name cell is P365's `EntityNameCell`: `PoolIcon` + bold name +

@@ -236,7 +236,7 @@ npm run preview
 
 ```
 src/
-  app/           # Shell: AppShell, Header, HeaderActions, AccountChip, FloatingMenu, SettingsDialog, SettingsProvider
+  app/           # Shell: AppShell, Header, HeaderActions, AccountChip, SideMenu, SettingsDialog, SettingsProvider
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES + URL overrides), modes.ts, featureFlags.ts, appConfig.ts
