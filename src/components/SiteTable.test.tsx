@@ -60,6 +60,44 @@ describe('SiteTable', () => {
     expect(screen.queryByRole('columnheader', { name: /owner/i })).not.toBeInTheDocument()
   })
 
+  describe('column help', () => {
+    it('explains a sortable column on hover', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'used']} />)
+      await user.hover(screen.getByRole('columnheader', { name: /storage used/i }))
+      expect(
+        await screen.findByText(/Storage consumed, as Microsoft's usage report measures it/),
+      ).toBeInTheDocument()
+    })
+
+    it('explains a non-sortable column on keyboard focus', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'template']} />)
+      await user.tab()
+      await user.tab()
+      await user.tab()
+      expect(screen.getByRole('columnheader', { name: /template/i })).toHaveFocus()
+      expect(
+        await screen.findByText(/Team Channel and Group templates count as Teams/),
+      ).toBeInTheDocument()
+    })
+
+    it('uses the caller wording for the name column when given', async () => {
+      const user = userEvent.setup()
+      render(
+        <SiteTable
+          rows={[drive]}
+          totalUsedBytes={500}
+          columns={['name']}
+          nameHeader="Drive"
+          nameHelp="The OneDrive account, named after its owner."
+        />,
+      )
+      await user.hover(screen.getByRole('columnheader', { name: 'Drive' }))
+      expect(await screen.findByText('The OneDrive account, named after its owner.')).toBeInTheDocument()
+    })
+  })
+
   it('renders the last-activity column when asked', () => {
     render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'lastActivity']} />)
     expect(screen.getByRole('columnheader', { name: /last activity/i })).toBeInTheDocument()

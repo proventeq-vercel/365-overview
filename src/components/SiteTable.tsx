@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
 import { PoolIcon } from '@/design/PoolIcon'
+import { ColumnHeaderTooltip } from '@/design/ColumnHeaderTooltip'
 
 export type ColumnKey =
   | 'name'
@@ -31,10 +32,12 @@ interface SiteTableProps {
   columns: ColumnKey[]
   label?: string
   nameHeader?: string
+  nameHelp?: string
 }
 
 interface ColumnSpec {
   label: TranslateKey
+  help: TranslateKey
   sortable: boolean
   width: string
   sortValue?: (row: StorageRow) => number
@@ -46,36 +49,62 @@ const capacityRatio = (row: StorageRow): number =>
     : 0
 
 const COLUMNS: Record<ColumnKey, ColumnSpec> = {
-  name: { label: 'table.column.site', sortable: false, width: 'minmax(0,2fr)' },
-  owner: { label: 'table.column.owner', sortable: false, width: 'minmax(0,1.5fr)' },
-  files: { label: 'table.column.files', sortable: true, width: '80px', sortValue: (r) => r.fileCount },
+  name: {
+    label: 'table.column.site',
+    help: 'table.column.help.site',
+    sortable: false,
+    width: 'minmax(0,2fr)',
+  },
+  owner: {
+    label: 'table.column.owner',
+    help: 'table.column.help.owner',
+    sortable: false,
+    width: 'minmax(0,1.5fr)',
+  },
+  files: {
+    label: 'table.column.files',
+    help: 'table.column.help.files',
+    sortable: true,
+    width: '80px',
+    sortValue: (r) => r.fileCount,
+  },
   active: {
     label: 'table.column.active',
+    help: 'table.column.help.active',
     sortable: true,
     width: '96px',
     sortValue: (r) => r.activeFileCount,
   },
   used: {
     label: 'table.column.used',
+    help: 'table.column.help.used',
     sortable: true,
     width: '120px',
     sortValue: (r) => r.storageUsedBytes,
   },
   share: {
     label: 'table.column.share',
+    help: 'table.column.help.share',
     sortable: true,
     width: 'minmax(120px,1.4fr)',
     sortValue: (r) => r.storageUsedBytes,
   },
   lastActivity: {
     label: 'table.column.lastActivity',
+    help: 'table.column.help.lastActivity',
     sortable: true,
     width: '120px',
     sortValue: (r) => (r.lastActivityDate ? Date.parse(r.lastActivityDate) : 0),
   },
-  template: { label: 'table.column.template', sortable: false, width: 'minmax(0,1fr)' },
+  template: {
+    label: 'table.column.template',
+    help: 'table.column.help.template',
+    sortable: false,
+    width: 'minmax(0,1fr)',
+  },
   capacity: {
     label: 'table.column.capacity',
+    help: 'table.column.help.capacity',
     sortable: true,
     width: '120px',
     sortValue: capacityRatio,
@@ -90,6 +119,7 @@ export function SiteTable({
   columns,
   label,
   nameHeader,
+  nameHelp,
 }: SiteTableProps) {
   const t = useTranslation()
   const tableLabel = label ?? t('table.sites')
@@ -143,6 +173,7 @@ export function SiteTable({
 
   const gridCols = columns.map((key) => COLUMNS[key].width).join(' ')
   const headerOf = (key: ColumnKey) => (key === 'name' ? nameLabel : t(COLUMNS[key].label))
+  const helpOf = (key: ColumnKey) => (key === 'name' && nameHelp ? nameHelp : t(COLUMNS[key].help))
 
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
@@ -272,30 +303,33 @@ export function SiteTable({
             className="grid items-center gap-2 border-b border-p365-grey-100 bg-p365-page px-4 py-2.5 text-xs font-semibold text-p365-grey-600"
             style={{ gridTemplateColumns: gridCols }}
           >
-            {columns.map((key) =>
-              COLUMNS[key].sortable ? (
-                <button
-                  key={key}
-                  type="button"
-                  role="columnheader"
-                  onClick={() => toggleSort(key)}
-                  aria-sort={
-                    key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
-                  }
-                  className={cn(
-                    'flex items-center gap-1 text-left transition-colors duration-150 ease-out hover:text-p365-navy',
-                    key === sortKey && 'text-p365-navy',
-                  )}
-                >
-                  {headerOf(key)}
-                  {sortIndicator(key)}
-                </button>
-              ) : (
-                <span key={key} role="columnheader">
-                  {headerOf(key)}
-                </span>
-              ),
-            )}
+            {columns.map((key) => (
+              <ColumnHeaderTooltip
+                key={key}
+                tooltip={helpOf(key)}
+                header={
+                  COLUMNS[key].sortable ? (
+                    <button
+                      type="button"
+                      role="columnheader"
+                      onClick={() => toggleSort(key)}
+                      aria-sort={
+                        key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
+                      }
+                      className={cn(
+                        'flex items-center gap-1 text-left transition-colors duration-150 ease-out hover:text-p365-navy',
+                        key === sortKey && 'text-p365-navy',
+                      )}
+                    />
+                  ) : (
+                    <span role="columnheader" tabIndex={0} className="w-fit cursor-help" />
+                  )
+                }
+              >
+                {headerOf(key)}
+                {sortIndicator(key)}
+              </ColumnHeaderTooltip>
+            ))}
           </div>
 
           {pageRows.map((row) => (
