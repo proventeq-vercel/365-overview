@@ -97,6 +97,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
   1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab).
+  `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
+  explains its column on hover and keyboard focus; copy lives under
+  `table.column.help.*`, the catalogue test reads `help: '…'` keys).
 - `src/app/` — the shell: `AppShell` (sticky `Header` + optional `FloatingMenu`
   + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live

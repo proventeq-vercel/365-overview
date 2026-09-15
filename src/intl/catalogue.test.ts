@@ -6,7 +6,7 @@ const SOURCES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   import: 'default',
   eager: true,
 })
-const KEY_USE = /(?:\bt\(|titleKey: |label: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
+const KEY_USE = /(?:\bt\(|titleKey: |label: |help: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
 const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
   'storageOptimisation.growth.risk.': 4,
   'pagination.jump.': 4,

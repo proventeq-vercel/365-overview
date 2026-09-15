@@ -60,6 +60,7 @@ export function OneDriveUsage() {
             columns={[...DRIVE_COLUMNS]}
             label={t('oneDrive.table.label')}
             nameHeader={t('oneDrive.table.driveHeader')}
+            nameHelp={t('table.column.help.drive')}
           />
         </Panel>
       </Section>
