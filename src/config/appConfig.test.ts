@@ -6,13 +6,13 @@ const ORIGIN = 'https://365-overview.vercel.app'
 describe('parseConfig', () => {
   it('runs on the built-in registration when no env is set at all', () => {
     expect(parseConfig({}, ORIGIN)).toEqual({
-      VITE_CLIENT_ID: 'a6036483-bd4e-44d4-896f-33d6547eb66d',
-      VITE_AUTHORITY_URI: 'https://login.microsoftonline.com/d3d3b20f-00ce-4a0f-9975-d79117daa055',
+      VITE_CLIENT_ID: '84e24db0-8904-41f8-8556-14a2b6863b1a',
+      VITE_AUTHORITY_URI: 'https://login.microsoftonline.com/organizations',
       VITE_REDIRECT_URI: 'https://365-overview.vercel.app/',
     })
     expect(DEFAULT_AUTH).toEqual({
-      clientId: 'a6036483-bd4e-44d4-896f-33d6547eb66d',
-      authority: 'https://login.microsoftonline.com/d3d3b20f-00ce-4a0f-9975-d79117daa055',
+      clientId: '84e24db0-8904-41f8-8556-14a2b6863b1a',
+      authority: 'https://login.microsoftonline.com/organizations',
     })
   })
 

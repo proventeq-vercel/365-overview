@@ -5,8 +5,8 @@ export interface AppConfig {
 }
 
 export const DEFAULT_AUTH = {
-  clientId: 'a6036483-bd4e-44d4-896f-33d6547eb66d',
-  authority: 'https://login.microsoftonline.com/d3d3b20f-00ce-4a0f-9975-d79117daa055',
+  clientId: '84e24db0-8904-41f8-8556-14a2b6863b1a',
+  authority: 'https://login.microsoftonline.com/organizations',
 } as const
 
 let _config: AppConfig | null = null

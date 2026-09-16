@@ -200,8 +200,8 @@ test.describe('modes from the URL', () => {
     )
     await page.goto('/?mock=false')
     const url = new URL((await signIn).url())
-    expect(url.pathname).toBe('/d3d3b20f-00ce-4a0f-9975-d79117daa055/oauth2/v2.0/authorize')
-    expect(url.searchParams.get('client_id')).toBe('a6036483-bd4e-44d4-896f-33d6547eb66d')
+    expect(url.pathname).toBe('/organizations/oauth2/v2.0/authorize')
+    expect(url.searchParams.get('client_id')).toBe('84e24db0-8904-41f8-8556-14a2b6863b1a')
     expect(url.searchParams.get('redirect_uri')).toBe(`${new URL(baseURL!).origin}/`)
 
     await page.goto('/?modes=reset')
