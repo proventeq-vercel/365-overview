@@ -114,7 +114,7 @@ describe('GrowthSection', () => {
   it('reports the mini-stats the model measured', () => {
     render(<GrowthSection overview={withGrowth} />)
     expect(screen.getByText('Added last 5 mo').nextElementSibling).toHaveTextContent('+50 GB')
-    expect(screen.getByText('Sites').nextElementSibling).toHaveTextContent('1,089')
+    expect(screen.getByText('Live sites').nextElementSibling).toHaveTextContent('1,089')
     expect(screen.getByText('Drives near cap').nextElementSibling).toHaveTextContent('3')
     expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
