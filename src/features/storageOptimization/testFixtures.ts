@@ -17,6 +17,7 @@ export const base: StorageOverview = {
     byWorkload: [],
     byTemplate: [],
     sites: [],
+    siteCount: 1089,
     deletedButBilling: { bytes: 0, count: 0 },
   },
   oneDrive: {

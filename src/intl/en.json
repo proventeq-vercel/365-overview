@@ -169,7 +169,7 @@
   "storageOptimisation.growth.cumulativeThreeYears": "Cumulative, 3 years",
   "storageOptimisation.growth.avgMonthlyGrowth": "Avg growth / mo",
   "storageOptimisation.growth.addedInWindow": "Added last {months} mo",
-  "storageOptimisation.growth.sites": "Sites",
+  "storageOptimisation.growth.sites": "Live sites",
   "storageOptimisation.growth.drivesNearCap": "Drives near cap",
 
   "storageOptimisation.offenders.title": "Main offenders",

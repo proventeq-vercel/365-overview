@@ -157,6 +157,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         ([name]) => name,
       ),
       sites,
+      siteCount: liveSites.length,
       deletedButBilling: retainedTotal(sites),
     },
 

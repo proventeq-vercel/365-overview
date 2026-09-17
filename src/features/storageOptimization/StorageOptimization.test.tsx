@@ -57,6 +57,7 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('heading', { name: 'Top SharePoint sites by storage' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Sites and drives' })).toBeInTheDocument()
+    expect(screen.getByText('Live sites').nextElementSibling).toHaveTextContent(/^2,499$/)
   })
 
   it('has no breadcrumb, no menu button and no footer when the menu flag is off', async () => {

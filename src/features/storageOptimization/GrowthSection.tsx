@@ -73,7 +73,7 @@ export function GrowthSection({ overview, delay }: Props) {
             />
             <MiniStat
               label={t('storageOptimisation.growth.sites')}
-              value={formatNumber(sharePoint.sites.length)}
+              value={formatNumber(sharePoint.siteCount)}
             />
             <MiniStat
               label={t('storageOptimisation.growth.drivesNearCap')}

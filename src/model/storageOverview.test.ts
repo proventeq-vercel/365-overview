@@ -226,6 +226,20 @@ describe('buildStorageOverview composition', () => {
     expect(overview.oneDrive.drivesNearCap).toBe(0)
   })
 
+  it('counts live sites only, leaving deleted ones to the retained total', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: [
+          site({ id: 'a' }),
+          site({ id: 'b' }),
+          site({ id: 'c', isDeleted: true }),
+        ],
+      }),
+    )
+    expect(overview.sharePoint.siteCount).toBe(2)
+    expect(overview.sharePoint.deletedButBilling.count).toBe(1)
+  })
+
   it('counts live drives only, leaving deleted ones to the retained total', () => {
     const overview = buildStorageOverview(
       inputs({
