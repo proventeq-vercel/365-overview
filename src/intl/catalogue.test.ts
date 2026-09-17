@@ -47,6 +47,13 @@ describe('en.json catalogue', () => {
     }
   })
 
+  it('carries no UTF-8 text mis-decoded as Windows-1252', () => {
+    const misdecoded = Object.entries(messages).filter(([, message]) =>
+      /â[€†]|Ã./.test(message),
+    )
+    expect(misdecoded.map(([key]) => key)).toEqual([])
+  })
+
   it('has no empty or unbalanced messages', () => {
     for (const [key, message] of Object.entries(messages)) {
       expect(message.trim(), key).not.toBe('')

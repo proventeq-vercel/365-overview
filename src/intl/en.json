@@ -184,8 +184,8 @@
   "storageOptimisation.offenders.all": "All sites and OneDrives",
   "storageOptimisation.offenders.allSubtitle": "Every site and drive in the usage reports, sortable and searchable",
   "storageOptimisation.offenders.tableLabel": "Sites and drives",
-  "table.concealedName.setting": "Concealed by your tenant, not by this app: Microsoft 365 reports are set to display concealed user, group and site names, so this identity is shown as a hash. Microsoft 365 admin centre â†’ Settings â†’ Org settings â†’ Reports.",
-  "table.concealedName.inferred": "This identity arrives from Microsoft 365 as a hash, which is how usage reports look when a tenant conceals names. It is a tenant setting, not an error in this app: Microsoft 365 admin centre â†’ Settings â†’ Org settings â†’ Reports.",
+  "table.concealedName.setting": "Concealed by your tenant, not by this app: Microsoft 365 reports are set to display concealed user, group and site names, so this identity is shown as a hash. Microsoft 365 admin centre → Settings → Org settings → Reports.",
+  "table.concealedName.inferred": "This identity arrives from Microsoft 365 as a hash, which is how usage reports look when a tenant conceals names. It is a tenant setting, not an error in this app: Microsoft 365 admin centre → Settings → Org settings → Reports.",
   "storageOptimisation.concealedNamesNote": "Your tenant conceals user and site names in usage reports, so identities below appear as hashes. The storage figures are unaffected. To show real names: Microsoft 365 admin centre → Settings → Org settings → Reports → uncheck \"Display concealed user, group, and site names\".",
 
   "oneDrive.description": "How much of the tenant sits in personal OneDrives, who holds the most, and which drives are running out of room.",
