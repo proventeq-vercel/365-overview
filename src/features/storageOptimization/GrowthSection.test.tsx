@@ -12,7 +12,11 @@ const points = [
   { month: '2026-04', actualUsedBytes: 110 * GB, projectedUsedBytes: 110 * GB },
   { month: '2026-05', actualUsedBytes: null, projectedUsedBytes: 120 * GB },
 ]
-const withGrowth = { ...base, growth: { ...base.growth, points } }
+const withGrowth = {
+  ...base,
+  sharePoint: { ...base.sharePoint, siteCount: 1089 },
+  growth: { ...base.growth, points },
+}
 
 describe('GrowthSection', () => {
   it('names the section and the trend chart', () => {
@@ -110,6 +114,7 @@ describe('GrowthSection', () => {
   it('reports the mini-stats the model measured', () => {
     render(<GrowthSection overview={withGrowth} />)
     expect(screen.getByText('Added last 5 mo').nextElementSibling).toHaveTextContent('+50 GB')
+    expect(screen.getByText('Sites').nextElementSibling).toHaveTextContent('1,089')
     expect(screen.getByText('Drives near cap').nextElementSibling).toHaveTextContent('3')
     expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
