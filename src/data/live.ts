@@ -31,9 +31,8 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
   const rawSites = () => {
     sitePages ??= graph
       .getAllPages<RawSiteRow>(reportUrl('getSharePointSiteUsageDetail'))
-      .catch((error: unknown) => {
+      .finally(() => {
         sitePages = null
-        throw error
       })
     return sitePages
   }
