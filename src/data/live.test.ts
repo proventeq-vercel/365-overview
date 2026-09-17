@@ -158,7 +158,7 @@ describe('getReportSettings', () => {
     expect(get).toHaveBeenCalledWith('/admin/reportSettings')
   })
 
-  it('answers null when the scope is not consented, so the app can fall back to inference', async () => {
+  it('answers null when Graph refuses the read, so the app can fall back to inference', async () => {
     const { graph } = recordingGraph()
     const get = graph.get as ReturnType<typeof vi.fn>
     get.mockRejectedValueOnce(new ApiError(403, 'Authorization_RequestDenied'))

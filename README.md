@@ -122,9 +122,9 @@ scope was added is asked to consent again.
 
 `ReportSettings.Read.All` reads `GET /admin/reportSettings` so the app knows *exactly* whether the
 tenant conceals names in usage reports (`displayConcealedNames`), instead of guessing from how many
-owners look like hashes. When the call is refused — the scope not yet consented, or the endpoint
-absent in a national cloud — the app falls back to that guess and says so in the tooltip on each
-concealed name.
+owners look like hashes. When the call is refused — the signed-in user holds no reports-reading role,
+or the endpoint is absent in a national cloud — the app falls back to that guess and says so in the
+tooltip on each concealed name.
 
 `Sites.Read.All` exists because the SharePoint site usage report returns a blank `siteUrl` for
 every site (a known Microsoft-side issue), so the app looks each site up by the id the report
