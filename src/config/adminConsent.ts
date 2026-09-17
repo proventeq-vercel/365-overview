@@ -1,3 +1,4 @@
+import { getConfig, type AppConfig } from './appConfig'
 import { env } from './env'
 
 const CONSENT_ENDPOINT = 'https://login.microsoftonline.com/organizations/adminconsent'
@@ -7,11 +8,11 @@ export function buildAdminConsentUrl(clientId: string, redirectUri: string): str
   return `${CONSENT_ENDPOINT}?${params.toString()}`
 }
 
+export function adminConsentUrlFor(config: AppConfig): string {
+  return buildAdminConsentUrl(config.VITE_CLIENT_ID, config.VITE_REDIRECT_URI)
+}
+
 export function adminConsentUrl(): string | null {
   if (env.useMock) return null
-  const source = import.meta.env as unknown as Record<string, string | undefined>
-  const clientId = source.VITE_CLIENT_ID
-  const redirectUri = source.VITE_REDIRECT_URI
-  if (!clientId || !redirectUri) return null
-  return buildAdminConsentUrl(clientId, redirectUri)
+  return adminConsentUrlFor(getConfig())
 }
