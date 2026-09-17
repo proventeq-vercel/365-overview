@@ -51,6 +51,7 @@ export interface StorageOverview {
     byWorkload: Slice[]
     byTemplate: Slice[]
     sites: StorageRow[]
+    siteCount: number
     deletedButBilling: RetainedTotal
   }
 
