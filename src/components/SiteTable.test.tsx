@@ -328,6 +328,7 @@ describe('SiteTable', () => {
 })
 
 describe('concealed names', () => {
+  const ANY_MARK = /concealed by your tenant|arrives from microsoft 365 as a hash/i
   const HASH = '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F'
   const hashed: StorageRow = {
     pool: 'OneDrive',
@@ -359,7 +360,7 @@ describe('concealed names', () => {
   it('shows no mark on the same rows when concealment is not in effect', async () => {
     render(<SiteTable rows={[hashed]} totalUsedBytes={10} columns={['name', 'owner']} />)
     await screen.findAllByText(HASH)
-    expect(screen.queryByRole('img', { name: /concealed/i })).toBeNull()
+    expect(screen.queryByRole('img', { name: ANY_MARK })).toBeNull()
   })
 
   it('leaves a readable name unmarked even while the tenant conceals', async () => {
@@ -367,6 +368,6 @@ describe('concealed names', () => {
       <SiteTable rows={rows.slice(0, 1)} totalUsedBytes={300} columns={['name', 'owner']} concealment="setting" />,
     )
     await screen.findByText('Ada')
-    expect(screen.queryByRole('img', { name: /concealed/i })).toBeNull()
+    expect(screen.queryByRole('img', { name: ANY_MARK })).toBeNull()
   })
 })

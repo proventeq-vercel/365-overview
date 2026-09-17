@@ -89,7 +89,7 @@ describe('Storage Optimisation app', () => {
     renderApp()
     await reportLoaded()
     expect(screen.queryByText(/appear as hashes/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /concealed/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /concealed by your tenant|arrives from microsoft 365 as a hash/i })).not.toBeInTheDocument()
   })
 
   it('explains concealed names on a tenant that conceals them, on the banner and on each hashed name', async () => {
