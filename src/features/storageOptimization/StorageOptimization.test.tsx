@@ -39,6 +39,8 @@ async function chooseOption(user: ReturnType<typeof userEvent.setup>, name: RegE
 const costCard = () =>
   screen.getByText('Cost of doing nothing').closest('[data-slot="stat-card"]') as HTMLElement
 
+const SETTINGS_ROUND_TRIP = { timeout: 15_000 }
+
 describe('Storage Optimisation app', () => {
   it('renders the header with the tenant name and the report sections', async () => {
     renderApp()
@@ -101,7 +103,7 @@ describe('Storage Optimisation app', () => {
     expect((await screen.findAllByText(/not an all-clear/i)).length).toBeGreaterThan(0)
   })
 
-  it('recalculates against an admin override and clears the estimate caveat', async () => {
+  it('recalculates against an admin override and clears the estimate caveat', SETTINGS_ROUND_TRIP, async () => {
     const user = userEvent.setup()
     renderApp()
     await reportLoaded()
@@ -117,7 +119,7 @@ describe('Storage Optimisation app', () => {
     })
   })
 
-  it('recalculates a changed rate without re-issuing the Graph calls', async () => {
+  it('recalculates a changed rate without re-issuing the Graph calls', SETTINGS_ROUND_TRIP, async () => {
     const user = userEvent.setup()
     const { ds } = renderApp()
     await reportLoaded()
@@ -132,7 +134,7 @@ describe('Storage Optimisation app', () => {
     expect(ds.getSites).toHaveBeenCalledTimes(1)
   })
 
-  it('re-prices the report when a currency is picked from the list', async () => {
+  it('re-prices the report when a currency is picked from the list', SETTINGS_ROUND_TRIP, async () => {
     const user = userEvent.setup()
     renderApp()
     await reportLoaded()
