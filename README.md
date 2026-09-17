@@ -48,7 +48,8 @@ npm install
 **No configuration is required.** With no env at all the app runs on real data
 (live mode) with the Storage Optimisation report only, signing in through the
 built-in Entra registration (`DEFAULT_AUTH` in `src/config/appConfig.ts`, the
-proventeqe5 tenant) with the page's own origin as the redirect URI. Everything
+multi-tenant "Proventeq365 - Storage Analyser" app, so any work or school
+account can sign in) with the page's own origin as the redirect URI. Everything
 below changes that default; each value is a **build-time Vite env var**
 (`import.meta.env.VITE_*`) baked into the bundle, and the three modes can also
 be switched per tab from the URL. For local dev, copy the example if you want
