@@ -34,6 +34,7 @@ export interface OverviewInputs {
   oneDriveTrend: UsagePoint[]
   skus: LicenseSku[]
   reportRefreshDate: string
+  displayConcealedNames: boolean | null
   ratePerGb: number
   currency: string
   entitlementOverrideBytes: number | null
@@ -93,6 +94,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     oneDriveTrend,
     skus,
     reportRefreshDate,
+    displayConcealedNames,
     ratePerGb,
     currency,
     entitlementOverrideBytes,
@@ -210,7 +212,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
-      namesAreConcealed: namesAreConcealed(rows),
+      namesAreConcealed: displayConcealedNames ?? namesAreConcealed(rows),
+      concealmentSource: displayConcealedNames === null ? 'inferred' : 'setting',
       historyTooShort,
     },
   }

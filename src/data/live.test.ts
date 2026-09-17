@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createLiveDataSource } from './live'
 import type { GraphClient } from '../clients/graphClient'
+import { ApiError } from '../clients/apiError'
 
 function recordingGraph() {
   const urls: string[] = []
@@ -145,3 +146,33 @@ describe('createLiveDataSource', () => {
 })
 
 type DataSourceUnderTest = ReturnType<typeof createLiveDataSource>
+
+describe('getReportSettings', () => {
+  it('reads displayConcealedNames from the v1.0 admin endpoint', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockResolvedValueOnce({ displayConcealedNames: true })
+    const ds = createLiveDataSource(graph)
+
+    await expect(ds.getReportSettings()).resolves.toBe(true)
+    expect(get).toHaveBeenCalledWith('/admin/reportSettings')
+  })
+
+  it('answers null when Graph refuses the read, so the app can fall back to inference', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValueOnce(new ApiError(403, 'Authorization_RequestDenied'))
+    const ds = createLiveDataSource(graph)
+
+    await expect(ds.getReportSettings()).resolves.toBeNull()
+  })
+
+  it('still surfaces failures that are not a missing permission', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValueOnce(new ApiError(500, 'Graph fell over'))
+    const ds = createLiveDataSource(graph)
+
+    await expect(ds.getReportSettings()).rejects.toThrow('Graph fell over')
+  })
+})

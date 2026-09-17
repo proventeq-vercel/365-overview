@@ -61,6 +61,7 @@ export function OneDriveUsage() {
             label={t('oneDrive.table.label')}
             nameHeader={t('oneDrive.table.driveHeader')}
             nameHelp={t('table.column.help.drive')}
+            concealment={caveats.namesAreConcealed ? caveats.concealmentSource : undefined}
           />
         </Panel>
       </Section>

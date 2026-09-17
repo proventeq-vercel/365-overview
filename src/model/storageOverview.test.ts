@@ -54,6 +54,7 @@ const inputs = (over: Partial<OverviewInputs> = {}): OverviewInputs => ({
   oneDriveTrend: monthly([50 * GB, 52 * GB, 54 * GB, 56 * GB, 58 * GB, 60 * GB]),
   skus: [sku('ENTERPRISEPACK', 100)],
   reportRefreshDate: '2026-08-30',
+  displayConcealedNames: null,
   ratePerGb: 0.2,
   currency: 'GBP',
   entitlementOverrideBytes: null,
@@ -63,6 +64,40 @@ const inputs = (over: Partial<OverviewInputs> = {}): OverviewInputs => ({
 
 const unknownEntitlement = (over: Partial<OverviewInputs> = {}): OverviewInputs =>
   inputs({ skus: [], forceUnknownEntitlement: true, ...over })
+
+const HASHED_OWNER = '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F'
+
+describe('concealment', () => {
+  it('trusts the tenant setting over the look of the data', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: [site({ ownerDisplayName: HASHED_OWNER, url: '' })],
+        drives: [],
+        displayConcealedNames: false,
+      }),
+    )
+    expect(overview.caveats.namesAreConcealed).toBe(false)
+    expect(overview.caveats.concealmentSource).toBe('setting')
+  })
+
+  it('reports concealment from the setting even while the sampled names read clear', () => {
+    const overview = buildStorageOverview(inputs({ displayConcealedNames: true }))
+    expect(overview.caveats.namesAreConcealed).toBe(true)
+    expect(overview.caveats.concealmentSource).toBe('setting')
+  })
+
+  it('falls back to inferring from hashed owners when the setting could not be read', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: [site({ ownerDisplayName: HASHED_OWNER, url: '' })],
+        drives: [],
+        displayConcealedNames: null,
+      }),
+    )
+    expect(overview.caveats.namesAreConcealed).toBe(true)
+    expect(overview.caveats.concealmentSource).toBe('inferred')
+  })
+})
 
 describe('classifyWorkload', () => {
   it('treats Teams channel and group sites as Teams, in the words Graph reports', () => {

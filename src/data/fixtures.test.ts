@@ -6,7 +6,7 @@ import { loadSettings } from '../lib/settings'
 async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0]) {
   const ds = createMockDataSource(scenario)
   const settings = loadSettings()
-  const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
+  const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate, displayConcealedNames] =
     await Promise.all([
       ds.getSites(),
       ds.getDrives(),
@@ -14,6 +14,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0])
       ds.getOneDriveTrend(),
       ds.getLicenses(),
       ds.getReportRefreshDate(),
+      ds.getReportSettings(),
     ])
   return buildStorageOverview({
     sites,
@@ -22,6 +23,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0])
     oneDriveTrend,
     skus,
     reportRefreshDate,
+    displayConcealedNames,
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
     entitlementOverrideBytes: settings.entitlementOverrideBytes,
@@ -74,6 +76,7 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.caveats).toEqual({
       entitlementIsEstimated: true,
       namesAreConcealed: false,
+      concealmentSource: 'setting',
       historyTooShort: false,
     })
     expect(overview.growth.forecastStatus).not.toBe('Unknown')

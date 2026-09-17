@@ -93,6 +93,9 @@ export function OffendersSection({ overview, delay }: Props) {
           totalUsedBytes={totalUsedBytes}
           columns={[...OFFENDER_COLUMNS]}
           label={t('storageOptimisation.offenders.tableLabel')}
+          concealment={
+            overview.caveats.namesAreConcealed ? overview.caveats.concealmentSource : undefined
+          }
         />
       </Panel>
     </Section>

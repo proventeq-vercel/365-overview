@@ -26,4 +26,5 @@ export const GRAPH_SCOPES = [
   'Reports.Read.All',
   'Organization.Read.All',
   'Sites.Read.All',
+  'ReportSettings.Read.All',
 ]

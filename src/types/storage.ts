@@ -2,6 +2,8 @@ import type { HealthStatus } from '@/lib/thresholds'
 
 export type StoragePool = 'SharePoint' | 'OneDrive'
 
+export type ConcealmentSource = 'setting' | 'inferred'
+
 export interface StorageRow {
   pool: StoragePool
   id: string
@@ -96,6 +98,7 @@ export interface StorageOverview {
   caveats: {
     entitlementIsEstimated: boolean
     namesAreConcealed: boolean
+    concealmentSource: ConcealmentSource
     historyTooShort: boolean
   }
 }

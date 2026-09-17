@@ -85,15 +85,19 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByRole('button', { name: /enter the real figure/i })).not.toBeInTheDocument()
   })
 
-  it('explains concealed names only on a tenant that conceals them', async () => {
-    const { unmount } = renderApp()
+  it('does not explain concealed names on a tenant that shows them', async () => {
+    renderApp()
     await reportLoaded()
     expect(screen.queryByText(/appear as hashes/i)).not.toBeInTheDocument()
-    unmount()
+    expect(screen.queryByRole('img', { name: /concealed by your tenant|arrives from microsoft 365 as a hash/i })).not.toBeInTheDocument()
+  })
 
+  it('explains concealed names on a tenant that conceals them, on the banner and on each hashed name', async () => {
     renderApp('concealed')
     expect(await screen.findByText(/appear as hashes/i)).toBeInTheDocument()
     expect(screen.getByText(/storage figures are unaffected/i)).toBeInTheDocument()
+    const marks = await screen.findAllByRole('img', { name: /concealed by your tenant, not by this app/i })
+    expect(marks.length).toBeGreaterThan(0)
   })
 
   it('refuses a forecast on the short-history tenant', async () => {

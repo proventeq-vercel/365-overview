@@ -11,6 +11,9 @@ import { parseSubscribedSkus } from '../reports/licensing'
 import type { RawSku } from '../reports/licensing'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
+import { parseReportSettings } from '../reports/reportSettings'
+import type { RawReportSettings } from '../reports/reportSettings'
+import { ApiError } from '../clients/apiError'
 import type { DataSource } from './fixtures'
 
 interface JsonReport<T> {
@@ -25,6 +28,8 @@ const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
 const SETTLED_STATUSES = new Set([200, 403, 404])
+
+const SETTINGS_UNAVAILABLE_STATUSES = new Set([403, 404])
 
 export function createLiveDataSource(graph: GraphClient): DataSource {
   let sitePages: Promise<RawSiteRow[]> | null = null
@@ -98,6 +103,15 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
 
     async getReportRefreshDate() {
       return reportRefreshDateOf(await rawSites())
+    },
+
+    async getReportSettings() {
+      try {
+        return parseReportSettings(await graph.get<RawReportSettings>('/admin/reportSettings'))
+      } catch (error: unknown) {
+        if (error instanceof ApiError && SETTINGS_UNAVAILABLE_STATUSES.has(error.status)) return null
+        throw error
+      }
     },
   }
 }

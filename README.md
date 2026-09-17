@@ -112,13 +112,19 @@ exists; these steps are for pointing the app at a registration of your own throu
 3. Under **Supported account types**, choose **Accounts in any organizational directory** (`AzureADMultipleOrgs`).
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
-6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All`.
+6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All`, `Organization.Read.All`, `Sites.Read.All` and `ReportSettings.Read.All`.
 7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
-`Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All` require **admin consent** in each
-tenant that uses the app; a signed-in administrator who has not yet consented is shown the consent
-screen with a link to grant it. A tenant that consented before `Sites.Read.All` was added is asked
-to consent again.
+`Reports.Read.All`, `Organization.Read.All`, `Sites.Read.All` and `ReportSettings.Read.All` require
+**admin consent** in each tenant that uses the app; a signed-in administrator who has not yet
+consented is shown the consent screen with a link to grant it. A tenant that consented before a
+scope was added is asked to consent again.
+
+`ReportSettings.Read.All` reads `GET /admin/reportSettings` so the app knows *exactly* whether the
+tenant conceals names in usage reports (`displayConcealedNames`), instead of guessing from how many
+owners look like hashes. When the call is refused — the signed-in user holds no reports-reading role,
+or the endpoint is absent in a national cloud — the app falls back to that guess and says so in the
+tooltip on each concealed name.
 
 `Sites.Read.All` exists because the SharePoint site usage report returns a blank `siteUrl` for
 every site (a known Microsoft-side issue), so the app looks each site up by the id the report
