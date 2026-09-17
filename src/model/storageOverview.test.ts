@@ -254,6 +254,17 @@ describe('buildStorageOverview composition', () => {
     expect(overview.oneDrive.deletedButBilling.count).toBe(1)
   })
 
+  it('leaves a deleted-but-retained drive out of the near-cap count, as it is out of the drive count', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        drives: [drive({ id: 'gone', storageUsedBytes: 1000 * GB, allocatedBytes: 1024 * GB, isDeleted: true })],
+      }),
+    )
+    expect(overview.oneDrive.driveCount).toBe(0)
+    expect(overview.oneDrive.drivesNearCap).toBe(0)
+    expect(overview.oneDrive.deletedButBilling.count).toBe(1)
+  })
+
   it('never counts a drive whose allocation is reported as zero', () => {
     const overview = buildStorageOverview(
       inputs({ drives: [drive({ storageUsedBytes: 900 * GB, allocatedBytes: 0 })] }),
