@@ -10,7 +10,8 @@ describe('parseReportSettings', () => {
     expect(parseReportSettings({ displayConcealedNames: false })).toBe(false)
   })
 
-  it('treats anything but an explicit true as not concealed', () => {
-    expect(parseReportSettings({ displayConcealedNames: 'true' as unknown as boolean })).toBe(false)
+  it('answers unknown, never a verdict, when the setting is missing or not a boolean', () => {
+    expect(parseReportSettings({})).toBeNull()
+    expect(parseReportSettings({ displayConcealedNames: 'true' })).toBeNull()
   })
 })

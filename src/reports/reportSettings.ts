@@ -1,7 +1,8 @@
 export interface RawReportSettings {
-  displayConcealedNames: boolean
+  displayConcealedNames?: unknown
 }
 
-export function parseReportSettings(raw: RawReportSettings): boolean {
-  return raw.displayConcealedNames === true
+export function parseReportSettings(raw: RawReportSettings): boolean | null {
+  const value = raw.displayConcealedNames
+  return typeof value === 'boolean' ? value : null
 }
