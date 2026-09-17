@@ -3,6 +3,11 @@ import { ApiError } from './apiError'
 const BASE = 'https://graph.microsoft.com/v1.0'
 
 export const BATCH_LIMIT = 20
+export const MAX_THROTTLE_RETRIES = 3
+export const DEFAULT_RETRY_AFTER_MS = 2_000
+export const MAX_RETRY_AFTER_MS = 60_000
+
+const THROTTLED_STATUSES = new Set([429, 503, 504])
 
 export interface BatchResponse<T> {
   status: number
@@ -10,7 +15,7 @@ export interface BatchResponse<T> {
 }
 
 interface BatchEnvelope<T> {
-  responses: { id: string; status: number; body?: T }[]
+  responses: { id: string; status: number; headers?: Record<string, string>; body?: T }[]
 }
 
 export interface GraphClient {
@@ -25,40 +30,76 @@ const chunk = <T>(items: T[], size: number): T[][] => {
   return out
 }
 
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+export function retryAfterMs(header: string | null | undefined, now = Date.now()): number {
+  if (!header) return DEFAULT_RETRY_AFTER_MS
+  const seconds = Number(header)
+  const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - now
+  if (!Number.isFinite(ms) || ms <= 0) return DEFAULT_RETRY_AFTER_MS
+  return Math.min(ms, MAX_RETRY_AFTER_MS)
+}
+
+const headerOf = (headers: Record<string, string> | undefined, name: string) =>
+  headers
+    ? Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1]
+    : undefined
+
 export function createGraphClient(
   getToken: () => Promise<string>,
   fetchImpl: typeof fetch = fetch,
 ): GraphClient {
+  async function apiError(res: Response): Promise<ApiError> {
+    let message = res.statusText
+    try {
+      const body = (await res.json()) as { error?: { message?: string } }
+      message = body.error?.message ?? message
+    } catch { /* ignore non-json error bodies */ }
+    return new ApiError(res.status, message)
+  }
+
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
-    const token = await getToken()
-    const res = await fetchImpl(url, {
-      ...init,
-      headers: { ...init.headers, Authorization: `Bearer ${token}` },
-    })
-    if (!res.ok) {
-      let message = res.statusText
-      try {
-        const body = (await res.json()) as { error?: { message?: string } }
-        message = body.error?.message ?? message
-      } catch { /* ignore non-json error bodies */ }
-      throw new ApiError(res.status, message)
+    for (let attempt = 0; ; attempt++) {
+      const token = await getToken()
+      const res = await fetchImpl(url, {
+        ...init,
+        headers: { ...init.headers, Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) return (await res.json()) as T
+      if (!THROTTLED_STATUSES.has(res.status) || attempt >= MAX_THROTTLE_RETRIES) {
+        throw await apiError(res)
+      }
+      await sleep(retryAfterMs(res.headers.get('Retry-After')))
     }
-    return (await res.json()) as T
   }
 
   async function batch<T>(paths: string[]): Promise<BatchResponse<T>[]> {
-    const envelope = await request<BatchEnvelope<T>>(`${BASE}/$batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: paths.map((url, i) => ({ id: String(i), method: 'GET', url })),
-      }),
-    })
-    const byId = new Map(envelope.responses.map((r) => [r.id, r]))
-    return paths.map((_, i) => {
-      const response = byId.get(String(i))
-      return response ? { status: response.status, body: response.body } : { status: 0 }
-    })
+    const results: BatchResponse<T>[] = paths.map(() => ({ status: 0 }))
+    let pending = paths.map((_, i) => i)
+    for (let attempt = 0; pending.length > 0; attempt++) {
+      const envelope = await request<BatchEnvelope<T>>(`${BASE}/$batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: pending.map((i) => ({ id: String(i), method: 'GET', url: paths[i] })),
+        }),
+      })
+      const byId = new Map(envelope.responses.map((r) => [r.id, r]))
+      const throttled: number[] = []
+      let waitMs = 0
+      for (const i of pending) {
+        const response = byId.get(String(i))
+        if (!response) continue
+        results[i] = { status: response.status, body: response.body }
+        if (THROTTLED_STATUSES.has(response.status) && attempt < MAX_THROTTLE_RETRIES) {
+          throttled.push(i)
+          waitMs = Math.max(waitMs, retryAfterMs(headerOf(response.headers, 'Retry-After')))
+        }
+      }
+      pending = throttled
+      if (pending.length > 0) await sleep(waitMs)
+    }
+    return results
   }
 
   return {

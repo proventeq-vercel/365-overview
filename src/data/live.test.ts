@@ -149,6 +149,35 @@ describe('createLiveDataSource', () => {
 
       expect(batchGet.mock.calls[1][0]).toEqual(['/sites/new?$select=id,displayName,webUrl'])
     })
+
+    it('shares an in-flight lookup between overlapping callers instead of asking Graph twice', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockResolvedValueOnce([finance]).mockResolvedValueOnce([{ status: 404 }])
+      const ds = createLiveDataSource(graph)
+
+      const [first, second] = await Promise.all([
+        ds.getSiteDetails([FINANCE_ID]),
+        ds.getSiteDetails([FINANCE_ID, 'other']),
+      ])
+
+      expect(batchGet).toHaveBeenCalledTimes(2)
+      expect(batchGet.mock.calls[1][0]).toEqual(['/sites/other?$select=id,displayName,webUrl'])
+      expect(first.get(FINANCE_ID)?.name).toBe('Finance')
+      expect(second.get(FINANCE_ID)?.name).toBe('Finance')
+      expect(second.size).toBe(1)
+    })
+
+    it('lets a later call try again after a failed batch instead of replaying the failure', async () => {
+      const { graph } = recordingGraph()
+      const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
+      batchGet.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce([finance])
+      const ds = createLiveDataSource(graph)
+
+      await expect(ds.getSiteDetails([FINANCE_ID])).rejects.toThrow('boom')
+      expect((await ds.getSiteDetails([FINANCE_ID])).get(FINANCE_ID)?.name).toBe('Finance')
+      expect(batchGet).toHaveBeenCalledTimes(2)
+    })
   })
 })
 
