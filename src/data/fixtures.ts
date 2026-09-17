@@ -13,6 +13,7 @@ export interface DataSource {
   getLicenses(): Promise<LicenseSku[]>
   getOrg(): Promise<OrgInfo>
   getReportRefreshDate(): Promise<string>
+  getReportSettings(): Promise<boolean | null>
 }
 
 const MB = 1_048_576
@@ -237,5 +238,6 @@ export function createMockDataSource(scenario: MockScenario = 'healthy'): DataSo
     getLicenses: async () => licenses,
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,
+    getReportSettings: async () => scenario === 'concealed',
   }
 }

@@ -2,9 +2,10 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
+import { isConcealedName } from '@/lib/concealment'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
-import type { StorageRow } from '@/types/storage'
+import type { ConcealmentSource, StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
@@ -14,6 +15,7 @@ import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
 import { PoolIcon } from '@/design/PoolIcon'
 import { ColumnHeaderTooltip } from '@/design/ColumnHeaderTooltip'
+import { ConcealedNameMark } from '@/design/ConcealedNameMark'
 
 export type ColumnKey =
   | 'name'
@@ -33,6 +35,7 @@ interface SiteTableProps {
   label?: string
   nameHeader?: string
   nameHelp?: string
+  concealment?: ConcealmentSource
 }
 
 interface ColumnSpec {
@@ -120,6 +123,7 @@ export function SiteTable({
   label,
   nameHeader,
   nameHelp,
+  concealment,
 }: SiteTableProps) {
   const t = useTranslation()
   const tableLabel = label ?? t('table.sites')
@@ -187,8 +191,11 @@ export function SiteTable({
               {resolving ? (
                 <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
               ) : (
-                <span className="block truncate font-semibold text-p365-navy" title={name}>
-                  {name}
+                <span className="flex min-w-0 items-center gap-1">
+                  <span className="block truncate font-semibold text-p365-navy" title={name}>
+                    {name}
+                  </span>
+                  {concealment && isConcealedName(name) && <ConcealedNameMark source={concealment} />}
                 </span>
               )}
               {resolving ? (
@@ -206,8 +213,11 @@ export function SiteTable({
       }
       case 'owner':
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.ownerDisplayName}
+          <span role="cell" key={key} className="flex min-w-0 items-center gap-1 text-p365-grey-600">
+            <span className="truncate">{row.ownerDisplayName}</span>
+            {concealment && isConcealedName(row.ownerDisplayName) && (
+              <ConcealedNameMark source={concealment} />
+            )}
           </span>
         )
       case 'files':

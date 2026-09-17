@@ -326,3 +326,47 @@ describe('SiteTable', () => {
     })
   })
 })
+
+describe('concealed names', () => {
+  const HASH = '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F'
+  const hashed: StorageRow = {
+    pool: 'OneDrive',
+    id: 'D41D8CD98F00B204E9800998ECF8427E',
+    url: '',
+    ownerDisplayName: HASH,
+    storageUsedBytes: 10,
+    fileCount: 1,
+    activeFileCount: 0,
+    lastActivityDate: '2026-01-01',
+    isDeleted: false,
+  }
+
+  it('marks each hashed identity with the tenant-setting explanation', async () => {
+    render(
+      <SiteTable rows={[hashed]} totalUsedBytes={10} columns={['name', 'owner']} concealment="setting" />,
+    )
+    const marks = await screen.findAllByRole('img', { name: /concealed by your tenant, not by this app/i })
+    expect(marks).toHaveLength(2)
+  })
+
+  it('says the concealment is inferred when the tenant setting could not be read', async () => {
+    render(<SiteTable rows={[hashed]} totalUsedBytes={10} columns={['name']} concealment="inferred" />)
+    expect(
+      await screen.findByRole('img', { name: /a tenant setting, not an error in this app/i }),
+    ).toBeTruthy()
+  })
+
+  it('shows no mark on the same rows when concealment is not in effect', async () => {
+    render(<SiteTable rows={[hashed]} totalUsedBytes={10} columns={['name', 'owner']} />)
+    await screen.findAllByText(HASH)
+    expect(screen.queryByRole('img', { name: /concealed/i })).toBeNull()
+  })
+
+  it('leaves a readable name unmarked even while the tenant conceals', async () => {
+    render(
+      <SiteTable rows={rows.slice(0, 1)} totalUsedBytes={300} columns={['name', 'owner']} concealment="setting" />,
+    )
+    await screen.findByText('Ada')
+    expect(screen.queryByRole('img', { name: /concealed/i })).toBeNull()
+  })
+})

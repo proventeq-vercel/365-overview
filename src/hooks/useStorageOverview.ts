@@ -11,16 +11,32 @@ export function useStorageOverview(settings: ReportSettings) {
   const query = useQuery({
     queryKey: ['storageInputs'],
     queryFn: async () => {
-      const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
-        await Promise.all([
-          ds.getSites().then((sites) => nameTopSites(ds, sites)),
-          ds.getDrives(),
-          ds.getSharePointTrend(),
-          ds.getOneDriveTrend(),
-          ds.getLicenses(),
-          ds.getReportRefreshDate(),
-        ])
-      return { sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate }
+      const [
+        sites,
+        drives,
+        sharePointTrend,
+        oneDriveTrend,
+        skus,
+        reportRefreshDate,
+        displayConcealedNames,
+      ] = await Promise.all([
+        ds.getSites().then((sites) => nameTopSites(ds, sites)),
+        ds.getDrives(),
+        ds.getSharePointTrend(),
+        ds.getOneDriveTrend(),
+        ds.getLicenses(),
+        ds.getReportRefreshDate(),
+        ds.getReportSettings(),
+      ])
+      return {
+        sites,
+        drives,
+        sharePointTrend,
+        oneDriveTrend,
+        skus,
+        reportRefreshDate,
+        displayConcealedNames,
+      }
     },
   })
 
