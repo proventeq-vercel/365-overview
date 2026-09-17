@@ -179,6 +179,9 @@ export function SiteTable({
   const headerOf = (key: ColumnKey) => (key === 'name' ? nameLabel : t(COLUMNS[key].label))
   const helpOf = (key: ColumnKey) => (key === 'name' && nameHelp ? nameHelp : t(COLUMNS[key].help))
 
+  const concealedMark = (text: string) =>
+    concealment && isConcealedName(text) ? <ConcealedNameMark source={concealment} /> : null
+
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
       case 'name': {
@@ -195,7 +198,7 @@ export function SiteTable({
                   <span className="block truncate font-semibold text-p365-navy" title={name}>
                     {name}
                   </span>
-                  {concealment && isConcealedName(name) && <ConcealedNameMark source={concealment} />}
+                  {concealedMark(name)}
                 </span>
               )}
               {resolving ? (
@@ -215,9 +218,7 @@ export function SiteTable({
         return (
           <span role="cell" key={key} className="flex min-w-0 items-center gap-1 text-p365-grey-600">
             <span className="truncate">{row.ownerDisplayName}</span>
-            {concealment && isConcealedName(row.ownerDisplayName) && (
-              <ConcealedNameMark source={concealment} />
-            )}
+            {concealedMark(row.ownerDisplayName)}
           </span>
         )
       case 'files':
