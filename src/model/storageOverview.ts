@@ -119,6 +119,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       : utilizationStatus(sharePointUsed, entitledBytes, STORAGE_THRESHOLDS)
 
   const liveSites = sites.filter((site) => !site.isDeleted)
+  const liveDrives = drives.filter((drive) => !drive.isDeleted)
   const rows = [...sites, ...drives]
 
   const buckets = monthlyBuckets(sharePointTrend)
@@ -164,8 +165,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     oneDrive: {
       usedBytes: oneDriveUsed,
       drives,
-      driveCount: drives.filter((drive) => !drive.isDeleted).length,
-      drivesNearCap: drives.filter(
+      driveCount: liveDrives.length,
+      drivesNearCap: liveDrives.filter(
         (drive) =>
           drive.allocatedBytes !== undefined &&
           drive.allocatedBytes > 0 &&

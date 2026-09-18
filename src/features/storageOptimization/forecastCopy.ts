@@ -5,18 +5,18 @@ import type { TranslateFn } from '@/hooks/useTranslation'
 
 const FORECAST_HORIZON_YEARS = 10
 
-export const RISK_TONE: Record<ForecastStatus, HealthStatus | undefined> = {
+const RISK_TONE: Record<ForecastStatus, HealthStatus | undefined> = {
   Healthy: 'healthy',
   Warning: 'watch',
   Critical: 'attention',
   Unknown: undefined,
 }
 
-export function forecastNeedsAction(status: ForecastStatus): boolean {
+function forecastNeedsAction(status: ForecastStatus): boolean {
   return status === 'Critical' || status === 'Warning'
 }
 
-export function exhaustionLabel(overview: StorageOverview): string | null {
+function exhaustionLabel(overview: StorageOverview): string | null {
   const date = overview.growth.forecastExhaustionDate
   return date === null ? null : formatLongMonthYear(date)
 }
@@ -44,7 +44,7 @@ export function forecastHint(overview: StorageOverview, t: TranslateFn): string 
     : t('storageOptimisation.kpi.forecastHint')
 }
 
-export interface ForecastCallout {
+interface ForecastCallout {
   tone: 'info' | 'warn'
   pillLabel: string
   pillStatus: HealthStatus | null

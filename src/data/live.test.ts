@@ -77,6 +77,14 @@ describe('createLiveDataSource', () => {
     expect(graph.getAllPages).toHaveBeenCalledTimes(2)
   })
 
+  it('re-reads the site report on the next request once the first has settled, so Refresh data is a refresh', async () => {
+    const { graph } = recordingGraph()
+    const ds = createLiveDataSource(graph)
+    await Promise.all([ds.getSites(), ds.getReportRefreshDate()])
+    await ds.getSites()
+    expect(graph.getAllPages).toHaveBeenCalledTimes(2)
+  })
+
   it('shares one paged site fetch between the rows and the refresh date', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)

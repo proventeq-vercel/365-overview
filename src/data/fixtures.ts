@@ -19,7 +19,7 @@ const MB = 1_048_576
 const GB = 1024 * MB
 const ONE_DRIVE_CAP_BYTES = 1024 * GB
 
-export const MOCK_REFRESH_DATE = '2026-08-30'
+const MOCK_REFRESH_DATE = '2026-08-30'
 
 const TEMPLATES = ['Team Site', 'Group', 'Team Channel', 'Site Page Publishing', 'Publishing Site']
 
