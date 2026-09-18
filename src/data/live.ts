@@ -37,7 +37,27 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     return sitePages
   }
 
-  const knownSites = new Map<string, DirectorySite | null>()
+  const siteLookups = new Map<string, Promise<DirectorySite | null | undefined>>()
+  const lookUpSites = (ids: string[]) => {
+    const batch = graph
+      .batchGet<RawDirectorySite>(ids.map(siteDetailsPath))
+      .then((responses) => {
+        const resolved = parseSiteDetails(ids, responses)
+        return ids.map((id, i) =>
+          resolved.get(id) ?? (SETTLED_STATUSES.has(responses[i].status) ? null : undefined),
+        )
+      })
+    ids.forEach((id, i) => {
+      const lookup = batch.then((sites) => sites[i])
+      lookup.then(
+        (site) => {
+          if (site === undefined) siteLookups.delete(id)
+        },
+        () => siteLookups.delete(id),
+      )
+      siteLookups.set(id, lookup)
+    })
+  }
 
   return {
     async getSites() {
@@ -46,22 +66,14 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
 
     async getSiteDetails(ids) {
       const wanted = [...new Set(ids.map((id) => id.toLowerCase()))]
-      const missing = wanted.filter((id) => !knownSites.has(id))
-      if (missing.length > 0) {
-        const responses = await graph.batchGet<RawDirectorySite>(missing.map(siteDetailsPath))
-        const resolved = parseSiteDetails(missing, responses)
-        responses.forEach((response, i) => {
-          const id = missing[i]
-          const site = resolved.get(id)
-          if (site) knownSites.set(id, site)
-          else if (SETTLED_STATUSES.has(response.status)) knownSites.set(id, null)
-        })
-      }
+      const missing = wanted.filter((id) => !siteLookups.has(id))
+      if (missing.length > 0) lookUpSites(missing)
+      const sites = await Promise.all(wanted.map((id) => siteLookups.get(id)))
       const found: SiteDirectory = new Map()
-      for (const id of wanted) {
-        const site = knownSites.get(id)
+      wanted.forEach((id, i) => {
+        const site = sites[i]
         if (site) found.set(id, site)
-      }
+      })
       return found
     },
 

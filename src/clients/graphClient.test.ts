@@ -1,12 +1,27 @@
-import { describe, it, expect, vi } from 'vitest'
-import { createGraphClient } from './graphClient'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import {
+  createGraphClient,
+  retryAfterMs,
+  DEFAULT_RETRY_AFTER_MS,
+  MAX_RETRY_AFTER_MS,
+  MAX_THROTTLE_RETRIES,
+} from './graphClient'
 import { ApiError } from './apiError'
 
 const token = () => Promise.resolve('tok')
 
-function jsonResponse(body: unknown, status = 200) {
-  return { ok: status < 400, status, json: () => Promise.resolve(body), text: () => Promise.resolve('') } as Response
+function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
+  return {
+    ok: status < 400,
+    status,
+    headers: new Headers(headers),
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(''),
+  } as Response
 }
+
+const batchRequests = (init: RequestInit) =>
+  (JSON.parse(init.body as string) as { requests: { id: string; url: string }[] }).requests
 
 describe('graphClient', () => {
   it('sends bearer token and returns json', async () => {
@@ -67,5 +82,125 @@ describe('graphClient', () => {
       .mockResolvedValueOnce(jsonResponse({ value: [2] }))
     const client = createGraphClient(token, fetchImpl)
     expect(await client.getAllPages<number>('/x')).toEqual([1, 2])
+  })
+
+  describe('throttling', () => {
+    afterEach(() => vi.useRealTimers())
+
+    it('waits Retry-After seconds and repeats a throttled request', async () => {
+      vi.useFakeTimers()
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(jsonResponse({ error: { message: 'slow down' } }, 429, { 'Retry-After': '3' }))
+        .mockResolvedValueOnce(jsonResponse({ value: [1] }))
+      const client = createGraphClient(token, fetchImpl)
+
+      const pending = client.get<{ value: number[] }>('/x')
+      await vi.advanceTimersByTimeAsync(2_999)
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+
+      expect((await pending).value).toEqual([1])
+      expect(fetchImpl).toHaveBeenCalledTimes(2)
+    })
+
+    it('treats 503 and 504 as throttling too', async () => {
+      vi.useFakeTimers()
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(jsonResponse({}, 503))
+        .mockResolvedValueOnce(jsonResponse({}, 504))
+        .mockResolvedValueOnce(jsonResponse({ value: [1] }))
+      const client = createGraphClient(token, fetchImpl)
+
+      const pending = client.get<{ value: number[] }>('/x')
+      await vi.runAllTimersAsync()
+
+      expect((await pending).value).toEqual([1])
+      expect(fetchImpl).toHaveBeenCalledTimes(3)
+    })
+
+    it('gives up after MAX_THROTTLE_RETRIES and surfaces the 429', async () => {
+      vi.useFakeTimers()
+      const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'still busy' } }, 429))
+      const client = createGraphClient(token, fetchImpl)
+
+      const pending = client.get('/x').catch((e: unknown) => e)
+      await vi.runAllTimersAsync()
+      const err = (await pending) as ApiError
+
+      expect(err).toBeInstanceOf(ApiError)
+      expect(err.status).toBe(429)
+      expect(err.message).toBe('still busy')
+      expect(fetchImpl).toHaveBeenCalledTimes(1 + MAX_THROTTLE_RETRIES)
+    })
+
+    it('does not retry a non-throttling failure', async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'nope' } }, 500))
+      const client = createGraphClient(token, fetchImpl)
+      await expect(client.get('/x')).rejects.toBeInstanceOf(ApiError)
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+    })
+
+    it('re-sends only the throttled sub-requests of a $batch, after their Retry-After', async () => {
+      vi.useFakeTimers()
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(
+          jsonResponse({
+            responses: [
+              { id: '0', status: 200, body: { url: '/sites/a' } },
+              { id: '1', status: 429, headers: { 'retry-after': '5' }, body: { error: {} } },
+              { id: '2', status: 404 },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(
+          jsonResponse({ responses: [{ id: '1', status: 200, body: { url: '/sites/b' } }] }),
+        )
+      const client = createGraphClient(token, fetchImpl as unknown as typeof fetch)
+
+      const pending = client.batchGet<{ url: string }>(['/sites/a', '/sites/b', '/sites/gone'])
+      await vi.advanceTimersByTimeAsync(4_999)
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+      const results = await pending
+
+      expect(fetchImpl).toHaveBeenCalledTimes(2)
+      expect(batchRequests(fetchImpl.mock.calls[1][1] as RequestInit)).toEqual([
+        { id: '1', method: 'GET', url: '/sites/b' },
+      ])
+      expect(results).toEqual([
+        { status: 200, body: { url: '/sites/a' } },
+        { status: 200, body: { url: '/sites/b' } },
+        { status: 404, body: undefined },
+      ])
+    })
+
+    it('returns the last 429 for a sub-request that stays throttled', async () => {
+      vi.useFakeTimers()
+      const fetchImpl = vi.fn().mockResolvedValue(
+        jsonResponse({ responses: [{ id: '0', status: 429, headers: { 'Retry-After': '1' } }] }),
+      )
+      const client = createGraphClient(token, fetchImpl)
+
+      const pending = client.batchGet(['/sites/a'])
+      await vi.runAllTimersAsync()
+
+      expect(await pending).toEqual([{ status: 429, body: undefined }])
+      expect(fetchImpl).toHaveBeenCalledTimes(1 + MAX_THROTTLE_RETRIES)
+    })
+  })
+
+  describe('retryAfterMs', () => {
+    const now = Date.parse('2026-09-17T10:00:00Z')
+
+    it.each([
+      ['a delay in seconds', '3', 3_000],
+      ['an HTTP date', 'Wed, 17 Sep 2026 10:00:10 GMT', 10_000],
+      ['a missing header', null, DEFAULT_RETRY_AFTER_MS],
+      ['an unparseable header', 'soon', DEFAULT_RETRY_AFTER_MS],
+      ['a date in the past', 'Wed, 17 Sep 2026 09:59:00 GMT', DEFAULT_RETRY_AFTER_MS],
+      ['a delay beyond the cap', '600', MAX_RETRY_AFTER_MS],
+    ])('handles %s', (_case, header, expected) => {
+      expect(retryAfterMs(header, now)).toBe(expected)
+    })
   })
 })

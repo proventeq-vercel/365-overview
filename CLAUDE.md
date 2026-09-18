@@ -19,11 +19,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   error **object** and `AuthErrorScreen` turns `AADSTS65001` into the
   admin-consent screen — the consent round-trip happens on the first
   `acquireTokenRedirect`, before any Graph call, so `AccessFailure` alone
-  would never see it. Shared byte-for-byte with the `365-oversharing` sibling
-  (`src/auth/*`, `src/clients/*`, `src/config/*`); fix there and here together.
+  would never see it. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
+  kept byte-identical with a `365-oversharing` sibling; that app is dropped.)
 - `src/clients/` — `graphClient` fetch wrapper (`get`, `getAllPages`,
-  `batchGet` over `$batch`) + `apiError`. `batchGet` is only here, not in the
-  sibling — port it there when the sibling needs it, keeping the rest in sync.
+  `batchGet` over `$batch`) + `apiError`. A 429/503/504 — on the request or on
+  a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
+  capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
+  sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
+  and is left to React Query's single retry.
 - `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
@@ -33,7 +36,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   known issue). `DataSource.getSiteDetails(ids)` resolves display name +
   `webUrl` per site id through `graphClient.batchGet` (`$batch`, 20 GETs per
   POST, `Sites.Read.All`); the live source caches found and definitively
-  missing (403/404) ids for the session. **Never walk the tenant** (`/sites?
+  missing (403/404) ids for the session and shares an in-flight lookup between
+  overlapping callers, so the top-fifty naming and the first table page never
+  ask Graph for the same site twice. **Never walk the tenant** (`/sites?
   search=*`, `getAllSites`) for this — it is O(all sites) and a 5M-site tenant
   is a design target. Two consumers: `data/namedSites.nameTopSites` names the
   fifty largest live sites before `buildStorageOverview` (so chart labels and
