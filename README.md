@@ -3,7 +3,9 @@
 A browser-only SPA that shows a Microsoft 365 tenant administrator what their SharePoint and
 OneDrive storage looks like today, how fast it is growing, and where the volume sits — a
 sneak-peek of the Proventeq 365 storage-optimisation report, built from the tenant's own Graph
-usage reports. Nothing leaves the browser: there is no backend, no lead capture and no telemetry.
+usage reports. There is no lead capture and no telemetry. By default nothing leaves the browser;
+with the optional [Graph proxy](functions/README.md) configured, the browser's Graph calls go
+through an Azure Function that signs them app-only for the signed-in admin's tenant.
 
 Built with React 19, TypeScript, and Vite.
 
@@ -79,6 +81,14 @@ An empty value counts as unset.
 MSAL is configured with `cacheLocation: localStorage` and uses **redirect-based**
 login and token acquisition (`acquireTokenSilent` → `acquireTokenRedirect` on
 interaction-required / browser-auth errors).
+
+### Graph proxy — `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`
+
+| Var | Default | Description |
+|---|---|---|
+| `VITE_GRAPH_PROXY_URL` | unset (call Graph directly) | Base URL of the deployed [Graph proxy](functions/README.md), e.g. `https://<function-app>.azurewebsites.net/api/graph`. When set, every Graph call goes there and MSAL asks for the proxy scope alone — no delegated report scope is requested from the prospect |
+| `VITE_GRAPH_PROXY_SCOPE` | `api://<VITE_CLIENT_ID>/access_as_user` | The proxy's exposed scope; only needed when the proxy is a separate registration |
+| `VITE_LOCAL_AUTH_URL` | unset | **Dev server only** (ignored by every build): the local stack's fake Entra, e.g. `http://127.0.0.1:7080`. Skips MSAL and takes the caller token from there, so the real UI runs against the local proxy with no tenant. Needs `VITE_GRAPH_PROXY_URL` |
 
 ### Mock flag — `VITE_USE_MOCK`
 
@@ -202,6 +212,24 @@ VITE_USE_MOCK=true VITE_MOCK_SCENARIO=concealed npm run dev
 
 Mock mode uses built-in fixture data. No Entra ID credentials are needed. This is the fastest way to explore the UI.
 
+### Development (through the local Graph proxy — no tenant required)
+
+The real data path, end to end, with no tenant: the proxy runs locally against a fake Entra and a
+fake Graph, and the SPA reads through it. In one terminal:
+
+```bash
+cd ~/Projects/365-overview/functions && npm install && npm run local
+```
+
+In another:
+
+```bash
+cd ~/Projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/graph VITE_LOCAL_AUTH_URL=http://127.0.0.1:7080 npm run dev
+```
+
+See [functions/README.md](functions/README.md) for the smoke script, running under the Azure
+Functions host, and validating against a real tenant before deploying.
+
 ### Production build
 
 ```bash
@@ -253,6 +281,7 @@ src/
   components/    # Shared UI (SiteTable, CaveatBanner, ErrorState, shadcn primitives)
   test/          # Test utilities and setup
 e2e/             # Playwright end-to-end tests
+functions/       # The Graph proxy (Azure Functions v4) with its own package.json, tests and local stack — see functions/README.md
 ```
 
 ---
