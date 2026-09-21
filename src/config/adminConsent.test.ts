@@ -9,6 +9,9 @@ vi.mock('./env', () => ({
     get useMock() {
       return envState.useMock
     },
+    get usesMsal() {
+      return !envState.useMock
+    },
   },
 }))
 

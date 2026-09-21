@@ -27,7 +27,7 @@ const finance = {
   body: { displayName: 'Finance', webUrl: 'https://contoso.sharepoint.com/sites/finance' },
 }
 
-const BETA = 'https://graph.microsoft.com/beta/reports/'
+const BETA = '/beta/reports/'
 
 describe('createLiveDataSource', () => {
   it.each([

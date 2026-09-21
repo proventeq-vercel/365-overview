@@ -33,6 +33,21 @@ describe('graphClient', () => {
     expect(url).toBe('https://graph.microsoft.com/v1.0/x')
     expect((init as RequestInit).headers).toMatchObject({ Authorization: 'Bearer tok' })
   })
+  it('sends every call to the configured origin, keeping a versioned path as given', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ value: [], responses: [] }))
+    const proxy = 'http://127.0.0.1:7071/api/graph'
+    const client = createGraphClient(token, fetchImpl, proxy)
+    await client.get('/organization')
+    await client.getAllPages("/beta/reports/getSharePointSiteUsageDetail(period='D180')?$format=application/json")
+    await client.batchGet(['/sites/a'])
+    await client.get(`${proxy}/v1.0/subscribedSkus?$skiptoken=2`)
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      `${proxy}/v1.0/organization`,
+      `${proxy}/beta/reports/getSharePointSiteUsageDetail(period='D180')?$format=application/json`,
+      `${proxy}/v1.0/$batch`,
+      `${proxy}/v1.0/subscribedSkus?$skiptoken=2`,
+    ])
+  })
   it('throws ApiError with status on failure', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'nope' } }, 403))
     const client = createGraphClient(token, fetchImpl)
@@ -40,6 +55,15 @@ describe('graphClient', () => {
     expect(err).toBeInstanceOf(ApiError)
     expect(err.status).toBe(403)
     expect(err.message).toBe('nope')
+    expect(err.code).toBeNull()
+  })
+  it('keeps the error code a Graph-shaped body carries', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse({ error: { code: 'AdminConsentRequired', message: 'consent first' } }, 403),
+    )
+    const err = (await createGraphClient(token, fetchImpl).get('/x').catch((e) => e)) as ApiError
+    expect(err.code).toBe('AdminConsentRequired')
+    expect(err.message).toBe('consent first')
   })
   it('posts a $batch of GETs, twenty per request, and returns the sub-responses in call order', async () => {
     const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {

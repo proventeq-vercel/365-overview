@@ -1,5 +1,5 @@
 import { type Configuration, PublicClientApplication } from '@azure/msal-browser'
-import { getConfig } from '../config/appConfig'
+import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
 
 let _msalInstance: PublicClientApplication | null = null
 
@@ -27,3 +27,12 @@ export const GRAPH_SCOPES = [
   'Organization.Read.All',
   'Sites.Read.All',
 ]
+
+export function tokenScopesFor(config: AppConfig): string[] {
+  const proxy = graphProxyOf(config)
+  return proxy ? [proxy.scope] : GRAPH_SCOPES
+}
+
+export function tokenScopes(): string[] {
+  return tokenScopesFor(getConfig())
+}

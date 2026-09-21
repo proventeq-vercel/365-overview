@@ -40,7 +40,7 @@ function renderBootstrapError(err: unknown) {
 }
 
 function bootstrap() {
-  if (env.useMock) {
+  if (!env.usesMsal) {
     render(<AppIntlProvider>{appTree}</AppIntlProvider>)
     return
   }

@@ -82,6 +82,36 @@ describe('readEnv with mode overrides', () => {
   })
 })
 
+describe('readEnv local auth', () => {
+  const LOCAL = 'http://127.0.0.1:7080/'
+
+  it('runs on MSAL in live mode and on nothing in mock mode', () => {
+    expect(readEnv({})).toMatchObject({ localAuthUrl: null, usesMsal: true })
+    expect(readEnv({ VITE_USE_MOCK: 'true' })).toMatchObject({ localAuthUrl: null, usesMsal: false })
+  })
+
+  it('takes VITE_LOCAL_AUTH_URL only from the dev server, never from a build', () => {
+    expect(readEnv({ VITE_LOCAL_AUTH_URL: LOCAL }, {}, true)).toMatchObject({
+      localAuthUrl: 'http://127.0.0.1:7080',
+      usesMsal: false,
+    })
+    expect(readEnv({ VITE_LOCAL_AUTH_URL: LOCAL }, {}, false)).toMatchObject({ localAuthUrl: null, usesMsal: true })
+    expect(readEnv({ VITE_LOCAL_AUTH_URL: LOCAL })).toMatchObject({ localAuthUrl: null, usesMsal: true })
+  })
+
+  it('lets mock mode win over local auth', () => {
+    expect(readEnv({ VITE_USE_MOCK: 'true', VITE_LOCAL_AUTH_URL: LOCAL }, {}, true)).toMatchObject({
+      useMock: true,
+      localAuthUrl: null,
+      usesMsal: false,
+    })
+  })
+
+  it('treats an empty local auth URL as unset', () => {
+    expect(readEnv({ VITE_LOCAL_AUTH_URL: '  ' }, {}, true).usesMsal).toBe(true)
+  })
+})
+
 describe('env at module load', () => {
   const descriptor = Object.getOwnPropertyDescriptor(window, 'sessionStorage')
   afterEach(() => {

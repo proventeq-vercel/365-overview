@@ -17,7 +17,7 @@ interface JsonReport<T> {
   value: T[]
 }
 
-const REPORTS_BASE = 'https://graph.microsoft.com/beta/reports'
+const REPORTS_BASE = '/beta/reports'
 
 const PERIOD = 'D180'
 

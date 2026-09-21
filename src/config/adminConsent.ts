@@ -13,6 +13,6 @@ export function adminConsentUrlFor(config: AppConfig): string {
 }
 
 export function adminConsentUrl(): string | null {
-  if (env.useMock) return null
+  if (!env.usesMsal) return null
   return adminConsentUrlFor(getConfig())
 }
