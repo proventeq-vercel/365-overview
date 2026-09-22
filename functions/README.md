@@ -173,6 +173,14 @@ Besides the settings in the table above, the platform ones must be present:
 including each Vercel preview host if previews are meant to work, since those get a new hostname per
 branch. A request carrying an origin outside the list is refused before its token is read.
 
+**The same origins must be registered as the Function App's platform CORS list.** On Azure the
+Functions host answers `OPTIONS` preflights itself and never invokes the function for them; with an
+empty platform list it returns a bare `204` without `Access-Control-Allow-Origin`, so every browser
+call fails at the preflight even though a direct `GET` carries the proxy's own CORS headers. Mirror
+the list with `az functionapp cors add --name <function-app-name> --resource-group <rg>
+--allowed-origins <origin> …` (the platform keeps one `Access-Control-Allow-Origin` per response,
+it does not duplicate the proxy's). The proxy's list still decides which origins are served.
+
 `PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
 the Function sees differs from the one the browser used (a custom domain, a front door); leave it
 unset otherwise. It is accepted with or without the `/api/graph` suffix.
