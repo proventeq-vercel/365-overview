@@ -91,6 +91,31 @@ describe('readCertificateCredential', () => {
     expect(refuses(pem, registered.thumbprintHex).message).toContain('RSA key is required')
   })
 
+  it('finds the leaf in a chain, whichever order the bundle lists it in', () => {
+    const intermediate = generateLocalAppCertificate('intermediate')
+    const leafLast = `${registered.privateKeyPem}${intermediate.certificatePem}${registered.certificatePem}`
+    const leafFirst = `${registered.privateKeyPem}${registered.certificatePem}${intermediate.certificatePem}`
+    expect(readCertificateCredential(leafLast, null).thumbprintHex).toBe(registered.thumbprintHex)
+    expect(readCertificateCredential(leafFirst, null).thumbprintHex).toBe(registered.thumbprintHex)
+  })
+
+  it('refuses a chain in which no certificate matches the key', () => {
+    const one = generateLocalAppCertificate('one')
+    const two = generateLocalAppCertificate('two')
+    const chain = `${registered.privateKeyPem}${one.certificatePem}${two.certificatePem}`
+    expect(refuses(chain).message).toContain('None of the 2 certificates')
+  })
+
+  it('reads a bundle whose CRLF newlines were escaped into one app-setting line', () => {
+    const escapedCrlf = registered.pemBundle.replace(/\n/g, '\\r\\n')
+    expect(readCertificateCredential(escapedCrlf, null).thumbprintHex).toBe(registered.thumbprintHex)
+  })
+
+  it('reads a bundle that carries real CRLF newlines', () => {
+    const crlf = registered.pemBundle.replace(/\n/g, '\r\n')
+    expect(readCertificateCredential(crlf, null).thumbprintHex).toBe(registered.thumbprintHex)
+  })
+
   it('refuses a PEM with no private key at all', () => {
     expect(refuses(registered.certificatePem).message).toContain('PKCS#8')
   })
