@@ -50,13 +50,13 @@ Everything below runs on this machine with no tenant, no registration and no sec
 Install once:
 
 ```bash
-cd ~/Projects/365-overview/functions && npm install
+cd ~/projects/365-overview/functions && npm install
 ```
 
 ### 1. Tests (unit + end-to-end on the local stack)
 
 ```bash
-cd ~/Projects/365-overview/functions && npm test
+cd ~/projects/365-overview/functions && npm test
 ```
 
 The integration suite boots a **fake Entra** (JWKS, a token endpoint that verifies the client
@@ -68,7 +68,7 @@ Graph** (260 sites with blank `siteUrl`, 120 drives, 180-day trends, SKUs, org, 
 ### 2. The local stack + smoke
 
 ```bash
-cd ~/Projects/365-overview/functions && npm run local
+cd ~/projects/365-overview/functions && npm run local
 ```
 
 Starts the fakes on `:7080` (Entra) and `:7090` (Graph) and hosts the proxy in-process on
@@ -76,14 +76,14 @@ Starts the fakes on `:7080` (Entra) and `:7090` (Graph) and hosts the proxy in-p
 Functions Core Tools** runtime instead — the same host that runs in Azure:
 
 ```bash
-cd ~/Projects/365-overview/functions && npm run local -- --func
+cd ~/projects/365-overview/functions && npm run local -- --func
 ```
 
 In a second terminal, exercise every call the SPA makes (paged reports through rewritten links,
 `$batch` names, `sites/delta` to its `deltaLink`, plus 401 / 404 / preflight):
 
 ```bash
-cd ~/Projects/365-overview/functions && npm run smoke
+cd ~/projects/365-overview/functions && npm run smoke
 ```
 
 ### 3. The real SPA against the local stack
@@ -91,7 +91,7 @@ cd ~/Projects/365-overview/functions && npm run smoke
 With `npm run local` running, from the repo root:
 
 ```bash
-cd ~/Projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/graph VITE_LOCAL_AUTH_URL=http://127.0.0.1:7080 npm run dev
+cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/graph VITE_LOCAL_AUTH_URL=http://127.0.0.1:7080 npm run dev
 ```
 
 `VITE_LOCAL_AUTH_URL` is honoured **only by the Vite dev server** (`import.meta.env.DEV`); a
@@ -103,7 +103,7 @@ caller token from the fake Entra and renders the whole report through the proxy.
 0. **Make the certificate.** It is generated here; only the public half is ever uploaded.
 
    ```bash
-   cd ~/Projects/365-overview/functions && npm run cert:new
+   cd ~/projects/365-overview/functions && npm run cert:new
    ```
 
    That writes `.temp/graph-proxy.pem` (key + certificate — this is `GRAPH_CERT_PEM`) and
@@ -124,7 +124,7 @@ caller token from the fake Entra and renders the whole report through the proxy.
 2. **Ask Entra whether it accepts the certificate**, before anything else is wired up:
 
    ```bash
-   cd ~/Projects/365-overview/functions && npm run cert:check -- --pem .temp/graph-proxy.pem --client-id <client id> --tenant <tenant id>
+   cd ~/projects/365-overview/functions && npm run cert:check -- --pem .temp/graph-proxy.pem --client-id <client id> --tenant <tenant id>
    ```
 
    It prints the roles on the issued token, or explains the `AADSTS` code it got back —
@@ -138,13 +138,13 @@ caller token from the fake Entra and renders the whole report through the proxy.
 4. **Run the host:**
 
    ```bash
-   cd ~/Projects/365-overview/functions && npm start
+   cd ~/projects/365-overview/functions && npm start
    ```
 
 5. **Run the SPA against it**, signing in with a real admin of the dev tenant:
 
    ```bash
-   cd ~/Projects/365-overview && VITE_GRAPH_PROXY_URL=http://localhost:7071/api/graph npm run dev
+   cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://localhost:7071/api/graph npm run dev
    ```
 
    The consent prompt now asks for `access_as_user` only. Every report section should load; the
@@ -153,7 +153,7 @@ caller token from the fake Entra and renders the whole report through the proxy.
 6. **Scripted check** with a real token (paste one from the browser's network tab):
 
    ```bash
-   cd ~/Projects/365-overview/functions && USER_TOKEN=<token> PROXY_URL=http://localhost:7071/api/graph npm run smoke
+   cd ~/projects/365-overview/functions && USER_TOKEN=<token> PROXY_URL=http://localhost:7071/api/graph npm run smoke
    ```
 
 ## Deploying
@@ -166,7 +166,7 @@ public. Set `PROXY_ALLOWED_ORIGINS` to the Vercel origin(s) and `PROXY_PUBLIC_UR
 domain fronts the app.
 
 ```bash
-cd ~/Projects/365-overview/functions && npm run build && node_modules/.bin/func azure functionapp publish <function-app-name>
+cd ~/projects/365-overview/functions && npm run build && node_modules/.bin/func azure functionapp publish <function-app-name>
 ```
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and

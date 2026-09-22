@@ -218,13 +218,13 @@ The real data path, end to end, with no tenant: the proxy runs locally against a
 fake Graph, and the SPA reads through it. In one terminal:
 
 ```bash
-cd ~/Projects/365-overview/functions && npm install && npm run local
+cd ~/projects/365-overview/functions && npm install && npm run local
 ```
 
 In another:
 
 ```bash
-cd ~/Projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/graph VITE_LOCAL_AUTH_URL=http://127.0.0.1:7080 npm run dev
+cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/graph VITE_LOCAL_AUTH_URL=http://127.0.0.1:7080 npm run dev
 ```
 
 See [functions/README.md](functions/README.md) for the smoke script, running under the Azure

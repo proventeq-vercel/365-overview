@@ -32,11 +32,20 @@ export function graphUrl(graphOrigin: string, request: GraphRequest): string {
   return `${graphOrigin}/${request.version}/${encodePath(request.path)}${request.search}`
 }
 
+export function graphTarget(url: string, graphOrigin: string): string {
+  const target = new URL(url)
+  if (target.origin !== new URL(graphOrigin).origin) {
+    throw new ProxyError(404, 'RouteNotAllowed', 'The proxy only forwards to Microsoft Graph.')
+  }
+  return `${graphOrigin}${target.pathname}${target.search}`
+}
+
 async function relay(url: string, init: RequestInit, options: ForwardOptions): Promise<ProxyResponse> {
   const fetchImpl = options.fetchImpl ?? fetch
+  const target = graphTarget(url, options.graphOrigin)
   let response: Response
   try {
-    response = await fetchImpl(url, {
+    response = await fetchImpl(target, {
       ...init,
       headers: {
         ...init.headers,

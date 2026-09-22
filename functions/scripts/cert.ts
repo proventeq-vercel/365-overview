@@ -61,12 +61,13 @@ function generate(): void {
 
 async function check(): Promise<void> {
   const pemPath = option('pem')
-  const pem = pemPath ? readFileSync(pemPath, 'utf8') : (process.env.GRAPH_CERT_PEM ?? '')
-  if (!pem.trim()) fail('Pass --pem <file> or set GRAPH_CERT_PEM.')
+  if (!pemPath) fail('Pass --pem <file>, the bundle written by `npm run cert:new`.')
+  const pem = readFileSync(pemPath, 'utf8')
+  if (!pem.trim()) fail(`${pemPath} is empty.`)
 
   let credential
   try {
-    credential = readCertificateCredential(pem, process.env.GRAPH_CERT_THUMBPRINT ?? null)
+    credential = readCertificateCredential(pem, option('thumbprint'))
   } catch (error) {
     fail(error instanceof ProxyError ? error.message : String(error))
   }
@@ -81,7 +82,7 @@ async function check(): Promise<void> {
     console.log(`  expires     ${new Date(parsed.validTo).toISOString().slice(0, 10)}`)
   }
 
-  const tenantId = option('tenant', process.env.PROXY_CHECK_TENANT_ID)
+  const tenantId = option('tenant')
   const clientId = option('client-id', process.env.GRAPH_CLIENT_ID ?? null)
   if (!tenantId) {
     console.log('\n  The credential is well formed. Add --tenant <id> --client-id <id> to ask Entra itself.\n')

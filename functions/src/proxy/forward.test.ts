@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ProxyError } from './errors.js'
-import { forwardBatch, forwardGet, graphUrl, rewriteGraphLinks } from './forward.js'
+import { forwardBatch, forwardGet, graphTarget, graphUrl, rewriteGraphLinks } from './forward.js'
 
 const GRAPH = 'https://graph.microsoft.com'
 const PROXY = 'https://proxy.example/api/graph'
@@ -86,6 +86,36 @@ describe('forwardGet', () => {
     const error = await forwardGet({ version: 'v1.0', path: 'organization', search: '' }, options(fetchImpl)).catch((e) => e as ProxyError)
     expect(error.status).toBe(502)
     expect(error.code).toBe('GraphUnreachable')
+  })
+
+})
+
+describe('graphTarget', () => {
+  it('keeps a Graph URL, rebuilt on the configured origin', () => {
+    expect(graphTarget(`${GRAPH}/v1.0/organization?$select=id`, GRAPH)).toBe(
+      `${GRAPH}/v1.0/organization?$select=id`,
+    )
+  })
+
+  it('refuses a URL that points anywhere but the configured Graph origin', () => {
+    const cases = [
+      'https://evil.example/v1.0/organization',
+      'https://graph.microsoft.com.evil.example/v1.0/organization',
+      'http://graph.microsoft.com/v1.0/organization',
+      'http://169.254.169.254/latest/meta-data/',
+    ]
+    for (const url of cases) {
+      const error = (() => {
+        try {
+          graphTarget(url, GRAPH)
+        } catch (e) {
+          return e as ProxyError
+        }
+        return null
+      })()
+      expect(error?.status, url).toBe(404)
+      expect(error?.code, url).toBe('RouteNotAllowed')
+    }
   })
 })
 
