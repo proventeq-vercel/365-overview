@@ -71,6 +71,10 @@ describe('parseBatch', () => {
     ['a sub-URL outside the allowlist', { requests: [{ id: '1', method: 'GET', url: '/me' }] }],
     ['a sub-URL with a disallowed option', { requests: [{ id: '1', method: 'GET', url: `/sites/${SITE}?$expand=drives` }] }],
     ['duplicate ids', { requests: [siteRequest('1'), siteRequest('1')] }],
+    ['a sub-URL that traverses to another allowlisted route', { requests: [{ id: '1', method: 'GET', url: '/sites/a/../../subscribedSkus' }] }],
+    ['a sub-URL naming an allowlisted route that is not a site', { requests: [{ id: '1', method: 'GET', url: '/subscribedSkus' }] }],
+    ['a nested batch', { requests: [{ id: '1', method: 'GET', url: '/$batch' }] }],
+    ['a sub-URL with invalid percent-encoding', { requests: [{ id: '1', method: 'GET', url: '/sites/%ZZ' }] }],
     ['a missing id', { requests: [{ method: 'GET', url: `/sites/${SITE}` }] }],
   ])('rejects %s', (_label, body) => {
     const error = failure(() => parseBatch(typeof body === 'string' ? body : JSON.stringify(body)))

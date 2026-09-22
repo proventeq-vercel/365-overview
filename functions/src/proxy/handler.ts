@@ -3,6 +3,7 @@ import type { AppTokenSource } from './appToken.js'
 import type { CallerVerifier } from './callerAuth.js'
 import type { ProxyConfig } from './config.js'
 import { errorResponse, ProxyError, type ProxyResponse } from './errors.js'
+import { decodePath } from './graphPath.js'
 import { forwardBatch, forwardGet } from './forward.js'
 
 export interface ProxyRequest {
@@ -36,7 +37,7 @@ function corsHeaders(origin: string | null, config: ProxyConfig): Record<string,
 }
 
 function parseGraphRequest(url: URL): GraphRequest {
-  const pathname = decodeURIComponent(url.pathname)
+  const pathname = decodePath(url.pathname)
   if (!pathname.toLowerCase().startsWith(GRAPH_ROUTE_PREFIX)) {
     throw new ProxyError(404, 'RouteNotAllowed', `The proxy only serves ${GRAPH_ROUTE_PREFIX}.`)
   }

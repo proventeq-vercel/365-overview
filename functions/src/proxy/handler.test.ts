@@ -66,6 +66,8 @@ describe('handleProxyRequest', () => {
     ['an unknown version', `${HOST}/api/graph/v2.0/organization`],
     ['no path', `${HOST}/api/graph/v1.0`],
     ['a different route', `${HOST}/api/other/v1.0/organization`],
+    ['a malformed percent-escape', `${HOST}/api/graph/v1.0/organization%ZZ`],
+    ['a lone percent sign', `${HOST}/api/graph/v1.0/organization%`],
   ])('rejects %s with 404 before acquiring an app token', async (_label, url) => {
     const d = deps()
     const response = await handleProxyRequest(request({ url }), d)
@@ -126,7 +128,8 @@ describe('handleProxyRequest', () => {
     const d = deps()
     const text = () => Promise.resolve(JSON.stringify({ requests: [{ id: 'a', method: 'GET', url: '/me' }] }))
     const response = await handleProxyRequest(request({ method: 'POST', url: `${HOST}/api/graph/v1.0/$batch`, text }), d)
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
+    expect(bodyOf(response).error?.code).toBe('InvalidBatch')
     expect(d.fetchImpl).not.toHaveBeenCalled()
   })
 

@@ -1,5 +1,6 @@
 import type { BatchRequest, GraphRequest } from './allowlist.js'
 import { ProxyError, type ProxyResponse } from './errors.js'
+import { encodePath } from './graphPath.js'
 
 const LINK_KEYS = new Set(['@odata.nextLink', '@odata.deltaLink'])
 const FORWARDED_RESPONSE_HEADERS = ['content-type', 'retry-after']
@@ -26,12 +27,6 @@ export function rewriteGraphLinks(value: unknown, graphOrigin: string, proxyGrap
   }
   return out
 }
-
-const encodePath = (path: string) =>
-  path
-    .split('/')
-    .map((segment) => encodeURIComponent(segment).replace(/%3D/g, '='))
-    .join('/')
 
 export function graphUrl(graphOrigin: string, request: GraphRequest): string {
   return `${graphOrigin}/${request.version}/${encodePath(request.path)}${request.search}`

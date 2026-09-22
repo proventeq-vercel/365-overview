@@ -1,4 +1,5 @@
 import { ProxyError } from './errors.js'
+import { decodePath } from './graphPath.js'
 
 export type GraphVersion = 'v1.0' | 'beta'
 
@@ -33,17 +34,19 @@ const USAGE_REPORTS = [
 
 const PAGING = ['$top', '$skiptoken']
 
+export const SITE_ROUTE: AllowedRoute = {
+  version: 'v1.0',
+  path: new RegExp(`^sites/${SITE_ID}$`),
+  query: new Set(['$select']),
+}
+
 export const ALLOWED_ROUTES: readonly AllowedRoute[] = [
   {
     version: 'v1.0',
     path: /^sites\/delta$/,
     query: new Set(['$select', 'token', '$deltatoken', ...PAGING]),
   },
-  {
-    version: 'v1.0',
-    path: new RegExp(`^sites/${SITE_ID}$`),
-    query: new Set(['$select']),
-  },
+  SITE_ROUTE,
   {
     version: 'v1.0',
     path: /^subscribedSkus$/,
@@ -96,7 +99,15 @@ function batchEntry(entry: unknown, index: number): BatchRequest {
     throw new ProxyError(400, 'InvalidBatch', `Batch request ${id} must carry a relative URL.`)
   }
   const parsed = new URL(`https://batch.invalid${url}`)
-  assertAllowed({ version: 'v1.0', path: decodeURIComponent(parsed.pathname.slice(1)), search: parsed.search })
+  const request: GraphRequest = {
+    version: 'v1.0',
+    path: decodePath(parsed.pathname.slice(1)),
+    search: parsed.search,
+  }
+  if (!SITE_ROUTE.path.test(request.path)) {
+    throw new ProxyError(400, 'InvalidBatch', `Batch request ${id} must be a GET of v1.0/sites/{id}.`)
+  }
+  assertAllowed(request)
   return { id, method: 'GET', url }
 }
 
