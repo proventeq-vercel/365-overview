@@ -1,6 +1,6 @@
 import { createPrivateKey, X509Certificate } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { createSelfSignedCertificate, objectIdentifier, toPem, utcTime } from './certificate.js'
+import { createSelfSignedCertificate, objectIdentifier, serialNumber, toPem, utcTime } from './certificate.js'
 
 const generated = createSelfSignedCertificate({ commonName: 'graph-proxy-test', days: 30 })
 const certificate = new X509Certificate(generated.certificatePem)
@@ -49,6 +49,23 @@ describe('createSelfSignedCertificate', () => {
     const other = createSelfSignedCertificate({ commonName: 'graph-proxy-test', days: 30 })
     expect(other.thumbprintHex).not.toBe(generated.thumbprintHex)
     expect(new X509Certificate(other.certificatePem).serialNumber).not.toBe(certificate.serialNumber)
+  })
+})
+
+describe('serialNumber', () => {
+  it('keeps the top byte positive and non-zero, so the DER INTEGER stays minimal', () => {
+    expect(serialNumber(Buffer.alloc(16, 0))[0]).toBe(0x01)
+    expect(serialNumber(Buffer.alloc(16, 0xff))[0]).toBe(0x7f)
+    for (let byte = 0; byte < 256; byte++) {
+      const first = serialNumber(Buffer.concat([Buffer.from([byte]), Buffer.alloc(15)]))[0]
+      expect(first & 0x80).toBe(0)
+      expect(first).not.toBe(0)
+    }
+  })
+
+  it('keeps the rest of the random bytes', () => {
+    const random = Buffer.from('00112233445566778899aabbccddeeff', 'hex')
+    expect(serialNumber(random).subarray(1).toString('hex')).toBe('112233445566778899aabbccddeeff')
   })
 })
 

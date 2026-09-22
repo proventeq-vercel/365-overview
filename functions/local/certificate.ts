@@ -52,6 +52,12 @@ function integer(value: Buffer): Buffer {
   return tlv(0x02, padded)
 }
 
+export function serialNumber(random = randomBytes(16)): Buffer {
+  const bytes = Buffer.from(random)
+  bytes[0] = (bytes[0] & 0x7f) | 0x01
+  return bytes
+}
+
 function bitString(value: Buffer, unusedBits = 0): Buffer {
   return tlv(0x03, Buffer.from([unusedBits]), value)
 }
@@ -116,7 +122,7 @@ export function createSelfSignedCertificate(
 
   const tbsCertificate = sequence(
     explicit(0, integer(Buffer.from([2]))),
-    integer(randomBytes(16)),
+    integer(serialNumber()),
     sequence(objectIdentifier(SHA256_WITH_RSA_OID), NULL),
     distinguishedName(options.commonName),
     sequence(utcTime(notBefore), utcTime(notAfter)),
