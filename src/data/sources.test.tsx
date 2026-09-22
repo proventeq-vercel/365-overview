@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { IPublicClientApplication } from '@azure/msal-browser'
 import { parseConfig } from '../config/appConfig'
-import { buildLiveSource, buildLocalAuthSource } from './DataProvider'
+import { buildLiveSource, buildLocalAuthSource } from './sources'
 
 const ORIGIN = 'https://365-overview.vercel.app'
 const PROXY = 'http://127.0.0.1:7071/api/graph'
