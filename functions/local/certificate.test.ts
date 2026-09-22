@@ -1,4 +1,4 @@
-import { createPrivateKey, X509Certificate } from 'node:crypto'
+import { createHash, createPrivateKey, X509Certificate } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { createSelfSignedCertificate, objectIdentifier, serialNumber, toPem, utcTime } from './certificate.js'
 
@@ -24,7 +24,7 @@ describe('createSelfSignedCertificate', () => {
   })
 
   it('reports the SHA-1 thumbprint Entra hashes from the DER, in lowercase hex', () => {
-    expect(generated.thumbprintHex).toBe(certificate.fingerprint.replace(/:/g, '').toLowerCase())
+    expect(generated.thumbprintHex).toBe(createHash('sha1').update(certificate.raw).digest('hex'))
     expect(generated.thumbprintHex).toMatch(/^[0-9a-f]{40}$/)
   })
 
@@ -95,10 +95,12 @@ describe('objectIdentifier', () => {
 
 describe('toPem', () => {
   it('wraps base64 at 64 characters between the labelled guards', () => {
-    const pem = toPem('CERTIFICATE', Buffer.alloc(120, 1))
-    const lines = pem.trimEnd().split('\n')
+    const der = Buffer.alloc(120, 1)
+    const lines = toPem('CERTIFICATE', der).trimEnd().split('\n')
     expect(lines[0]).toBe('-----BEGIN CERTIFICATE-----')
     expect(lines.at(-1)).toBe('-----END CERTIFICATE-----')
-    expect(lines.slice(1, -1).every((line) => line.length <= 64)).toBe(true)
+    const body = lines.slice(1, -1)
+    expect(body.slice(0, -1).map((line) => line.length)).toEqual(body.slice(0, -1).map(() => 64))
+    expect(Buffer.from(body.join(''), 'base64')).toEqual(der)
   })
 })

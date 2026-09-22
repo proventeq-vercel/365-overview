@@ -1,8 +1,8 @@
 import { decodeProtectedHeader, jwtVerify } from 'jose'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { createPublicKey } from 'node:crypto'
+import { createHash, createPublicKey, X509Certificate } from 'node:crypto'
 import { generateLocalAppCertificate, type LocalAppCertificate } from '../../local/keys.js'
-import { createAppTokenSource, thumbprintToX5t, tokenEndpoint } from './appToken.js'
+import { createAppTokenSource, tokenEndpoint } from './appToken.js'
 import { readConfig } from './config.js'
 import type { ProxyError } from './errors.js'
 
@@ -47,7 +47,8 @@ describe('createAppTokenSource', () => {
     expect(form.get('client_secret')).toBeNull()
 
     const assertion = form.get('client_assertion') as string
-    expect(decodeProtectedHeader(assertion)).toMatchObject({ alg: 'RS256', typ: 'JWT', x5t: thumbprintToX5t(appCertificate.thumbprintHex) })
+    const x5t = createHash('sha1').update(new X509Certificate(appCertificate.certificatePem).raw).digest('base64url')
+    expect(decodeProtectedHeader(assertion)).toMatchObject({ alg: 'RS256', typ: 'JWT', x5t })
     const { payload } = await jwtVerify(assertion, createPublicKey(appCertificate.certificatePem), { issuer: CLIENT_ID, subject: CLIENT_ID, audience: url })
     expect(payload.jti).toBeTruthy()
     expect((payload.exp ?? 0) - (payload.nbf ?? 0)).toBe(600)

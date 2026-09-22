@@ -13,6 +13,7 @@ export interface RecordedRequest {
   method: string
   url: string
   authorization: string | null
+  batchUrls?: string[]
 }
 
 export interface FakeGraph {
@@ -209,6 +210,7 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
     }
     if (request.method === 'POST' && path === '/v1.0/$batch') {
       const { requests: batch } = JSON.parse(await readBody(request)) as { requests: { id: string; url: string }[] }
+      requests[requests.length - 1].batchUrls = batch.map((entry) => entry.url)
       const responses = batch.map(({ id, url: subUrl }) => {
         const match = /^\/sites\/([^/?]+)/.exec(subUrl)
         const entry = match ? directoryEntry(match[1]) : null

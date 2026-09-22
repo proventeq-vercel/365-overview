@@ -18,6 +18,7 @@ describe('assertAllowed', () => {
     { version: 'v1.0', path: 'sites/delta', search: '?$select=id,webUrl&token=abc' },
     { version: 'v1.0', path: 'sites/delta', search: '?$deltatoken=xyz&$top=200' },
     { version: 'v1.0', path: `sites/${SITE}`, search: '?$select=id,displayName,webUrl' },
+    { version: 'v1.0', path: 'sites/8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', search: '?$select=id' },
     { version: 'v1.0', path: 'subscribedSkus', search: '' },
     { version: 'v1.0', path: 'organization', search: '?$format=application/json' },
     {
@@ -42,6 +43,9 @@ describe('assertAllowed', () => {
     ['$expand on a site', { version: 'v1.0', path: `sites/${SITE}`, search: '?$select=id&$expand=drives' }],
     ['$search on delta', { version: 'v1.0', path: 'sites/delta', search: '?$search=finance' }],
     ['a traversal segment', { version: 'v1.0', path: 'sites/../users', search: '' }],
+    ['the getAllSites tenant walk', { version: 'v1.0', path: 'sites/getAllSites', search: '' }],
+    ['a Graph function dressed as a site id', { version: 'v1.0', path: 'sites/root', search: '' }],
+    ['a site id that is neither a GUID nor host,guid,guid', { version: 'v1.0', path: 'sites/contoso.sharepoint.com', search: '' }],
     ['an empty segment', { version: 'v1.0', path: 'sites//delta', search: '' }],
   ])('rejects %s with 404 RouteNotAllowed', (_label, request) => {
     const error = failure(() => assertAllowed(request))
@@ -52,6 +56,15 @@ describe('assertAllowed', () => {
 
 describe('parseBatch', () => {
   const siteRequest = (id: string) => ({ id, method: 'GET', url: `/sites/${SITE}?$select=id,displayName,webUrl` })
+
+  it.each([
+    ['a dot segment', `/sites/./${SITE}?$select=id`],
+    ['a fragment the allowlist never sees', `/sites/${SITE}?$select=id#/../../users`],
+    ['an embedded tab', `/sites/${SITE}	?$select=id`],
+  ])('forwards the string it validated, not the raw one, for %s', (_label, url) => {
+    const [entry] = parseBatch(JSON.stringify({ requests: [{ id: '1', method: 'GET', url }] }))
+    expect(entry.url).toBe(`/sites/${SITE}?$select=id`)
+  })
 
   it('returns only id, method and url of each allowed sub-request', () => {
     const body = JSON.stringify({

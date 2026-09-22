@@ -23,7 +23,9 @@ export interface BatchRequest {
 
 export const BATCH_LIMIT = 20
 
-const SITE_ID = String.raw`[A-Za-z0-9][A-Za-z0-9._,-]*`
+const GUID = String.raw`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
+const SITE_HOST = String.raw`[A-Za-z0-9][A-Za-z0-9.-]*`
+const SITE_ID = String.raw`(?:${GUID}|${SITE_HOST},${GUID},${GUID})`
 const REPORT_PERIOD = String.raw`\(period='D(?:7|30|90|180)'\)`
 const USAGE_REPORTS = [
   'getSharePointSiteUsageDetail',
@@ -108,7 +110,7 @@ function batchEntry(entry: unknown, index: number): BatchRequest {
     throw new ProxyError(400, 'InvalidBatch', `Batch request ${id} must be a GET of v1.0/sites/{id}.`)
   }
   assertAllowed(request)
-  return { id, method: 'GET', url }
+  return { id, method: 'GET', url: `${parsed.pathname}${parsed.search}` }
 }
 
 export function parseBatch(body: string): BatchRequest[] {

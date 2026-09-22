@@ -94,6 +94,37 @@ describe('proxy end to end on the local stack', () => {
     expect(responses[0].body.displayName).toBe('Team Site 0')
   })
 
+  it('sends Graph the sub-request url it validated, with the caller’s dot segments and fragment gone', async () => {
+    const id = siteIdOf(1)
+    const response = await graph('v1.0/$batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{ id: '1', method: 'GET', url: `/sites/./${encodeURIComponent(id)}?$select=id#/../../users` }],
+      }),
+    })
+    expect(response.status).toBe(200)
+    const sent = stack.graph.requests.filter((request) => request.batchUrls).at(-1)
+    expect(sent?.batchUrls).toEqual([`/sites/${encodeURIComponent(id)}?$select=id`])
+  })
+
+  it('refuses a batch sub-request for the whole site directory', async () => {
+    const response = await graph('v1.0/$batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ requests: [{ id: '1', method: 'GET', url: '/sites/getAllSites' }] }),
+    })
+    expect(response.status).toBe(400)
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe('InvalidBatch')
+  })
+
+  it('refuses the getAllSites tenant walk on the direct route', async () => {
+    const before = stack.graph.requests.length
+    const response = await graph('v1.0/sites/getAllSites')
+    expect(response.status).toBe(404)
+    expect(stack.graph.requests.length).toBe(before)
+  })
+
   it('walks sites/delta to a deltaLink that also points back at the proxy', async () => {
     const { rows, last } = await allPages<{ id: string; webUrl: string }>('v1.0/sites/delta?$select=id,displayName,webUrl')
     expect(rows).toHaveLength(SITE_COUNT)
