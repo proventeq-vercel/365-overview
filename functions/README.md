@@ -110,6 +110,17 @@ caller token from the fake Entra and renders the whole report through the proxy.
    That writes `.temp/graph-proxy.pem` (key + certificate — this is `GRAPH_CERT_PEM`) and
    `.temp/graph-proxy.crt` (upload this one), and prints the thumbprint and expiry.
 
+   **Or reuse a certificate the registration already has.** If it lives in Key Vault, download
+   the certificate as PFX (the export has an empty password) and turn it into the same PEM bundle
+   — key first, certificate second — without ever pasting the key anywhere:
+
+   ```bash
+   cd ~/projects/365-overview/functions && mkdir -p .temp && openssl pkcs12 -in ~/Downloads/<name>.pfx -passin pass: -nocerts -nodes | openssl pkcs8 -topk8 -nocrypt > .temp/graph-proxy.pem && openssl pkcs12 -in ~/Downloads/<name>.pfx -passin pass: -clcerts -nokeys | openssl x509 >> .temp/graph-proxy.pem && chmod 600 .temp/graph-proxy.pem
+   ```
+
+   `npm run cert:check -- --pem .temp/graph-proxy.pem` prints the thumbprint; it must match one
+   under *Certificates & secrets* on the registration.
+
 1. **Registration.** On the registration the proxy will use (the multi-tenant *Storage Analyser*
    `84e24db0-…`, or a second one dedicated to the proxy):
    - **API permissions → Application**: `Sites.Read.All`, `Reports.Read.All`,
@@ -130,6 +141,11 @@ caller token from the fake Entra and renders the whole report through the proxy.
 
    It prints the roles on the issued token, or explains the `AADSTS` code it got back —
    `700027` means the certificate is not uploaded yet, `700016` that the tenant has not consented.
+   With a token in hand it then relays one call per application role through the proxy's own
+   forwarder (`organization`, `sites/delta`, the SharePoint site report) and prints the status and
+   row count of each — `200` all the way down is the certificate proven against real Graph, a `403
+   Authorization_RequestDenied` names the role that tenant has not consented to yet. This is the
+   whole app-only path; only the caller-token side is left to the browser run below.
 
 3. **Local settings.** Copy `local.settings.json.example` to `local.settings.json` (git-ignored)
    and fill `GRAPH_CLIENT_ID`, `GRAPH_CERT_PEM` (the contents of `.temp/graph-proxy.pem`),
@@ -159,46 +175,95 @@ caller token from the fake Entra and renders the whole report through the proxy.
 
 ## Deploying
 
-The Function App needs Node 20+ and these app settings; store the PEM in Key Vault and reference
-it (`@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/<name>/)`) with the
-Function's managed identity granted *Key Vault Secrets User*. `authLevel` is `anonymous` on
-purpose: the Entra token is the authentication, and a function key in a browser bundle would be
-public.
+Everything below is the Azure CLI (`az login` first). A deploy script is deliberately not written
+yet; this is the procedure that has been run by hand and is known to work.
 
-Besides the settings in the table above, the platform ones must be present:
-`FUNCTIONS_WORKER_RUNTIME=node`, `FUNCTIONS_EXTENSION_VERSION=~4`, a Node 20+ site setting, and
-`AzureWebJobsStorage`.
+**The proxy gets its own resource group** — never one shared with other workloads. `az group
+delete` is then the whole tear-down, and a test deployment cannot be mistaken for, or take down,
+anything else.
+
+```bash
+az group create --name <rg> --location uksouth
+az storage account create --name <storage> --resource-group <rg> --location uksouth --sku Standard_LRS --kind StorageV2 --allow-blob-public-access false --min-tls-version TLS1_2
+az functionapp create --name <function-app-name> --resource-group <rg> --storage-account <storage> --flexconsumption-location uksouth --runtime node --runtime-version 22 --assign-identity "[system]"
+az functionapp update --name <function-app-name> --resource-group <rg> --set httpsOnly=true
+```
+
+Flex Consumption, Node 22, a system-assigned identity. `authLevel` is `anonymous` on purpose: the
+Entra token is the authentication, and a function key in a browser bundle would be public. The
+platform settings (`FUNCTIONS_WORKER_RUNTIME`, `AzureWebJobsStorage`, the deployment container)
+come from `az functionapp create`; the proxy's own are the table above. Put them in a JSON file
+so the PEM survives the shell — the bundle as one line with `\n` in place of each newline, which
+the proxy unescapes — and delete the file afterwards:
+
+```json
+[
+  { "name": "GRAPH_CLIENT_ID", "value": "<client id>", "slotSetting": false },
+  { "name": "GRAPH_CERT_PEM", "value": "-----BEGIN PRIVATE KEY-----\n…\n-----END CERTIFICATE-----\n", "slotSetting": false },
+  { "name": "PROXY_AUDIENCES", "value": "api://<client id>,<client id>", "slotSetting": false },
+  { "name": "PROXY_ALLOWED_ORIGINS", "value": "https://<spa host>,http://localhost:5173", "slotSetting": false },
+  { "name": "PROXY_ALLOWED_TENANT_IDS", "value": "<dev tenant id>", "slotSetting": false }
+]
+```
+
+```bash
+az functionapp config appsettings set --name <function-app-name> --resource-group <rg> --settings @settings.json
+az functionapp cors add --name <function-app-name> --resource-group <rg> --allowed-origins https://<spa host> http://localhost:5173
+```
+
+**The same origins must be in the Function App's platform CORS list.** On Azure the Functions
+host answers `OPTIONS` preflights itself and never invokes the function for them; with an empty
+platform list it returns a bare `204` without `Access-Control-Allow-Origin`, so every browser call
+fails at the preflight even though a direct `GET` carries the proxy's own CORS headers. The
+platform keeps one `Access-Control-Allow-Origin` per response, it does not duplicate the proxy's;
+the proxy's list still decides which origins are served.
 
 `PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it —
 including each Vercel preview host if previews are meant to work, since those get a new hostname per
 branch. A request carrying an origin outside the list is refused before its token is read.
 
-**The same origins must be registered as the Function App's platform CORS list.** On Azure the
-Functions host answers `OPTIONS` preflights itself and never invokes the function for them; with an
-empty platform list it returns a bare `204` without `Access-Control-Allow-Origin`, so every browser
-call fails at the preflight even though a direct `GET` carries the proxy's own CORS headers. Mirror
-the list with `az functionapp cors add --name <function-app-name> --resource-group <rg>
---allowed-origins <origin> …` (the platform keeps one `Access-Control-Allow-Origin` per response,
-it does not duplicate the proxy's). The proxy's list still decides which origins are served.
-
 `PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
 the Function sees differs from the one the browser used (a custom domain, a front door); leave it
 unset otherwise. It is accepted with or without the `/api/graph` suffix.
 
-Publishing needs the Core Tools on the PATH (`npm i -g azure-functions-core-tools@4`) — they are
-deliberately not a dependency of this package, because the .NET host they carry is over a gigabyte
-and would land in both CI and the deployment package. Publish a production install so the zip
-carries the four runtime packages and not the test tooling:
+**The package** is a production install plus the build, zipped minus `.funcignore` — about 200
+files and under 300 KiB: `host.json`, `package.json`, `dist/src/**` and the four runtime packages,
+no sources, source maps or tests. `func azure functionapp publish` builds that zip itself
+(Core Tools on the PATH: `npm i -g azure-functions-core-tools@4` — deliberately not a dependency of
+this package, because the .NET host they carry is over a gigabyte and would land in both CI and
+the deployment package); `az functionapp deployment source config-zip … --build-remote false`
+takes a zip made any other way that honours `.funcignore`.
 
 ```bash
-cd ~/projects/365-overview/functions && npm ci && npm run build && npm ci --omit=dev && func azure functionapp publish <function-app-name>
+cd ~/projects/365-overview/functions && npm ci && npm run build && npm ci --omit=dev && func azure functionapp publish <function-app-name> && npm ci
 ```
+
+**Proving a deployment from outside** — none of this needs a caller token:
+
+```bash
+curl -si https://<function-app-name>.azurewebsites.net/api/graph/v1.0/organization -H "Origin: https://<spa host>"
+```
+
+`401 Unauthorized` with `Access-Control-Allow-Origin` and `Cache-Control: no-store` means the
+settings and the certificate loaded (the PEM is parsed and its thumbprint matched before any
+request is routed; a broken one answers `500 InvalidConfiguration`). An `OPTIONS` preflight with
+`Access-Control-Request-Method: GET` must come back `204` **with** `Access-Control-Allow-Origin`
+— a bare `204` is the platform CORS list missing that origin. An unlisted origin gets `403`. A
+made-up `Bearer` token gets `401 InvalidToken … no applicable key`, which shows the host reached
+Entra's JWKS. After that, the SPA run in *Validating against a real tenant* is the proof of the
+whole path: point it at the deployment instead of `localhost:7071`.
+
+**For a long-lived deployment move the PEM to Key Vault**: store the bundle as a secret, grant the
+Function's identity *Key Vault Secrets User*, and set `GRAPH_CERT_PEM` to
+`@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/<name>/)`. A plain app
+setting is fine for a test deployment; the Key Vault reference needs a role assignment, which is
+an owner-level step.
 
 **The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: every
 request answers 500 `InvalidConfiguration` from the moment it expires. `npm run cert:new` dates one
 two years out — put its expiry in the calendar, and roll it with
 `az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old one
-keeps working until the new PEM is in place).
+keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
 `VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) on the Vercel project.
