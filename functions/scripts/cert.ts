@@ -1,10 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createSelfSignedCertificate } from '../local/certificate.js'
+import { assertAllowed, JSON_FORMAT, type GraphRequest } from '../src/proxy/allowlist.js'
 import { buildClientAssertion, tokenEndpoint } from '../src/proxy/appToken.js'
 import { leafCertificateOf, readCertificateCredential } from '../src/proxy/certificate.js'
 import { PUBLIC_AUTHORITY_HOST, PUBLIC_GRAPH_ORIGIN } from '../src/proxy/config.js'
 import { ProxyError } from '../src/proxy/errors.js'
+import { forwardGet } from '../src/proxy/forward.js'
 import { importPKCS8 } from 'jose'
 
 const args = process.argv.slice(2)
@@ -116,6 +118,7 @@ async function check(): Promise<void> {
       Buffer.from(payload.access_token.split('.')[1], 'base64url').toString('utf8'),
     ) as { roles?: string[] }
     console.log(`  Entra issued an app-only token. Roles: ${roles.roles?.join(', ') || '(none granted yet)'}\n`)
+    await probeGraph(payload.access_token)
     return
   }
 
@@ -131,6 +134,39 @@ async function check(): Promise<void> {
   if (code && meaning[code]) console.log(`\n  ${code}: ${meaning[code]}`)
   console.log()
   process.exitCode = 1
+}
+
+const GRAPH_PROBES: Array<{ role: string; request: GraphRequest }> = [
+  { role: 'Organization.Read.All', request: { version: 'v1.0', path: 'organization', search: '' } },
+  { role: 'Sites.Read.All', request: { version: 'v1.0', path: 'sites/delta', search: '?$select=id&$top=5' } },
+  {
+    role: 'Reports.Read.All',
+    request: {
+      version: 'beta',
+      path: "reports/getSharePointSiteUsageDetail(period='D180')",
+      search: `?$format=${JSON_FORMAT}`,
+    },
+  },
+]
+
+async function probeGraph(appToken: string): Promise<void> {
+  const graphOrigin = (process.env.GRAPH_ORIGIN ?? PUBLIC_GRAPH_ORIGIN).replace(/\/+$/, '')
+  const options = { graphOrigin, proxyGraphBase: graphOrigin, appToken }
+  console.log('  Through the proxy relay, as the SPA would receive it:')
+  let failures = 0
+  for (const probe of GRAPH_PROBES) {
+    assertAllowed(probe.request)
+    const response = await forwardGet(probe.request, options)
+    const body = JSON.parse(response.body || '{}') as { value?: unknown[]; error?: { code?: string } }
+    const summary =
+      response.status === 200
+        ? `${body.value?.length ?? 0} rows`
+        : `${body.error?.code ?? 'no error code'} — grant admin consent for ${probe.role}`
+    if (response.status !== 200) failures += 1
+    console.log(`    ${probe.request.version}/${probe.request.path.padEnd(56)} ${response.status}  ${summary}`)
+  }
+  console.log()
+  if (failures > 0) process.exitCode = 1
 }
 
 if (command === 'new') generate()
