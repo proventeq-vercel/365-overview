@@ -30,18 +30,26 @@ const PRIVATE_RESPONSE_HEADERS = {
   vary: 'Origin, Authorization',
 }
 
-const isAllowedOrigin = (origin: string, config: ProxyConfig) =>
-  config.allowedOrigins.includes(origin.replace(/\/+$/, ''))
+const matchedOrigin = (origin: string, config: ProxyConfig): string | null =>
+  config.allowedOrigins.find((allowed) => allowed === origin.replace(/\/+$/, '').toLowerCase()) ?? null
 
 function corsHeaders(origin: string | null, config: ProxyConfig): Record<string, string> {
-  if (!origin || !isAllowedOrigin(origin, config)) return {}
+  const allowed = origin ? matchedOrigin(origin, config) : null
+  if (!allowed) return {}
   return {
-    'access-control-allow-origin': origin,
+    'access-control-allow-origin': allowed,
     'access-control-allow-methods': 'GET, POST, OPTIONS',
     'access-control-allow-headers': 'authorization, content-type',
     'access-control-expose-headers': 'retry-after',
     'access-control-max-age': String(PREFLIGHT_MAX_AGE_S),
   }
+}
+
+const ROUTE_PREFIX = GRAPH_ROUTE_PREFIX.replace(/\/$/, '')
+
+export function proxyGraphBase(publicUrl: string): string {
+  const trimmed = publicUrl.replace(/\/+$/, '')
+  return trimmed.toLowerCase().endsWith(ROUTE_PREFIX) ? trimmed : `${trimmed}${ROUTE_PREFIX}`
 }
 
 function parseGraphRequest(url: URL): GraphRequest {
@@ -61,8 +69,8 @@ function parseGraphRequest(url: URL): GraphRequest {
 
 async function route(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyResponse> {
   const url = new URL(request.url)
-  const graphRequest = parseGraphRequest(url)
   const caller = await deps.verifyCaller(request.header('authorization'))
+  const graphRequest = parseGraphRequest(url)
   const isBatch =
     request.method === 'POST' && graphRequest.version === 'v1.0' && graphRequest.path === BATCH_PATH
   if (!isBatch && request.method !== 'GET') {
@@ -73,7 +81,7 @@ async function route(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyRespo
 
   const options = {
     graphOrigin: deps.config.graphOrigin,
-    proxyGraphBase: `${deps.config.publicUrl ?? url.origin}${GRAPH_ROUTE_PREFIX.replace(/\/$/, '')}`,
+    proxyGraphBase: proxyGraphBase(deps.config.publicUrl ?? url.origin),
     appToken: await deps.appToken(caller.tenantId),
     fetchImpl: deps.fetchImpl,
   }

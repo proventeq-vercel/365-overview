@@ -147,8 +147,10 @@ describe('proxy end to end on the local stack', () => {
 
   it('reuses the cached app token across calls of the same tenant', async () => {
     const before = stack.entra.tokenRequests.length
-    await graph('v1.0/organization')
-    await graph('v1.0/organization')
+    const first = await graph('v1.0/organization')
+    const second = await graph('v1.0/organization')
+    expect([first.status, second.status]).toEqual([200, 200])
+    expect(((await first.json()) as { value: unknown[] }).value.length).toBeGreaterThan(0)
     expect(stack.entra.tokenRequests.length).toBe(before)
   })
 
@@ -170,6 +172,7 @@ describe('proxy end to end on the local stack', () => {
     const token = await stack.entra.issueUserToken({ audience: 'https://graph.microsoft.com' })
     const response = await fetch(`${host.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${token}` } })
     expect(response.status).toBe(401)
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe('InvalidToken')
   })
 
   it.each([

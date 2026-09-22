@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { readConfig } from './config.js'
 import { ProxyError } from './errors.js'
-import { handleProxyRequest, type ProxyDeps, type ProxyRequest } from './handler.js'
+import { handleProxyRequest, proxyGraphBase, type ProxyDeps, type ProxyRequest } from './handler.js'
 
 const TENANT = '11111111-2222-4333-8444-555555555555'
 const ORIGIN = 'http://localhost:5173'
@@ -38,7 +38,29 @@ function request(init: Partial<ProxyRequest> & { headers?: Record<string, string
 
 const bodyOf = (response: { body: string }) => JSON.parse(response.body) as { error?: { code: string } }
 
+describe('proxyGraphBase', () => {
+  it('appends the proxy route to a bare origin', () => {
+    expect(proxyGraphBase('https://proxy.example')).toBe('https://proxy.example/api/graph')
+    expect(proxyGraphBase('https://proxy.example/')).toBe('https://proxy.example/api/graph')
+  })
+
+  it('does not double the route when the setting already carries it', () => {
+    expect(proxyGraphBase('https://proxy.example/api/graph')).toBe('https://proxy.example/api/graph')
+    expect(proxyGraphBase('https://proxy.example/api/graph/')).toBe('https://proxy.example/api/graph')
+  })
+})
+
 describe('handleProxyRequest', () => {
+  it('answers an allowed origin however the browser cased it, echoing the configured spelling', async () => {
+    const d = deps()
+    const response = await handleProxyRequest(
+      request({ method: 'OPTIONS', headers: { origin: ORIGIN.toUpperCase() } }),
+      d,
+    )
+    expect(response.status).toBe(204)
+    expect(response.headers['access-control-allow-origin']).toBe(ORIGIN)
+  })
+
   it('answers a preflight from an allowed origin and refuses one from anywhere else', async () => {
     const d = deps()
     const allowed = await handleProxyRequest(request({ method: 'OPTIONS', headers: { origin: ORIGIN } }), d)
@@ -117,6 +139,7 @@ describe('handleProxyRequest', () => {
     const response = await handleProxyRequest(request({ url }), d)
     expect(response.status).toBe(404)
     expect(bodyOf(response).error?.code).toBe('RouteNotAllowed')
+    expect(d.verifyCaller).toHaveBeenCalled()
     expect(d.appToken).not.toHaveBeenCalled()
   })
 

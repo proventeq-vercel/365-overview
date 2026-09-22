@@ -65,7 +65,9 @@ export function readConfig(env: Env): ProxyConfig {
   const credential = readCredential(env, missing)
   const audiences = readList(env, 'PROXY_AUDIENCES')
   if (audiences.length === 0) missing.push('PROXY_AUDIENCES')
-  const allowedOrigins = readList(env, 'PROXY_ALLOWED_ORIGINS').map(trimSlash)
+  const allowedOrigins = readList(env, 'PROXY_ALLOWED_ORIGINS').map((origin) =>
+    trimSlash(origin).toLowerCase(),
+  )
   if (allowedOrigins.length === 0) missing.push('PROXY_ALLOWED_ORIGINS')
   if (missing.length > 0) {
     throw new ProxyError(500, 'InvalidConfiguration', `Missing settings: ${missing.join(', ')}`)

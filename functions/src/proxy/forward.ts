@@ -5,6 +5,7 @@ import { encodePath } from './graphPath.js'
 const LINK_KEYS = new Set(['@odata.nextLink', '@odata.deltaLink'])
 const FORWARDED_RESPONSE_HEADERS = ['content-type', 'retry-after']
 const GRAPH_TIMEOUT_MS = 90_000
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 
 export interface ForwardOptions {
   graphOrigin: string
@@ -18,14 +19,25 @@ export function rewriteGraphLinks(value: unknown, graphOrigin: string, proxyGrap
     return value.map((item) => rewriteGraphLinks(item, graphOrigin, proxyGraphBase))
   }
   if (!value || typeof value !== 'object') return value
-  const out: Record<string, unknown> = {}
+  const out: Record<string, unknown> = Object.create(null) as Record<string, unknown>
   for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
     out[key] =
-      LINK_KEYS.has(key) && typeof item === 'string' && item.startsWith(`${graphOrigin}/`)
-        ? `${proxyGraphBase}/${item.slice(graphOrigin.length + 1)}`
+      LINK_KEYS.has(key) && typeof item === 'string'
+        ? rewriteLink(item, graphOrigin, proxyGraphBase)
         : rewriteGraphLinks(item, graphOrigin, proxyGraphBase)
   }
   return out
+}
+
+function rewriteLink(link: string, graphOrigin: string, proxyGraphBase: string): string {
+  let parsed: URL
+  try {
+    parsed = new URL(link)
+  } catch {
+    return link
+  }
+  if (parsed.origin !== new URL(graphOrigin).origin) return link
+  return `${proxyGraphBase}${parsed.pathname}${parsed.search}`
 }
 
 export function graphUrl(graphOrigin: string, request: GraphRequest): string {
@@ -38,6 +50,33 @@ export function graphTarget(url: string, graphOrigin: string): string {
     throw new ProxyError(404, 'RouteNotAllowed', 'The proxy only forwards to Microsoft Graph.')
   }
   return `${graphOrigin}${target.pathname}${target.search}`
+}
+
+async function followDownload(response: Response, fetchImpl: typeof fetch): Promise<Response> {
+  const location = response.headers.get('location')
+  if (!location) {
+    throw new ProxyError(502, 'GraphUnreachable', 'Graph redirected the report without saying where.')
+  }
+  let target: URL
+  try {
+    target = new URL(location)
+  } catch {
+    throw new ProxyError(502, 'GraphUnreachable', 'Graph redirected the report to an unreadable address.')
+  }
+  if (target.protocol !== 'https:') {
+    throw new ProxyError(502, 'GraphUnreachable', 'Graph redirected the report to a non-HTTPS address.')
+  }
+  try {
+    return await fetchImpl(target.toString(), {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS),
+    })
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    throw new ProxyError(502, 'GraphUnreachable', `The report download did not answer: ${reason}`)
+  }
 }
 
 async function relay(url: string, init: RequestInit, options: ForwardOptions): Promise<ProxyResponse> {
@@ -58,6 +97,9 @@ async function relay(url: string, init: RequestInit, options: ForwardOptions): P
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     throw new ProxyError(502, 'GraphUnreachable', `Graph did not answer: ${reason}`)
+  }
+  if (REDIRECT_STATUSES.has(response.status)) {
+    response = await followDownload(response, fetchImpl)
   }
   const headers: Record<string, string> = {}
   for (const name of FORWARDED_RESPONSE_HEADERS) {

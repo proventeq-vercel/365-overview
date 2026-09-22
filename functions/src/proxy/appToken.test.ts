@@ -6,6 +6,15 @@ import { createAppTokenSource, tokenEndpoint } from './appToken.js'
 import { readConfig } from './config.js'
 import type { ProxyError } from './errors.js'
 
+const rejection = async (pending: Promise<unknown>): Promise<ProxyError> => {
+  try {
+    await pending
+  } catch (error) {
+    return error as ProxyError
+  }
+  throw new Error('the call resolved instead of failing')
+}
+
 const TENANT = '11111111-2222-4333-8444-555555555555'
 const OTHER = '22222222-2222-4333-8444-555555555555'
 const CLIENT_ID = 'graph-app'
@@ -99,7 +108,7 @@ describe('createAppTokenSource', () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({ error: 'unauthorized_client', error_description: `AADSTS700016: Application with identifier '${CLIENT_ID}' was not found in the directory` }, 400),
     )
-    const error = await createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT).catch((e) => e as ProxyError)
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.status).toBe(403)
     expect(error.code).toBe('AdminConsentRequired')
   })
@@ -108,7 +117,7 @@ describe('createAppTokenSource', () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({ error: 'invalid_client', error_description: 'AADSTS700027: Client assertion failed signature validation\nTrace ID: abc' }, 401),
     )
-    const error = await createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT).catch((e) => e as ProxyError)
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.status).toBe(502)
     expect(error.code).toBe('TokenAcquisitionFailed')
     expect(error.message).toContain('AADSTS700027')
@@ -127,7 +136,7 @@ describe('createAppTokenSource', () => {
 
   it('reports an unreachable authority as 502', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError('fetch failed'))
-    const error = await createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT).catch((e) => e as ProxyError)
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.status).toBe(502)
     expect(error.message).toContain('fetch failed')
   })

@@ -23,6 +23,11 @@ describe('isConsentRequired', () => {
 
   it('recognises the proxy telling it the tenant admin has not consented to the application', () => {
     expect(isConsentRequired(new ApiError(403, 'An administrator has not consented yet.', PROXY_CONSENT_CODE))).toBe(true)
+  })
+
+  it('treats an ungranted application permission as a consent failure, not a user role failure', () => {
+    const error = new ApiError(403, 'Insufficient privileges.', 'Authorization_RequestDenied')
+    expect(isConsentRequired(error)).toBe(true)
     expect(isConsentRequired(new ApiError(403, 'An administrator has not consented yet.', 'DirectoryRoleRequired'))).toBe(false)
   })
 

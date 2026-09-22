@@ -75,14 +75,19 @@ export function isGraphVersion(value: string): value is GraphVersion {
   return value === 'v1.0' || value === 'beta'
 }
 
+export const JSON_FORMAT = 'application/json'
+
 export function assertAllowed(request: GraphRequest): void {
   const route = ALLOWED_ROUTES.find(
     (candidate) => candidate.version === request.version && candidate.path.test(request.path),
   )
   if (!route) throw notAllowed(`${request.version}/${request.path}`)
   const params = new URLSearchParams(request.search)
-  for (const key of params.keys()) {
+  for (const [key, value] of params) {
     if (!route.query.has(key)) throw notAllowed(`the ${key} option on ${request.path}`)
+    if (key === '$format' && value !== JSON_FORMAT) {
+      throw notAllowed(`the ${key}=${value} option; the proxy relays ${JSON_FORMAT} only`)
+    }
   }
 }
 

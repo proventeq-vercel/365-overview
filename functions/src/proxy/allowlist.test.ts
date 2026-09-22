@@ -54,6 +54,22 @@ describe('assertAllowed', () => {
   })
 })
 
+describe('$format', () => {
+  it('relays the JSON report format the app asks for', () => {
+    expect(() =>
+      assertAllowed({ version: 'v1.0', path: 'organization', search: '?$format=application/json' }),
+    ).not.toThrow()
+  })
+
+  it('refuses any other format, so the proxy never has to relay a CSV redirect', () => {
+    for (const format of ['text/csv', 'application/xml', '']) {
+      expect(() =>
+        assertAllowed({ version: 'v1.0', path: 'organization', search: `?$format=${format}` }),
+      ).toThrow('application/json')
+    }
+  })
+})
+
 describe('parseBatch', () => {
   const siteRequest = (id: string) => ({ id, method: 'GET', url: `/sites/${SITE}?$select=id,displayName,webUrl` })
 

@@ -2,6 +2,15 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ProxyError } from './errors.js'
 import { forwardBatch, forwardGet, graphTarget, graphUrl, rewriteGraphLinks } from './forward.js'
 
+const rejection = async (pending: Promise<unknown>): Promise<ProxyError> => {
+  try {
+    await pending
+  } catch (error) {
+    return error as ProxyError
+  }
+  throw new Error('the call resolved instead of failing')
+}
+
 const GRAPH = 'https://graph.microsoft.com'
 const PROXY = 'https://proxy.example/api/graph'
 
@@ -83,11 +92,63 @@ describe('forwardGet', () => {
 
   it('reports a network failure as 502 GraphUnreachable', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError('fetch failed'))
-    const error = await forwardGet({ version: 'v1.0', path: 'organization', search: '' }, options(fetchImpl)).catch((e) => e as ProxyError)
+    const error = await rejection(forwardGet({ version: 'v1.0', path: 'organization', search: '' }, options(fetchImpl)))
     expect(error.status).toBe(502)
     expect(error.code).toBe('GraphUnreachable')
   })
 
+})
+
+describe('rewriteGraphLinks and hostile keys', () => {
+  it('keeps a __proto__ key Graph sent instead of silently dropping it', () => {
+    const rewritten = rewriteGraphLinks(JSON.parse('{"__proto__":{"a":1},"b":2}'), GRAPH, PROXY) as Record<
+      string,
+      unknown
+    >
+    expect(Object.keys(rewritten)).toEqual(['__proto__', 'b'])
+    expect(({} as Record<string, unknown>).a).toBeUndefined()
+  })
+})
+
+describe('a Graph redirect to a download URL', () => {
+  const redirect = (location: string | null) =>
+    new Response('', { status: 302, headers: location ? { location } : {} })
+
+  it('follows the redirect once, without handing the app token to the download host', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(redirect('https://reports.example/download/abc'))
+      .mockResolvedValueOnce(reply('{"value":[{"siteId":"a"}]}'))
+    const response = await forwardGet(
+      { version: 'beta', path: "reports/getSharePointSiteUsageDetail(period='D180')", search: '' },
+      options(fetchImpl),
+    )
+    expect(response.status).toBe(200)
+    expect(JSON.parse(response.body)).toEqual({ value: [{ siteId: 'a' }] })
+    const [downloadUrl, downloadInit] = fetchImpl.mock.calls[1] as [string, RequestInit]
+    expect(downloadUrl).toBe('https://reports.example/download/abc')
+    expect(downloadInit.headers).toEqual({ accept: 'application/json' })
+  })
+
+  it('refuses a redirect that names nowhere', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(redirect(null))
+    const error = await rejection(forwardGet(
+      { version: 'v1.0', path: 'organization', search: '' },
+      options(fetchImpl),
+    ))
+    expect(error.status).toBe(502)
+    expect(error.code).toBe('GraphUnreachable')
+  })
+
+  it('refuses a redirect off HTTPS', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(redirect('http://169.254.169.254/latest/meta-data/'))
+    const error = await rejection(forwardGet(
+      { version: 'v1.0', path: 'organization', search: '' },
+      options(fetchImpl),
+    ))
+    expect(error.status).toBe(502)
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('graphTarget', () => {
