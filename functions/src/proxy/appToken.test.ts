@@ -20,6 +20,7 @@ const certEnv = () => ({
   GRAPH_CLIENT_ID: CLIENT_ID,
   GRAPH_CERT_PEM: appCertificate.pemBundle,
   PROXY_AUDIENCES: 'api://proxy',
+  PROXY_ALLOWED_ORIGINS: 'http://localhost:5173',
 })
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -56,7 +57,7 @@ describe('createAppTokenSource', () => {
 
   it('posts the client secret when that is the configured credential', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(tokenReply('app-1'))
-    const config = readConfig({ GRAPH_CLIENT_ID: CLIENT_ID, GRAPH_CLIENT_SECRET: 's3cret', PROXY_AUDIENCES: 'api://proxy' })
+    const config = readConfig({ ...certEnv(), GRAPH_CERT_PEM: '', GRAPH_CLIENT_SECRET: 's3cret' })
     await createAppTokenSource(config, fetchImpl)(TENANT)
     const form = formOf(fetchImpl.mock.calls[0][1] as RequestInit)
     expect(form.get('client_secret')).toBe('s3cret')

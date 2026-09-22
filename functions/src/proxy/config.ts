@@ -65,6 +65,8 @@ export function readConfig(env: Env): ProxyConfig {
   const credential = readCredential(env, missing)
   const audiences = readList(env, 'PROXY_AUDIENCES')
   if (audiences.length === 0) missing.push('PROXY_AUDIENCES')
+  const allowedOrigins = readList(env, 'PROXY_ALLOWED_ORIGINS').map(trimSlash)
+  if (allowedOrigins.length === 0) missing.push('PROXY_ALLOWED_ORIGINS')
   if (missing.length > 0) {
     throw new ProxyError(500, 'InvalidConfiguration', `Missing settings: ${missing.join(', ')}`)
   }
@@ -78,7 +80,7 @@ export function readConfig(env: Env): ProxyConfig {
     credential: credential as GraphCredential,
     audiences,
     scope: read(env, 'PROXY_SCOPE') ?? DEFAULT_SCOPE,
-    allowedOrigins: readList(env, 'PROXY_ALLOWED_ORIGINS').map(trimSlash),
+    allowedOrigins,
     allowedTenantIds: allowedTenantIds.length > 0 ? allowedTenantIds : null,
     requiredDirectoryRoles:
       requiredDirectoryRoles.length > 0 ? requiredDirectoryRoles : DEFAULT_REQUIRED_DIRECTORY_ROLES,

@@ -19,7 +19,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | What is forwarded | `GET` on `v1.0/sites/delta`, `v1.0/sites/{id}`, `v1.0/subscribedSkus`, `v1.0/organization`, the four `beta/reports/…UsageDetail` / `…UsageStorage` storage reports, and `POST v1.0/$batch` whose sub-requests are `GET v1.0/sites/{id}`. Query options are allowlisted per route (`$select`, `$format`, paging tokens). Anything else is `404 RouteNotAllowed` and never reaches Graph. |
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
 | The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
-| Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; any other origin gets no CORS headers and a refused preflight. |
+| Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; a request carrying any other `Origin` is refused with 403 before the caller's token is read. |
 | Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants (use it on a dev deployment). |
 
 Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA's existing
@@ -37,7 +37,7 @@ Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA'
 | `GRAPH_CLIENT_SECRET` | alternative | Client secret instead of the certificate. Local checks only. |
 | `PROXY_AUDIENCES` | yes | Comma list of accepted `aud` values for caller tokens, e.g. `api://<client id>,<client id>` (v1 tokens carry the URI form, v2 the bare id). |
 | `PROXY_SCOPE` | no | Scope the caller token must carry. Default `access_as_user`. |
-| `PROXY_ALLOWED_ORIGINS` | for browsers | Comma list of SPA origins for CORS. |
+| `PROXY_ALLOWED_ORIGINS` | yes | Comma list of SPA origins allowed to call the proxy. |
 | `PROXY_ALLOWED_TENANT_IDS` | no | Comma list of tenant ids; unset = any consented tenant. |
 | `PROXY_REQUIRED_DIRECTORY_ROLES` | no | Comma list of directory role template ids; unset = the four admin roles above. |
 | `PROXY_PUBLIC_URL` | no | The URL the SPA reaches the proxy on, used in rewritten links when it differs from the request host (front door, custom domain). |

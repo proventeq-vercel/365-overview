@@ -18,6 +18,7 @@ interface TokenResponse {
 }
 
 const REFRESH_SKEW_MS = 60_000
+const MAX_CACHED_TENANTS = 200
 const ASSERTION_LIFETIME_S = 600
 const CONSENT_ERROR_CODES = ['AADSTS700016', 'AADSTS65001', 'AADSTS650052']
 
@@ -78,6 +79,16 @@ export function createAppTokenSource(
     return signingKey
   }
 
+  function evictStaleTokens() {
+    for (const [tenant, entry] of cache) {
+      if (entry.expiresAt <= now()) cache.delete(tenant)
+    }
+    for (const tenant of cache.keys()) {
+      if (cache.size < MAX_CACHED_TENANTS) break
+      cache.delete(tenant)
+    }
+  }
+
   async function credentialParams(audience: string): Promise<Record<string, string>> {
     const { credential } = config
     if (credential.kind === 'secret') return { client_secret: credential.clientSecret }
@@ -115,6 +126,7 @@ export function createAppTokenSource(
     const payload = (await response.json().catch(() => ({}))) as TokenResponse
     if (!response.ok || !payload.access_token) throw tokenError(response.status, payload)
     const lifetimeMs = (payload.expires_in ?? 0) * 1000
+    evictStaleTokens()
     cache.set(tenantId, { token: payload.access_token, expiresAt: now() + lifetimeMs })
     return payload.access_token
   }

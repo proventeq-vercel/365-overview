@@ -25,14 +25,22 @@ export const GRAPH_ROUTE_PREFIX = '/api/graph/'
 
 const PREFLIGHT_MAX_AGE_S = 600
 
+const PRIVATE_RESPONSE_HEADERS = {
+  'cache-control': 'no-store',
+  vary: 'Origin, Authorization',
+}
+
+const isAllowedOrigin = (origin: string, config: ProxyConfig) =>
+  config.allowedOrigins.includes(origin.replace(/\/+$/, ''))
+
 function corsHeaders(origin: string | null, config: ProxyConfig): Record<string, string> {
-  if (!origin || !config.allowedOrigins.includes(origin.replace(/\/+$/, ''))) return {}
+  if (!origin || !isAllowedOrigin(origin, config)) return {}
   return {
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'GET, POST, OPTIONS',
     'access-control-allow-headers': 'authorization, content-type',
+    'access-control-expose-headers': 'retry-after',
     'access-control-max-age': String(PREFLIGHT_MAX_AGE_S),
-    vary: 'Origin',
   }
 }
 
@@ -73,22 +81,26 @@ async function route(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyRespo
 }
 
 export async function handleProxyRequest(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyResponse> {
-  const cors = corsHeaders(request.header('origin'), deps.config)
+  const origin = request.header('origin')
+  const cors = corsHeaders(origin, deps.config)
+  const headers = { ...PRIVATE_RESPONSE_HEADERS, ...cors }
+  if (origin && Object.keys(cors).length === 0) {
+    return { status: 403, headers, body: '' }
+  }
   if (request.method === 'OPTIONS') {
-    return Object.keys(cors).length > 0
-      ? { status: 204, headers: cors, body: '' }
-      : { status: 403, headers: {}, body: '' }
+    return { status: 204, headers, body: '' }
   }
   let response: ProxyResponse
   try {
     response = await route(request, deps)
   } catch (error) {
     if (error instanceof ProxyError) {
+      if (error.status >= 500) deps.log?.(`${error.code}: ${error.message}`)
       response = errorResponse(error)
     } else {
       deps.log?.(`Unhandled proxy error: ${error instanceof Error ? error.stack ?? error.message : String(error)}`)
       response = errorResponse(new ProxyError(500, 'InternalError', 'The proxy failed unexpectedly.'))
     }
   }
-  return { ...response, headers: { ...response.headers, ...cors } }
+  return { ...response, headers: { ...response.headers, ...headers } }
 }

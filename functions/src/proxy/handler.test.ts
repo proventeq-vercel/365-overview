@@ -52,6 +52,50 @@ describe('handleProxyRequest', () => {
     expect(d.verifyCaller).not.toHaveBeenCalled()
   })
 
+  it('refuses a data request from an unlisted origin before it reaches Graph', async () => {
+    const d = deps()
+    const response = await handleProxyRequest(
+      request({ headers: { origin: 'https://evil.example', authorization: 'Bearer user' } }),
+      d,
+    )
+    expect(response.status).toBe(403)
+    expect(response.body).toBe('')
+    expect(response.headers['access-control-allow-origin']).toBeUndefined()
+    expect(d.verifyCaller).not.toHaveBeenCalled()
+    expect(d.fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('keeps tenant data out of shared caches and varies on both origin and caller', async () => {
+    const d = deps()
+    const response = await handleProxyRequest(
+      request({ url: `${HOST}/api/graph/v1.0/organization`, headers: { origin: ORIGIN, authorization: 'Bearer user' } }),
+      d,
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers['cache-control']).toBe('no-store')
+    expect(response.headers.vary).toBe('Origin, Authorization')
+  })
+
+  it('lets the browser read retry-after across origins', async () => {
+    const d = deps()
+    const response = await handleProxyRequest(request({ method: 'OPTIONS', headers: { origin: ORIGIN } }), d)
+    expect(response.headers['access-control-expose-headers']).toBe('retry-after')
+  })
+
+  it('logs a server-side failure but tells the caller nothing about the configuration', async () => {
+    const d = deps({
+      appToken: vi.fn().mockRejectedValue(
+        new ProxyError(500, 'InvalidConfiguration', 'GRAPH_CERT_THUMBPRINT (abc123) does not match'),
+      ),
+    })
+    const response = await handleProxyRequest(request({ headers: { authorization: 'Bearer user' } }), d)
+    expect(response.status).toBe(500)
+    expect(response.body).not.toContain('abc123')
+    expect(response.body).not.toContain('GRAPH_CERT_THUMBPRINT')
+    expect(bodyOf(response).error?.code).toBe('InvalidConfiguration')
+    expect(d.log).toHaveBeenCalledWith(expect.stringContaining('abc123'))
+  })
+
   it('verifies the caller before it looks at the route, so the allowlist cannot be probed anonymously', async () => {
     const d = deps({ verifyCaller: vi.fn().mockRejectedValue(new ProxyError(401, 'Unauthorized', 'no token')) })
     const response = await handleProxyRequest(request({ url: `${HOST}/api/graph/v1.0/me` }), d)

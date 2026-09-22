@@ -14,6 +14,7 @@ const complete = {
   GRAPH_CLIENT_ID: 'client-id',
   GRAPH_CERT_PEM: appCertificate.pemBundle,
   PROXY_AUDIENCES: 'api://client-id, client-id',
+  PROXY_ALLOWED_ORIGINS: 'http://localhost:5173',
 }
 
 describe('readConfig', () => {
@@ -32,6 +33,7 @@ describe('readConfig', () => {
     expect(error?.message).toContain('GRAPH_CLIENT_ID')
     expect(error?.message).toContain('GRAPH_CERT_PEM')
     expect(error?.message).toContain('PROXY_AUDIENCES')
+    expect(error?.message).toContain('PROXY_ALLOWED_ORIGINS')
   })
 
   it('unescapes a single-line PEM, derives the thumbprint and prefers the certificate over a secret', () => {
@@ -59,7 +61,7 @@ describe('readConfig', () => {
     expect(config.authorityHost).toBe(PUBLIC_AUTHORITY_HOST)
     expect(config.graphOrigin).toBe(PUBLIC_GRAPH_ORIGIN)
     expect(config.allowedTenantIds).toBeNull()
-    expect(config.allowedOrigins).toEqual([])
+    expect(config.allowedOrigins).toEqual(['http://localhost:5173'])
     expect(config.publicUrl).toBeNull()
     expect(config.requiredDirectoryRoles).toEqual(DEFAULT_REQUIRED_DIRECTORY_ROLES)
     expect(config.requiredDirectoryRoles).toHaveLength(4)

@@ -14,6 +14,7 @@ const baseEnv = {
   GRAPH_CLIENT_ID: 'graph-app',
   GRAPH_CLIENT_SECRET: 'secret',
   PROXY_AUDIENCES: `${AUDIENCE},proxy`,
+  PROXY_ALLOWED_ORIGINS: 'http://localhost:5173',
 }
 
 let key: LocalKeyPair

@@ -6,8 +6,8 @@ import { handleProxyRequest, type ProxyDeps } from '../proxy/handler.js'
 let deps: ProxyDeps | null = null
 
 function resolveDeps(context: InvocationContext): ProxyDeps {
-  deps ??= createProxyDeps(process.env, (message) => context.error(message))
-  return deps
+  deps ??= createProxyDeps(process.env)
+  return { ...deps, log: (message) => context.error(message) }
 }
 
 export async function graphProxy(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
