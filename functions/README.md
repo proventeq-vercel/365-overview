@@ -73,7 +73,8 @@ cd ~/projects/365-overview/functions && npm run local
 
 Starts the fakes on `:7080` (Entra) and `:7090` (Graph) and hosts the proxy in-process on
 `:7071`, then prints a ready user token and a `curl`. Add `--func` to host it under the **Azure
-Functions Core Tools** runtime instead — the same host that runs in Azure:
+Functions Core Tools** runtime instead — the same host that runs in Azure, and the one case that
+needs `npm i -g azure-functions-core-tools@4` first:
 
 ```bash
 cd ~/projects/365-overview/functions && npm run local -- --func
@@ -162,12 +163,34 @@ The Function App needs Node 20+ and these app settings; store the PEM in Key Vau
 it (`@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/<name>/)`) with the
 Function's managed identity granted *Key Vault Secrets User*. `authLevel` is `anonymous` on
 purpose: the Entra token is the authentication, and a function key in a browser bundle would be
-public. Set `PROXY_ALLOWED_ORIGINS` to the Vercel origin(s) and `PROXY_PUBLIC_URL` if a custom
-domain fronts the app.
+public.
+
+Besides the settings in the table above, the platform ones must be present:
+`FUNCTIONS_WORKER_RUNTIME=node`, `FUNCTIONS_EXTENSION_VERSION=~4`, a Node 20+ site setting, and
+`AzureWebJobsStorage`.
+
+`PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it —
+including each Vercel preview host if previews are meant to work, since those get a new hostname per
+branch. A request carrying an origin outside the list is refused before its token is read.
+
+`PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
+the Function sees differs from the one the browser used (a custom domain, a front door); leave it
+unset otherwise. It is accepted with or without the `/api/graph` suffix.
+
+Publishing needs the Core Tools on the PATH (`npm i -g azure-functions-core-tools@4`) — they are
+deliberately not a dependency of this package, because the .NET host they carry is over a gigabyte
+and would land in both CI and the deployment package. Publish a production install so the zip
+carries the four runtime packages and not the test tooling:
 
 ```bash
-cd ~/projects/365-overview/functions && npm run build && node_modules/.bin/func azure functionapp publish <function-app-name>
+cd ~/projects/365-overview/functions && npm ci && npm run build && npm ci --omit=dev && func azure functionapp publish <function-app-name>
 ```
+
+**The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: every
+request answers 500 `InvalidConfiguration` from the moment it expires. `npm run cert:new` dates one
+two years out — put its expiry in the calendar, and roll it with
+`az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old one
+keeps working until the new PEM is in place).
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
 `VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) on the Vercel project.

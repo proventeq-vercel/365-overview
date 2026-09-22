@@ -24,8 +24,9 @@ export async function graphProxy(request: HttpRequest, context: InvocationContex
     return { status: response.status, headers: response.headers, body: response.body }
   } catch (error) {
     if (error instanceof ProxyError) {
-      context.error(error.message)
-      return errorResponse(error)
+      context.error(`${error.code}: ${error.message}`)
+      const response = errorResponse(error)
+      return { ...response, headers: { ...response.headers, 'cache-control': 'no-store' } }
     }
     throw error
   }

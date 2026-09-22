@@ -13,6 +13,8 @@ const invalid = (message: string) => new ProxyError(500, 'InvalidConfiguration',
 
 export const normaliseThumbprint = (value: string) => value.replace(/[\s:]/g, '').toLowerCase()
 
+const unescapeNewlines = (pem: string) => pem.replace(/\\r\\n|\\r|\\n/g, '\n')
+
 function blocksOf(pem: string): Map<string, string[]> {
   const blocks = new Map<string, string[]>()
   for (const [block, label] of pem.matchAll(PEM_BLOCK)) {
@@ -80,12 +82,20 @@ function thumbprintOfCertificate(certificate: X509Certificate, now: Date): strin
   return normaliseThumbprint(certificate.fingerprint)
 }
 
+export function leafCertificateOf(rawPem: string): X509Certificate | null {
+  const pem = unescapeNewlines(rawPem)
+  const blocks = blocksOf(pem)
+  const certificatePems = blocks.get('CERTIFICATE')
+  if (!certificatePems) return null
+  return leafCertificate(certificatePems, readPrivateKey(blocks).key)
+}
+
 export function readCertificateCredential(
   rawPem: string,
   declaredThumbprint: string | null,
   now: Date = new Date(),
 ): CertificateCredential {
-  const pem = rawPem.replace(/\\r\\n|\\r|\\n/g, '\n')
+  const pem = unescapeNewlines(rawPem)
   const blocks = blocksOf(pem)
   const { pem: privateKeyPem, key } = readPrivateKey(blocks)
   const certificatePems = blocks.get('CERTIFICATE')

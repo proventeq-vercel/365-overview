@@ -1,9 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { X509Certificate } from 'node:crypto'
 import { createSelfSignedCertificate } from '../local/certificate.js'
 import { buildClientAssertion, tokenEndpoint } from '../src/proxy/appToken.js'
-import { readCertificateCredential } from '../src/proxy/certificate.js'
+import { leafCertificateOf, readCertificateCredential } from '../src/proxy/certificate.js'
 import { PUBLIC_AUTHORITY_HOST, PUBLIC_GRAPH_ORIGIN } from '../src/proxy/config.js'
 import { ProxyError } from '../src/proxy/errors.js'
 import { importPKCS8 } from 'jose'
@@ -73,13 +72,10 @@ async function check(): Promise<void> {
   }
 
   console.log(`\n  thumbprint  ${credential.thumbprintHex}`)
-  const certificateBlock = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/.exec(
-    pem.replace(/\\n/g, '\n'),
-  )
-  if (certificateBlock) {
-    const parsed = new X509Certificate(certificateBlock[0])
-    console.log(`  subject     ${parsed.subject}`)
-    console.log(`  expires     ${new Date(parsed.validTo).toISOString().slice(0, 10)}`)
+  const leaf = leafCertificateOf(pem)
+  if (leaf) {
+    console.log(`  subject     ${leaf.subject}`)
+    console.log(`  expires     ${new Date(leaf.validTo).toISOString().slice(0, 10)}`)
   }
 
   const tenantId = option('tenant')

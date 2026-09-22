@@ -9,3 +9,6 @@
 /tsconfig.json
 /README.md
 /.temp/
+/node_modules/azure-functions-core-tools/
+*.map
+/tsconfig.test.json

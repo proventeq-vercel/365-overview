@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -22,7 +23,9 @@ let closeHost: () => Promise<void>
 let child: ChildProcess | null = null
 
 if (useFunctionsHost) {
-  const funcBin = resolve(packageRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'func.cmd' : 'func')
+  const funcName = process.platform === 'win32' ? 'func.cmd' : 'func'
+  const localFunc = resolve(packageRoot, 'node_modules', '.bin', funcName)
+  const funcBin = existsSync(localFunc) ? localFunc : funcName
   child = spawn(funcBin, ['start', '--port', String(PROXY_PORT)], {
     cwd: packageRoot,
     stdio: 'inherit',

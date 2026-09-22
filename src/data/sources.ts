@@ -7,14 +7,6 @@ import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
 import type { DataSource } from './fixtures'
 import { createLiveDataSource } from './live'
 
-/**
- * Build a token getter bound to the currently active account. The account is
- * resolved lazily (per token request) so a sign-in completed after the provider
- * mounts is picked up. `MsalAuthHandler` gates the live app on an authenticated
- * account, so one can normally be assumed when live methods are called; if none
- * is present we fail fast with a clear error rather than calling Graph
- * unauthenticated.
- */
 function makeTokenGetter(
   instance: IPublicClientApplication,
   getAccount: () => AccountInfo | null,

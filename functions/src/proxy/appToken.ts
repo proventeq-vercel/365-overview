@@ -18,6 +18,7 @@ interface TokenResponse {
 }
 
 const REFRESH_SKEW_MS = 60_000
+const FALLBACK_LIFETIME_S = 300
 const MAX_CACHED_TENANTS = 200
 const ASSERTION_LIFETIME_S = 600
 const CONSENT_ERROR_CODES = ['AADSTS700016', 'AADSTS65001', 'AADSTS650052']
@@ -73,9 +74,8 @@ export function createAppTokenSource(
   const inFlight = new Map<string, Promise<string>>()
   let signingKey: Promise<CryptoKey> | null = null
 
-  const key = () => {
-    if (config.credential.kind !== 'certificate') throw new Error('no certificate configured')
-    signingKey ??= importPKCS8(config.credential.privateKeyPem, 'RS256')
+  const key = (credential: Extract<GraphCredential, { kind: 'certificate' }>) => {
+    signingKey ??= importPKCS8(credential.privateKeyPem, 'RS256')
     return signingKey
   }
 
@@ -98,7 +98,7 @@ export function createAppTokenSource(
         config.graphClientId,
         audience,
         credential,
-        await key(),
+        await key(credential),
         now(),
       ),
     }
@@ -125,7 +125,7 @@ export function createAppTokenSource(
     }
     const payload = (await response.json().catch(() => ({}))) as TokenResponse
     if (!response.ok || !payload.access_token) throw tokenError(response.status, payload)
-    const lifetimeMs = (payload.expires_in ?? 0) * 1000
+    const lifetimeMs = (payload.expires_in && payload.expires_in > 0 ? payload.expires_in : FALLBACK_LIFETIME_S) * 1000
     evictStaleTokens()
     cache.set(tenantId, { token: payload.access_token, expiresAt: now() + lifetimeMs })
     return payload.access_token
