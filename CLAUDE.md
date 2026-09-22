@@ -56,9 +56,18 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   overlapping callers, so the top-fifty naming and the first table page never
   ask Graph for the same site twice. **Never walk the tenant** (`/sites?
   search=*`, `getAllSites`) for this from the browser — it is O(all sites)
-  and a 5M-site tenant is a design target; `sites/delta` is on the proxy's
-  allowlist for a server-side directory, which is future work, not a licence
-  to page it into the browser. Two consumers: `data/namedSites.nameTopSites` names the
+  and a 5M-site tenant is a design target. The one sanctioned walk is
+  `DataSource.getSiteDirectory()`: `sites/delta` (app-only `Sites.Read.All`,
+  so it needs the proxy) paged **at most `SITE_DIRECTORY_PAGE_LIMIT` × 500
+  sites** and parsed by `parseDeltaSites`, which keys each entry by the
+  site-collection id the usage report carries — the middle segment of Graph's
+  composite id — and keeps the root web when subsites come back too. The cap is
+  what makes it safe: a tenant larger than it is named as far as the cap
+  reaches and the `$batch` path still covers whatever is on screen, so nothing
+  is O(all sites). On proventeqe5 it names 98.8% of 1305 rows in one 1.7s walk
+  where `$batch` alone named 50. It degrades to an empty directory on any
+  `ApiError` (delegated mode has no app-only delta), never failing the report.
+  Two consumers: `data/namedSites.nameTopSites` names the
   fifty largest live sites before `buildStorageOverview` (so chart labels and
   the default first page are right), and `hooks/useSiteDetails` names the rows
   of whatever table page is on screen (skeleton while pending). Unresolved
@@ -207,8 +216,16 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Every user-facing string, colour rule and card state comes from P365's
   `features/storageOptimization` (`storageFormat.ts`, `forecastCallout.ts`,
   `intl/en.json` under `storageOverview.*`). Change the wording there first, or
-  not at all; `src/intl/en.json` mirrors it and the cost rate default is P365's
-  `StorageOptimisationOptions.DefaultCostRatePerGbPerMonth` (0.16 GBP).
+  not at all; `src/intl/en.json` mirrors it. **Two figures deliberately do not
+  mirror P365** — record the reason before "fixing" either. The cost rate
+  default is 0.16 GBP/GB/month (`lib/settings.ts`), not the 0.02 in P365's
+  `StorageOverviewService.DefaultCostRatePerGbPerMonth`; there is no
+  `StorageOptimisationOptions` class, an earlier note here claimed one. And the
+  cost of doing nothing is **headroom-gated** here — P365 charges the whole
+  projected growth (`annualGrowthGb × rate × 12`), this report charges only the
+  part that would not fit inside the entitlement, which is what the card's own
+  copy promises ("Growth that still fits inside your entitlement adds
+  nothing"). Ungating it would make the copy a lie.
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.

@@ -7,6 +7,7 @@ export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short
 export interface DataSource {
   getSites(): Promise<StorageRow[]>
   getSiteDetails(ids: string[]): Promise<SiteDirectory>
+  getSiteDirectory(): Promise<SiteDirectory>
   getDrives(): Promise<StorageRow[]>
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
@@ -231,6 +232,7 @@ export function createMockDataSource(scenario: MockScenario = 'healthy'): DataSo
       }
       return found
     },
+    getSiteDirectory: async () => data.directory,
     getDrives: async () => data.drives,
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,

@@ -3,8 +3,20 @@ import { parseOneDriveAccounts } from '../reports/oneDriveAccounts'
 import type { RawDriveRow } from '../reports/oneDriveAccounts'
 import { parseSharePointSites, reportRefreshDateOf } from '../reports/sharePointSites'
 import type { RawSiteRow } from '../reports/sharePointSites'
-import { parseSiteDetails, siteDetailsPath } from '../reports/siteDirectory'
-import type { DirectorySite, RawDirectorySite, SiteDirectory } from '../reports/siteDirectory'
+import {
+  parseDeltaSites,
+  parseSiteDetails,
+  siteDetailsPath,
+  siteDirectoryPath,
+  SITE_DIRECTORY_PAGE_LIMIT,
+} from '../reports/siteDirectory'
+import type {
+  DirectorySite,
+  RawDeltaSite,
+  RawDirectorySite,
+  SiteDirectory,
+} from '../reports/siteDirectory'
+import { ApiError } from '../clients/apiError'
 import { parseStorageTrend } from '../reports/storageTrend'
 import type { RawTrendRow } from '../reports/storageTrend'
 import { parseSubscribedSkus } from '../reports/licensing'
@@ -16,6 +28,13 @@ import type { DataSource } from './fixtures'
 interface JsonReport<T> {
   value: T[]
 }
+
+interface DeltaPage {
+  value: RawDeltaSite[]
+  '@odata.nextLink'?: string
+}
+
+const EMPTY_DIRECTORY: SiteDirectory = new Map()
 
 const REPORTS_BASE = '/beta/reports'
 
@@ -59,9 +78,30 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     })
   }
 
+  let directory: Promise<SiteDirectory> | null = null
+  const walkDirectory = async (): Promise<SiteDirectory> => {
+    const sites: RawDeltaSite[] = []
+    let path: string | undefined = siteDirectoryPath()
+    for (let page = 0; page < SITE_DIRECTORY_PAGE_LIMIT && path; page += 1) {
+      const body: DeltaPage = await graph.get<DeltaPage>(path)
+      sites.push(...body.value)
+      path = body['@odata.nextLink']
+    }
+    return parseDeltaSites(sites)
+  }
+
   return {
     async getSites() {
       return parseSharePointSites(await rawSites())
+    },
+
+    async getSiteDirectory() {
+      directory ??= walkDirectory().catch((error: unknown) => {
+        directory = null
+        if (error instanceof ApiError) return EMPTY_DIRECTORY
+        throw error
+      })
+      return directory
     },
 
     async getSiteDetails(ids) {
