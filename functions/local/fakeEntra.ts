@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { randomUUID } from 'node:crypto'
-import { decodeProtectedHeader, jwtVerify, SignJWT, type CryptoKey } from 'jose'
+import { randomUUID, X509Certificate } from 'node:crypto'
+import { decodeProtectedHeader, jwtVerify, SignJWT } from 'jose'
 import { thumbprintToX5t } from '../src/proxy/appToken.js'
 import { DEFAULT_REQUIRED_DIRECTORY_ROLES } from '../src/proxy/config.js'
 import type { LocalKeyPair } from './keys.js'
@@ -14,8 +14,7 @@ const APP_TOKEN_LIFETIME_S = 3599
 
 export interface RegisteredApp {
   clientId: string
-  publicKey: CryptoKey
-  thumbprintHex: string
+  certificatePem: string
   clientSecret?: string
 }
 
@@ -91,11 +90,14 @@ export async function startFakeEntra(options: FakeEntraOptions): Promise<FakeEnt
       .sign(options.issuerKey.privateKey)
   }
 
+  const registeredCertificate = new X509Certificate(options.app.certificatePem)
+  const registeredX5t = thumbprintToX5t(registeredCertificate.fingerprint.replace(/:/g, '').toLowerCase())
+
   async function verifyAssertion(assertion: string, tokenUrl: string): Promise<boolean> {
     try {
       const header = decodeProtectedHeader(assertion)
-      if (header.x5t !== thumbprintToX5t(options.app.thumbprintHex)) return false
-      await jwtVerify(assertion, options.app.publicKey, {
+      if (header.x5t !== registeredX5t) return false
+      await jwtVerify(assertion, registeredCertificate.publicKey, {
         algorithms: ['RS256'],
         issuer: options.app.clientId,
         subject: options.app.clientId,

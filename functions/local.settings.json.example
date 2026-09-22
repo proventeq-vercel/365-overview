@@ -5,8 +5,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
 
     "GRAPH_CLIENT_ID": "<application (client) id of the registration that holds the Graph application roles>",
-    "GRAPH_CERT_PEM": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----",
-    "GRAPH_CERT_THUMBPRINT": "<SHA-1 thumbprint of the certificate uploaded to that registration, hex>",
+    "GRAPH_CERT_PEM": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
 
     "PROXY_AUDIENCES": "api://<proxy client id>,<proxy client id>",
     "PROXY_SCOPE": "access_as_user",

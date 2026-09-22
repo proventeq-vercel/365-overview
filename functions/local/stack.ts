@@ -1,6 +1,6 @@
 import { startFakeEntra, type FakeEntra } from './fakeEntra.js'
 import { startFakeGraph, type FakeGraph, type FakeGraphOptions } from './fakeGraph.js'
-import { generateLocalKeyPair } from './keys.js'
+import { generateLocalAppCertificate, generateLocalKeyPair, type LocalAppCertificate } from './keys.js'
 
 export const LOCAL_GRAPH_CLIENT_ID = '0f0f0f0f-1111-4222-8333-444444444444'
 export const LOCAL_PROXY_AUDIENCE = `api://${LOCAL_GRAPH_CLIENT_ID}`
@@ -18,16 +18,17 @@ export interface LocalStackOptions {
 export interface LocalStack {
   entra: FakeEntra
   graph: FakeGraph
+  appCertificate: LocalAppCertificate
   env: Record<string, string>
   close(): Promise<void>
 }
 
 export async function startLocalStack(options: LocalStackOptions = {}): Promise<LocalStack> {
   const issuerKey = await generateLocalKeyPair('local-entra-signing-key')
-  const appKey = await generateLocalKeyPair('local-app-certificate')
+  const appCertificate = generateLocalAppCertificate()
   const entra = await startFakeEntra({
     issuerKey,
-    app: { clientId: LOCAL_GRAPH_CLIENT_ID, publicKey: appKey.publicKey, thumbprintHex: appKey.thumbprintHex },
+    app: { clientId: LOCAL_GRAPH_CLIENT_ID, certificatePem: appCertificate.certificatePem },
     proxyAudience: LOCAL_PROXY_AUDIENCE,
     proxyScope: LOCAL_PROXY_SCOPE,
     port: options.entraPort,
@@ -37,10 +38,10 @@ export async function startLocalStack(options: LocalStackOptions = {}): Promise<
   return {
     entra,
     graph,
+    appCertificate,
     env: {
       GRAPH_CLIENT_ID: LOCAL_GRAPH_CLIENT_ID,
-      GRAPH_CERT_PEM: appKey.privateKeyPem,
-      GRAPH_CERT_THUMBPRINT: appKey.thumbprintHex,
+      GRAPH_CERT_PEM: appCertificate.pemBundle,
       PROXY_AUDIENCES: LOCAL_PROXY_AUDIENCE,
       PROXY_SCOPE: LOCAL_PROXY_SCOPE,
       PROXY_ALLOWED_ORIGINS: (options.allowedOrigins ?? DEFAULT_LOCAL_ORIGINS).join(','),

@@ -1,3 +1,4 @@
+import { readCertificateCredential } from './certificate.js'
 import { ProxyError } from './errors.js'
 
 export type GraphCredential =
@@ -47,12 +48,13 @@ const readList = (env: Env, key: string): string[] =>
 const trimSlash = (url: string) => url.replace(/\/+$/, '')
 
 function readCredential(env: Env, missing: string[]): GraphCredential | null {
-  const privateKeyPem = read(env, 'GRAPH_CERT_PEM')?.replace(/\\n/g, '\n') ?? null
-  const thumbprintHex = read(env, 'GRAPH_CERT_THUMBPRINT')
-  if (privateKeyPem && thumbprintHex) return { kind: 'certificate', privateKeyPem, thumbprintHex }
+  const rawPem = read(env, 'GRAPH_CERT_PEM')
+  if (rawPem) {
+    return { kind: 'certificate', ...readCertificateCredential(rawPem, read(env, 'GRAPH_CERT_THUMBPRINT')) }
+  }
   const clientSecret = read(env, 'GRAPH_CLIENT_SECRET')
   if (clientSecret) return { kind: 'secret', clientSecret }
-  missing.push('GRAPH_CERT_PEM + GRAPH_CERT_THUMBPRINT (or GRAPH_CLIENT_SECRET)')
+  missing.push('GRAPH_CERT_PEM (or GRAPH_CLIENT_SECRET)')
   return null
 }
 

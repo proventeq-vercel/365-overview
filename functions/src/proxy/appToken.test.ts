@@ -1,6 +1,7 @@
 import { decodeProtectedHeader, jwtVerify } from 'jose'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { generateLocalKeyPair, type LocalKeyPair } from '../../local/keys.js'
+import { createPublicKey } from 'node:crypto'
+import { generateLocalAppCertificate, type LocalAppCertificate } from '../../local/keys.js'
 import { createAppTokenSource, thumbprintToX5t, tokenEndpoint } from './appToken.js'
 import { readConfig } from './config.js'
 import type { ProxyError } from './errors.js'
@@ -9,16 +10,15 @@ const TENANT = '11111111-2222-4333-8444-555555555555'
 const OTHER = '22222222-2222-4333-8444-555555555555'
 const CLIENT_ID = 'graph-app'
 
-let appKey: LocalKeyPair
+let appCertificate: LocalAppCertificate
 
-beforeAll(async () => {
-  appKey = await generateLocalKeyPair('app')
+beforeAll(() => {
+  appCertificate = generateLocalAppCertificate('app-token-test')
 })
 
 const certEnv = () => ({
   GRAPH_CLIENT_ID: CLIENT_ID,
-  GRAPH_CERT_PEM: appKey.privateKeyPem,
-  GRAPH_CERT_THUMBPRINT: appKey.thumbprintHex,
+  GRAPH_CERT_PEM: appCertificate.pemBundle,
   PROXY_AUDIENCES: 'api://proxy',
 })
 
@@ -47,8 +47,8 @@ describe('createAppTokenSource', () => {
     expect(form.get('client_secret')).toBeNull()
 
     const assertion = form.get('client_assertion') as string
-    expect(decodeProtectedHeader(assertion)).toMatchObject({ alg: 'RS256', typ: 'JWT', x5t: thumbprintToX5t(appKey.thumbprintHex) })
-    const { payload } = await jwtVerify(assertion, appKey.publicKey, { issuer: CLIENT_ID, subject: CLIENT_ID, audience: url })
+    expect(decodeProtectedHeader(assertion)).toMatchObject({ alg: 'RS256', typ: 'JWT', x5t: thumbprintToX5t(appCertificate.thumbprintHex) })
+    const { payload } = await jwtVerify(assertion, createPublicKey(appCertificate.certificatePem), { issuer: CLIENT_ID, subject: CLIENT_ID, audience: url })
     expect(payload.jti).toBeTruthy()
     expect((payload.exp ?? 0) - (payload.nbf ?? 0)).toBe(600)
   })

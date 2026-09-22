@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { LOCAL_TENANT_ID } from '../../local/fakeEntra.js'
 import { APP_TOKEN_PREFIX, isMissingFromDirectory, siteIdOf } from '../../local/fakeGraph.js'
-import { generateLocalKeyPair } from '../../local/keys.js'
+import { generateLocalAppCertificate } from '../../local/keys.js'
 import { startNodeHost, type NodeHost } from '../../local/nodeHost.js'
 import { startLocalStack, type LocalStack } from '../../local/stack.js'
 import { createProxyDeps } from './deps.js'
@@ -142,10 +142,16 @@ describe('proxy end to end on the local stack', () => {
   })
 
   it.each([
-    ['thumbprint', async () => ({ GRAPH_CERT_THUMBPRINT: 'deadbeef' })],
-    ['private key', async () => ({ GRAPH_CERT_PEM: (await generateLocalKeyPair('imposter')).privateKeyPem })],
-  ])('cannot obtain an app token with the wrong certificate %s', async (_label, override) => {
-    const imposter = await startNodeHost(createProxyDeps({ ...stack.env, ...(await override()) }))
+    ['certificate', () => ({ GRAPH_CERT_PEM: generateLocalAppCertificate('imposter').pemBundle })],
+    [
+      'thumbprint',
+      () => ({
+        GRAPH_CERT_PEM: generateLocalAppCertificate('imposter').privateKeyPem,
+        GRAPH_CERT_THUMBPRINT: stack.appCertificate.thumbprintHex,
+      }),
+    ],
+  ])('cannot obtain an app token with an unregistered %s', async (_label, override) => {
+    const imposter = await startNodeHost(createProxyDeps({ ...stack.env, ...override() }))
     try {
       const response = await fetch(`${imposter.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${userToken}` } })
       expect(response.status).toBe(502)

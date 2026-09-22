@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { generateLocalAppCertificate } from '../../local/keys.js'
 import {
   DEFAULT_REQUIRED_DIRECTORY_ROLES,
   PUBLIC_AUTHORITY_HOST,
@@ -7,10 +8,11 @@ import {
 } from './config.js'
 import { ProxyError } from './errors.js'
 
+const appCertificate = generateLocalAppCertificate('config-test')
+
 const complete = {
   GRAPH_CLIENT_ID: 'client-id',
-  GRAPH_CERT_PEM: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----',
-  GRAPH_CERT_THUMBPRINT: 'AB:CD',
+  GRAPH_CERT_PEM: appCertificate.pemBundle,
   PROXY_AUDIENCES: 'api://client-id, client-id',
 }
 
@@ -32,17 +34,18 @@ describe('readConfig', () => {
     expect(error?.message).toContain('PROXY_AUDIENCES')
   })
 
-  it('unescapes a single-line PEM and prefers the certificate over a secret', () => {
-    const config = readConfig({ ...complete, GRAPH_CLIENT_SECRET: 'secret' })
+  it('unescapes a single-line PEM, derives the thumbprint and prefers the certificate over a secret', () => {
+    const singleLine = appCertificate.pemBundle.replace(/\n/g, '\\n')
+    const config = readConfig({ ...complete, GRAPH_CERT_PEM: singleLine, GRAPH_CLIENT_SECRET: 'secret' })
     expect(config.credential).toEqual({
       kind: 'certificate',
-      privateKeyPem: '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----',
-      thumbprintHex: 'AB:CD',
+      privateKeyPem: appCertificate.privateKeyPem.trimEnd(),
+      thumbprintHex: appCertificate.thumbprintHex,
     })
   })
 
   it('falls back to a client secret when no certificate is configured', () => {
-    const { GRAPH_CERT_PEM: _pem, GRAPH_CERT_THUMBPRINT: _tp, ...rest } = complete
+    const { GRAPH_CERT_PEM: _pem, ...rest } = complete
     expect(readConfig({ ...rest, GRAPH_CLIENT_SECRET: 'secret' }).credential).toEqual({
       kind: 'secret',
       clientSecret: 'secret',

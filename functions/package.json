@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "start": "npm run build && func start",
     "local": "npm run build && node dist/scripts/local-stack.js",
-    "smoke": "node dist/scripts/smoke.js"
+    "smoke": "node dist/scripts/smoke.js",
+    "cert:new": "npm run build && node dist/scripts/cert.js new",
+    "cert:check": "npm run build && node dist/scripts/cert.js check"
   },
   "dependencies": {
     "@azure/functions": "^4.16.5",
