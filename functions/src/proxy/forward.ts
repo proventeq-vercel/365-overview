@@ -66,8 +66,9 @@ async function followDownload(response: Response, fetchImpl: typeof fetch): Prom
   if (target.protocol !== 'https:') {
     throw new ProxyError(502, 'GraphUnreachable', 'Graph redirected the report to a non-HTTPS address.')
   }
+  let downloaded: Response
   try {
-    return await fetchImpl(target.toString(), {
+    downloaded = await fetchImpl(target.toString(), {
       method: 'GET',
       headers: { accept: 'application/json' },
       redirect: 'manual',
@@ -77,6 +78,10 @@ async function followDownload(response: Response, fetchImpl: typeof fetch): Prom
     const reason = error instanceof Error ? error.message : String(error)
     throw new ProxyError(502, 'GraphUnreachable', `The report download did not answer: ${reason}`)
   }
+  if (REDIRECT_STATUSES.has(downloaded.status)) {
+    throw new ProxyError(502, 'GraphUnreachable', 'The report download redirected more than once.')
+  }
+  return downloaded
 }
 
 async function relay(url: string, init: RequestInit, options: ForwardOptions): Promise<ProxyResponse> {

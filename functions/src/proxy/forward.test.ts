@@ -140,6 +140,19 @@ describe('a Graph redirect to a download URL', () => {
     expect(error.code).toBe('GraphUnreachable')
   })
 
+  it('refuses to chase a second redirect', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(redirect('https://reports.example/one'))
+      .mockResolvedValueOnce(redirect('https://reports.example/two'))
+    const error = await rejection(
+      forwardGet({ version: 'v1.0', path: 'organization', search: '' }, options(fetchImpl)),
+    )
+    expect(error.status).toBe(502)
+    expect(error.message).toContain('more than once')
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
   it('refuses a redirect off HTTPS', async () => {
     const fetchImpl = vi.fn().mockResolvedValueOnce(redirect('http://169.254.169.254/latest/meta-data/'))
     const error = await rejection(forwardGet(
