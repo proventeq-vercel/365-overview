@@ -8,7 +8,6 @@ import {
   formatNumber,
   formatPercent,
   formatSignedBytes,
-  formatSignedPercent,
 } from './format'
 
 describe('formatMoney', () => {
@@ -69,14 +68,6 @@ describe('formatSignedBytes', () => {
   })
 })
 
-describe('formatSignedPercent', () => {
-  it('prefixes a plus for positive values', () => {
-    expect(formatSignedPercent(12.34)).toBe('+12.3%')
-  })
-  it('keeps the minus for negative values', () => {
-    expect(formatSignedPercent(-4.2)).toBe('-4.2%')
-  })
-})
 
 describe('formatShortMonthYear', () => {
   it('renders a YYYY-MM bucket as its abbreviated month and year', () => {

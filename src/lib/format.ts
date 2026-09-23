@@ -26,11 +26,6 @@ export function formatPercent(ratio: number, digits = 0): string {
   return `${(ratio * 100).toFixed(digits)}%`
 }
 
-export function formatSignedPercent(pct: number, digits = 1): string {
-  const sign = pct > 0 ? '+' : ''
-  return `${sign}${pct.toFixed(digits)}%`
-}
-
 export function formatShortMonthYear(month: string): string {
   const date = new Date(`${month}-01T00:00:00Z`)
   if (Number.isNaN(date.getTime())) return month

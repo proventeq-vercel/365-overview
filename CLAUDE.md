@@ -366,7 +366,7 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 
 ## Testing / e2e conventions
 
-- shadcn `Card` renders `data-slot="card"`. `StatCard` nests label and value as
+- `StatCard` nests label and value as
   **siblings** — scope assertions with `getByText(label).closest('[data-slot="stat-card"]')`.
 - Every chart wrapper takes an `ariaLabel` and renders `role="img"` — always pass
   it from call sites; the e2e suite asserts every `role="img"` has a name.
@@ -406,6 +406,6 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 
 - Build emits a >500 kB chunk advisory (single bundle) — consider route-level
   code-splitting if it matters.
-- oxlint reports 6 `only-export-components` fast-refresh warnings — 3 in the
-  generated `src/components/ui/*`, 3 in the test helper `src/test/render.tsx` —
-  cosmetic.
+- oxlint reports 4 `only-export-components` fast-refresh warnings — 1 in the
+  generated `src/components/ui/button.tsx`, 3 in the test helper
+  `src/test/render.tsx` — cosmetic.
