@@ -10,19 +10,6 @@ import { AuthLoadingScreen } from './AuthLoadingScreen'
 import { AuthErrorScreen } from './AuthErrorScreen'
 import { useTranslation } from '../hooks/useTranslation'
 
-/**
- * Drives the redirect-based MSAL login lifecycle. Ported from the ProventeqCloud
- * `MsalAuthHandler` (browser path only — no Teams, no Redux, no styled-components
- * or i18n):
- *
- * - Registers an event callback: LOGIN_SUCCESS sets the active account;
- *   LOGOUT_SUCCESS clears it; a redirect ACQUIRE_TOKEN_FAILURE surfaces an error.
- * - Completes any in-flight redirect via `handleRedirectPromise()`.
- * - Auto-triggers `loginRedirect()` when there is no account and no interaction
- *   is in progress.
- * - Renders a loading screen while an interaction is in progress, otherwise the
- *   children (the authenticated app).
- */
 export function MsalAuthHandler({ children }: { children: ReactNode }) {
   const t = useTranslation()
   const { instance, accounts, inProgress } = useMsal()
@@ -42,8 +29,9 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         setActiveAccount(null)
         setAuthError(null)
       } else if (
-        event.eventType === EventType.ACQUIRE_TOKEN_FAILURE &&
-        event.interactionType === InteractionType.Redirect
+        event.eventType === EventType.LOGIN_FAILURE ||
+        (event.eventType === EventType.ACQUIRE_TOKEN_FAILURE &&
+          event.interactionType === InteractionType.Redirect)
       ) {
         console.error('Login error:', event.error)
         setAuthError(event.error ?? new Error(t('auth.unknownError')))
@@ -66,6 +54,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('MSAL Redirect Error:', error)
+        setAuthError(error)
       }
     }
     void handleRedirect()
@@ -73,6 +62,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (
+      !authError &&
       !activeAccount &&
       accounts.length === 0 &&
       inProgress === InteractionStatus.None
@@ -81,7 +71,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         console.error('Login redirect error', error)
       })
     }
-  }, [accounts, activeAccount, inProgress, instance])
+  }, [accounts, activeAccount, authError, inProgress, instance])
 
   if (authError) {
     return <AuthErrorScreen error={authError} />

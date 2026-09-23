@@ -1,14 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { render } from '@/test/render'
-import { InteractionStatus, type AccountInfo } from '@azure/msal-browser'
+import { EventType, InteractionStatus, type AccountInfo } from '@azure/msal-browser'
 import { MsalAuthHandler } from './MsalAuthHandler'
 
-/**
- * Pragmatic approach: mock `@azure/msal-react`'s `useMsal` so the handler can be
- * exercised without a real MsalProvider / browser MSAL instance. We control the
- * returned `instance`, `accounts`, and `inProgress` per test.
- */
 const account = { homeAccountId: 'a', name: 'Ada Lovelace' } as AccountInfo
 
 const instance = {
@@ -72,5 +67,51 @@ describe('MsalAuthHandler', () => {
       </MsalAuthHandler>,
     )
     expect(instance.loginRedirect).toHaveBeenCalled()
+  })
+
+  it('shows why sign-in failed instead of sending the user straight back to Entra', async () => {
+    instance.getActiveAccount.mockReturnValue(null)
+    msalState.accounts = []
+    msalState.inProgress = InteractionStatus.HandleRedirect
+    instance.handleRedirectPromise.mockRejectedValueOnce(
+      new Error('access_denied: AADSTS65004: User declined to consent to access the app.'),
+    )
+    const view = render(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    expect(await screen.findByText(/User declined to consent/)).toBeInTheDocument()
+    msalState.inProgress = InteractionStatus.None
+    view.rerender(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Sign-in failed')
+    expect(instance.loginRedirect).not.toHaveBeenCalled()
+  })
+
+  it('stops at a login failure the MSAL event stream reports rather than redirecting again', async () => {
+    instance.getActiveAccount.mockReturnValue(null)
+    msalState.accounts = []
+    msalState.inProgress = InteractionStatus.HandleRedirect
+    const view = render(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    const [[callback]] = instance.addEventCallback.mock.calls as unknown as [[(event: unknown) => void]]
+    act(() => {
+      callback({ eventType: EventType.LOGIN_FAILURE, error: new Error('AADSTS50105: user is not assigned') })
+    })
+    msalState.inProgress = InteractionStatus.None
+    view.rerender(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    expect(await screen.findByText(/user is not assigned/)).toBeInTheDocument()
+    expect(instance.loginRedirect).not.toHaveBeenCalled()
   })
 })
