@@ -52,11 +52,6 @@ function hashName(seed: number): string {
   return hex
 }
 
-/**
- * Deterministically generate a large, long-tailed site set so virtualization
- * and scale behaviour are exercised in mock mode and e2e. No Math.random / Date
- * so tests stay stable. Every 250th site is a big consumer (a realistic tail).
- */
 function generateSites(count: number, concealed = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {

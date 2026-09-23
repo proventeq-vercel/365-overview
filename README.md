@@ -33,7 +33,7 @@ never counted against the SharePoint entitlement.
 
 ## Prerequisites
 
-- **Node.js** 20 or later (LTS recommended)
+- **Node.js** 20.19+ or 22.13+ (22 LTS recommended; CI runs 22) — Vite 8, oxlint and jsdom 29 refuse older releases
 - A **Microsoft Entra ID** work or school tenant (unless running in mock mode)
 
 ---
@@ -435,6 +435,6 @@ functions/       # The Graph proxy (Azure Functions v4) with its own package.jso
 ## Data flow
 
 1. In live mode, `MsalAuthProvider` initialises the MSAL singleton and `MsalAuthHandler` gates the app — with no signed-in account it calls `loginRedirect()`.
-2. `useStorageOverview` issues the five Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs — plus `/organization` for the header. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
+2. `useStorageOverview` issues the Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs, the `sites/delta` directory walk that names the sites (proxy mode only) and a `$batch` lookup for the largest sites it did not name — plus `/organization` for the header. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
 3. The parsed inputs go through `buildStorageOverview`, which produces every figure the screen shows. Sections render the model; none of them compute a number.
 4. The Graph scopes are consented on the first token round-trip, so an unconsented organisation fails there with `AADSTS65001`: `MsalAuthHandler` keeps the error object and `AuthErrorScreen` shows the Global Administrator action with the admin-consent link (built for the multi-tenant `organizations` endpoint, `redirect_uri` included). Once signed in, a failed Graph call is classified the same way in `AccessFailure`: consent error → consent screen; the proxy's `TenantNotAllowed` → the tenant screen, which says no role or consent will change it; any other authorisation failure → the role screen; anything else → the generic error state.

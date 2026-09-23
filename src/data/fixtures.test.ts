@@ -29,7 +29,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0])
 }
 
 describe('mock data source', () => {
-  it('generates a large estate so virtualization is exercised', async () => {
+  it('generates a large estate so pagination and search are exercised', async () => {
     const sites = await createMockDataSource().getSites()
     expect(sites.length).toBeGreaterThan(2500)
     expect(sites.every((s) => s.pool === 'SharePoint')).toBe(true)

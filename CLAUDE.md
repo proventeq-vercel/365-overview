@@ -1,7 +1,9 @@
 # CLAUDE.md
 
 Guidance for working in this repo. See `README.md` for setup/permissions and
-`docs/superpowers/specs/` for the approved design.
+`docs/superpowers/specs/2026-09-02-m365-storage-overview-design.md` for the
+approved design. The older specs are history: they describe an Azure estate
+dashboard and a virtualised table, and the table is paginated.
 
 ## What this is
 
@@ -47,9 +49,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
+- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (four mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
-  `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
+  `live.ts` (the four usage reports on `/beta/reports`, period `D180`, plus
+  `/subscribedSkus`, `/organization`, the `sites/delta` directory walk and the
+  `$batch` site lookups).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
   The usage report returns a **blank `siteUrl` for every site** (Microsoft-side
@@ -293,12 +297,13 @@ typecheck · test · build as a separate job.
 
 ## Design system / brand
 
-- Palette (exact): teal `#34a1a0` (primary), coral `#f98d50`, sky `#2e9cc7`,
-  amber `#eab000`, lime `#b1eb46`, ink `#0c2340`/`#16475c`; surfaces white /
-  `#f7f8f9`. Typeface **Open Sans** (self-hosted, `@fontsource/open-sans`). Light
-  theme only.
-- Chart palette + shared config live in `src/components/charts/chartTheme.ts`
-  (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
+- Palette = P365's `themes.ts`, held in `P365` in `src/design/theme.ts` and
+  mirrored as `--color-p365-*` in `index.css`: navy `#0f2c3d`, blue `#16475c`,
+  teal `#34a1a0` (primary), red `#f94545`, orange `#f97f50`, yellow `#edba20`,
+  green `#82bc17`; page `#f9fafb`, cards white. Typeface **Open Sans**
+  (self-hosted, `@fontsource/open-sans`). Light theme only.
+- Charts are monochrome, as in P365: `monoColor` (`monoColorByIndex`) and
+  `facetFill` in `src/design/theme.ts`, used by `src/design/charts.tsx`.
 - Two gradings, kept apart on purpose: `src/lib/thresholds.ts` grades
   *utilisation* (watch ≥85% / attention ≥95%) once, in the model
   (`sharePoint.utilization`), and both the used-KPI dot and the quota gauge
@@ -338,9 +343,9 @@ rules MUST remain in `src/index.css` — a full index.css rewrite once dropped
 legacy CSS, keep any class still referenced by `src/auth/*`.
 
 `index.html` carries a copy of the `.auth-screen*` rules inline (the boot card
-that shows before the JS bundle arrives, with the vertical loading dots and the
+that shows before the JS bundle arrives, with the ring spinner and the
 logo). It cannot import `index.css`, so a change to those rules — colours,
-sizes, the dot animation — has to be made in both places, and the boot-shell
+sizes, the spinner animation — has to be made in both places, and the boot-shell
 e2e (`javaScriptEnabled: false`) is what catches a drift in the markup.
 
 ## Chart data typing
@@ -394,5 +399,6 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 
 - Build emits a >500 kB chunk advisory (single bundle) — consider route-level
   code-splitting if it matters.
-- `src/components/ui/*` (generated) trip 3 oxlint `only-export-components`
-  fast-refresh warnings — cosmetic, from the CLI output.
+- oxlint reports 6 `only-export-components` fast-refresh warnings — 3 in the
+  generated `src/components/ui/*`, 3 in the test helper `src/test/render.tsx` —
+  cosmetic.
