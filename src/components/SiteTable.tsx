@@ -2,6 +2,7 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
+import { capacityRatio, shareOf } from '@/lib/share'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
 import type { StorageRow } from '@/types/storage'
@@ -28,7 +29,7 @@ export type ColumnKey =
 
 interface SiteTableProps {
   rows: StorageRow[]
-  totalUsedBytes: number
+  shareTotalBytes?: number
   columns: ColumnKey[]
   label?: string
   nameHeader?: string
@@ -42,11 +43,6 @@ interface ColumnSpec {
   width: string
   sortValue?: (row: StorageRow) => number
 }
-
-const capacityRatio = (row: StorageRow): number =>
-  row.allocatedBytes !== undefined && row.allocatedBytes > 0
-    ? row.storageUsedBytes / row.allocatedBytes
-    : 0
 
 const COLUMNS: Record<ColumnKey, ColumnSpec> = {
   name: {
@@ -107,7 +103,7 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
     help: 'table.column.help.capacity',
     sortable: true,
     width: '120px',
-    sortValue: capacityRatio,
+    sortValue: (row) => capacityRatio(row) ?? 0,
   },
 }
 
@@ -115,7 +111,7 @@ const DEFAULT_SORT: ColumnKey = 'used'
 
 export function SiteTable({
   rows,
-  totalUsedBytes,
+  shareTotalBytes = 0,
   columns,
   label,
   nameHeader,
@@ -240,23 +236,23 @@ export function SiteTable({
             {row.template ?? ''}
           </span>
         )
-      case 'capacity':
+      case 'capacity': {
+        const ratio = capacityRatio(row)
         return (
           <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {row.allocatedBytes !== undefined && row.allocatedBytes > 0
-              ? formatPercent(capacityRatio(row))
-              : ''}
+            {ratio === null ? '' : formatPercent(ratio)}
           </span>
         )
+      }
       case 'share': {
-        const share = totalUsedBytes ? row.storageUsedBytes / totalUsedBytes : 0
+        const share = shareOf(row.storageUsedBytes, shareTotalBytes)
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
             <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
             <span className="h-1.5 flex-1 rounded-full bg-p365-grey-50">
               <span
                 className="block h-full rounded-full bg-p365-teal transition-[width] duration-300 ease-out"
-                style={{ width: `${Math.min(100, share * 100)}%` }}
+                style={{ width: `${share * 100}%` }}
               />
             </span>
           </span>

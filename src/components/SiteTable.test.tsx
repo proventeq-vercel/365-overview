@@ -55,7 +55,7 @@ afterEach(cleanup)
 
 describe('SiteTable', () => {
   it('renders only the requested columns', () => {
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'used']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'used']} />)
     expect(screen.getByRole('columnheader', { name: /site/i })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: /owner/i })).not.toBeInTheDocument()
   })
@@ -63,7 +63,7 @@ describe('SiteTable', () => {
   describe('column help', () => {
     it('explains a sortable column on hover', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'used']} />)
+      render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'used']} />)
       await user.hover(screen.getByRole('columnheader', { name: /storage used/i }))
       expect(
         await screen.findByText(/Storage consumed, as Microsoft's usage report measures it/),
@@ -72,7 +72,7 @@ describe('SiteTable', () => {
 
     it('explains a non-sortable column on keyboard focus', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'template']} />)
+      render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'template']} />)
       await user.tab()
       await user.tab()
       await user.tab()
@@ -87,7 +87,7 @@ describe('SiteTable', () => {
       render(
         <SiteTable
           rows={[drive]}
-          totalUsedBytes={500}
+          shareTotalBytes={500}
           columns={['name']}
           nameHeader="Drive"
           nameHelp="The OneDrive account, named after its owner."
@@ -99,18 +99,18 @@ describe('SiteTable', () => {
   })
 
   it('renders the last-activity column when asked', () => {
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'lastActivity']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'lastActivity']} />)
     expect(screen.getByRole('columnheader', { name: /last activity/i })).toBeInTheDocument()
     expect(screen.getByText('2026-08-01')).toBeInTheDocument()
   })
 
   it('renders the template column when asked', () => {
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'template']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'template']} />)
     expect(screen.getByText('TEAMCHANNEL#0')).toBeInTheDocument()
   })
 
   it('sorts by storage used descending by default', () => {
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'used']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'used']} />)
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('beta')
   })
 
@@ -119,7 +119,7 @@ describe('SiteTable', () => {
     render(
       <SiteTable
         rows={[...rows, drive]}
-        totalUsedBytes={1500}
+        shareTotalBytes={1500}
         columns={['name', 'lastActivity']}
       />,
     )
@@ -131,19 +131,19 @@ describe('SiteTable', () => {
 
   it('filters on search across url and owner', async () => {
     const user = userEvent.setup()
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'owner']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'owner']} />)
     await user.type(screen.getByRole('searchbox'), 'Grace')
     expect(screen.getByText('Grace')).toBeInTheDocument()
     expect(screen.queryByText('Ada')).not.toBeInTheDocument()
   })
 
   it('shows a drive capacity percentage where an allocation exists', () => {
-    render(<SiteTable rows={[drive]} totalUsedBytes={500} columns={['name', 'capacity']} />)
+    render(<SiteTable rows={[drive]} shareTotalBytes={500} columns={['name', 'capacity']} />)
     expect(screen.getByText('50%')).toBeInTheDocument()
   })
 
   it('shows no capacity figure for a site, whose allocation is the 25 TB maximum', () => {
-    render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'capacity']} />)
+    render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'capacity']} />)
     expect(screen.queryByText(/%$/)).not.toBeInTheDocument()
   })
 
@@ -151,7 +151,7 @@ describe('SiteTable', () => {
     render(
       <SiteTable
         rows={[...rows, drive]}
-        totalUsedBytes={1500}
+        shareTotalBytes={1500}
         columns={['name', 'share']}
       />,
     )
@@ -160,7 +160,7 @@ describe('SiteTable', () => {
 
   it('shows the resolved display name over a link to the site that opens in a new tab', () => {
     const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
-    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name']} />)
+    render(<SiteTable rows={[named]} shareTotalBytes={300} columns={['name']} />)
     expect(screen.getByTitle('Alpha Finance')).toHaveTextContent('Alpha Finance')
     const link = screen.getByRole('link', { name: '/sites/alpha' })
     expect(link).toHaveAttribute('href', 'https://c.sharepoint.com/sites/alpha')
@@ -169,7 +169,7 @@ describe('SiteTable', () => {
   })
 
   it('marks each row with its pool icon', () => {
-    render(<SiteTable rows={[rows[0], drive]} totalUsedBytes={800} columns={['name']} />)
+    render(<SiteTable rows={[rows[0], drive]} shareTotalBytes={800} columns={['name']} />)
     expect(screen.getByRole('img', { name: 'SharePoint' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'OneDrive' })).toBeInTheDocument()
   })
@@ -177,7 +177,7 @@ describe('SiteTable', () => {
   it('finds a site by its resolved display name', async () => {
     const user = userEvent.setup()
     const named: StorageRow[] = [{ ...rows[0], name: 'Finance' }, rows[1]]
-    render(<SiteTable rows={named} totalUsedBytes={1000} columns={['name']} />)
+    render(<SiteTable rows={named} shareTotalBytes={1000} columns={['name']} />)
     await user.type(screen.getByRole('searchbox'), 'finan')
     expect(screen.getByText('1 of 2')).toBeInTheDocument()
     expect(screen.getByTitle('Finance')).toBeInTheDocument()
@@ -193,7 +193,7 @@ describe('SiteTable', () => {
       for (const id of ids) if (directory.has(id)) found.set(id, directory.get(id)!)
       return found
     })
-    render(<SiteTable rows={[blank, drive]} totalUsedBytes={800} columns={['name']} />, getSiteDetails)
+    render(<SiteTable rows={[blank, drive]} shareTotalBytes={800} columns={['name']} />, getSiteDetails)
 
     expect(screen.getByLabelText('Looking up the site name')).toBeInTheDocument()
     expect(await screen.findByTitle('Finance')).toBeInTheDocument()
@@ -219,7 +219,7 @@ describe('SiteTable', () => {
       }
       return found
     })
-    render(<SiteTable rows={blank} totalUsedBytes={1e6} columns={['name']} />, getSiteDetails)
+    render(<SiteTable rows={blank} shareTotalBytes={1e6} columns={['name']} />, getSiteDetails)
 
     await user.click(screen.getByRole('button', { name: 'Next page' }))
     expect(await screen.findByTitle('Payroll')).toBeInTheDocument()
@@ -232,13 +232,13 @@ describe('SiteTable', () => {
 
   it('does not look up rows that already carry a name', () => {
     const getSiteDetails = vi.fn(async () => new Map())
-    render(<SiteTable rows={[{ ...rows[0], name: 'Alpha' }]} totalUsedBytes={300} columns={['name']} />, getSiteDetails)
+    render(<SiteTable rows={[{ ...rows[0], name: 'Alpha' }]} shareTotalBytes={300} columns={['name']} />, getSiteDetails)
     expect(getSiteDetails).not.toHaveBeenCalled()
   })
 
   it('names a URL-less site by its owner and shows the site id underneath', async () => {
     const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
-    render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)
+    render(<SiteTable rows={[blank]} shareTotalBytes={300} columns={['name']} />)
     expect(await screen.findByTitle('Ada')).toBeInTheDocument()
     expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
   })
@@ -249,7 +249,7 @@ describe('SiteTable', () => {
       { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' },
       { ...rows[0], id: 'e5f60718-1234-4f60-a1b2-000000000000', url: '' },
     ]
-    render(<SiteTable rows={twins} totalUsedBytes={600} columns={['name']} />)
+    render(<SiteTable rows={twins} shareTotalBytes={600} columns={['name']} />)
     await user.type(screen.getByRole('searchbox'), '8f3c1a2b')
     expect(screen.getByText('1 of 2')).toBeInTheDocument()
     expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
@@ -267,7 +267,7 @@ describe('SiteTable', () => {
     const bodyRows = () => screen.getAllByRole('row').length - 1
 
     it('shows the first fifty rows of a large estate with the range', () => {
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name', 'used']} />)
       expect(bodyRows()).toBe(50)
       expect(firstCell()).toHaveTextContent('team-0')
       expect(screen.getByText('1–50 of 120')).toBeInTheDocument()
@@ -277,7 +277,7 @@ describe('SiteTable', () => {
 
     it('pages forward, to the end, and back to the start', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name', 'used']} />)
       await user.click(screen.getByRole('button', { name: 'Next page' }))
       expect(firstCell()).toHaveTextContent('team-50')
       expect(screen.getByText('51–100 of 120')).toBeInTheDocument()
@@ -291,7 +291,7 @@ describe('SiteTable', () => {
 
     it('changes the page size and starts again from the first page', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name', 'used']} />)
       await user.click(screen.getByRole('button', { name: 'Next page' }))
       await user.click(screen.getByRole('combobox', { name: 'Rows per page' }))
       await user.click(await screen.findByRole('option', { name: '100' }))
@@ -301,7 +301,7 @@ describe('SiteTable', () => {
 
     it('returns to the first page when the search changes', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'owner']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name', 'owner']} />)
       await user.click(screen.getByRole('button', { name: 'Next page' }))
       await user.type(screen.getByRole('searchbox'), 'Early')
       expect(screen.getByText('1–50 of 60')).toBeInTheDocument()
@@ -310,7 +310,7 @@ describe('SiteTable', () => {
 
     it('returns to the first page when the sort changes', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name', 'used']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name', 'used']} />)
       await user.click(screen.getByRole('button', { name: 'Next page' }))
       await user.click(screen.getByRole('columnheader', { name: /storage used/i }))
       expect(screen.getByText('1–50 of 120')).toBeInTheDocument()
@@ -319,7 +319,7 @@ describe('SiteTable', () => {
 
     it('says so when nothing matches', async () => {
       const user = userEvent.setup()
-      render(<SiteTable rows={many} totalUsedBytes={1e6} columns={['name']} />)
+      render(<SiteTable rows={many} shareTotalBytes={1e6} columns={['name']} />)
       await user.type(screen.getByRole('searchbox'), 'nobody')
       expect(screen.getByText('No rows')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()

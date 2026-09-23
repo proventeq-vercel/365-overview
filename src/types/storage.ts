@@ -65,7 +65,7 @@ export interface StorageOverview {
 
   offenders: {
     rows: StorageRow[]
-    totalUsedBytes: number
+    tableTotalBytes: number
     topConsumers: Slice[]
     topSites: Slice[]
     topDrives: Slice[]

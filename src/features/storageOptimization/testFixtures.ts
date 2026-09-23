@@ -29,7 +29,7 @@ export const base: StorageOverview = {
   },
   offenders: {
     rows: [],
-    totalUsedBytes: 620 * GB,
+    tableTotalBytes: 620 * GB,
     topConsumers: [],
     topSites: [],
     topDrives: [],

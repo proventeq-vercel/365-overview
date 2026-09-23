@@ -40,7 +40,7 @@ const withSites = {
   ...base,
   offenders: {
     rows,
-    totalUsedBytes: 1500,
+    tableTotalBytes: 1500,
     topConsumers: [
       { name: 'beta', value: 700 },
       { name: 'dana', value: 500 },

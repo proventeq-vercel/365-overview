@@ -496,14 +496,14 @@ describe('buildStorageOverview growth and cost', () => {
     expect(offenders.topDrives[4]).toEqual({ name: 'Owner 1 · d1', value: 200 * GB })
   })
 
-  it('totals the offender pool across SharePoint and OneDrive and counts every retained row', () => {
+  it('shares each offender row out of the rows the table lists, retained ones included, not the trend totals', () => {
     const { offenders } = buildStorageOverview(
       inputs({
         sites: [site(), site({ id: 'gone', isDeleted: true, storageUsedBytes: 3 * GB })],
         drives: [drive(), drive({ id: 'left', isDeleted: true, storageUsedBytes: 2 * GB })],
       }),
     )
-    expect(offenders.totalUsedBytes).toBe(210 * GB)
+    expect(offenders.tableTotalBytes).toBe(20 * GB)
     expect(offenders.retained).toEqual({ bytes: 5 * GB, count: 2 })
   })
 

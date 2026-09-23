@@ -4,6 +4,7 @@ import { estimateEntitlementBytes } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
 import { rowLabel } from '@/lib/rowName'
+import { capacityRatio } from '@/lib/share'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
@@ -163,18 +164,14 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       usedBytes: oneDriveUsed,
       drives,
       driveCount: liveDrives.length,
-      drivesNearCap: liveDrives.filter(
-        (drive) =>
-          drive.allocatedBytes !== undefined &&
-          drive.allocatedBytes > 0 &&
-          drive.storageUsedBytes / drive.allocatedBytes >= NEAR_CAP_RATIO,
-      ).length,
+      drivesNearCap: liveDrives.filter((drive) => (capacityRatio(drive) ?? 0) >= NEAR_CAP_RATIO)
+        .length,
       deletedButBilling: retainedTotal(drives),
     },
 
     offenders: {
       rows,
-      totalUsedBytes: sharePointUsed + oneDriveUsed,
+      tableTotalBytes: sumBytes(rows),
       topConsumers: topConsumers(rows),
       topSites: topByPool(rows, 'SharePoint'),
       topDrives: topByPool(rows, 'OneDrive'),
