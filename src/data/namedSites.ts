@@ -1,3 +1,4 @@
+import { ApiError } from '../clients/apiError'
 import { unresolvedSiteIds, withSiteDirectory } from '../reports/siteDirectory'
 import type { StorageRow } from '../types/storage'
 import type { DataSource } from './fixtures'
@@ -17,5 +18,10 @@ export async function nameTopSites(
 ): Promise<StorageRow[]> {
   const ids = unresolvedSiteIds(topSitesByStorage(sites))
   if (ids.length === 0) return sites
-  return withSiteDirectory(sites, await source.getSiteDetails(ids))
+  try {
+    return withSiteDirectory(sites, await source.getSiteDetails(ids))
+  } catch (error) {
+    if (error instanceof ApiError) return sites
+    throw error
+  }
 }

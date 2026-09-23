@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import { renderWithData } from '@/test/render'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
+import { ApiError } from '@/clients/apiError'
 import type { DataSource } from '@/data/fixtures'
 import type { SiteDirectory } from '@/reports/siteDirectory'
 import type { StorageRow } from '@/types/storage'
@@ -79,5 +80,15 @@ describe('useStorageOverview', () => {
     renderWithData(<Probe />, sourceWith({ getSiteDirectory: async () => new Map() }))
 
     expect(await screen.findByText(`${FINANCE_ID}=(unnamed)`)).toBeInTheDocument()
+  })
+
+  it('renders the report with its top sites unnamed when the per-site lookup is refused', async () => {
+    const getSiteDetails = vi.fn(async (): Promise<SiteDirectory> => {
+      throw new ApiError(400, 'Batch request 1 must be a GET of v1.0/sites/{id}.', 'InvalidBatch')
+    })
+    renderWithData(<Probe />, sourceWith({ getSiteDetails }))
+
+    expect(await screen.findByText(`${LEGAL_ID}=(unnamed)`)).toBeInTheDocument()
+    expect(screen.getByText(`${FINANCE_ID}=Finance`)).toBeInTheDocument()
   })
 })
