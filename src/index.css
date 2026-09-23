@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+@source not '../docs';
+@source not '../functions';
+@source not '../e2e';
 @import 'tw-animate-css';
 @import '@fontsource/open-sans/400.css';
 @import '@fontsource/open-sans/600.css';
