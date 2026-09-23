@@ -7,18 +7,8 @@
 @theme {
   --font-sans: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  --color-brand: #34a1a0;
-  --color-brand-strong: #277978;
-  --color-coral: #f98d50;
-  --color-sky: #2e9cc7;
-  --color-amber: #eab000;
-  --color-lime: #b1eb46;
   --color-ink: #0f2c3d;
-  --color-ink-soft: #16475c;
-
   --color-canvas: #f9fafb;
-  --color-surface: #ffffff;
-  --color-hairline: #dedede;
 
   --color-p365-navy: #0f2c3d;
   --color-p365-blue: #16475c;
