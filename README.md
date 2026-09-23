@@ -334,8 +334,9 @@ Three things have to name the new origin before it works:
 ### Automatic deployment
 
 `.github/workflows/deploy.yml` deploys on every push to `main`, but only **after CI has gone
-green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Two
-jobs, both from the exact commit CI tested:
+green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab — a
+manual run refuses a commit that has no successful CI run. Two jobs, both from the exact commit
+CI tested:
 
 | Job | What it deploys | Where |
 |---|---|---|

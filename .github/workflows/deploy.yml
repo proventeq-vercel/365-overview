@@ -10,6 +10,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 concurrency:
   group: deploy
@@ -31,6 +32,16 @@ jobs:
     outputs:
       ready: ${{ steps.check.outputs.ready }}
     steps:
+      - name: dispatched commit passed CI
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          passed=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&status=success" --jq '.total_count')
+          if [ "$passed" = "0" ]; then
+            echo "No successful CI run for ${{ github.sha }}: refusing to deploy it." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
       - id: check
         env:
           CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
