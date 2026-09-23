@@ -76,7 +76,8 @@ describe('mock scenarios reach every caveat state', () => {
       namesAreConcealed: false,
       historyTooShort: false,
     })
-    expect(overview.growth.forecastStatus).not.toBe('Unknown')
+    expect(overview.growth.forecastStatus).toBe('Critical')
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(11)
     expect(overview.sharePoint.remainingBytes).toBeGreaterThan(0)
   })
 
