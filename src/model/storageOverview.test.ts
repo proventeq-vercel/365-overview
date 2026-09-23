@@ -206,6 +206,21 @@ describe('buildStorageOverview composition', () => {
     expect(overview.sharePoint.deletedButBilling).toEqual({ bytes: 0, count: 0 })
   })
 
+  it('sizes the OneDrive workload slice from live drives, as the SharePoint slices are from live sites', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        drives: [drive(), drive({ id: 'd2', isDeleted: true, storageUsedBytes: 3 * GB })],
+      }),
+    )
+    expect(overview.oneDrive.workloadBytes).toBe(5 * GB)
+    expect(overview.oneDrive.usedBytes).toBe(60 * GB)
+  })
+
+  it('leaves the OneDrive workload slice unavailable when Microsoft 365 reports no OneDrive history', () => {
+    const overview = buildStorageOverview(inputs({ oneDriveTrend: [] }))
+    expect(overview.oneDrive.workloadBytes).toBeNull()
+  })
+
   it('counts drives at or above 90% of their own allocation', () => {
     const overview = buildStorageOverview(
       inputs({

@@ -67,6 +67,11 @@ describe('DistributionSection', () => {
     expect(screen.queryByText(/estimated from licence counts/i)).not.toBeInTheDocument()
   })
 
+  it('sizes the OneDrive slice from the live-drive total, not the pool total', () => {
+    render(<DistributionSection overview={withSlices} />)
+    expect(screen.getByText('OneDrive').closest('li')).toHaveTextContent('OneDrive · 110 GB')
+  })
+
   it('includes OneDrive as its own workload slice', () => {
     render(<DistributionSection overview={withSlices} />)
     expect(screen.getByText('OneDrive')).toBeInTheDocument()

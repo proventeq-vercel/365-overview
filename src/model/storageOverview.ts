@@ -173,6 +173,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     oneDrive: {
       usedBytes: oneDriveUsed,
+      workloadBytes: oneDriveUsed === null ? null : sumBytes(liveDrives),
       drives,
       driveCount: liveDrives.length,
       drivesNearCap: liveDrives.filter((drive) => (capacityRatio(drive) ?? 0) >= NEAR_CAP_RATIO)

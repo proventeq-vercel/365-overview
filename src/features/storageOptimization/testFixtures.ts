@@ -22,6 +22,7 @@ export const base: StorageOverview = {
   },
   oneDrive: {
     usedBytes: 120 * GB,
+    workloadBytes: 110 * GB,
     drives: [],
     driveCount: 40,
     drivesNearCap: 3,
@@ -90,7 +91,7 @@ export const usageUnreported: StorageOverview = {
     overageBytes: null,
     utilization: null,
   },
-  oneDrive: { ...base.oneDrive, usedBytes: null },
+  oneDrive: { ...base.oneDrive, usedBytes: null, workloadBytes: null },
   growth: {
     ...base.growth,
     windowMonths: 0,

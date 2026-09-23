@@ -52,11 +52,11 @@ export function DistributionSection({ overview, delay }: Props) {
     sharePoint.byTemplate.map((slice) => ({ ...slice, name: templateLabels.get(slice.name) ?? slice.name })),
   )
   const workloadSlices =
-    oneDrive.usedBytes === null
+    oneDrive.workloadBytes === null
       ? sharePoint.byWorkload
       : [
           ...sharePoint.byWorkload,
-          { name: t('storageOptimisation.workload.oneDrive'), value: oneDrive.usedBytes },
+          { name: t('storageOptimisation.workload.oneDrive'), value: oneDrive.workloadBytes },
         ]
 
   return (
@@ -108,7 +108,7 @@ export function DistributionSection({ overview, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.workload.title')}</PanelLabel>
           <PanelDescription>{t('storageOptimisation.workload.subtitle')}</PanelDescription>
           <ShareDoughnut slices={workloadSlices} ariaLabel={t('storageOptimisation.workload.title')} />
-          {oneDrive.usedBytes === null && (
+          {oneDrive.workloadBytes === null && (
             <PanelDescription>{t('storageOptimisation.workload.oneDriveUnavailable')}</PanelDescription>
           )}
           <p className="mt-3 text-xs text-p365-grey-500">

@@ -57,6 +57,7 @@ export interface StorageOverview {
 
   oneDrive: {
     usedBytes: number | null
+    workloadBytes: number | null
     drives: StorageRow[]
     driveCount: number
     drivesNearCap: number
