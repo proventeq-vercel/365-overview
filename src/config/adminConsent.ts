@@ -8,12 +8,17 @@ export function buildAdminConsentUrl(clientId: string, redirectUri: string): str
   return `${CONSENT_ENDPOINT}?${params.toString()}`
 }
 
-const PROXY_SCOPE_CLIENT_ID = /^api:\/\/([^/]+)\//
+const API_SCOPE_PREFIX = 'api://'
+
+function clientIdOfScope(scope: string): string | null {
+  if (!scope.startsWith(API_SCOPE_PREFIX)) return null
+  const segments = scope.slice(API_SCOPE_PREFIX.length).split('/')
+  return segments.length > 1 ? (segments.at(-2) ?? null) || null : null
+}
 
 export function consentClientIdFor(config: AppConfig): string {
   const proxy = graphProxyOf(config)
-  const named = proxy ? PROXY_SCOPE_CLIENT_ID.exec(proxy.scope)?.[1] : null
-  return named ?? config.VITE_CLIENT_ID
+  return (proxy ? clientIdOfScope(proxy.scope) : null) ?? config.VITE_CLIENT_ID
 }
 
 export function adminConsentUrlFor(config: AppConfig): string {

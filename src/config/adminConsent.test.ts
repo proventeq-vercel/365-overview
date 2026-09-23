@@ -58,6 +58,18 @@ describe('consentClientIdFor', () => {
     expect(adminConsentUrlFor(config)).toContain('client_id=proxy-app')
   })
 
+  it('reads the app id, not the tenant domain, from the domain-qualified scope form', () => {
+    const config = parseConfig(
+      {
+        VITE_CLIENT_ID: 'spa-app',
+        VITE_GRAPH_PROXY_URL: 'https://proxy.example/api/graph',
+        VITE_GRAPH_PROXY_SCOPE: 'api://proventeq.com/proxy-app/access_as_user',
+      },
+      'https://365-overview.vercel.app',
+    )
+    expect(consentClientIdFor(config)).toBe('proxy-app')
+  })
+
   it('consents the SPA registration when the proxy shares it', () => {
     const config = parseConfig(
       { VITE_CLIENT_ID: 'spa-app', VITE_GRAPH_PROXY_URL: 'https://proxy.example/api/graph' },
