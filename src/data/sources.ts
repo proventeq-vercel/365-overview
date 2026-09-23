@@ -3,7 +3,7 @@ import { createLocalTokenGetter } from '../auth/localAuth'
 import { tokenScopesFor } from '../auth/msalConfig'
 import { acquireToken } from '../auth/tokens'
 import { createGraphClient, GRAPH_ORIGIN } from '../clients/graphClient'
-import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
+import { getConfig, graphProxyOf, type AppConfig, type GraphProxy } from '../config/appConfig'
 import type { DataSource } from './dataSource'
 import { createLiveDataSource } from './live'
 
@@ -33,10 +33,15 @@ export function buildLiveSource(
   return createLiveDataSource(createGraphClient(getToken, fetch, graphOriginOf(config)))
 }
 
-export function buildLocalAuthSource(localAuthUrl: string, config: AppConfig = getConfig()): DataSource {
+export function requireLocalAuthProxy(config: AppConfig = getConfig()): GraphProxy {
   const proxy = graphProxyOf(config)
   if (!proxy) {
     throw new Error('VITE_LOCAL_AUTH_URL needs VITE_GRAPH_PROXY_URL: local auth only works through the proxy')
   }
+  return proxy
+}
+
+export function buildLocalAuthSource(localAuthUrl: string, config: AppConfig = getConfig()): DataSource {
+  const proxy = requireLocalAuthProxy(config)
   return createLiveDataSource(createGraphClient(createLocalTokenGetter(localAuthUrl), fetch, proxy.url))
 }

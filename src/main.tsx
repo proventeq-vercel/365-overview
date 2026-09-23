@@ -8,6 +8,7 @@ import { AppIntlProvider } from './app/AppIntlProvider'
 import { BootstrapError } from './app/BootstrapError'
 import { queryClient } from './app/queryClient'
 import { DataProvider } from './data/DataProvider'
+import { requireLocalAuthProxy } from './data/sources'
 import App from './App.tsx'
 import './index.css'
 
@@ -40,6 +41,7 @@ function renderBootstrapError(err: unknown) {
 }
 
 function bootstrap() {
+  if (env.localAuthUrl) requireLocalAuthProxy()
   if (!env.usesMsal) {
     render(<AppIntlProvider>{appTree}</AppIntlProvider>)
     return
