@@ -17,8 +17,8 @@ Built with React 19, TypeScript, and Vite.
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
-Four KPI cards sit above the sections: storage used, entitlement, remaining headroom and average
-monthly growth. SharePoint and OneDrive are reported as two separate pools — OneDrive volume is
+Four KPI cards sit above the sections: storage used (against the entitlement), remaining
+headroom, the cost of doing nothing and the forecast exhaustion date. SharePoint and OneDrive are reported as two separate pools — OneDrive volume is
 never counted against the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
