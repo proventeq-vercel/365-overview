@@ -104,6 +104,8 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
+          VITE_CLIENT_ID: ${{ vars.VITE_CLIENT_ID }}
+          VITE_AUTHORITY_URI: ${{ vars.VITE_AUTHORITY_URI }}
           VITE_GRAPH_PROXY_URL: ${{ vars.VITE_GRAPH_PROXY_URL }}
           VITE_GRAPH_PROXY_SCOPE: ${{ vars.VITE_GRAPH_PROXY_SCOPE }}
           VITE_FEATURES: ${{ vars.VITE_FEATURES }}

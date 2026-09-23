@@ -379,8 +379,10 @@ az role assignment create --assignee <appId> --role "Storage Blob Data Contribut
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the names ever differ from the defaults in the workflow, the
 repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job also
-reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
-from repository variables, so the Azure-hosted copy is configured without touching the code.
+reads `VITE_CLIENT_ID`, `VITE_AUTHORITY_URI`, `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`,
+`VITE_FEATURES` and `VITE_MODES_LOCKED` from repository variables, so the Azure-hosted copy is
+configured without touching the code. The redirect URI is the static website's own origin, which
+has to be a registered SPA redirect URI on whichever registration `VITE_CLIENT_ID` names.
 
 ### Preview production build locally
 
