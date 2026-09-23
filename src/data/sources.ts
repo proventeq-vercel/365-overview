@@ -4,7 +4,7 @@ import { tokenScopesFor } from '../auth/msalConfig'
 import { acquireToken } from '../auth/tokens'
 import { createGraphClient, GRAPH_ORIGIN } from '../clients/graphClient'
 import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
-import type { DataSource } from './fixtures'
+import type { DataSource } from './dataSource'
 import { createLiveDataSource } from './live'
 
 function makeTokenGetter(

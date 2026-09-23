@@ -4,7 +4,7 @@ import { useDataSource } from '../data/useDataSource'
 import { nameTopSites } from '../data/namedSites'
 import { withSiteDirectory } from '../reports/siteDirectory'
 import { buildStorageOverview, licenceEstimateOf } from '../model/storageOverview'
-import type { DataSource } from '../data/fixtures'
+import type { DataSource } from '../data/dataSource'
 import type { ReportSettings } from '../lib/settings'
 import type { StorageOverview } from '../types/storage'
 

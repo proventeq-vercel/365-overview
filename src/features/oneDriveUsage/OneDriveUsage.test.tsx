@@ -6,7 +6,8 @@ import type { ReactNode } from 'react'
 import { SettingsProvider } from '@/app/SettingsProvider'
 import { ApiError } from '@/clients/apiError'
 import { DataSourceContext } from '@/data/useDataSource'
-import { createMockDataSource, type DataSource, type MockScenario } from '@/data/fixtures'
+import type { DataSource } from '@/data/dataSource'
+import { createMockDataSource, type MockScenario } from '@/data/fixtures'
 import { OneDriveUsage } from './OneDriveUsage'
 
 afterEach(() => {

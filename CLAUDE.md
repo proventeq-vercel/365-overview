@@ -49,7 +49,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (four mock
+- `src/data/` — `dataSource.ts` (the `DataSource` interface, nine methods); `fixtures.ts` (four mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
   `live.ts` (the four usage reports on `/beta/reports`, period `D180`, plus
   `/subscribedSkus`, `/organization`, the `sites/delta` directory walk and the

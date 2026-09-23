@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { DataSource } from './fixtures'
+import type { DataSource } from './dataSource'
 
 export const DataSourceContext = createContext<DataSource | null>(null)
 

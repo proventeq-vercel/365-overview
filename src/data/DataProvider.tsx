@@ -1,7 +1,8 @@
 import { useMsal } from '@azure/msal-react'
 import { useMemo, type ReactNode } from 'react'
 import { env } from '../config/env'
-import { createMockDataSource, type DataSource, type MockScenario } from './fixtures'
+import type { DataSource } from './dataSource'
+import { createMockDataSource, type MockScenario } from './fixtures'
 import { buildLiveSource, buildLocalAuthSource } from './sources'
 import { DataSourceContext } from './useDataSource'
 

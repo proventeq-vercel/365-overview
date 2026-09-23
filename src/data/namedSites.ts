@@ -1,7 +1,7 @@
 import { ApiError } from '../clients/apiError'
 import { unresolvedSiteIds, withSiteDirectory } from '../reports/siteDirectory'
 import type { StorageRow } from '../types/storage'
-import type { DataSource } from './fixtures'
+import type { DataSource } from './dataSource'
 
 export const NAMED_UP_FRONT = 50
 

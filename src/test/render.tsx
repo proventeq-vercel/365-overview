@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createIntl } from 'react-intl'
 import { AppIntlProvider, DEFAULT_LOCALE } from '@/app/AppIntlProvider'
 import { DataSourceContext } from '@/data/useDataSource'
-import type { DataSource } from '@/data/fixtures'
+import type { DataSource } from '@/data/dataSource'
 import messages from '@/intl/en.json'
 import type { TranslateFn } from '@/hooks/useTranslation'
 

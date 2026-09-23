@@ -1,20 +1,9 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
+import type { DataSource } from './dataSource'
 
 export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short-history'
-
-export interface DataSource {
-  getSites(): Promise<StorageRow[]>
-  getSiteDetails(ids: string[]): Promise<SiteDirectory>
-  getSiteDirectory(): Promise<SiteDirectory>
-  getDrives(): Promise<StorageRow[]>
-  getSharePointTrend(): Promise<UsagePoint[]>
-  getOneDriveTrend(): Promise<UsagePoint[]>
-  getLicenses(): Promise<LicenseSku[] | null>
-  getOrg(): Promise<OrgInfo>
-  getReportRefreshDate(): Promise<string>
-}
 
 const MB = 1_048_576
 const GB = 1024 * MB

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { DataProvider } from './DataProvider'
-import type { DataSource } from './fixtures'
+import type { DataSource } from './dataSource'
 import { useDataSource } from './useDataSource'
 
 vi.mock('../config/env', () => ({ env: { useMock: true, mockScenario: 'healthy', localAuthUrl: null } }))

@@ -23,7 +23,7 @@ import { parseSubscribedSkus } from '../reports/licensing'
 import type { RawSku } from '../reports/licensing'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
-import type { DataSource } from './fixtures'
+import type { DataSource } from './dataSource'
 
 interface JsonReport<T> {
   value: T[]

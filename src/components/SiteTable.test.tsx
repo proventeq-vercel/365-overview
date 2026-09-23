@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { NO_SITE_DETAILS, renderWithData } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import type { StorageRow } from '@/types/storage'
-import type { DataSource } from '@/data/fixtures'
+import type { DataSource } from '@/data/dataSource'
 import type { SiteDirectory } from '@/reports/siteDirectory'
 import { SiteTable } from './SiteTable'
 
