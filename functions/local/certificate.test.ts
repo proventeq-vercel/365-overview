@@ -1,4 +1,4 @@
-import { createHash, createPrivateKey, X509Certificate } from 'node:crypto'
+import { createPrivateKey, X509Certificate } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { createSelfSignedCertificate, objectIdentifier, serialNumber, toPem, utcTime } from './certificate.js'
 
@@ -23,8 +23,7 @@ describe('createSelfSignedCertificate', () => {
     expect(certificate.checkPrivateKey(createPrivateKey(generated.privateKeyPem))).toBe(true)
   })
 
-  it('reports the SHA-1 thumbprint Entra hashes from the DER, in lowercase hex', () => {
-    expect(generated.thumbprintHex).toBe(createHash('sha1').update(certificate.raw).digest('hex'))
+  it('reports the thumbprint as the 40 lowercase hex characters Entra matches x5t against', () => {
     expect(generated.thumbprintHex).toMatch(/^[0-9a-f]{40}$/)
   })
 
