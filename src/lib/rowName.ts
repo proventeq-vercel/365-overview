@@ -16,5 +16,5 @@ function shortId(id: string): string {
 }
 
 export function rowLabel(row: NamedRow): string {
-  return row.url ? rowName(row) : `${row.ownerDisplayName} · ${shortId(row.id)}`
+  return row.name || row.url ? rowName(row) : `${row.ownerDisplayName} · ${shortId(row.id)}`
 }

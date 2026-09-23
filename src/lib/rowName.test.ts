@@ -29,6 +29,10 @@ describe('rowLabel', () => {
     expect(rowLabel(named)).toBe('Finance & Treasury')
   })
 
+  it('keeps a resolved name even when the URL came back blank', () => {
+    expect(rowLabel({ ...withoutUrl, name: 'Finance & Treasury' })).toBe('Finance & Treasury')
+  })
+
   it('appends the short id to the owner when the URL is blank', () => {
     expect(rowLabel(withoutUrl)).toBe('Ada Lovelace · 8f3c1a2b')
   })
