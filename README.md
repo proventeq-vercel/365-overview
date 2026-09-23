@@ -138,10 +138,16 @@ so the cost is a few requests per page however many sites the tenant has. A site
 not return — a deleted site, or one the signed-in user cannot open — falls back to its owner's
 name and its id.
 
-> **Role requirement:** consent alone is not enough. `Reports.Read.All` additionally requires the
-> signed-in user to hold **Global Reader**, **Reports Reader** or an equivalent directory role. A
-> consented user without such a role gets a permission failure, and the app tells them which role
-> to ask for rather than asking them to consent again.
+> **Role requirement, and only on this path:** consent alone is not enough. *Delegated*
+> `Reports.Read.All` additionally requires the signed-in user to hold **Global Reader**,
+> **Reports Reader** or an equivalent directory role — Microsoft's rule, not ours. A consented user
+> without such a role gets a permission failure, and the app tells them which role to ask for
+> rather than asking them to consent again.
+>
+> **Through the Graph proxy this does not apply.** The proxy reads app-only, so Graph never looks at
+> the signed-in user's roles, and any signed-in user of an allowed tenant may read the report —
+> matching P365, which gates on an active licence rather than a directory role. See
+> `functions/README.md`.
 
 ---
 

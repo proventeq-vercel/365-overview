@@ -90,8 +90,6 @@ describe('createCallerVerifier', () => {
     ['a non-guid tenant', async () => `Bearer ${await token({ tid: 'common', iss: 'https://login.microsoftonline.com/common/v2.0' })}`, 401, 'InvalidToken'],
     ['a token without the proxy scope', async () => `Bearer ${await token({ scp: 'User.Read' })}`, 401, 'InvalidToken'],
     ['a token without a user', async () => `Bearer ${await token({ oid: null })}`, 401, 'InvalidToken'],
-    ['a user without an admin role', async () => `Bearer ${await token({ wids: [] })}`, 403, 'DirectoryRoleRequired'],
-    ['a user with an unrelated role', async () => `Bearer ${await token({ wids: ['00000000-0000-0000-0000-000000000000'] })}`, 403, 'DirectoryRoleRequired'],
   ])('rejects %s', async (_label, header, status, code) => {
     const error = await rejection(verifier(), await header())
     expect(error.status).toBe(status)
@@ -124,6 +122,22 @@ describe('createCallerVerifier', () => {
     await expect(verify(`Bearer ${await token({ wids: [custom] })}`)).resolves.toBeDefined()
     const error = await rejection(verify, `Bearer ${await token({ wids: [DIRECTORY_ROLES.globalAdministrator] })}`)
     expect(error.code).toBe('DirectoryRoleRequired')
+  })
+
+  it('admits a user holding no directory role at all, the way P365 does', async () => {
+    await expect(verifier()(`Bearer ${await token({ wids: [] })}`)).resolves.toMatchObject({
+      tenantId: TENANT,
+    })
+  })
+
+  it('refuses a roleless user only once a role list is demanded', async () => {
+    const verify = verifier({ PROXY_REQUIRED_DIRECTORY_ROLES: DIRECTORY_ROLES.reportsReader })
+    const error = await rejection(verify, `Bearer ${await token({ wids: [] })}`)
+    expect(error.status).toBe(403)
+    expect(error.code).toBe('DirectoryRoleRequired')
+    await expect(
+      verify(`Bearer ${await token({ wids: [DIRECTORY_ROLES.reportsReader] })}`),
+    ).resolves.toBeDefined()
   })
 
   it('only trusts sts.windows.net issuers on the public authority host', () => {

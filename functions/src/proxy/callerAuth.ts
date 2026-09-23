@@ -72,7 +72,10 @@ export function createCallerVerifier(
       throw new ProxyError(403, 'TenantNotAllowed', 'This tenant is not enabled for the proxy.')
     }
     const directoryRoles = listClaim(payload, 'wids').map((id) => id.toLowerCase())
-    if (!directoryRoles.some((id) => config.requiredDirectoryRoles.includes(id))) {
+    if (
+      config.requiredDirectoryRoles.length > 0 &&
+      !directoryRoles.some((id) => config.requiredDirectoryRoles.includes(id))
+    ) {
       throw new ProxyError(
         403,
         'DirectoryRoleRequired',

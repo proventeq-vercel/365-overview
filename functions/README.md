@@ -15,7 +15,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | --- | --- |
 | Who may call it | An Entra access token for this API (`aud` in `PROXY_AUDIENCES`, `scp` contains `PROXY_SCOPE`) signed by `login.microsoftonline.com`. No token, no route evaluation — the allowlist cannot be probed anonymously. |
 | Which tenant is read | The `tid` claim of that token, checked against its issuer. The tenant is **never** a request parameter. |
-| Who inside the tenant | The user must hold an admin directory role (`wids`): Global Administrator, Global Reader, SharePoint Administrator or Reports Reader by default (`PROXY_REQUIRED_DIRECTORY_ROLES`). That mirrors the role the delegated usage reports required, so the proxy widens nobody's access. |
+| Who inside the tenant | Any signed-in user of an allowed tenant, which is what P365 does — its `StorageOverviewController` gates on an active licence and workspace permission, never on a directory role, because its Graph reads are app-only too. `PROXY_ALLOWED_TENANT_IDS` is this proxy's equivalent of the licence. Set `PROXY_REQUIRED_DIRECTORY_ROLES` to also demand a directory role (`wids`) — off by default, because requiring one refused accounts that use P365 itself. |
 | What is forwarded | `GET` on `v1.0/sites/delta`, `v1.0/sites/{id}`, `v1.0/subscribedSkus`, `v1.0/organization`, the four `beta/reports/…UsageDetail` / `…UsageStorage` storage reports, and `POST v1.0/$batch` whose sub-requests are `GET v1.0/sites/{id}`. Query options are allowlisted per route (`$select`, `$format`, paging tokens). Anything else is `404 RouteNotAllowed` and never reaches Graph. |
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
 | The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
@@ -39,7 +39,7 @@ Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA'
 | `PROXY_SCOPE` | no | Scope the caller token must carry. Default `access_as_user`. |
 | `PROXY_ALLOWED_ORIGINS` | yes | Comma list of SPA origins allowed to call the proxy. |
 | `PROXY_ALLOWED_TENANT_IDS` | no | Comma list of tenant ids; unset = any consented tenant. |
-| `PROXY_REQUIRED_DIRECTORY_ROLES` | no | Comma list of directory role template ids; unset = the four admin roles above. |
+| `PROXY_REQUIRED_DIRECTORY_ROLES` | no | Comma list of directory role template ids the caller must hold one of. **Unset = no role required.** `DIRECTORY_ROLES` in `config.ts` carries the ids for Global Administrator, Global Reader, SharePoint Administrator and Reports Reader. |
 | `PROXY_PUBLIC_URL` | no | The URL the SPA reaches the proxy on, used in rewritten links when it differs from the request host (front door, custom domain). |
 | `ENTRA_AUTHORITY_HOST`, `GRAPH_ORIGIN` | no | Only the local stack sets these, to its fake Entra and fake Graph. |
 

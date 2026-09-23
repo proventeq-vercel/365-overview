@@ -238,7 +238,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 
 A separate npm package (Azure Functions v4, Node, ESM, `jose` for JWT
 verify/sign): `src/proxy/handler.ts` is the pure pipeline — CORS → verify the
-caller's Entra token (aud/scope/issuer, tenant from `tid`, admin `wids`) →
+caller's Entra token (aud/scope/issuer, tenant from `tid`; a directory-role
+check on `wids` only when `PROXY_REQUIRED_DIRECTORY_ROLES` asks for one —
+**off by default**, because P365 gates the same report on licence, not role,
+and demanding one refused accounts that use P365 itself) →
 allowlist (`allowlist.ts`: routes × query options, `$batch` rebuilt from
 validated parts) → per-tenant app token via certificate client assertion
 (`appToken.ts`, cached) → relay with `nextLink`/`deltaLink` rewritten to the

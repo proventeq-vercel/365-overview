@@ -84,8 +84,7 @@ export function readConfig(env: Env): ProxyConfig {
     scope: read(env, 'PROXY_SCOPE') ?? DEFAULT_SCOPE,
     allowedOrigins,
     allowedTenantIds: allowedTenantIds.length > 0 ? allowedTenantIds : null,
-    requiredDirectoryRoles:
-      requiredDirectoryRoles.length > 0 ? requiredDirectoryRoles : DEFAULT_REQUIRED_DIRECTORY_ROLES,
+    requiredDirectoryRoles,
     authorityHost: trimSlash(read(env, 'ENTRA_AUTHORITY_HOST') ?? PUBLIC_AUTHORITY_HOST),
     graphOrigin: trimSlash(read(env, 'GRAPH_ORIGIN') ?? PUBLIC_GRAPH_ORIGIN),
     publicUrl: publicUrl ? trimSlash(publicUrl) : null,

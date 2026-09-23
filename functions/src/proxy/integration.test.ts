@@ -4,6 +4,8 @@ import { APP_TOKEN_PREFIX, isMissingFromDirectory, siteIdOf } from '../../local/
 import { generateLocalAppCertificate } from '../../local/keys.js'
 import { startNodeHost, type NodeHost } from '../../local/nodeHost.js'
 import { startLocalStack, type LocalStack } from '../../local/stack.js'
+
+const REPORTS_READER = '4a5d8f65-41da-4de4-8968-e035b65339cf'
 import { createProxyDeps } from './deps.js'
 
 const UNCONSENTED_TENANT = '77777777-2222-4333-8444-555555555555'
@@ -161,11 +163,28 @@ describe('proxy end to end on the local stack', () => {
     expect(((await response.json()) as { error: { code: string } }).error.code).toBe('AdminConsentRequired')
   })
 
-  it('refuses a signed-in user without an admin directory role', async () => {
+  it('serves a signed-in user holding no directory role, the way P365 does', async () => {
     const token = await stack.entra.issueUserToken({ wids: [] })
     const response = await fetch(`${host.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${token}` } })
-    expect(response.status).toBe(403)
-    expect(((await response.json()) as { error: { code: string } }).error.code).toBe('DirectoryRoleRequired')
+    expect(response.status).toBe(200)
+  })
+
+  it('refuses that same user once a directory role is demanded', async () => {
+    const strict = await startNodeHost(
+      createProxyDeps({ ...stack.env, PROXY_REQUIRED_DIRECTORY_ROLES: REPORTS_READER }),
+    )
+    try {
+      const token = await stack.entra.issueUserToken({ wids: [] })
+      const response = await fetch(`${strict.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${token}` } })
+      expect(response.status).toBe(403)
+      expect(((await response.json()) as { error: { code: string } }).error.code).toBe('DirectoryRoleRequired')
+
+      const admin = await stack.entra.issueUserToken({ wids: [REPORTS_READER] })
+      const allowed = await fetch(`${strict.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${admin}` } })
+      expect(allowed.status).toBe(200)
+    } finally {
+      await strict.close()
+    }
   })
 
   it('refuses a token minted for another audience', async () => {

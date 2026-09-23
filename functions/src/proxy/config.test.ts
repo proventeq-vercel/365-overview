@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateLocalAppCertificate } from '../../local/keys.js'
 import {
-  DEFAULT_REQUIRED_DIRECTORY_ROLES,
   PUBLIC_AUTHORITY_HOST,
   PUBLIC_GRAPH_ORIGIN,
   readConfig,
@@ -54,7 +53,7 @@ describe('readConfig', () => {
     })
   })
 
-  it('applies the public defaults and the four admin directory roles', () => {
+  it('applies the public defaults and requires no directory role, as P365 does not', () => {
     const config = readConfig(complete)
     expect(config.audiences).toEqual(['api://client-id', 'client-id'])
     expect(config.scope).toBe('access_as_user')
@@ -63,8 +62,7 @@ describe('readConfig', () => {
     expect(config.allowedTenantIds).toBeNull()
     expect(config.allowedOrigins).toEqual(['http://localhost:5173'])
     expect(config.publicUrl).toBeNull()
-    expect(config.requiredDirectoryRoles).toEqual(DEFAULT_REQUIRED_DIRECTORY_ROLES)
-    expect(config.requiredDirectoryRoles).toHaveLength(4)
+    expect(config.requiredDirectoryRoles).toEqual([])
   })
 
   it('lower-cases tenant and role ids and trims trailing slashes off hosts', () => {
