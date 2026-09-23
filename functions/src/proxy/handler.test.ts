@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { readConfig } from './config.js'
 import { ProxyError } from './errors.js'
-import { handleProxyRequest, proxyGraphBase, type ProxyDeps, type ProxyRequest } from './handler.js'
+import {
+  configurationFailure,
+  handleProxyRequest,
+  proxyGraphBase,
+  type ProxyDeps,
+  type ProxyRequest,
+} from './handler.js'
 
 const TENANT = '11111111-2222-4333-8444-555555555555'
 const ORIGIN = 'http://localhost:5173'
@@ -47,6 +53,31 @@ describe('proxyGraphBase', () => {
   it('does not double the route when the setting already carries it', () => {
     expect(proxyGraphBase('https://proxy.example/api/graph')).toBe('https://proxy.example/api/graph')
     expect(proxyGraphBase('https://proxy.example/api/graph/')).toBe('https://proxy.example/api/graph')
+  })
+})
+
+describe('configurationFailure', () => {
+  const broken = new ProxyError(500, 'InvalidConfiguration', 'Missing settings: GRAPH_CLIENT_ID')
+
+  it('lets an allowed origin through its preflight, so the browser can read the error that follows', () => {
+    const response = configurationFailure(request({ method: 'OPTIONS', headers: { origin: ORIGIN } }), [ORIGIN], broken)
+    expect(response.status).toBe(204)
+    expect(response.headers['access-control-allow-origin']).toBe(ORIGIN)
+  })
+
+  it('reports the configuration error to an allowed origin with CORS and without the setting names', () => {
+    const response = configurationFailure(request({ headers: { origin: ORIGIN } }), [ORIGIN], broken)
+    expect(response.status).toBe(500)
+    expect(response.headers['access-control-allow-origin']).toBe(ORIGIN)
+    expect(response.headers['cache-control']).toBe('no-store')
+    expect(bodyOf(response).error?.code).toBe('InvalidConfiguration')
+    expect(response.body).not.toContain('GRAPH_CLIENT_ID')
+  })
+
+  it('still refuses an origin that is not allowed', () => {
+    const response = configurationFailure(request({ headers: { origin: 'https://evil.example' } }), [ORIGIN], broken)
+    expect(response.status).toBe(403)
+    expect(response.headers['access-control-allow-origin']).toBeUndefined()
   })
 })
 

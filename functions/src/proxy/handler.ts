@@ -30,11 +30,11 @@ const PRIVATE_RESPONSE_HEADERS = {
   vary: 'Origin, Authorization',
 }
 
-const matchedOrigin = (origin: string, config: ProxyConfig): string | null =>
-  config.allowedOrigins.find((allowed) => allowed === origin.replace(/\/+$/, '').toLowerCase()) ?? null
+const matchedOrigin = (origin: string, allowedOrigins: string[]): string | null =>
+  allowedOrigins.find((allowed) => allowed === origin.replace(/\/+$/, '').toLowerCase()) ?? null
 
-function corsHeaders(origin: string | null, config: ProxyConfig): Record<string, string> {
-  const allowed = origin ? matchedOrigin(origin, config) : null
+function corsHeaders(origin: string | null, allowedOrigins: string[]): Record<string, string> {
+  const allowed = origin ? matchedOrigin(origin, allowedOrigins) : null
   if (!allowed) return {}
   return {
     'access-control-allow-origin': allowed,
@@ -88,16 +88,33 @@ async function route(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyRespo
   return batch ? forwardBatch(batch, options) : forwardGet(graphRequest, options)
 }
 
-export async function handleProxyRequest(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyResponse> {
+function originGate(request: ProxyRequest, allowedOrigins: string[]) {
   const origin = request.header('origin')
-  const cors = corsHeaders(origin, deps.config)
+  const cors = corsHeaders(origin, allowedOrigins)
   const headers = { ...PRIVATE_RESPONSE_HEADERS, ...cors }
   if (origin && Object.keys(cors).length === 0) {
-    return { status: 403, headers, body: '' }
+    return { headers, answer: { status: 403, headers, body: '' } }
   }
   if (request.method === 'OPTIONS') {
-    return { status: 204, headers, body: '' }
+    return { headers, answer: { status: 204, headers, body: '' } }
   }
+  return { headers, answer: null }
+}
+
+export function configurationFailure(
+  request: ProxyRequest,
+  allowedOrigins: string[],
+  error: ProxyError,
+): ProxyResponse {
+  const { headers, answer } = originGate(request, allowedOrigins)
+  if (answer) return answer
+  const response = errorResponse(error)
+  return { ...response, headers: { ...response.headers, ...headers } }
+}
+
+export async function handleProxyRequest(request: ProxyRequest, deps: ProxyDeps): Promise<ProxyResponse> {
+  const { headers, answer } = originGate(request, deps.config.allowedOrigins)
+  if (answer) return answer
   let response: ProxyResponse
   try {
     response = await route(request, deps)
