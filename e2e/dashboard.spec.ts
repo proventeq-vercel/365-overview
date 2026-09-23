@@ -163,6 +163,17 @@ test.describe('before any script runs', () => {
     expect(logo.mask).toContain('proventeq-logo.svg')
     expect(logo.width).not.toBe('0px')
   })
+
+  test('the tab shows the Proventeq icon P365 uses', async ({ page, request }) => {
+    await page.goto('/')
+    const icon = page.locator('link[rel="icon"]')
+    await expect(icon).toHaveAttribute('href', '/proventeqIcon.webp')
+    await expect(icon).toHaveAttribute('type', 'image/webp')
+    const served = await request.get('/proventeqIcon.webp')
+    expect(served.ok()).toBe(true)
+    expect(served.headers()['content-type']).toBe('image/webp')
+    expect((await served.body()).length).toBe(6040)
+  })
 })
 
 test.describe('modes from the URL', () => {
