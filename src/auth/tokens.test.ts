@@ -45,6 +45,20 @@ describe('acquireToken', () => {
     expect(acquireTokenRedirect).toHaveBeenCalledWith({ account, scopes: ['s'] })
   })
 
+  it.each(['no_network_connectivity', 'post_request_failed', 'get_request_failed', 'interaction_in_progress'])(
+    'rethrows %s without sending the user to sign in again, which would not fix it',
+    async (code) => {
+      const acquireTokenRedirect = vi.fn()
+      const failure = new BrowserAuthError(code, code)
+      const instance = {
+        acquireTokenSilent: vi.fn().mockRejectedValue(failure),
+        acquireTokenRedirect,
+      } as never
+      await expect(acquireToken(instance, account, ['s'])).rejects.toBe(failure)
+      expect(acquireTokenRedirect).not.toHaveBeenCalled()
+    },
+  )
+
   it('rethrows other errors without redirecting', async () => {
     const acquireTokenRedirect = vi.fn()
     const instance = {

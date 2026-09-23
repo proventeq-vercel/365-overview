@@ -100,7 +100,8 @@ An empty value counts as unset.
 
 MSAL is configured with `cacheLocation: localStorage` and uses **redirect-based**
 login and token acquisition (`acquireTokenSilent` → `acquireTokenRedirect` on
-interaction-required / browser-auth errors).
+interaction-required / browser-auth errors, except a network failure or an
+interaction already in progress, which signing in again would not fix).
 
 ### Graph proxy — `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`
 
