@@ -82,6 +82,9 @@ function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
   )
 }
 
+export const licenceEstimateOf = (skus: LicenseSku[] | null): number | null =>
+  skus === null ? null : estimateEntitlementBytes(skus)
+
 const positiveOrNull = (bytes: number | null): number | null =>
   bytes !== null && bytes > 0 ? bytes : null
 
@@ -100,7 +103,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
-  const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
+  const licenceEstimateBytes = licenceEstimateOf(skus)
   const entitledBytes = override ?? licenceEstimateBytes
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 

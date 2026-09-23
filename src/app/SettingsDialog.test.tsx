@@ -28,10 +28,12 @@ function renderDialog(initial?: Partial<ReportSettings>, open = true) {
   const onChange = vi.fn()
   const onOpenChange = vi.fn()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const source = createMockDataSource('healthy')
+  const ds = { ...source, getSites: vi.fn(source.getSites) }
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <DataSourceContext value={createMockDataSource('healthy')}>
+        <DataSourceContext value={ds}>
           <SettingsProvider>{children}</SettingsProvider>
         </DataSourceContext>
       </QueryClientProvider>
@@ -44,7 +46,7 @@ function renderDialog(initial?: Partial<ReportSettings>, open = true) {
     </>,
     { wrapper: Wrapper },
   )
-  return { onChange, onOpenChange }
+  return { onChange, onOpenChange, ds }
 }
 
 const dialogHasFocus = () =>
@@ -60,6 +62,11 @@ describe('SettingsDialog', () => {
     renderDialog(undefined, false)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('SharePoint entitlement')).not.toBeInTheDocument()
+  })
+
+  it('starts no Graph calls while closed, so the header alone never fetches the report', () => {
+    const { ds } = renderDialog(undefined, false)
+    expect(ds.getSites).not.toHaveBeenCalled()
   })
 
   it('is a titled dialog with a close button', async () => {

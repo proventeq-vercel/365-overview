@@ -93,7 +93,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   inside the per-keystroke path).
 - `src/hooks/useStorageOverview.ts` — fetches the inputs once under
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
-  The ONLY data entry point for the page.
+  The ONLY data entry point for the page. `useLicenceEstimateBytes` selects just
+  the licence estimate from the same query for the settings dialog, whose fields
+  mount only while it is open, and never refetches on mount — opening the
+  dialog must not re-issue the Graph calls or build the model a second time.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),

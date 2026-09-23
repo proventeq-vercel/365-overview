@@ -3,29 +3,42 @@ import { useQuery } from '@tanstack/react-query'
 import { useDataSource } from '../data/useDataSource'
 import { nameTopSites } from '../data/namedSites'
 import { withSiteDirectory } from '../reports/siteDirectory'
-import { buildStorageOverview } from '../model/storageOverview'
+import { buildStorageOverview, licenceEstimateOf } from '../model/storageOverview'
+import type { DataSource } from '../data/fixtures'
 import type { ReportSettings } from '../lib/settings'
 import type { StorageOverview } from '../types/storage'
 
-export function useStorageOverview(settings: ReportSettings) {
+const storageInputsQuery = (ds: DataSource) => ({
+  queryKey: ['storageInputs'],
+  queryFn: async () => {
+    const [rawSites, directory, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
+      await Promise.all([
+        ds.getSites(),
+        ds.getSiteDirectory(),
+        ds.getDrives(),
+        ds.getSharePointTrend(),
+        ds.getOneDriveTrend(),
+        ds.getLicenses(),
+        ds.getReportRefreshDate(),
+      ])
+    const sites = await nameTopSites(ds, withSiteDirectory(rawSites, directory))
+    return { sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate }
+  },
+})
+
+export function useLicenceEstimateBytes(): number | null {
   const ds = useDataSource()
   const query = useQuery({
-    queryKey: ['storageInputs'],
-    queryFn: async () => {
-      const [rawSites, directory, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
-        await Promise.all([
-          ds.getSites(),
-          ds.getSiteDirectory(),
-          ds.getDrives(),
-          ds.getSharePointTrend(),
-          ds.getOneDriveTrend(),
-          ds.getLicenses(),
-          ds.getReportRefreshDate(),
-        ])
-      const sites = await nameTopSites(ds, withSiteDirectory(rawSites, directory))
-      return { sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate }
-    },
+    ...storageInputsQuery(ds),
+    select: (inputs) => licenceEstimateOf(inputs.skus),
+    refetchOnMount: false,
   })
+  return query.data ?? null
+}
+
+export function useStorageOverview(settings: ReportSettings) {
+  const ds = useDataSource()
+  const query = useQuery(storageInputsQuery(ds))
 
   const inputs = query.data
   const data: StorageOverview | undefined = useMemo(
