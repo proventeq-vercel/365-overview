@@ -238,6 +238,34 @@ npm run build
 
 The output is written to `dist/`. Serve with any static file host.
 
+### Hosting the build on Azure
+
+The production host is Vercel, but a build can be served from an Azure Storage **static website**
+in the same resource group as the Graph proxy — useful for checking a branch against a real tenant
+without touching the Vercel project. No script, and nothing here is specific to a branch:
+
+```bash
+cd ~/projects/365-overview
+az storage account create --name <storage> --resource-group <rg> --location uksouth --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --allow-blob-public-access true
+az storage blob service-properties update --account-name <storage> --static-website --index-document index.html --404-document index.html --auth-mode login
+VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph npm run build
+az storage blob upload-batch --account-name <storage> --destination '$web' --source dist --overwrite --auth-mode key
+```
+
+The site is then `https://<storage>.z33.web.core.windows.net/`. `index.html` is the 404 document so
+client-side routes resolve; Azure serves them with a `404` status, which the browser ignores but a
+crawler would not — the Vercel rewrite in `vercel.json` is the one that answers `200`.
+
+Three things have to name the new origin before it works:
+
+- `PROXY_ALLOWED_ORIGINS` on the Function App,
+- the Function App's **platform CORS** list (`az functionapp cors add`) — see `functions/README.md`
+  for why both are needed,
+- the **SPA redirect URI** on the Entra registration. Without it MSAL reaches the sign-in page and
+  fails on the way back with `AADSTS50011`; Entra does not validate the redirect URI until after
+  authentication, so a sign-in prompt is not evidence that the URI is registered. Adding one needs
+  write access to the registration, which owning the subscription does not grant.
+
 ### Preview production build locally
 
 ```bash
