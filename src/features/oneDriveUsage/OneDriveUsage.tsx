@@ -3,6 +3,7 @@ import { CaveatBanner } from '@/components/CaveatBanner'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
 import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
+import { ReportHeading } from '@/design/ReportHeading'
 import { ReportSkeleton } from '@/design/ReportSkeleton'
 import { AccessFailure } from '@/features/storageOptimization/AccessFailure'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
@@ -26,13 +27,11 @@ export function OneDriveUsage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="enter-rise flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-p365-navy">{t('reports.oneDriveUsage.title')}</h1>
-        <p className="text-sm text-p365-grey-500">
-          {t('oneDrive.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
-          {t('app.reportLagNote')}
-        </p>
-      </div>
+      <ReportHeading
+        title={t('reports.oneDriveUsage.title')}
+        description={t('oneDrive.description')}
+        reportRefreshDate={data.reportRefreshDate}
+      />
       <OneDriveKpiCards overview={data} />
       <Section title={t('oneDrive.top.title')} subtitle={t('oneDrive.top.subtitle')} delay={80}>
         <Panel>

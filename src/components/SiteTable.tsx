@@ -6,7 +6,7 @@ import { capacityRatio, shareOf } from '@/lib/share'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
 import type { StorageRow } from '@/types/storage'
-import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
+import { formatBytes, formatDay, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
 import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
@@ -227,7 +227,7 @@ export function SiteTable({
       case 'lastActivity':
         return (
           <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {row.lastActivityDate ?? t('table.never')}
+            {row.lastActivityDate ? formatDay(row.lastActivityDate) : t('table.never')}
           </span>
         )
       case 'template':

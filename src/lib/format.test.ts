@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   formatBytes,
+  formatDay,
   formatLongMonthYear,
   formatShortMonthYear,
   formatNumber,
@@ -72,6 +73,20 @@ describe('formatShortMonthYear', () => {
 
   it('returns an unparseable label untouched', () => {
     expect(formatShortMonthYear('n/a')).toBe('n/a')
+  })
+})
+
+describe('formatDay', () => {
+  it('writes a report date the way the rest of the page writes dates', () => {
+    expect(formatDay('2026-08-30')).toBe('30 Aug 2026')
+  })
+
+  it('keeps the calendar day of a timestamp late in the UTC day', () => {
+    expect(formatDay('2026-08-30T23:30:00Z')).toBe('30 Aug 2026')
+  })
+
+  it('hands back text that is not a date rather than printing Invalid Date', () => {
+    expect(formatDay('soon')).toBe('soon')
   })
 })
 

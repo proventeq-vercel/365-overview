@@ -37,6 +37,12 @@ export function formatShortMonthYear(month: string): string {
   return new Intl.DateTimeFormat(REPORT_LOCALE, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
 
+export function formatDay(isoDate: string): string {
+  const date = new Date(`${isoDate.slice(0, 10)}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return isoDate
+  return new Intl.DateTimeFormat(REPORT_LOCALE, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date)
+}
+
 export function formatLongMonthYear(isoDate: string): string {
   const date = new Date(isoDate)
   if (Number.isNaN(date.getTime())) return isoDate

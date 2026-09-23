@@ -101,7 +101,7 @@ describe('SiteTable', () => {
   it('renders the last-activity column when asked', () => {
     render(<SiteTable rows={rows} shareTotalBytes={1000} columns={['name', 'lastActivity']} />)
     expect(screen.getByRole('columnheader', { name: /last activity/i })).toBeInTheDocument()
-    expect(screen.getByText('2026-08-01')).toBeInTheDocument()
+    expect(screen.getByText('1 Aug 2026')).toBeInTheDocument()
   })
 
   it('renders the template column when asked', () => {

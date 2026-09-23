@@ -129,6 +129,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
+  `ReportHeading` (a report's title, description and "Data as of" line,
+  dropped when the report carries no date),
   `AdornedInput` (prefix/suffix input), `DraftInput` (an
   `AdornedInput` that keeps what is typed as a draft, commits only valid
   input, marks the rest `aria-invalid` and reverts on blur), `ReportSkeleton`, `Logo` (inline SVG of
