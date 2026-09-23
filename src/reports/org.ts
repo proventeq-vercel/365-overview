@@ -1,6 +1,7 @@
 import type { OrgInfo } from '../types/reports'
 
 export interface RawOrg {
+  id: string
   displayName: string
   countryLetterCode: string | null
   verifiedDomains: { name: string; isDefault: boolean }[]
@@ -9,6 +10,7 @@ export interface RawOrg {
 export function parseOrg(raw: RawOrg): OrgInfo {
   const def = raw.verifiedDomains.find((d) => d.isDefault) ?? raw.verifiedDomains[0]
   return {
+    id: raw.id,
     displayName: raw.displayName,
     verifiedDomain: def?.name ?? '',
     country: raw.countryLetterCode,

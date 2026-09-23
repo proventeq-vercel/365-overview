@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { DataSourceContext } from '@/data/useDataSource'
-import { createMockDataSource, type DataSource, type MockScenario } from '@/data/fixtures'
+import { createMockDataSource, MOCK_TENANT_ID, type DataSource, type MockScenario } from '@/data/fixtures'
 import { ApiError } from '@/clients/apiError'
 import App from '@/App'
 
@@ -122,7 +122,7 @@ describe('Storage Optimisation app', () => {
       expect(screen.queryByText(/estimated from licence counts/i)).not.toBeInTheDocument(),
     )
     expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
-      entitlementOverrideBytes: 40 * 1024 * 1_073_741_824,
+      entitlementOverrides: { [MOCK_TENANT_ID]: 40 * 1024 * 1_073_741_824 },
     })
   })
 

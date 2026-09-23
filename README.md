@@ -26,7 +26,8 @@ never counted against the SharePoint entitlement.
 > plans include SharePoint storage (1 GB per Extra File Storage unit, 0.5 GB per OneDrive standalone
 > licence) — and marks every dependent figure *Estimated* until the administrator enters the real
 > figure from the SharePoint admin centre in the report settings. The entered value is kept in
-> the browser's `localStorage` only.
+> the browser's `localStorage` only, against the tenant it was entered for, so signing in to
+> another tenant never reuses it.
 
 ---
 
@@ -255,7 +256,8 @@ concept for a second report and reuses the same model and data.
 **Report settings** opens a dialog with the cost per GB per month (with the currency
 picked from a list), and the SharePoint entitlement in TB — the licence estimate is shown as the
 hint so the admin knows what they are replacing. Settings live in the browser's
-localStorage only.
+localStorage only; the rate and currency apply to every tenant, the entitlement only to the
+tenant it was entered for.
 
 ## Running the app
 

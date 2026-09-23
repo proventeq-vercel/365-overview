@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { createMockDataSource } from './fixtures'
 import { buildStorageOverview } from '../model/storageOverview'
-import { loadSettings } from '../lib/settings'
+import { DEFAULT_SETTINGS } from '../lib/settings'
 
 async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0]) {
   const ds = createMockDataSource(scenario)
-  const settings = loadSettings()
+  const settings = DEFAULT_SETTINGS
   const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
     await Promise.all([
       ds.getSites(),

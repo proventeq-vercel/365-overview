@@ -29,6 +29,7 @@ export interface LicenseSku {
 }
 
 export interface OrgInfo {
+  id: string;
   displayName: string;
   verifiedDomain: string;
   country: string | null;

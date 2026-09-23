@@ -150,7 +150,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB with the licence estimate as hint), `SettingsProvider` /
-  `useSettings` (localStorage-backed `ReportSettings` context), `SideMenu`
+  `useSettings` (localStorage-backed `ReportSettings` context; rate and
+  currency are global, the entitlement override is stored per tenant under
+  the organisation id `App` passes as `tenantKey`, so a switched account
+  never inherits another tenant's figure), `SideMenu`
   (P365's `NavBarComponent` pattern: a navy panel that is always mounted and
   animates `width` 0 ↔ 17.5rem in 260ms `cubic-bezier(0.4,0,0.2,1)` with a
   fixed-width inner so it slides rather than reflows; the header hamburger

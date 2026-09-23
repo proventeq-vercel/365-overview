@@ -20,7 +20,11 @@ function Probe({ onChange }: { onChange: (settings: ReportSettings) => void }) {
 }
 
 function renderDialog(initial?: Partial<ReportSettings>, open = true) {
-  if (initial) localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(initial))
+  if (initial) {
+    const { entitlementOverrideBytes, ...shared } = initial
+    const entitlementOverrides = entitlementOverrideBytes ? { '': entitlementOverrideBytes } : {}
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...shared, entitlementOverrides }))
+  }
   const onChange = vi.fn()
   const onOpenChange = vi.fn()
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

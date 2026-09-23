@@ -159,7 +159,10 @@ const licenses: LicenseSku[] = [
   },
 ]
 
+export const MOCK_TENANT_ID = '7d2f4c1e-3b8a-4e6f-9c05-1a2b3c4d5e6f'
+
 const org: OrgInfo = {
+  id: MOCK_TENANT_ID,
   displayName: 'Contoso Ltd',
   verifiedDomain: 'contoso.onmicrosoft.com',
   country: 'GB',

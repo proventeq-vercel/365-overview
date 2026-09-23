@@ -1,22 +1,33 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, loadSettings, saveSettings } from './settings'
+import {
+  DEFAULT_SETTINGS,
+  SETTINGS_STORAGE_KEY,
+  loadSettings,
+  saveSettings,
+  settingsForTenant,
+  withSettingsUpdate,
+} from './settings'
+
+const TENANT_A = 'aaaaaaaa-0000-4000-8000-000000000001'
+const TENANT_B = 'bbbbbbbb-0000-4000-8000-000000000002'
+const EMPTY = { ratePerGb: 0.02, currency: 'GBP', entitlementOverrides: {} }
 
 describe('settings', () => {
   beforeEach(() => localStorage.clear())
 
   it('returns defaults when nothing is stored', () => {
-    expect(loadSettings()).toEqual(DEFAULT_SETTINGS)
+    expect(loadSettings()).toEqual(EMPTY)
   })
 
   it('round-trips saved settings', () => {
-    const custom = { ratePerGb: 0.17, currency: 'EUR', entitlementOverrideBytes: 42 }
+    const custom = { ratePerGb: 0.17, currency: 'EUR', entitlementOverrides: { [TENANT_A]: 42 } }
     saveSettings(custom)
     expect(loadSettings()).toEqual(custom)
   })
 
   it('falls back to defaults on corrupt stored JSON', () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, '{not json')
-    expect(loadSettings()).toEqual(DEFAULT_SETTINGS)
+    expect(loadSettings()).toEqual(EMPTY)
   })
 
   it('ignores a stored rate of the wrong shape', () => {
@@ -54,20 +65,56 @@ describe('settings', () => {
   })
 
   it('reads a stored override of the wrong shape as no override, not as zero', () => {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":"lots"}')
-    expect(loadSettings().entitlementOverrideBytes).toBeNull()
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ entitlementOverrides: { [TENANT_A]: 'lots' } }))
+    expect(settingsForTenant(loadSettings(), TENANT_A).entitlementOverrideBytes).toBeNull()
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ entitlementOverrides: [123] }))
+    expect(loadSettings().entitlementOverrides).toEqual({})
   })
 
   it('reads a stored override of zero or less as no override, since the report would ignore it', () => {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":0}')
-    expect(loadSettings().entitlementOverrideBytes).toBeNull()
-    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":-2199023255552}')
-    expect(loadSettings().entitlementOverrideBytes).toBeNull()
+    localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ entitlementOverrides: { [TENANT_A]: 0, [TENANT_B]: -2199023255552 } }),
+    )
+    expect(loadSettings().entitlementOverrides).toEqual({})
   })
 
-  it('keeps a stored override that is a real number', () => {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":123}')
-    expect(loadSettings().entitlementOverrideBytes).toBe(123)
+  it('keeps a stored override that is a real number, for its own tenant', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ entitlementOverrides: { [TENANT_A]: 123 } }))
+    expect(settingsForTenant(loadSettings(), TENANT_A).entitlementOverrideBytes).toBe(123)
+  })
+
+  it("never applies one tenant's entitlement to another tenant signed in on the same browser", () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ entitlementOverrides: { [TENANT_A]: 123 } }))
+    expect(settingsForTenant(loadSettings(), TENANT_B).entitlementOverrideBytes).toBeNull()
+  })
+
+  it('drops an override stored before overrides were per tenant, since its tenant is unknown', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":123,"currency":"EUR"}')
+    const stored = loadSettings()
+    expect(stored.currency).toBe('EUR')
+    expect(settingsForTenant(stored, '').entitlementOverrideBytes).toBeNull()
+    expect(settingsForTenant(stored, TENANT_A).entitlementOverrideBytes).toBeNull()
+  })
+
+  it('does not read an inherited object property as an override', () => {
+    expect(settingsForTenant(EMPTY, 'constructor').entitlementOverrideBytes).toBeNull()
+  })
+
+  it('sets and clears the override of the tenant being edited and leaves the others alone', () => {
+    const both = withSettingsUpdate(
+      { ...EMPTY, entitlementOverrides: { [TENANT_B]: 7 } },
+      TENANT_A,
+      { entitlementOverrideBytes: 5 },
+    )
+    expect(both.entitlementOverrides).toEqual({ [TENANT_A]: 5, [TENANT_B]: 7 })
+    expect(withSettingsUpdate(both, TENANT_A, { entitlementOverrideBytes: null }).entitlementOverrides).toEqual({
+      [TENANT_B]: 7,
+    })
+    expect(withSettingsUpdate(both, TENANT_A, { currency: 'EUR' }).entitlementOverrides).toEqual({
+      [TENANT_A]: 5,
+      [TENANT_B]: 7,
+    })
   })
 
   it('keeps each stored field independently of the others', () => {
@@ -96,8 +143,8 @@ describe('settings', () => {
       throw new Error('storage disabled')
     }
     try {
-      expect(() => saveSettings(DEFAULT_SETTINGS)).not.toThrow()
-      expect(loadSettings()).toEqual(DEFAULT_SETTINGS)
+      expect(() => saveSettings(EMPTY)).not.toThrow()
+      expect(loadSettings()).toEqual(EMPTY)
     } finally {
       Storage.prototype.getItem = getItem
       Storage.prototype.setItem = setItem
