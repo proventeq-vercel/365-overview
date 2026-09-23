@@ -50,12 +50,12 @@ describe('consentClientIdFor', () => {
       {
         VITE_CLIENT_ID: 'spa-app',
         VITE_GRAPH_PROXY_URL: 'https://proxy.example/api/graph',
-        VITE_GRAPH_PROXY_SCOPE: 'api://proxy-app/access_as_user',
+        VITE_GRAPH_PROXY_SCOPE: 'api://f0e1d2c3-b4a5-4697-8a1b-2c3d4e5f6a7b/access_as_user',
       },
       'https://365-overview.vercel.app',
     )
-    expect(consentClientIdFor(config)).toBe('proxy-app')
-    expect(adminConsentUrlFor(config)).toContain('client_id=proxy-app')
+    expect(consentClientIdFor(config)).toBe('f0e1d2c3-b4a5-4697-8a1b-2c3d4e5f6a7b')
+    expect(adminConsentUrlFor(config)).toContain('client_id=f0e1d2c3-b4a5-4697-8a1b-2c3d4e5f6a7b')
   })
 
   it('reads the app id, not the tenant domain, from the domain-qualified scope form', () => {
@@ -63,11 +63,23 @@ describe('consentClientIdFor', () => {
       {
         VITE_CLIENT_ID: 'spa-app',
         VITE_GRAPH_PROXY_URL: 'https://proxy.example/api/graph',
-        VITE_GRAPH_PROXY_SCOPE: 'api://proventeq.com/proxy-app/access_as_user',
+        VITE_GRAPH_PROXY_SCOPE: 'api://proventeq.com/f0e1d2c3-b4a5-4697-8a1b-2c3d4e5f6a7b/access_as_user',
       },
       'https://365-overview.vercel.app',
     )
-    expect(consentClientIdFor(config)).toBe('proxy-app')
+    expect(consentClientIdFor(config)).toBe('f0e1d2c3-b4a5-4697-8a1b-2c3d4e5f6a7b')
+  })
+
+  it('never puts a named App ID URI in client_id, which Entra would reject', () => {
+    const config = parseConfig(
+      {
+        VITE_CLIENT_ID: 'spa-app',
+        VITE_GRAPH_PROXY_URL: 'https://proxy.example/api/graph',
+        VITE_GRAPH_PROXY_SCOPE: 'api://proventeq.com/graph-proxy/access_as_user',
+      },
+      'https://365-overview.vercel.app',
+    )
+    expect(consentClientIdFor(config)).toBe('spa-app')
   })
 
   it('consents the SPA registration when the proxy shares it', () => {

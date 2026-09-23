@@ -10,10 +10,12 @@ export function buildAdminConsentUrl(clientId: string, redirectUri: string): str
 
 const API_SCOPE_PREFIX = 'api://'
 
+const APPLICATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function clientIdOfScope(scope: string): string | null {
   if (!scope.startsWith(API_SCOPE_PREFIX)) return null
-  const segments = scope.slice(API_SCOPE_PREFIX.length).split('/')
-  return segments.length > 1 ? (segments.at(-2) ?? null) || null : null
+  const resource = scope.slice(API_SCOPE_PREFIX.length).split('/').slice(0, -1)
+  return resource.find((segment) => APPLICATION_ID.test(segment)) ?? null
 }
 
 export function consentClientIdFor(config: AppConfig): string {
