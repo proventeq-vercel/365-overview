@@ -74,8 +74,8 @@ describe('settings', () => {
     expect(DEFAULT_SETTINGS.entitlementOverrideBytes).toBeNull()
   })
 
-  it('defaults the rate to the P365 UK list price of the Extra File Storage add-on', () => {
-    expect(DEFAULT_SETTINGS.ratePerGb).toBe(0.16)
+  it("defaults the rate to P365's DefaultCostRatePerGbPerMonth", () => {
+    expect(DEFAULT_SETTINGS.ratePerGb).toBe(0.02)
     expect(DEFAULT_SETTINGS.currency).toBe('GBP')
   })
 

@@ -29,11 +29,6 @@ export function GrowthSection({ overview, delay }: Props) {
   const callout = buildCallout(overview, t)
   const quotaKnown = sharePoint.entitledBytes !== null
 
-  const projected =
-    cost.growthBillableAnnual !== null && cost.cumulativeBillableYear3 !== null
-      ? { billable: true, annual: cost.growthBillableAnnual, cumulative: cost.cumulativeBillableYear3 }
-      : { billable: false, annual: cost.growthNotionalAnnual, cumulative: cost.cumulativeNotionalYear3 }
-
   return (
     <Section
       delay={delay}
@@ -110,26 +105,18 @@ export function GrowthSection({ overview, delay }: Props) {
             />
           </MiniStatRow>
           <div className="mt-3 flex flex-col gap-1">
-            <PanelLabel>
-              {projected.billable
-                ? t('storageOptimisation.growth.costTitle')
-                : t('storageOptimisation.growth.costTitleNotional')}
-            </PanelLabel>
+            <PanelLabel>{t('storageOptimisation.growth.costTitle')}</PanelLabel>
             <dl className="divide-y divide-p365-grey-100">
               <KvRow
                 label={t('storageOptimisation.growth.nextTwelveMonths')}
-                value={formatMoney(projected.annual, cost.currency)}
+                value={formatMoney(cost.growthAnnual, cost.currency)}
               />
               <KvRow
                 label={t('storageOptimisation.growth.cumulativeThreeYears')}
-                value={formatMoney(projected.cumulative, cost.currency)}
+                value={formatMoney(cost.cumulativeYear3, cost.currency)}
               />
             </dl>
-            <PanelDescription>
-              {projected.billable
-                ? t('storageOptimisation.growth.costSubtitle')
-                : t('storageOptimisation.growth.costSubtitleNotional')}
-            </PanelDescription>
+            <PanelDescription>{t('storageOptimisation.growth.costSubtitle')}</PanelDescription>
           </div>
         </Panel>
       </SplitGrid>

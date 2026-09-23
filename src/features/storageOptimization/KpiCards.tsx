@@ -58,19 +58,9 @@ export function KpiCards({ overview }: Props) {
         />
         <StatCard
           label={t('storageOptimisation.kpi.costOfNothing')}
-          value={
-            cost.growthBillableAnnual === null
-              ? t('storageOptimisation.kpi.unknown')
-              : cost.growthBillableAnnual > 0
-                ? formatMoney(cost.growthBillableAnnual, cost.currency)
-                : t('storageOptimisation.kpi.costOfNothingNone')
-          }
-          color={cost.growthBillableAnnual === null ? P365.grey400 : P365.yellow}
-          information={
-            cost.growthBillableAnnual === null
-              ? t('storageOptimisation.kpi.costOfNothingHintUnknownQuota', { rate })
-              : t('storageOptimisation.kpi.costOfNothingHint', { rate })
-          }
+          value={formatMoney(cost.growthAnnual, cost.currency)}
+          color={P365.yellow}
+          information={t('storageOptimisation.kpi.costOfNothingHint', { rate })}
         />
         <StatCard
           label={t('storageOptimisation.kpi.forecast')}

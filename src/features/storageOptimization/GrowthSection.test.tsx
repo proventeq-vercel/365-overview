@@ -84,7 +84,17 @@ describe('GrowthSection', () => {
     expect(screen.getByText(/estimated from licence counts/i)).toBeInTheDocument()
   })
 
-  it('labels the cost as notional when the entitlement is unknown', () => {
+  it('prices growth identically whether or not the entitlement is known', () => {
+    const { unmount } = render(<GrowthSection overview={withGrowth} />)
+    expect(
+      screen.getByRole('heading', { name: /projected cost if nothing changes/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
+    expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent(
+      '£1,296.00',
+    )
+    unmount()
+
     render(
       <GrowthSection
         overview={{
@@ -95,16 +105,8 @@ describe('GrowthSection', () => {
         }}
       />,
     )
-    expect(screen.getByRole('heading', { name: 'Projected value of growth' })).toBeInTheDocument()
-    expect(screen.getByText(/this is not billable spend/)).toBeInTheDocument()
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('Unknown')
-  })
-
-  it('shows the billable cost when the entitlement is known', () => {
-    render(<GrowthSection overview={withGrowth} />)
-    expect(
-      screen.getByRole('heading', { name: /projected cost if nothing changes/i }),
-    ).toBeInTheDocument()
   })
 
   it('reports the mini-stats the model measured', () => {

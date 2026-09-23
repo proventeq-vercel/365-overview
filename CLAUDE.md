@@ -183,8 +183,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   allocation IS the real per-user cap and a percentage of it is meaningful — do
   not "fix" one by analogy with the other.**
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
-  `entitledBytes`, `remainingBytes`, `usedPercentage`, `growthBillableAnnual` or
-  `cumulativeBillableYear3` is a defect.**
+  `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
+  defect.** The cost figures are the exception and are never null: P365 prices
+  growth from the growth rate alone, so an unknown entitlement does not stop
+  `cost.growthAnnual` / `cost.cumulativeYear3` being real numbers.
 - **Components do no arithmetic. If a section needs a number, add it to
   `buildStorageOverview`.** That includes clamps (`remainingBytes` is already
   ≥ 0, as P365's backend returns it), grades (`sharePoint.utilization`), the
@@ -216,16 +218,18 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Every user-facing string, colour rule and card state comes from P365's
   `features/storageOptimization` (`storageFormat.ts`, `forecastCallout.ts`,
   `intl/en.json` under `storageOverview.*`). Change the wording there first, or
-  not at all; `src/intl/en.json` mirrors it. **Two figures deliberately do not
-  mirror P365** — record the reason before "fixing" either. The cost rate
-  default is 0.16 GBP/GB/month (`lib/settings.ts`), not the 0.02 in P365's
-  `StorageOverviewService.DefaultCostRatePerGbPerMonth`; there is no
-  `StorageOptimisationOptions` class, an earlier note here claimed one. And the
-  cost of doing nothing is **headroom-gated** here — P365 charges the whole
-  projected growth (`annualGrowthGb × rate × 12`), this report charges only the
-  part that would not fit inside the entitlement, which is what the card's own
-  copy promises ("Growth that still fits inside your entitlement adds
-  nothing"). Ungating it would make the copy a lie.
+  not at all; `src/intl/en.json` mirrors it. **Pricing mirrors P365 exactly**:
+  the rate default is 0.02 GBP/GB/month (`lib/settings.ts`), which is
+  `StorageOverviewService.DefaultCostRatePerGbPerMonth` — there is no
+  `StorageOptimisationOptions` class, an earlier note here claimed one. The
+  cost of doing nothing is the whole projected growth
+  (`annualGrowthGb × rate × 12`), never gated on headroom or on the
+  entitlement being known; the three-year figure prices each year at its
+  **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. An earlier
+  version of this report charged only the growth that overflowed the
+  entitlement and split every figure into notional and billable — it produced
+  a different number from P365 on the same tenant, which is the bug this rule
+  exists to stop.
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.

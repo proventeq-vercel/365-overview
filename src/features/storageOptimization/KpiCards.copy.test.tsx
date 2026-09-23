@@ -36,28 +36,20 @@ describe('KpiCards', () => {
     expect(card('Remaining')).not.toHaveTextContent('0%')
   })
 
-  it('says the cost is unknown rather than showing a zero bill', () => {
+  it('prices growth as money even when the entitlement is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent(/unknown/i)
-    expect(card('Cost of doing nothing')).not.toHaveTextContent('£0.00')
+    expect(card('Cost of doing nothing')).toHaveTextContent('£288.00')
+    expect(card('Cost of doing nothing')).not.toHaveTextContent(/unknown/i)
   })
 
-  it('says "No change today" instead of £0.00 when growth fits inside the entitlement', () => {
-    render(<KpiCards overview={base} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('No change today')
-    expect(card('Cost of doing nothing')).not.toHaveTextContent('£0.00')
-  })
-
-  it('shows the billable cost as money once growth exceeds the headroom', () => {
-    render(
-      <KpiCards overview={{ ...base, cost: { ...base.cost, growthBillableAnnual: 1234.5 } }} />,
-    )
+  it('shows the annual cost of growth as money', () => {
+    render(<KpiCards overview={{ ...base, cost: { ...base.cost, growthAnnual: 1234.5 } }} />)
     expect(card('Cost of doing nothing')).toHaveTextContent('£1,234.50')
   })
 
   it('quotes the configured rate in the cost hint', () => {
     render(<KpiCards overview={base} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£0.16/GB per month')
+    expect(card('Cost of doing nothing')).toHaveTextContent('£0.02/GB per month')
   })
 
   it('does not present a forecast when history is too short', () => {

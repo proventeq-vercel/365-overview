@@ -156,8 +156,6 @@ describe('buildStorageOverview entitlement', () => {
     expect(overview.sharePoint.usedPercentage).toBeNull()
     expect(overview.sharePoint.headroomRatio).toBeNull()
     expect(overview.sharePoint.overageBytes).toBeNull()
-    expect(overview.cost.growthBillableAnnual).toBeNull()
-    expect(overview.cost.cumulativeBillableYear3).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Unknown')
     expect(overview.growth.forecastExhaustionDate).toBeNull()
     expect(overview.growth.forecastMonthsToExhaustion).toBeNull()
@@ -169,10 +167,10 @@ describe('buildStorageOverview entitlement', () => {
     )
   })
 
-  it('always populates the notional cost figures, even without an entitlement', () => {
+  it('prices growth without an entitlement, which P365 never gates the cost on', () => {
     const overview = buildStorageOverview(unknownEntitlement())
-    expect(overview.cost.growthNotionalAnnual).toBeGreaterThan(0)
-    expect(overview.cost.cumulativeNotionalYear3).toBeGreaterThan(0)
+    expect(overview.cost.growthAnnual).toBeGreaterThan(0)
+    expect(overview.cost.cumulativeYear3).toBeGreaterThan(0)
   })
 })
 
@@ -427,7 +425,7 @@ describe('buildStorageOverview growth and cost', () => {
     const overview = buildStorageOverview(inputs({ sharePointTrend: shrinking }))
     expect(overview.growth.avgMonthlyGrowthBytes).toBe(-10 * GB)
     expect(overview.growth.forecastExhaustionDate).toBeNull()
-    expect(overview.cost.growthNotionalAnnual).toBe(0)
+    expect(overview.cost.growthAnnual).toBe(0)
   })
 
   it('marks a volatile series without suppressing the rate', () => {
@@ -445,14 +443,10 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastEndBytes).toBe(210 * GB)
   })
 
-  it('bills the year-one growth that exceeds headroom', () => {
+  it('prices the whole year of growth, headroom or not, as P365 does', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 200 * GB }))
-    const headroomGb = 50
-    const growthGb = 120
-    expect(overview.cost.growthBillableAnnual).toBeCloseTo(
-      (growthGb - headroomGb) * 0.2 * 12,
-      6,
-    )
+    expect(overview.cost.growthAnnual).toBeCloseTo(288, 6)
+    expect(overview.cost.cumulativeYear3).toBeCloseTo(1296, 6)
   })
 
   it('passes the rate and currency through untouched', () => {
@@ -509,7 +503,7 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.oneDrive.usedBytes).toBe(0)
     expect(overview.growth.points).toEqual([])
     expect(overview.growth.forecastEndBytes).toBe(0)
-    expect(Number.isFinite(overview.cost.growthNotionalAnnual)).toBe(true)
+    expect(Number.isFinite(overview.cost.growthAnnual)).toBe(true)
     expect(overview.sharePoint.byWorkload).toEqual([])
     expect(overview.oneDrive.drivesNearCap).toBe(0)
   })
