@@ -56,7 +56,7 @@ export function isSeriesVolatile(buckets: MonthBucket[]): boolean {
   return Math.abs(endpointRate - medianRate) > VOLATILITY_DIVERGENCE * Math.abs(medianRate)
 }
 
-export function monthsToExhaustion(
+export function runwayMonths(
   usedBytes: number,
   entitledBytes: number | null,
   ratePerMonth: number,
@@ -65,7 +65,7 @@ export function monthsToExhaustion(
   const remaining = entitledBytes - usedBytes
   if (remaining <= 0) return 0
   if (ratePerMonth <= 0) return null
-  return Math.floor(remaining / ratePerMonth)
+  return remaining / ratePerMonth
 }
 
 export function forecastStatusFor(
@@ -75,9 +75,13 @@ export function forecastStatusFor(
 ): ForecastStatus {
   if (!hasEntitlement || historyTooShort) return 'Unknown'
   if (months === null) return 'Healthy'
-  if (months < CRITICAL_MONTHS) return 'Critical'
-  if (months < WARNING_MONTHS) return 'Warning'
+  if (months <= CRITICAL_MONTHS) return 'Critical'
+  if (months <= WARNING_MONTHS) return 'Warning'
   return 'Healthy'
+}
+
+export function monthsToExhaustion(runway: number | null): number | null {
+  return runway === null ? null : Math.floor(runway)
 }
 
 export function exhaustionDateFor(months: number | null, from: Date): string | null {

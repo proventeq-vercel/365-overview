@@ -17,6 +17,7 @@ import {
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
+  runwayMonths,
 } from '@/lib/forecast'
 
 const NEAR_CAP_RATIO = 0.9
@@ -136,7 +137,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     ? 0
     : historyTooShort || sharePointUsed === null
       ? null
-      : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
+      : runwayMonths(sharePointUsed, entitledBytes, rate)
+  const wholeMonths = monthsToExhaustion(runway)
   const points = buildGrowthPoints(buckets, rate, FORECAST_CHART_MONTHS)
 
   const growthGb = annualGrowthGb(rate)
@@ -196,8 +198,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastStatus: exhausted
         ? 'Critical'
         : forecastStatusFor(runway, historyTooShort, entitledBytes !== null),
-      forecastExhaustionDate: exhausted ? null : exhaustionDateFor(runway, now),
-      forecastMonthsToExhaustion: runway,
+      forecastExhaustionDate: exhausted ? null : exhaustionDateFor(wholeMonths, now),
+      forecastMonthsToExhaustion: wholeMonths,
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
     },
 

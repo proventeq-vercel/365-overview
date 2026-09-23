@@ -11,6 +11,7 @@ import {
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
+  runwayMonths,
 } from './forecast'
 
 const daily = (entries: [string, number][]): UsagePoint[] =>
@@ -120,25 +121,33 @@ describe('isSeriesVolatile', () => {
   })
 })
 
-describe('monthsToExhaustion', () => {
-  it('divides headroom by the growth rate', () => {
-    expect(monthsToExhaustion(100, 400, 30)).toBe(10)
+describe('runwayMonths', () => {
+  it('divides headroom by the growth rate, unrounded', () => {
+    expect(runwayMonths(100, 400, 30)).toBe(10)
+    expect(runwayMonths(100, 400, 24)).toBe(12.5)
   })
 
   it('is null when the entitlement is unknown', () => {
-    expect(monthsToExhaustion(100, null, 30)).toBeNull()
+    expect(runwayMonths(100, null, 30)).toBeNull()
   })
 
   it('is zero when the tenant is already over its entitlement', () => {
-    expect(monthsToExhaustion(500, 400, 30)).toBe(0)
+    expect(runwayMonths(500, 400, 30)).toBe(0)
   })
 
   it('is null for a flat tenant, because there is no rate to divide by', () => {
-    expect(monthsToExhaustion(100, 400, 0)).toBeNull()
+    expect(runwayMonths(100, 400, 0)).toBeNull()
   })
 
   it('is null for a shrinking tenant, which never exhausts', () => {
-    expect(monthsToExhaustion(100, 400, -30)).toBeNull()
+    expect(runwayMonths(100, 400, -30)).toBeNull()
+  })
+})
+
+describe('monthsToExhaustion', () => {
+  it('counts the whole months of a runway', () => {
+    expect(monthsToExhaustion(12.5)).toBe(12)
+    expect(monthsToExhaustion(null)).toBeNull()
   })
 })
 
@@ -151,18 +160,18 @@ describe('forecastStatusFor', () => {
     expect(forecastStatusFor(5, true, true)).toBe('Unknown')
   })
 
-  it('is Critical inside a year', () => {
+  it('is Critical up to and including a year, as P365 grades it', () => {
     expect(forecastStatusFor(0, false, true)).toBe('Critical')
-    expect(forecastStatusFor(CRITICAL_MONTHS - 1, false, true)).toBe('Critical')
+    expect(forecastStatusFor(12, false, true)).toBe('Critical')
   })
 
-  it('is Warning between one and three years', () => {
-    expect(forecastStatusFor(CRITICAL_MONTHS, false, true)).toBe('Warning')
-    expect(forecastStatusFor(WARNING_MONTHS - 1, false, true)).toBe('Warning')
+  it('is Warning past a year and up to and including three', () => {
+    expect(forecastStatusFor(12.5, false, true)).toBe('Warning')
+    expect(forecastStatusFor(36, false, true)).toBe('Warning')
   })
 
-  it('is Healthy beyond three years, and for a null runway with a known entitlement', () => {
-    expect(forecastStatusFor(WARNING_MONTHS, false, true)).toBe('Healthy')
+  it('is Healthy past three years, and for a null runway with a known entitlement', () => {
+    expect(forecastStatusFor(36.5, false, true)).toBe('Healthy')
     expect(forecastStatusFor(null, false, true)).toBe('Healthy')
   })
 

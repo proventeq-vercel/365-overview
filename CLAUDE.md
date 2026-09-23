@@ -308,7 +308,7 @@ typecheck · test · build as a separate job.
   *utilisation* (watch ≥85% / attention ≥95%) once, in the model
   (`sharePoint.utilization`), and both the used-KPI dot and the quota gauge
   take that grade — the gauge never grades itself; `src/lib/forecast.ts`
-  grades *runway* (Critical <12 months / Warning <36) and drives the forecast
+  grades *runway* (Critical ≤12 months / Warning ≤36, on the unrounded runway, as P365's `DetermineForecastStatus`) and drives the forecast
   badge. They answer different questions.
 
 ## Tailwind v4 + shadcn gotchas (learned the hard way)

@@ -392,6 +392,18 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastExhaustionDate).toBeNull()
   })
 
+  it('grades a runway of exactly a year Critical, as P365 does', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 270 * GB }))
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(12)
+    expect(overview.growth.forecastStatus).toBe('Critical')
+  })
+
+  it('grades the unrounded runway, so 36.5 months is Healthy though it shows as 36', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 515 * GB }))
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(36)
+    expect(overview.growth.forecastStatus).toBe('Healthy')
+  })
+
   it('keeps an exhaustion date for a tenant that runs out within the current month', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 155 * GB }))
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
