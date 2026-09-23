@@ -75,6 +75,7 @@ jobs:
           package: functions
           sku: flexconsumption
           remote-build: false
+          respect-funcignore: true
 
   site:
     name: SPA → Azure Storage static website
