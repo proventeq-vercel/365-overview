@@ -5,11 +5,6 @@ import { createMockDataSource, type DataSource } from './fixtures'
 import { buildLiveSource, buildLocalAuthSource } from './sources'
 import { DataSourceContext } from './useDataSource'
 
-/**
- * Live-mode provider. Calls `useMsal()` — so it is only ever mounted inside an
- * `MsalProvider` (live mode). Mock mode never renders this, keeping mock mode
- * MSAL-free end to end.
- */
 function LiveDataProvider({ children }: { children: ReactNode }) {
   const { instance, accounts } = useMsal()
   const dataSource = useMemo<DataSource>(
@@ -24,12 +19,6 @@ function LocalAuthDataProvider({ localAuthUrl, children }: { localAuthUrl: strin
   return <DataSourceContext value={dataSource}>{children}</DataSourceContext>
 }
 
-/**
- * Provides a `DataSource` to the app. In mock mode it supplies fixture data and
- * never touches MSAL; with a local auth stack (dev server only) it reads through
- * the proxy with a token minted by that stack; otherwise it delegates to
- * `LiveDataProvider` (which is the only place `useMsal()` is called for data).
- */
 export function DataProvider({ children }: { children: ReactNode }) {
   if (env.useMock) {
     return (

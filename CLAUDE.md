@@ -74,6 +74,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   rows keep the owner-name / id fallback `rowName` / `rowLabel` provide.
   `useKnownSites` merges every `['siteDetails', …]` result already in the
   React Query cache, so a name the user has seen on any page is searchable.
+  `DataProvider` picks the source — fixtures, the local-auth stack, or live —
+  and `LiveDataProvider` is the ONLY component that calls `useMsal()` for data,
+  so it must stay the only branch mounted inside `MsalProvider`; mock and
+  local-auth modes are MSAL-free end to end (`main.tsx` gates on `usesMsal`).
 - `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
   derivation of every figure on screen. Pure, table-tested.
 - `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,

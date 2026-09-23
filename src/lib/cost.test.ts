@@ -21,7 +21,7 @@ describe('growthCostAnnual', () => {
     expect(growthCostAnnual(120, 0.2)).toBeCloseTo(288, 2)
   })
 
-  it('prices the growth whether or not it fits inside the entitlement', () => {
+  it("prices a year of growth at P365's own default rate", () => {
     expect(growthCostAnnual(120, 0.02)).toBeCloseTo(28.8, 2)
   })
 
