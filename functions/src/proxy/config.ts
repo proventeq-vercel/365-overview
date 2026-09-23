@@ -28,7 +28,7 @@ export const DIRECTORY_ROLES = {
   reportsReader: '4a5d8f65-41da-4de4-8968-e035b65339cf',
 } as const
 
-export const DEFAULT_REQUIRED_DIRECTORY_ROLES: string[] = Object.values(DIRECTORY_ROLES)
+export const ADMIN_DIRECTORY_ROLES: string[] = Object.values(DIRECTORY_ROLES)
 
 const DEFAULT_SCOPE = 'access_as_user'
 

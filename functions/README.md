@@ -20,7 +20,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
 | The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
 | Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; a request carrying any other `Origin` is refused with 403 before the caller's token is read. |
-| Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants (use it on a dev deployment). |
+| Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants — set it on a dev deployment. Unset, the gate is admin consent alone: any tenant that has consented may read **its own** data, which is the multi-tenant behaviour this app is built for. |
 
 Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA's existing
 `ApiError` handling works unchanged. Codes: `Unauthorized` / `InvalidToken` (401),

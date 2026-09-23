@@ -3,7 +3,7 @@ import type { AddressInfo } from 'node:net'
 import { randomUUID, X509Certificate } from 'node:crypto'
 import { decodeProtectedHeader, jwtVerify, SignJWT } from 'jose'
 import { thumbprintToX5t } from '../src/proxy/appToken.js'
-import { DEFAULT_REQUIRED_DIRECTORY_ROLES } from '../src/proxy/config.js'
+import { ADMIN_DIRECTORY_ROLES } from '../src/proxy/config.js'
 import type { LocalKeyPair } from './keys.js'
 
 export const LOCAL_TENANT_ID = '11111111-2222-4333-8444-555555555555'
@@ -75,7 +75,7 @@ export async function startFakeEntra(options: FakeEntraOptions): Promise<FakeEnt
       tid: tenantId,
       oid: claims.oid ?? LOCAL_USER_OID,
       scp: claims.scope ?? options.proxyScope,
-      wids: claims.wids ?? DEFAULT_REQUIRED_DIRECTORY_ROLES,
+      wids: claims.wids ?? ADMIN_DIRECTORY_ROLES,
       name: 'Local Admin',
       preferred_username: 'admin@local.test',
       ver: '2.0',
