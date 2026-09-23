@@ -328,9 +328,9 @@ export function SiteTable({
             ))}
           </div>
 
-          {pageRows.map((row) => (
+          {pageRows.map((row, index) => (
             <div
-              key={row.id}
+              key={`${row.pool}:${row.id}:${index}`}
               role="row"
               className="grid items-center gap-2 border-b border-p365-grey-50 px-4 py-3 text-sm transition-colors duration-150 ease-out last:border-b-0 hover:bg-p365-page"
               style={{ gridTemplateColumns: gridCols }}

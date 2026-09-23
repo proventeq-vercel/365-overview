@@ -325,4 +325,21 @@ describe('SiteTable', () => {
       expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()
     })
   })
+
+  it('lists both drives of a recreated user who kept the same sign-in name, without a duplicate-key clash', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    try {
+      render(
+        <SiteTable
+          rows={[{ ...drive, isDeleted: true, storageUsedBytes: 200 }, drive]}
+          shareTotalBytes={1000}
+          columns={['name', 'used']}
+        />,
+      )
+      expect(screen.getAllByRole('row')).toHaveLength(3)
+      expect(errors.mock.calls.flat().join(' ')).not.toMatch(/same key/)
+    } finally {
+      errors.mockRestore()
+    }
+  })
 })
