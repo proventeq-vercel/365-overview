@@ -38,13 +38,13 @@ describe('KpiCards', () => {
 
   it('prices growth as money even when the entitlement is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£288.00')
+    expect(card('Cost of doing nothing')).toHaveTextContent('£288')
     expect(card('Cost of doing nothing')).not.toHaveTextContent(/unknown/i)
   })
 
   it('shows the annual cost of growth as money', () => {
     render(<KpiCards overview={{ ...base, cost: { ...base.cost, growthAnnual: 1234.5 } }} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£1,234.50')
+    expect(card('Cost of doing nothing')).toHaveTextContent('£1,235')
   })
 
   it('quotes the configured rate in the cost hint', () => {

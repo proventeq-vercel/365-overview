@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   formatBytes,
   formatDay,
+  formatMoney,
   formatLongMonthYear,
   formatShortMonthYear,
   formatNumber,
@@ -9,6 +10,18 @@ import {
   formatSignedBytes,
   formatSignedPercent,
 } from './format'
+
+describe('formatMoney', () => {
+  it('rounds to whole units from 100 up, as P365 does', () => {
+    expect(formatMoney(1234.56, 'GBP')).toBe('£1,235')
+    expect(formatMoney(100, 'EUR')).toBe('€100')
+  })
+
+  it('keeps pence below 100, so a per-GB rate stays readable', () => {
+    expect(formatMoney(99.5, 'GBP')).toBe('£99.50')
+    expect(formatMoney(0.02, 'GBP')).toBe('£0.02')
+  })
+})
 
 describe('formatBytes', () => {
   it('formats units', () => {

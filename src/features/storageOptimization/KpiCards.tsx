@@ -1,7 +1,6 @@
-import { formatBytes, formatPercent } from '@/lib/format'
+import { formatBytes, formatMoney, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import { forecastHeadline, forecastHint } from './forecastCopy'
-import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
 import { P365, RISK_COLOR } from '@/design/theme'

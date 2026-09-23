@@ -89,9 +89,9 @@ describe('GrowthSection', () => {
     expect(
       screen.getByRole('heading', { name: /projected cost if nothing changes/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288')
     expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent(
-      '£1,296.00',
+      '£1,296',
     )
     unmount()
 
@@ -105,7 +105,7 @@ describe('GrowthSection', () => {
         }}
       />,
     )
-    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('Unknown')
   })
 

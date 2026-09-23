@@ -1,8 +1,7 @@
-import { formatBytes, formatNumber, formatShortMonthYear, formatSignedBytes } from '@/lib/format'
+import { formatBytes, formatMoney, formatNumber, formatShortMonthYear, formatSignedBytes } from '@/lib/format'
 import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import { useTranslation } from '@/hooks/useTranslation'
 import { buildCallout } from './forecastCopy'
-import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { MonoLineChart } from '@/design/charts'
 import {

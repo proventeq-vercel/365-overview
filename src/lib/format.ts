@@ -48,3 +48,11 @@ export function formatLongMonthYear(isoDate: string): string {
   if (Number.isNaN(date.getTime())) return isoDate
   return new Intl.DateTimeFormat(REPORT_LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
+
+export function formatMoney(amount: number, currency: string): string {
+  return new Intl.NumberFormat(REPORT_LOCALE, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: amount >= 100 ? 0 : 2,
+  }).format(amount)
+}
