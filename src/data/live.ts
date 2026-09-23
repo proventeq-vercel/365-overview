@@ -149,7 +149,9 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
 
     async getOrg() {
       const res = await graph.get<JsonReport<RawOrg>>('/organization?$format=application/json')
-      return parseOrg(res.value[0])
+      const [org] = res.value
+      if (!org) throw new ApiError(404, 'Microsoft Graph returned no organization', 'OrganizationMissing')
+      return parseOrg(org)
     },
 
     async getReportRefreshDate() {

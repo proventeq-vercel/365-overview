@@ -264,6 +264,15 @@ describe('getSiteDirectory', () => {
   })
 })
 
+describe('getOrg', () => {
+  it('reports a missing organization as a Graph error the header can fall back from', async () => {
+    const { graph } = recordingGraph()
+    const error = await createLiveDataSource(graph).getOrg().catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).code).toBe('OrganizationMissing')
+  })
+})
+
 describe('getLicenses', () => {
   it('reports licences as unavailable when Graph refuses them, so the report still renders', async () => {
     const { graph } = recordingGraph()
