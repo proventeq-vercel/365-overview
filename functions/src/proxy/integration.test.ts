@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { LOCAL_TENANT_ID } from '../../local/fakeEntra.js'
-import { APP_TOKEN_PREFIX, isMissingFromDirectory, siteIdOf } from '../../local/fakeGraph.js'
+import { APP_TOKEN_PREFIX, isMissingFromDirectory, siteIdOf, usageSiteIdOf } from '../../local/fakeGraph.js'
 import { generateLocalAppCertificate } from '../../local/keys.js'
 import { startNodeHost, type NodeHost } from '../../local/nodeHost.js'
 import { startLocalStack, type LocalStack } from '../../local/stack.js'
@@ -70,7 +70,8 @@ describe('proxy end to end on the local stack', () => {
     )
     expect(pages).toBe(Math.ceil(SITE_COUNT / PAGE_SIZE))
     expect(rows).toHaveLength(SITE_COUNT)
-    expect(rows[0].siteId).toBe(siteIdOf(0))
+    expect(rows[0].siteId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+    expect(rows[0].siteId).toBe(siteIdOf(0).split(',')[1])
     expect(rows[0].siteUrl).toBe('')
 
     expect(stack.entra.tokenRequests).toEqual([{ tenantId: LOCAL_TENANT_ID, credential: 'assertion' }])
@@ -87,7 +88,7 @@ describe('proxy end to end on the local stack', () => {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        requests: ids.map((i) => ({ id: String(i), method: 'GET', url: `/sites/${encodeURIComponent(siteIdOf(i))}?$select=id,displayName,webUrl` })),
+        requests: ids.map((i) => ({ id: String(i), method: 'GET', url: `/sites/${usageSiteIdOf(i)}?$select=id,displayName,webUrl` })),
       }),
     })
     expect(response.status).toBe(200)

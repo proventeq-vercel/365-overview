@@ -36,6 +36,7 @@ const guid = (seed: number, salt: number) => {
 }
 
 export const siteIdOf = (index: number) => `${HOST},${guid(index, 1)},${guid(index, 2)}`
+export const usageSiteIdOf = (index: number) => guid(index, 1)
 export const isMissingFromDirectory = (index: number) => index % 13 === 5
 
 const siteRow = (index: number) => {
@@ -44,7 +45,7 @@ const siteRow = (index: number) => {
   const files = 40 + ((index * 31) % 5000)
   return {
     reportRefreshDate: REPORT_REFRESH_DATE,
-    siteId: siteIdOf(index),
+    siteId: usageSiteIdOf(index),
     siteUrl: '',
     ownerDisplayName: index % 7 === 0 ? 'SharePoint Admin' : `Owner ${index}`,
     isDeleted: index % 40 === 3 ? 'True' : 'False',
@@ -131,7 +132,10 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
   let url = ''
 
   const siteIndexById = new Map<string, number>()
-  for (let index = 0; index < siteCount; index++) siteIndexById.set(siteIdOf(index).toLowerCase(), index)
+  for (let index = 0; index < siteCount; index++) {
+    siteIndexById.set(siteIdOf(index).toLowerCase(), index)
+    siteIndexById.set(usageSiteIdOf(index).toLowerCase(), index)
+  }
 
   const directoryEntry = (rawId: string) => {
     const index = siteIndexById.get(decodeURIComponent(rawId).toLowerCase())
