@@ -176,8 +176,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   to Playwright and assistive tech, and `inert` while closed), `AccountChip`
   (initials + name, username as title), `queryClient`.
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
-  styled; the name cell is P365's `EntityNameCell`: `PoolIcon` + bold name +
-  `ExternalUrlLink` showing the URL path, opening the site in a new tab),
+  styled: search, sort, header and pagination; the column spec is
+  `siteTableColumns.ts` and each cell is `SiteTableCell` — the name cell is
+  P365's `EntityNameCell`: `PoolIcon` + bold name + `ExternalUrlLink` showing
+  the URL path, opening the site in a new tab),
   `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button, select,
   dropdown-menu, dialog, skeleton, …).
 - `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`

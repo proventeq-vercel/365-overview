@@ -1,31 +1,17 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { rowName } from '@/lib/rowName'
-import { capacityRatio, shareOf } from '@/lib/share'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
 import type { StorageRow } from '@/types/storage'
-import { formatBytes, formatDay, formatNumber, formatPercent } from '@/lib/format'
-import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
+import { formatNumber } from '@/lib/format'
+import { useTranslation } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
 import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ExternalUrlLink } from '@/design/ExternalUrlLink'
 import { Pagination } from '@/design/Pagination'
-import { PoolIcon } from '@/design/PoolIcon'
 import { ColumnHeaderTooltip } from '@/design/ColumnHeaderTooltip'
-
-export type ColumnKey =
-  | 'name'
-  | 'owner'
-  | 'files'
-  | 'active'
-  | 'used'
-  | 'share'
-  | 'lastActivity'
-  | 'template'
-  | 'capacity'
+import { COLUMNS, DEFAULT_SORT, type ColumnKey } from './siteTableColumns'
+import { SiteTableCell } from './SiteTableCell'
 
 interface SiteTableProps {
   rows: StorageRow[]
@@ -36,78 +22,6 @@ interface SiteTableProps {
   nameHelp?: string
 }
 
-interface ColumnSpec {
-  label: TranslateKey
-  help: TranslateKey
-  sortable: boolean
-  width: string
-  sortValue?: (row: StorageRow) => number
-}
-
-const COLUMNS: Record<ColumnKey, ColumnSpec> = {
-  name: {
-    label: 'table.column.site',
-    help: 'table.column.help.site',
-    sortable: false,
-    width: 'minmax(0,2fr)',
-  },
-  owner: {
-    label: 'table.column.owner',
-    help: 'table.column.help.owner',
-    sortable: false,
-    width: 'minmax(0,1.5fr)',
-  },
-  files: {
-    label: 'table.column.files',
-    help: 'table.column.help.files',
-    sortable: true,
-    width: '80px',
-    sortValue: (r) => r.fileCount,
-  },
-  active: {
-    label: 'table.column.active',
-    help: 'table.column.help.active',
-    sortable: true,
-    width: '96px',
-    sortValue: (r) => r.activeFileCount,
-  },
-  used: {
-    label: 'table.column.used',
-    help: 'table.column.help.used',
-    sortable: true,
-    width: '120px',
-    sortValue: (r) => r.storageUsedBytes,
-  },
-  share: {
-    label: 'table.column.share',
-    help: 'table.column.help.share',
-    sortable: true,
-    width: 'minmax(120px,1.4fr)',
-    sortValue: (r) => r.storageUsedBytes,
-  },
-  lastActivity: {
-    label: 'table.column.lastActivity',
-    help: 'table.column.help.lastActivity',
-    sortable: true,
-    width: '120px',
-    sortValue: (r) => (r.lastActivityDate ? Date.parse(r.lastActivityDate) : 0),
-  },
-  template: {
-    label: 'table.column.template',
-    help: 'table.column.help.template',
-    sortable: false,
-    width: 'minmax(0,1fr)',
-  },
-  capacity: {
-    label: 'table.column.capacity',
-    help: 'table.column.help.capacity',
-    sortable: true,
-    width: '120px',
-    sortValue: (row) => capacityRatio(row) ?? 0,
-  },
-}
-
-const DEFAULT_SORT: ColumnKey = 'used'
 
 export function SiteTable({
   rows,
@@ -170,96 +84,6 @@ export function SiteTable({
   const gridCols = columns.map((key) => COLUMNS[key].width).join(' ')
   const headerOf = (key: ColumnKey) => (key === 'name' ? nameLabel : t(COLUMNS[key].label))
   const helpOf = (key: ColumnKey) => (key === 'name' && nameHelp ? nameHelp : t(COLUMNS[key].help))
-
-  function renderCell(key: ColumnKey, row: StorageRow) {
-    switch (key) {
-      case 'name': {
-        const name = rowName(row)
-        const resolving = namesPending && row.pool === 'SharePoint' && !row.name && !row.url
-        return (
-          <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
-            <PoolIcon pool={row.pool} />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              {resolving ? (
-                <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
-              ) : (
-                <span className="block truncate font-semibold text-p365-navy" title={name}>
-                  {name}
-                </span>
-              )}
-              {resolving ? (
-                <Skeleton className="h-3 w-2/3" />
-              ) : row.url ? (
-                <ExternalUrlLink href={row.url} />
-              ) : (
-                <span className="block truncate text-xs text-p365-grey-500" title={row.id}>
-                  {row.id}
-                </span>
-              )}
-            </span>
-          </span>
-        )
-      }
-      case 'owner':
-        return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.ownerDisplayName}
-          </span>
-        )
-      case 'files':
-        return (
-          <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {formatNumber(row.fileCount)}
-          </span>
-        )
-      case 'active':
-        return (
-          <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {formatNumber(row.activeFileCount)}
-          </span>
-        )
-      case 'used':
-        return (
-          <span role="cell" key={key} className="tabular font-semibold text-p365-navy">
-            {formatBytes(row.storageUsedBytes)}
-          </span>
-        )
-      case 'lastActivity':
-        return (
-          <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {row.lastActivityDate ? formatDay(row.lastActivityDate) : t('table.never')}
-          </span>
-        )
-      case 'template':
-        return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.template ?? ''}
-          </span>
-        )
-      case 'capacity': {
-        const ratio = capacityRatio(row)
-        return (
-          <span role="cell" key={key} className="tabular text-p365-grey-600">
-            {ratio === null ? '' : formatPercent(ratio)}
-          </span>
-        )
-      }
-      case 'share': {
-        const share = shareOf(row.storageUsedBytes, shareTotalBytes)
-        return (
-          <span role="cell" key={key} className="flex items-center gap-2">
-            <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
-            <span className="h-1.5 flex-1 rounded-full bg-p365-grey-50">
-              <span
-                className="block h-full rounded-full bg-p365-teal transition-[width] duration-300 ease-out"
-                style={{ width: `${share * 100}%` }}
-              />
-            </span>
-          </span>
-        )
-      }
-    }
-  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -335,7 +159,15 @@ export function SiteTable({
               className="grid items-center gap-2 border-b border-p365-grey-50 px-4 py-3 text-sm transition-colors duration-150 ease-out last:border-b-0 hover:bg-p365-page"
               style={{ gridTemplateColumns: gridCols }}
             >
-              {columns.map((key) => renderCell(key, row))}
+              {columns.map((key) => (
+                <SiteTableCell
+                  key={key}
+                  column={key}
+                  row={row}
+                  shareTotalBytes={shareTotalBytes}
+                  namesPending={namesPending}
+                />
+              ))}
             </div>
           ))}
         </div>
