@@ -58,6 +58,13 @@ describe('settings', () => {
     expect(loadSettings().entitlementOverrideBytes).toBeNull()
   })
 
+  it('reads a stored override of zero or less as no override, since the report would ignore it', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":0}')
+    expect(loadSettings().entitlementOverrideBytes).toBeNull()
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":-2199023255552}')
+    expect(loadSettings().entitlementOverrideBytes).toBeNull()
+  })
+
   it('keeps a stored override that is a real number', () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, '{"entitlementOverrideBytes":123}')
     expect(loadSettings().entitlementOverrideBytes).toBe(123)

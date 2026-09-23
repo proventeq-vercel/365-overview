@@ -129,7 +129,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo` (inline SVG of
+  `AdornedInput` (prefix/suffix input), `DraftInput` (an
+  `AdornedInput` that keeps what is typed as a draft, commits only valid
+  input, marks the rest `aria-invalid` and reverts on blur), `ReportSkeleton`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,

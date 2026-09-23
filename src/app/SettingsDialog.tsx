@@ -7,12 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AdornedInput } from '@/design/AdornedInput'
+import { DraftInput } from '@/design/DraftInput'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
 import { GB_IN_BYTES } from '@/lib/entitlement'
 import { formatBytes } from '@/lib/format'
+import { isEntitlementOverride, isRate } from '@/lib/settings'
 import { useSettings } from './useSettings'
 
 const TB_IN_BYTES = 1024 * GB_IN_BYTES
@@ -60,6 +61,24 @@ export function SettingsDialog({
       ? ''
       : String(settings.entitlementOverrideBytes / TB_IN_BYTES)
 
+  const draftRate = (text: string) => {
+    const rate = Number(text)
+    if (text.trim() === '' || !isRate(rate)) return false
+    update({ ratePerGb: rate })
+    return true
+  }
+
+  const draftEntitlement = (text: string) => {
+    if (text.trim() === '') {
+      update({ entitlementOverrideBytes: null })
+      return true
+    }
+    const bytes = Number(text) * TB_IN_BYTES
+    if (!isEntitlementOverride(bytes)) return false
+    update({ entitlementOverrideBytes: bytes })
+    return true
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -103,7 +122,7 @@ export function SettingsDialog({
             label={t('settings.rate')}
             hint={t('settings.rateHint')}
           >
-            <AdornedInput
+            <DraftInput
               id={rateId}
               type="number"
               inputMode="decimal"
@@ -111,8 +130,8 @@ export function SettingsDialog({
               min="0"
               prefix={currencySymbol(settings.currency)}
               suffix={t('settings.rateSuffix')}
-              value={settings.ratePerGb}
-              onChange={(e) => update({ ratePerGb: Number(e.target.value) })}
+              value={String(settings.ratePerGb)}
+              onDraft={draftRate}
             />
           </Field>
 
@@ -125,7 +144,7 @@ export function SettingsDialog({
                 : t('settings.entitlementHintNoEstimate')
             }
           >
-            <AdornedInput
+            <DraftInput
               id={entitlementId}
               type="number"
               inputMode="decimal"
@@ -134,12 +153,7 @@ export function SettingsDialog({
               suffix={t('settings.entitlementUnit')}
               placeholder={t('settings.entitlementPlaceholder')}
               value={overrideTb}
-              onChange={(e) =>
-                update({
-                  entitlementOverrideBytes:
-                    e.target.value === '' ? null : Number(e.target.value) * TB_IN_BYTES,
-                })
-              }
+              onDraft={draftEntitlement}
             />
           </Field>
         </div>

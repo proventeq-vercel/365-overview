@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -42,6 +42,9 @@ function renderDialog(initial?: Partial<ReportSettings>, open = true) {
   )
   return { onChange, onOpenChange }
 }
+
+const dialogHasFocus = () =>
+  waitFor(() => expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement))
 
 afterEach(() => {
   cleanup()
@@ -90,18 +93,45 @@ describe('SettingsDialog', () => {
   it('lifts a changed rate', async () => {
     const user = userEvent.setup()
     const { onChange } = renderDialog()
+    await dialogHasFocus()
     const rate = screen.getByLabelText('Cost per GB per month')
     await user.clear(rate)
     await user.type(rate, '0.35')
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ ratePerGb: 0.35 }))
   })
 
-  it('never lifts a negative rate', async () => {
+  it('never lifts a negative rate, marks it invalid, and restores the stored rate on leaving the field', async () => {
     const { onChange } = renderDialog()
-    fireEvent.change(screen.getByLabelText('Cost per GB per month'), { target: { value: '-2' } })
+    const rate = screen.getByLabelText('Cost per GB per month')
+    fireEvent.change(rate, { target: { value: '-2' } })
     expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ ratePerGb: DEFAULT_SETTINGS.ratePerGb }),
     )
+    expect(rate).toHaveValue(-2)
+    expect(rate).toHaveAttribute('aria-invalid', 'true')
+    fireEvent.blur(rate)
+    expect(rate).toHaveValue(0.02)
+    expect(rate).toHaveAttribute('aria-invalid', 'false')
+  })
+
+  it('lets the rate field be cleared while typing without storing a zero rate', async () => {
+    const user = userEvent.setup()
+    const { onChange } = renderDialog({ ratePerGb: 0.5 })
+    await dialogHasFocus()
+    const rate = screen.getByLabelText('Cost per GB per month')
+    await user.clear(rate)
+    expect(rate).toHaveValue(null)
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ ratePerGb: 0.5 }))
+  })
+
+  it('does not store an entitlement of zero, which the report would ignore', async () => {
+    const { onChange } = renderDialog({ entitlementOverrideBytes: 5 * 1024 * GB })
+    const entitlement = screen.getByLabelText('SharePoint entitlement')
+    fireEvent.change(entitlement, { target: { value: '0' } })
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ entitlementOverrideBytes: 5 * 1024 * GB }),
+    )
+    expect(entitlement).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('prefixes the rate with the symbol of the chosen currency', async () => {

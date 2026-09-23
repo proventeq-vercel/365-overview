@@ -18,18 +18,19 @@ export function isCurrencyCode(value: unknown): value is string {
   return typeof value === 'string' && CURRENCY_CODE.test(value)
 }
 
-const isRate = (value: unknown): value is number =>
+export const isRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0
+
+export const isEntitlementOverride = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0
 
 export function sanitizeSettings(candidate: Partial<ReportSettings>): ReportSettings {
   return {
     ratePerGb: isRate(candidate.ratePerGb) ? candidate.ratePerGb : DEFAULT_SETTINGS.ratePerGb,
     currency: isCurrencyCode(candidate.currency) ? candidate.currency : DEFAULT_SETTINGS.currency,
-    entitlementOverrideBytes:
-      typeof candidate.entitlementOverrideBytes === 'number' &&
-      Number.isFinite(candidate.entitlementOverrideBytes)
-        ? candidate.entitlementOverrideBytes
-        : null,
+    entitlementOverrideBytes: isEntitlementOverride(candidate.entitlementOverrideBytes)
+      ? candidate.entitlementOverrideBytes
+      : null,
   }
 }
 
