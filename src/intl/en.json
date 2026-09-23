@@ -11,6 +11,7 @@
   "app.noReports.body": "VITE_FEATURES names no report this app knows. Enable at least one feature flag and rebuild.",
   "app.modes.overridden": "This tab overrides the deployed modes from the URL, which may be why.",
   "app.modes.reset": "Reset the modes for this tab",
+  "app.sampleData": "Sample data: this is a fictional tenant, not yours. Nothing is read from Microsoft 365 in this mode.",
   "app.bootstrap.title": "Couldn't start the dashboard",
   "app.bootstrap.body": "Check the app configuration or refresh to try again.",
   "app.dataAsOf": "Data as of {date}.",

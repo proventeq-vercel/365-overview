@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './app/AppShell'
 import { NoReports } from './app/NoReports'
+import { SampleDataBanner } from './app/SampleDataBanner'
 import { SettingsProvider } from './app/SettingsProvider'
 import { env } from './config/env'
 import { FeatureFlags } from './config/featureFlags'
@@ -18,6 +19,7 @@ function App() {
   return (
     <SettingsProvider>
       <AppShell reports={reports} menuEnabled={env.features.has(FeatureFlags.AppReportMenu)}>
+        <SampleDataBanner env={env} />
         <Routes>
           <Route path="/" element={fallback ? <fallback.Component /> : <NoReports />} />
           {reports.map((report) => (

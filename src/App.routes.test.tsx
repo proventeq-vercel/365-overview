@@ -56,6 +56,11 @@ function renderAt(path: string, features = ['flag.storage', 'flag.sharing', 'app
 afterEach(cleanup)
 
 describe('App routes', () => {
+  it('marks every report as sample data while the app runs on fixtures', () => {
+    renderAt('/storage')
+    expect(screen.getByText(/Sample data: this is a fictional tenant, not yours/)).toBeInTheDocument()
+  })
+
   it('mounts every enabled report on its own path and offers the menu', () => {
     renderAt('/sharing')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sharing report')

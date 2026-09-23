@@ -222,7 +222,9 @@ A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
 that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
 the app ignore the URL entirely — it is the one variable the URL can never touch, and
-the production deployment should set it.
+the production deployment should set it. Whenever the app runs on fixture data a banner
+at the top of the page says it is a sample tenant, and when the URL switched it on the
+banner carries the reset link.
 
 ## Localisation
 
