@@ -27,6 +27,14 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
     )
   }
 
+  if (kind === 'tenant') {
+    return (
+      <AlertPanel tone="error" title={t('access.tenant.title')}>
+        <p className="text-sm text-p365-grey-600">{t('access.tenant.body')}</p>
+      </AlertPanel>
+    )
+  }
+
   if (kind === 'permission') {
     return (
       <AlertPanel tone="error" title={t('access.permission.title')}>

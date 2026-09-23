@@ -1,6 +1,8 @@
 import { ApiError } from './apiError'
 
-const BASE = 'https://graph.microsoft.com/v1.0'
+export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
+
+const VERSIONED_PATH = /^\/(v1\.0|beta)\//
 
 export const BATCH_LIMIT = 20
 export const MAX_THROTTLE_RETRIES = 3
@@ -48,14 +50,22 @@ const headerOf = (headers: Record<string, string> | undefined, name: string) =>
 export function createGraphClient(
   getToken: () => Promise<string>,
   fetchImpl: typeof fetch = fetch,
+  origin: string = GRAPH_ORIGIN,
 ): GraphClient {
+  const resolve = (path: string) => {
+    if (path.startsWith('http')) return path
+    return VERSIONED_PATH.test(path) ? `${origin}${path}` : `${origin}/v1.0${path}`
+  }
+
   async function apiError(res: Response): Promise<ApiError> {
     let message = res.statusText
+    let code: string | null = null
     try {
-      const body = (await res.json()) as { error?: { message?: string } }
+      const body = (await res.json()) as { error?: { code?: string; message?: string } }
       message = body.error?.message ?? message
+      code = body.error?.code ?? null
     } catch { /* ignore non-json error bodies */ }
-    return new ApiError(res.status, message)
+    return new ApiError(res.status, message, code)
   }
 
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
@@ -77,7 +87,7 @@ export function createGraphClient(
     const results: BatchResponse<T>[] = paths.map(() => ({ status: 0 }))
     let pending = paths.map((_, i) => i)
     for (let attempt = 0; pending.length > 0; attempt++) {
-      const envelope = await request<BatchEnvelope<T>>(`${BASE}/$batch`, {
+      const envelope = await request<BatchEnvelope<T>>(resolve('/$batch'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,10 +113,10 @@ export function createGraphClient(
   }
 
   return {
-    get: <T>(path: string) => request<T>(path.startsWith('http') ? path : `${BASE}${path}`),
+    get: <T>(path: string) => request<T>(resolve(path)),
     async getAllPages<T>(path: string): Promise<T[]> {
       const out: T[] = []
-      let url: string | undefined = path.startsWith('http') ? path : `${BASE}${path}`
+      let url: string | undefined = resolve(path)
       while (url) {
         const page: { value: T[]; '@odata.nextLink'?: string } = await request(url)
         out.push(...page.value)

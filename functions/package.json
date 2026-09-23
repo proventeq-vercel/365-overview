@@ -1,0 +1,30 @@
+{
+  "name": "365-overview-graph-proxy",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/src/functions/*.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "npm run build && func start",
+    "local": "npm run build && node dist/scripts/local-stack.js",
+    "smoke": "npm run build && node dist/scripts/smoke.js",
+    "cert:new": "npm run build && node dist/scripts/cert.js new",
+    "cert:check": "npm run build && node dist/scripts/cert.js check"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.16.5",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.9"
+  }
+}

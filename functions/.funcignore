@@ -1,0 +1,14 @@
+/src/
+/local/
+/scripts/
+/dist/local/
+/dist/scripts/
+/local.settings.json
+/local.settings.json.example
+/vitest.config.ts
+/tsconfig.json
+/README.md
+/.temp/
+/node_modules/azure-functions-core-tools/
+*.map
+/tsconfig.test.json

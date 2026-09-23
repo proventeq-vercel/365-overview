@@ -32,6 +32,9 @@ vi.mock('@/config/env', () => ({
     get useMock() {
       return envState.useMock
     },
+    get usesMsal() {
+      return !envState.useMock
+    },
     mockScenario: 'healthy',
     features: new Set(),
   },

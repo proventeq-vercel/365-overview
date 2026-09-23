@@ -51,7 +51,7 @@ export function Header({
           <TenantName />
         </div>
         <div className="flex items-center gap-2">
-          {!env.useMock && <AccountChip />}
+          {env.usesMsal && <AccountChip />}
           <HeaderActions />
         </div>
       </div>

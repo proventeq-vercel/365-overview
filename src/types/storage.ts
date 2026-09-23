@@ -87,10 +87,8 @@ export interface StorageOverview {
   cost: {
     ratePerGb: number
     currency: string
-    growthNotionalAnnual: number
-    growthBillableAnnual: number | null
-    cumulativeNotionalYear3: number
-    cumulativeBillableYear3: number | null
+    growthAnnual: number
+    cumulativeYear3: number
   }
 
   caveats: {

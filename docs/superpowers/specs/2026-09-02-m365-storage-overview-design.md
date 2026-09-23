@@ -29,9 +29,9 @@ may be faked to fill a layout.
 | | |
 |---|---|
 | **Repo** | Repurpose `365-overview` in place. Its `auth/` / `clients/` / `config/` / `data/` layers are stable and stay. |
-| **Backend** | **None.** Browser-only SPA. Prospect tenant data never leaves the admin's browser. |
-| **Tenancy** | Multi-tenant Entra app registration, Proventeq-hosted, delegated admin consent to Graph. |
-| **Deployment** | Static bundle on Vercel, as today. |
+| **Backend** | **None by default.** Browser-only SPA; with no `VITE_GRAPH_PROXY_URL` the prospect's tenant data never leaves the admin's browser. **Superseded in part:** a build that sets it routes every Graph call through `functions/`, a read-only Azure Functions proxy that signs them app-only and stores nothing — the only way to reach the application-permission endpoints. See `functions/README.md`. |
+| **Tenancy** | Multi-tenant Entra app registration, Proventeq-hosted, admin consent to Graph — delegated in the default build, application roles through the proxy. |
+| **Deployment** | Static bundle on Vercel, as today; the proxy, where one is used, on Azure Functions. |
 | **Look & feel** | Mirror P365's report layout, section structure and chart choices — on this repo's existing Tailwind v4 + shadcn + Recharts stack. Do **not** pull P365's private `@proventeq/pcl-material-ui-lib`. |
 | **Workloads** | SharePoint + OneDrive, pools kept strictly separate. |
 | **Sections** | Three: Distribution, Growth, Offenders. **No ROT section** — see [What is deliberately absent](#what-is-deliberately-absent). |
@@ -118,9 +118,9 @@ figure is the same. Selected strings (P365 i18n keys shown for traceability):
   approximate."*
 - `growth.noExhaustionNote` — *"At the current growth rate the tenant stays
   within its pooled entitlement for at least the next {years} years."*
-- `kpi.costOfNothingHint` — *"What a year of growth would add to your bill, at
-  {rate}/GB per month. Growth that still fits inside your entitlement adds
-  nothing."*
+- `kpi.costOfNothingHint` — *"Added spend per year at current growth, valued at
+  {rate}/GB per month."* The cost is the whole projected growth, priced exactly
+  as P365 prices it, never gated on headroom or on the entitlement being known.
 - `quota.used` / `quota.remaining` — *"Used"* / *"Available"*
 - `offenders.sitesTitle` — *"Biggest sites & OneDrives by storage"*
 
@@ -235,8 +235,8 @@ every caveat disappears. The override is not a nicety — the Extra File Storage
 add-on is genuinely unknowable from Graph, so without it a customer who has
 bought extra storage sees a wrong entitlement with no way to correct it.
 
-Persisted in `localStorage`, per browser. There is no backend to store it in,
-and that is the intended trade.
+Persisted in `localStorage`, per browser. Nothing stores it server-side — the
+Graph proxy forwards reads and keeps no state — and that is the intended trade.
 
 ---
 
@@ -343,10 +343,8 @@ interface StorageOverview {
   cost: {
     ratePerGb: number
     currency: string
-    growthNotionalAnnual: number             // always populated
-    growthBillableAnnual: number | null      // null when entitlement unknown
-    cumulativeNotionalYear3: number          // always populated
-    cumulativeBillableYear3: number | null   // null when entitlement unknown
+    growthAnnual: number                     // always populated
+    cumulativeYear3: number                  // always populated
   }
 
   caveats: {

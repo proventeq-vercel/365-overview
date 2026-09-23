@@ -36,7 +36,7 @@ function Location() {
   return <output>{useLocation().pathname}</output>
 }
 
-function renderShell(path = '/', reports: ReportDefinition[] = TWO_REPORTS) {
+function renderShell(path = '/', reports: ReportDefinition[] = TWO_REPORTS, menuEnabled = true) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function Wrapper({ children }: { children: ReactNode }) {
     return (
@@ -50,7 +50,7 @@ function renderShell(path = '/', reports: ReportDefinition[] = TWO_REPORTS) {
     )
   }
   return render(
-    <AppShell reports={reports}>
+    <AppShell reports={reports} menuEnabled={menuEnabled}>
       <Routes>
         <Route path="*" element={<Location />} />
       </Routes>
@@ -81,6 +81,12 @@ describe('AppShell', () => {
 
   it('has no menu button and no menu at all when a single report is enabled', () => {
     renderShell('/', [TWO_REPORTS[0]])
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Reports' })).not.toBeInTheDocument()
+  })
+
+  it('has no menu button and no menu when two reports are enabled but the menu flag is off', () => {
+    renderShell('/', TWO_REPORTS, false)
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Reports' })).not.toBeInTheDocument()
   })

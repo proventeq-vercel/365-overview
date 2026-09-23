@@ -167,9 +167,23 @@ test.describe('before any script runs', () => {
 
 test.describe('modes from the URL', () => {
   const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
+  const BOTH_WITH_MENU = `${BOTH},app.menu`
+
+  test('?features= without app.menu enables the second report but no menu', async ({ page }) => {
+    await page.goto(`/?features=${BOTH}`)
+    await reportLoaded(page)
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden()
+
+    await page.goto('/onedrive-usage')
+    await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden()
+
+    await page.goto('/?modes=reset')
+    await reportLoaded(page)
+  })
 
   test('?features= enables reports for the tab, ?modes=reset forgets them', async ({ page }) => {
-    await page.goto(`/?features=${BOTH}`)
+    await page.goto(`/?features=${BOTH_WITH_MENU}`)
     await reportLoaded(page)
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
 
@@ -211,7 +225,7 @@ test.describe('modes from the URL', () => {
   test('a new tab starts from the env again', async ({ browser }) => {
     const first = await browser.newContext()
     const page = await first.newPage()
-    await page.goto(`/?features=${BOTH}`)
+    await page.goto(`/?features=${BOTH_WITH_MENU}`)
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
     await first.close()
 

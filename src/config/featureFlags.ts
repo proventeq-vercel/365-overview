@@ -1,6 +1,7 @@
 export const FeatureFlags = {
   OptimizationStorageReportOverview: 'optimization.storage.report.overview',
   OptimizationStorageReportOneDrive: 'optimization.storage.report.onedrive',
+  AppReportMenu: 'app.menu',
 } as const
 
 export type FeatureFlag = (typeof FeatureFlags)[keyof typeof FeatureFlags]

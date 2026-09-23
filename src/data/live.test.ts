@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+﻿import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { createLiveDataSource } from './live'
+import { ApiError } from '../clients/apiError'
+import { siteDirectoryPath } from '../reports/siteDirectory'
 import type { GraphClient } from '../clients/graphClient'
 
 function recordingGraph() {
@@ -27,7 +29,7 @@ const finance = {
   body: { displayName: 'Finance', webUrl: 'https://contoso.sharepoint.com/sites/finance' },
 }
 
-const BETA = 'https://graph.microsoft.com/beta/reports/'
+const BETA = '/beta/reports/'
 
 describe('createLiveDataSource', () => {
   it.each([
@@ -178,6 +180,87 @@ describe('createLiveDataSource', () => {
       expect((await ds.getSiteDetails([FINANCE_ID])).get(FINANCE_ID)?.name).toBe('Finance')
       expect(batchGet).toHaveBeenCalledTimes(2)
     })
+  })
+})
+
+describe('getSiteDirectory', () => {
+  let nextSite = 0
+  const page = (count: number, nextLink?: string) => ({
+    value: Array.from({ length: count }, () => {
+      const i = nextSite++
+      return {
+        id: `contoso.sharepoint.com,${i}-site,${i}-web`,
+        displayName: `Site ${i}`,
+        webUrl: `https://contoso.sharepoint.com/sites/s${i}`,
+      }
+    }),
+    ...(nextLink ? { '@odata.nextLink': nextLink } : {}),
+  })
+
+  beforeEach(() => {
+    nextSite = 0
+  })
+
+  it('walks the delta pages Graph hands back and keys every site it found', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockResolvedValueOnce(page(2, 'https://graph/next')).mockResolvedValueOnce(page(1))
+
+    const directory = await createLiveDataSource(graph).getSiteDirectory()
+
+    expect(get.mock.calls.flat()).toEqual([siteDirectoryPath(), 'https://graph/next'])
+    expect(directory.size).toBe(3)
+    expect(directory.get('0-site')?.name).toBe('Site 0')
+  })
+
+  it('stops at the page limit instead of walking a tenant of any size', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockResolvedValue(page(1, 'https://graph/forever'))
+
+    await createLiveDataSource(graph).getSiteDirectory()
+
+    expect(get).toHaveBeenCalledTimes(10)
+  })
+
+  it('walks once and serves later callers from the same walk', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockResolvedValue(page(1))
+    const ds = createLiveDataSource(graph)
+
+    const [first, second] = await Promise.all([ds.getSiteDirectory(), ds.getSiteDirectory()])
+
+    expect(get).toHaveBeenCalledTimes(1)
+    expect(second).toBe(first)
+  })
+
+  it('degrades to no directory when Graph refuses the delta, so the report still renders', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValue(new ApiError(403, 'Forbidden', 'accessDenied'))
+
+    await expect(createLiveDataSource(graph).getSiteDirectory()).resolves.toEqual(new Map())
+  })
+
+  it('lets a failed walk be retried rather than caching the failure', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get
+      .mockRejectedValueOnce(new ApiError(503, 'Service Unavailable', null))
+      .mockResolvedValueOnce(page(1))
+    const ds = createLiveDataSource(graph)
+
+    expect((await ds.getSiteDirectory()).size).toBe(0)
+    expect((await ds.getSiteDirectory()).size).toBe(1)
+  })
+
+  it('propagates a failure that is not Graph saying no', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValue(new TypeError('network down'))
+
+    await expect(createLiveDataSource(graph).getSiteDirectory()).rejects.toThrow('network down')
   })
 })
 
