@@ -37,8 +37,5 @@ export function parseSharePointSites(rows: RawSiteRow[]): StorageRow[] {
     lastActivityDate: dateOrNull(row.lastActivityDate),
     isDeleted: bool(row.isDeleted),
     template: row.rootWebTemplate,
-    // allocatedBytes is deliberately NOT set. For a site this field is the
-    // 25 TB site-collection maximum, not a quota share — summing it or taking
-    // a percentage of it produces a meaningless figure.
   }))
 }

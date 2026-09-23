@@ -1,9 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
 
-/**
- * Shared React Query client. Report data changes slowly (Graph usage reports are
- * daily), so we keep a generous staleTime and retry once on transient failures.
- */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

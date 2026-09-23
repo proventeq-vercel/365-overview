@@ -1,4 +1,3 @@
-/** Minimal centered loading screen used while MSAL initializes / authenticates. */
 export function AuthLoadingScreen({ title }: { title: string }) {
   return (
     <div className="auth-screen">

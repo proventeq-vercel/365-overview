@@ -1,6 +1,5 @@
 export type HealthStatus = 'healthy' | 'watch' | 'attention'
 
-/** Fractions in 0–1. `watch`/`attention` are the lower bounds of each band. */
 export interface Thresholds {
   watch: number
   attention: number
