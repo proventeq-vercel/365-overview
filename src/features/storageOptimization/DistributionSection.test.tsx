@@ -3,7 +3,7 @@ import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import type { StorageOverview } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
-import { base, unknownEntitlement } from './testFixtures'
+import { base, unknownEntitlement, usageUnreported } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -82,5 +82,21 @@ describe('DistributionSection', () => {
     const gauge = screen.getByRole('img', { name: /quota usage/i })
     expect(gauge).toHaveTextContent('50.0%')
     expect(gauge).toHaveTextContent('500 GB / 1000 GB')
+  })
+
+  it('says the quota gauge has no usage to show, rather than blaming the entitlement, when the history is missing', () => {
+    render(<DistributionSection overview={usageUnreported} />)
+    expect(
+      screen.getByText('Microsoft 365 returned no storage history, so quota usage cannot be shown'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Tenant entitlement unavailable/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /quota usage/i })).not.toBeInTheDocument()
+  })
+
+  it('leaves OneDrive out of the workload chart, and says so, when its history is missing', () => {
+    render(<DistributionSection overview={{ ...withSlices, oneDrive: usageUnreported.oneDrive }} />)
+    expect(
+      screen.getByText('OneDrive is left out because Microsoft 365 returned no OneDrive storage history'),
+    ).toBeInTheDocument()
   })
 })

@@ -14,6 +14,7 @@ export function KpiCards({ overview }: Props) {
   const t = useTranslation()
   const { sharePoint, growth, cost } = overview
   const quotaKnown = sharePoint.entitledBytes !== null
+  const usageKnown = sharePoint.usedBytes !== null
   const rate = formatMoney(cost.ratePerGb, cost.currency)
 
   return (
@@ -25,16 +26,22 @@ export function KpiCards({ overview }: Props) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label={t('storageOptimisation.kpi.used')}
-          value={formatBytes(sharePoint.usedBytes)}
-          color={P365.navy}
+          value={
+            sharePoint.usedBytes === null
+              ? t('storageOptimisation.kpi.unknown')
+              : formatBytes(sharePoint.usedBytes)
+          }
+          color={usageKnown ? P365.navy : P365.grey400}
           information={
             <>
-              {sharePoint.entitledBytes === null
-                ? t('storageOptimisation.kpi.usedEntitlementUnknown')
-                : t('storageOptimisation.kpi.usedOfEntitled', {
-                    used: formatBytes(sharePoint.usedBytes),
-                    entitled: formatBytes(sharePoint.entitledBytes),
-                  })}
+              {sharePoint.usedBytes === null
+                ? t('storageOptimisation.kpi.usedUnavailableHint')
+                : sharePoint.entitledBytes === null
+                  ? t('storageOptimisation.kpi.usedEntitlementUnknown')
+                  : t('storageOptimisation.kpi.usedOfEntitled', {
+                      used: formatBytes(sharePoint.usedBytes),
+                      entitled: formatBytes(sharePoint.entitledBytes),
+                    })}
               <br />
               {t('storageOptimisation.kpi.usedTenantWide')}
             </>
@@ -47,13 +54,15 @@ export function KpiCards({ overview }: Props) {
               ? t('storageOptimisation.kpi.unknown')
               : formatBytes(sharePoint.remainingBytes)
           }
-          color={quotaKnown ? P365.green : P365.grey400}
+          color={sharePoint.remainingBytes === null ? P365.grey400 : P365.green}
           information={
-            sharePoint.headroomRatio === null
-              ? t('storageOptimisation.kpi.remainingUnknownHint')
-              : t('storageOptimisation.kpi.remainingHint', {
-                  percent: formatPercent(sharePoint.headroomRatio, 1),
-                })
+            !usageKnown
+              ? t('storageOptimisation.kpi.usedUnavailableHint')
+              : sharePoint.headroomRatio === null
+                ? t('storageOptimisation.kpi.remainingUnknownHint')
+                : t('storageOptimisation.kpi.remainingHint', {
+                    percent: formatPercent(sharePoint.headroomRatio, 1),
+                  })
           }
         />
         <StatCard

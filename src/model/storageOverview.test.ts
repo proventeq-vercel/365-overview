@@ -507,14 +507,32 @@ describe('buildStorageOverview growth and cost', () => {
     expect(offenders.retained).toEqual({ bytes: 5 * GB, count: 2 })
   })
 
+  it('reports usage as unavailable, not zero, when Microsoft 365 returns no storage history', () => {
+    const overview = buildStorageOverview(inputs({ sharePointTrend: [], oneDriveTrend: [] }))
+    expect(overview.sharePoint.entitledBytes).toBe((1024 + 1000) * GB)
+    expect(overview.sharePoint.usedBytes).toBeNull()
+    expect(overview.sharePoint.remainingBytes).toBeNull()
+    expect(overview.sharePoint.usedPercentage).toBeNull()
+    expect(overview.sharePoint.headroomRatio).toBeNull()
+    expect(overview.sharePoint.overageBytes).toBeNull()
+    expect(overview.sharePoint.utilization).toBeNull()
+    expect(overview.oneDrive.usedBytes).toBeNull()
+    expect(overview.growth.forecastEndBytes).toBeNull()
+    expect(overview.growth.forecastStatus).toBe('Unknown')
+    expect(overview.growth.forecastMonthsToExhaustion).toBeNull()
+  })
+
+  it('keeps the OneDrive figure when only the SharePoint history is missing', () => {
+    const overview = buildStorageOverview(inputs({ sharePointTrend: [] }))
+    expect(overview.sharePoint.usedBytes).toBeNull()
+    expect(overview.oneDrive.usedBytes).toBe(60 * GB)
+  })
+
   it('does not divide by zero on an empty tenant', () => {
     const overview = buildStorageOverview(
       inputs({ sites: [], drives: [], sharePointTrend: [], oneDriveTrend: [] }),
     )
-    expect(overview.sharePoint.usedBytes).toBe(0)
-    expect(overview.oneDrive.usedBytes).toBe(0)
     expect(overview.growth.points).toEqual([])
-    expect(overview.growth.forecastEndBytes).toBe(0)
     expect(Number.isFinite(overview.cost.growthAnnual)).toBe(true)
     expect(overview.sharePoint.byWorkload).toEqual([])
     expect(overview.oneDrive.drivesNearCap).toBe(0)

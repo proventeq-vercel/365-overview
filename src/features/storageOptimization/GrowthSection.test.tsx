@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { GrowthSection } from './GrowthSection'
-import { base, shortHistory, unknownEntitlement } from './testFixtures'
+import { base, shortHistory, unknownEntitlement, usageUnreported } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -117,5 +117,11 @@ describe('GrowthSection', () => {
     expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('0 B')
+  })
+
+  it('shows used today and the forecast end as unknown when Microsoft 365 returned no storage history', () => {
+    render(<GrowthSection overview={usageUnreported} />)
+    expect(screen.getByText('Used today').parentElement).toHaveTextContent('Unknown')
+    expect(screen.getByText(/^Forecast \(/).parentElement).toHaveTextContent('Unknown')
   })
 })

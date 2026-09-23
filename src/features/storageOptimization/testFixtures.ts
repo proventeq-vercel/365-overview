@@ -79,6 +79,29 @@ export const unknownEntitlement: StorageOverview = {
   caveats: { ...base.caveats, entitlementIsEstimated: false },
 }
 
+export const usageUnreported: StorageOverview = {
+  ...base,
+  sharePoint: {
+    ...base.sharePoint,
+    usedBytes: null,
+    remainingBytes: null,
+    usedPercentage: null,
+    headroomRatio: null,
+    overageBytes: null,
+    utilization: null,
+  },
+  oneDrive: { ...base.oneDrive, usedBytes: null },
+  growth: {
+    ...base.growth,
+    windowMonths: 0,
+    forecastStatus: 'Unknown',
+    forecastExhaustionDate: null,
+    forecastMonthsToExhaustion: null,
+    forecastEndBytes: null,
+  },
+  caveats: { ...base.caveats, historyTooShort: true },
+}
+
 export const shortHistory: StorageOverview = {
   ...base,
   growth: {

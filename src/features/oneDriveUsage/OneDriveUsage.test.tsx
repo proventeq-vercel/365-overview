@@ -97,4 +97,11 @@ describe('OneDriveUsage', () => {
     renderReport('healthy', { getDrives: () => Promise.reject(new ApiError(403, 'Forbidden')) })
     expect(await screen.findByRole('alert')).toHaveTextContent(/reports reader/i)
   })
+
+  it('shows OneDrive storage as unknown, not 0 B, when Microsoft 365 returned no OneDrive history', async () => {
+    renderReport('healthy', { getOneDriveTrend: () => Promise.resolve([]) })
+    expect(await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeInTheDocument()
+    expect(card('OneDrive storage')).toHaveTextContent('Unknown')
+    expect(card('OneDrive storage')).toHaveTextContent('Microsoft 365 returned no OneDrive storage history')
+  })
 })

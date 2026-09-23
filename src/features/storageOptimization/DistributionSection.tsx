@@ -43,10 +43,13 @@ function ShareDoughnut({ slices, ariaLabel }: { slices: Slice[]; ariaLabel: stri
 export function DistributionSection({ overview, delay }: Props) {
   const t = useTranslation()
   const { sharePoint, oneDrive, caveats } = overview
-  const workloadSlices = [
-    ...sharePoint.byWorkload,
-    { name: t('storageOptimisation.workload.oneDrive'), value: oneDrive.usedBytes },
-  ]
+  const workloadSlices =
+    oneDrive.usedBytes === null
+      ? sharePoint.byWorkload
+      : [
+          ...sharePoint.byWorkload,
+          { name: t('storageOptimisation.workload.oneDrive'), value: oneDrive.usedBytes },
+        ]
 
   return (
     <Section
@@ -58,9 +61,11 @@ export function DistributionSection({ overview, delay }: Props) {
         <Panel>
           <PanelLabel>{t('storageOptimisation.quota.title')}</PanelLabel>
           <PanelDescription>{t('storageOptimisation.quota.scopeNote')}</PanelDescription>
-          {sharePoint.usedPercentage === null ||
-          sharePoint.remainingBytes === null ||
-          sharePoint.entitledBytes === null ? (
+          {sharePoint.usedBytes === null ? (
+            <EmptyBlock>{t('storageOptimisation.quota.usageUnavailable')}</EmptyBlock>
+          ) : sharePoint.usedPercentage === null ||
+            sharePoint.remainingBytes === null ||
+            sharePoint.entitledBytes === null ? (
             <EmptyBlock>{t('storageOptimisation.quota.entitlementUnknown')}</EmptyBlock>
           ) : (
             <MonoDoughnut
@@ -95,6 +100,9 @@ export function DistributionSection({ overview, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.workload.title')}</PanelLabel>
           <PanelDescription>{t('storageOptimisation.workload.subtitle')}</PanelDescription>
           <ShareDoughnut slices={workloadSlices} ariaLabel={t('storageOptimisation.workload.title')} />
+          {oneDrive.usedBytes === null && (
+            <PanelDescription>{t('storageOptimisation.workload.oneDriveUnavailable')}</PanelDescription>
+          )}
           <p className="mt-3 text-xs text-p365-grey-500">
             {t('storageOptimisation.workload.groupingNote')}
           </p>

@@ -39,7 +39,7 @@ export interface StorageOverview {
   reportRefreshDate: string
 
   sharePoint: {
-    usedBytes: number
+    usedBytes: number | null
     entitledBytes: number | null
     remainingBytes: number | null
     usedPercentage: number | null
@@ -56,7 +56,7 @@ export interface StorageOverview {
   }
 
   oneDrive: {
-    usedBytes: number
+    usedBytes: number | null
     drives: StorageRow[]
     driveCount: number
     drivesNearCap: number
@@ -81,7 +81,7 @@ export interface StorageOverview {
     forecastStatus: ForecastStatus
     forecastExhaustionDate: string | null
     forecastMonthsToExhaustion: number | null
-    forecastEndBytes: number
+    forecastEndBytes: number | null
   }
 
   cost: {

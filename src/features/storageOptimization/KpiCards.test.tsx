@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, screen } from '@testing-library/react'
 import { render } from '@/test/render'
-import { base, unknownEntitlement } from './testFixtures'
+import { base, unknownEntitlement, usageUnreported } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
 import { KpiCards } from './KpiCards'
 import { P365 } from '@/design/theme'
@@ -45,5 +45,18 @@ describe('KpiCards', () => {
     render(<KpiCards overview={base} />)
     expect(railOf('Remaining')).toBe(rgb(P365.green))
     expect(railOf('Cost of doing nothing')).toBe(rgb(P365.yellow))
+  })
+
+  it('shows storage used as unknown, not 0 B, when Microsoft 365 returned no storage history', () => {
+    render(<KpiCards overview={usageUnreported} />)
+    const used = screen.getByText('Storage used').parentElement as HTMLElement
+    expect(used).toHaveTextContent('Unknown')
+    expect(used).not.toHaveTextContent('0 B')
+    expect(used).toHaveTextContent('Microsoft 365 returned no storage history for this tenant')
+    expect(railOf('Storage used')).toBe(rgb(P365.grey400))
+    const remaining = screen.getByText('Remaining').parentElement as HTMLElement
+    expect(remaining).toHaveTextContent('Unknown')
+    expect(remaining).toHaveTextContent('Microsoft 365 returned no storage history for this tenant')
+    expect(remaining).not.toHaveTextContent('Tenant entitlement unavailable')
   })
 })

@@ -48,8 +48,8 @@ export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
     : 'SharePoint'
 }
 
-const latest = (series: UsagePoint[]): number =>
-  series.length === 0 ? 0 : series[series.length - 1].value
+const latest = (series: UsagePoint[]): number | null =>
+  series.length === 0 ? null : series[series.length - 1].value
 
 const sumBytes = (rows: StorageRow[]): number =>
   rows.reduce((total, row) => total + row.storageUsedBytes, 0)
@@ -107,15 +107,17 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const sharePointUsed = latest(sharePointTrend)
   const oneDriveUsed = latest(oneDriveTrend)
 
-  const remainingBytes = entitledBytes === null ? null : Math.max(0, entitledBytes - sharePointUsed)
-  const usedPercentage = entitledBytes === null ? null : sharePointUsed / entitledBytes
-  const headroomRatio = usedPercentage === null ? null : Math.max(0, 1 - usedPercentage)
-  const overageBytes = entitledBytes === null ? null : Math.max(0, sharePointUsed - entitledBytes)
-  const exhausted = entitledBytes !== null && sharePointUsed >= entitledBytes
-  const utilization =
-    entitledBytes === null
+  const quota =
+    entitledBytes === null || sharePointUsed === null
       ? null
-      : utilizationStatus(sharePointUsed, entitledBytes, STORAGE_THRESHOLDS)
+      : { used: sharePointUsed, entitled: entitledBytes }
+  const remainingBytes = quota === null ? null : Math.max(0, quota.entitled - quota.used)
+  const usedPercentage = quota === null ? null : quota.used / quota.entitled
+  const headroomRatio = usedPercentage === null ? null : Math.max(0, 1 - usedPercentage)
+  const overageBytes = quota === null ? null : Math.max(0, quota.used - quota.entitled)
+  const exhausted = quota !== null && quota.used >= quota.entitled
+  const utilization =
+    quota === null ? null : utilizationStatus(quota.used, quota.entitled, STORAGE_THRESHOLDS)
 
   const liveSites = sites.filter((site) => !site.isDeleted)
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
@@ -126,7 +128,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const historyTooShort = buckets.length < FORECAST_WINDOW_MONTHS
   const runway = exhausted
     ? 0
-    : historyTooShort
+    : historyTooShort || sharePointUsed === null
       ? null
       : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
   const points = buildGrowthPoints(buckets, rate, FORECAST_CHART_MONTHS)

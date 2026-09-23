@@ -89,11 +89,19 @@ export function GrowthSection({ overview, delay }: Props) {
           <MiniStatRow>
             <MiniStat
               label={t('storageOptimisation.growth.usedToday')}
-              value={formatBytes(sharePoint.usedBytes)}
+              value={
+                sharePoint.usedBytes === null
+                  ? t('storageOptimisation.kpi.unknown')
+                  : formatBytes(sharePoint.usedBytes)
+              }
             />
             <MiniStat
               label={t('storageOptimisation.growth.forecastEnd', { months: FORECAST_CHART_MONTHS })}
-              value={formatBytes(growth.forecastEndBytes)}
+              value={
+                growth.forecastEndBytes === null
+                  ? t('storageOptimisation.kpi.unknown')
+                  : formatBytes(growth.forecastEndBytes)
+              }
             />
             <MiniStat
               label={t('storageOptimisation.growth.overEntitlement')}

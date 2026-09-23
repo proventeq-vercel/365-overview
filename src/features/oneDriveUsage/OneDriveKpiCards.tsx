@@ -12,9 +12,11 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
     <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" style={{ animationDelay: '40ms' }}>
       <StatCard
         label={t('oneDrive.kpi.used')}
-        value={formatBytes(usedBytes)}
-        color={P365.navy}
-        information={t('oneDrive.kpi.usedHint')}
+        value={usedBytes === null ? t('storageOptimisation.kpi.unknown') : formatBytes(usedBytes)}
+        color={usedBytes === null ? P365.grey400 : P365.navy}
+        information={
+          usedBytes === null ? t('oneDrive.kpi.usedUnavailableHint') : t('oneDrive.kpi.usedHint')
+        }
       />
       <StatCard
         label={t('oneDrive.kpi.drives')}
