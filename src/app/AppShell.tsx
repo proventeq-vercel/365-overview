@@ -5,13 +5,15 @@ import { Header } from './Header'
 
 export function AppShell({
   reports,
+  menuEnabled,
   children,
 }: {
   reports: readonly ReportDefinition[]
+  menuEnabled: boolean
   children: ReactNode
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const hasMenu = reports.length > 1
+  const hasMenu = menuEnabled && reports.length > 1
 
   return (
     <div className="flex min-h-screen flex-col bg-p365-page text-p365-navy">

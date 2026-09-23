@@ -68,6 +68,25 @@ piece of hosting config the app needs: a rewrite of every path to `index.html`,
 so a reload on `/onedrive-usage` (or any client-side route) is served by the
 app instead of Vercel's 404.
 
+### Every option at a glance
+
+| Var | Default | What it does | URL override |
+|---|---|---|---|
+| `VITE_CLIENT_ID` | built-in registration | Entra application (client) id | — |
+| `VITE_AUTHORITY_URI` | built-in registration's authority | Which tenants may sign in | — |
+| `VITE_REDIRECT_URI` | the page's own origin + `/` | OAuth redirect URI, must be registered | — |
+| `VITE_GRAPH_PROXY_URL` | unset — the browser calls Graph itself | Route every Graph call through the proxy, app-only | — |
+| `VITE_GRAPH_PROXY_SCOPE` | `api://<VITE_CLIENT_ID>/access_as_user` | The proxy's exposed scope | — |
+| `VITE_LOCAL_AUTH_URL` | unset | Dev server only: take the caller token from the local fake Entra | — |
+| `VITE_USE_MOCK` | `false` | Run on fixture data with no auth at all | `?mock=` |
+| `VITE_MOCK_SCENARIO` | `healthy` | Which fixture tenant mock mode serves | `?scenario=` |
+| `VITE_FEATURES` | `optimization.storage.report.overview` | Which reports are routable, and whether the menu exists | `?features=` |
+| `VITE_MODES_LOCKED` | `false` | Ignore every URL override; the one var the URL cannot touch | — |
+
+Only the last four have a URL override, and `?modes=reset` forgets all of them for the tab.
+Every var is read once at load: `src/config/env.ts` is a module constant, so nothing re-reads
+the env or the URL mid-session.
+
 ### Auth config (live mode only)
 
 | Var | Default | Description |
@@ -108,6 +127,39 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `over-entitlement` | Already using more than the estimated entitlement — no exhaustion date to project |
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
 | `short-history` | Fewer than six months of trend data — no forecast, explicitly not an all-clear |
+
+### Feature flags — `VITE_FEATURES`
+
+A comma list of the flags to enable, named the way the Proventeq 365 licence flags are.
+Unknown flags are dropped; **unset means the default set**, and setting the var *replaces*
+that set rather than adding to it, so a list must name every flag it wants.
+
+| Flag | In the default set | What it enables |
+|---|---|---|
+| `optimization.storage.report.overview` | yes | The Storage Optimisation report — the whole point of the app |
+| `optimization.storage.report.onedrive` | no | The OneDrive Usage report, on `/onedrive-usage` |
+| `app.menu` | no | The hamburger and the side menu of reports |
+
+`app.menu` is off by default, so the deployed app is a single report with no navigation.
+Turning it on takes effect only where there is something to navigate to — with fewer than
+two reports enabled the menu stays hidden, because a menu of one is not navigation.
+A report whose flag is off is not routable at all; a report that is on is always reachable
+at its own path, menu or no menu.
+
+```
+# both reports and the menu, from the env
+VITE_FEATURES=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu
+
+# the same for one browser tab, no rebuild
+/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu
+```
+
+### Mode lock — `VITE_MODES_LOCKED`
+
+`VITE_MODES_LOCKED=true` makes the app ignore `?features=`, `?mock=`, `?scenario=` and any
+override already remembered for the tab. It is applied inside `readEnv`, so no test or
+caller can slip past it, and a deployment that must not be reconfigured from a URL —
+anything customer-facing — should set it.
 
 ---
 
@@ -153,15 +205,15 @@ name and its id.
 
 ## Modes: env by default, URL per tab, lockable
 
-The app has three runtime switches — which reports are enabled, whether it runs on
-fixture data, and which fixture tenant. The env (`VITE_FEATURES`, `VITE_USE_MOCK`,
+The app has three runtime switches — which reports and shell features are enabled, whether
+it runs on fixture data, and which fixture tenant. The env (`VITE_FEATURES`, `VITE_USE_MOCK`,
 `VITE_MOCK_SCENARIO`) is the default, and the deployed default is the Storage
 Optimisation report alone, live data, no menu. Each switch can also be set for one
 browser tab with a search param:
 
 | Param | Values | Example |
 |---|---|---|
-| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive` (both reports + menu) |
+| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` | `/?mock=true&scenario=concealed` |
 | `modes` | `reset` | `/?modes=reset` (forget every override) |
@@ -191,10 +243,12 @@ one **⋯ Options** menu whose items each carry an icon and a one-line descripti
 Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
 way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,
 `optimization.storage.report.onedrive`). `VITE_FEATURES` lists the enabled flags; only
-those reports are built in and routable. With one report enabled there is no menu at
-all; with two or more, a hamburger in the header opens a floating menu of the enabled
-reports. The root path falls back to the first enabled report. The OneDrive Usage report
-is the proof of concept for a second report and reuses the same model and data.
+those reports are routable. The menu is a flag of its own, `app.menu`, and it is **off
+unless it is asked for** — from the env or from `?features=`. With it off there is no
+hamburger and the side menu is not mounted at all, however many reports are enabled; with
+it on and two or more reports enabled, the hamburger opens the side menu of them. The root
+path falls back to the first enabled report. The OneDrive Usage report is the proof of
+concept for a second report and reuses the same model and data.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
 picked from a list), and the SharePoint entitlement in TB — the licence estimate is shown as the
@@ -272,6 +326,56 @@ Three things have to name the new origin before it works:
   authentication, so a sign-in prompt is not evidence that the URI is registered. Adding one needs
   write access to the registration, which owning the subscription does not grant.
 
+### Automatic deployment
+
+`.github/workflows/deploy.yml` deploys on every push to `main`, but only **after CI has gone
+green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Two
+jobs, both from the exact commit CI tested:
+
+| Job | What it deploys | Where |
+|---|---|---|
+| `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
+| `site` | `npm run build` output | the storage account's `$web` container, `az storage blob upload-batch` |
+
+Vercel deploys the SPA from `main` on its own, so this workflow is what keeps the **proxy** and
+the **Azure-hosted copy** current.
+
+**It needs credentials the repo does not have yet.** The first job checks for them and, when they
+are absent, skips the deploy with a note in the run summary rather than failing — so the workflow
+is inert until someone configures it, and merging it changes nothing.
+
+The Function App is on a **Flex Consumption** plan, which deploys through Entra RBAC only:
+publish-profile (basic auth) deployment is not supported there, and SCM basic auth is disabled on
+the app anyway. So a federated (OIDC) credential is required, and creating one needs a directory
+role this project's account does not hold — `az ad app create` answers *"Insufficient privileges
+to complete the operation"*. **A tenant administrator has to create it once:**
+
+```bash
+# 1. an app registration for the deployment, and its service principal
+az ad app create --display-name 365-overview-github-deploy
+az ad sp create --id <appId>
+
+# 2. trust GitHub's token for this repo's main branch
+az ad app federated-credential create --id <appId> --parameters '{
+  "name": "github-main",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:proventeq-vercel/365-overview:ref:refs/heads/main",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+
+# 3. let it deploy, and write to the static website
+az role assignment create --assignee <appId> --role Contributor \
+  --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev
+az role assignment create --assignee <appId> --role "Storage Blob Data Contributor" \
+  --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev/providers/Microsoft.Storage/storageAccounts/p365lite
+```
+
+Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
+`AZURE_SUBSCRIPTION_ID` — and, if the names ever differ from the defaults in the workflow, the
+repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job also
+reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
+from repository variables, so the Azure-hosted copy is configured without touching the code.
+
 ### Preview production build locally
 
 ```bash
@@ -325,4 +429,4 @@ functions/       # The Graph proxy (Azure Functions v4) with its own package.jso
 1. In live mode, `MsalAuthProvider` initialises the MSAL singleton and `MsalAuthHandler` gates the app — with no signed-in account it calls `loginRedirect()`.
 2. `useStorageOverview` issues the five Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs — plus `/organization` for the header. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
 3. The parsed inputs go through `buildStorageOverview`, which produces every figure the screen shows. Sections render the model; none of them compute a number.
-4. The Graph scopes are consented on the first token round-trip, so an unconsented organisation fails there with `AADSTS65001`: `MsalAuthHandler` keeps the error object and `AuthErrorScreen` shows the Global Administrator action with the admin-consent link (built for the multi-tenant `organizations` endpoint, `redirect_uri` included). Once signed in, a failed Graph call is classified the same way in `AccessFailure`: consent error → consent screen; any other authorisation failure → the role screen; anything else → the generic error state.
+4. The Graph scopes are consented on the first token round-trip, so an unconsented organisation fails there with `AADSTS65001`: `MsalAuthHandler` keeps the error object and `AuthErrorScreen` shows the Global Administrator action with the admin-consent link (built for the multi-tenant `organizations` endpoint, `redirect_uri` included). Once signed in, a failed Graph call is classified the same way in `AccessFailure`: consent error → consent screen; the proxy's `TenantNotAllowed` → the tenant screen, which says no role or consent will change it; any other authorisation failure → the role screen; anything else → the generic error state.

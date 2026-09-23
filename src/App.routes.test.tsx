@@ -34,7 +34,7 @@ function LocationProbe() {
   )
 }
 
-function renderAt(path: string, features = ['flag.storage', 'flag.sharing']) {
+function renderAt(path: string, features = ['flag.storage', 'flag.sharing', 'app.menu']) {
   envState.features.clear()
   for (const flag of features) envState.features.add(flag)
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -62,8 +62,14 @@ describe('App routes', () => {
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument()
   })
 
+  it('keeps the menu off until app.menu is enabled, however many reports are on', () => {
+    renderAt('/sharing', ['flag.storage', 'flag.sharing'])
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sharing report')
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
+  })
+
   it('does not mount a report whose flag is off, and shows no menu for a single report', () => {
-    renderAt('/sharing', ['flag.storage'])
+    renderAt('/sharing', ['flag.storage', 'app.menu'])
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Storage report')
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument()
   })
