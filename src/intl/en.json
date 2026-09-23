@@ -55,6 +55,8 @@
   "access.consent.body": "Microsoft 365 usage reports need one-off admin consent for the whole tenant. A Global Administrator has to grant it; signing in again will not help until they do.",
   "access.consent.sendLink": "Send them this link:",
   "access.consent.grant": "grant admin consent",
+  "access.tenant.title": "This tenant is not enabled for the report yet",
+  "access.tenant.body": "You signed in successfully, but your tenant has not been switched on for this report. No role or consent will change that — ask Proventeq to enable it.",
   "access.permission.title": "Your account cannot read usage reports",
   "access.permission.body": "You are signed in and your organisation has approved the app, but reading tenant usage reports needs an administrative role. Microsoft requires Global Reader, Reports Reader, or an equivalent role — ask an administrator to assign one.",
 

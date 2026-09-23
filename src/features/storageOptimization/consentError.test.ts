@@ -31,6 +31,12 @@ describe('consentErrorFor', () => {
     expect(consentErrorFor(new ApiError(403, 'Forbidden'))).toBe('permission')
   })
 
+  it("reads the proxy's disabled-tenant refusal as its own kind, not a missing role", () => {
+    expect(
+      consentErrorFor(new ApiError(403, 'This tenant is not enabled.', 'TenantNotAllowed')),
+    ).toBe('tenant')
+  })
+
   it('does not read a rejected token as a missing role', () => {
     expect(consentErrorFor(new ApiError(401, 'Unauthorized'))).toBe('other')
   })

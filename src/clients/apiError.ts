@@ -15,6 +15,8 @@ const CONSENT_CODES = ['AADSTS65001', 'consent_required', 'interaction_required'
 
 export const PROXY_CONSENT_CODE = 'AdminConsentRequired'
 
+export const PROXY_TENANT_CODE = 'TenantNotAllowed'
+
 const UNGRANTED_APPLICATION_PERMISSION = 'Authorization_RequestDenied'
 
 export function isConsentRequired(error: unknown): boolean {
@@ -31,4 +33,8 @@ export function isConsentRequired(error: unknown): boolean {
 
 export function isForbidden(error: unknown): boolean {
   return error instanceof ApiError && error.isForbidden
+}
+
+export function isTenantNotAllowed(error: unknown): boolean {
+  return error instanceof ApiError && error.code === PROXY_TENANT_CODE
 }

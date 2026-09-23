@@ -23,6 +23,17 @@ describe('AccessFailure', () => {
     expect(screen.getByRole('alert')).not.toHaveTextContent(/global administrator/i)
   })
 
+  it('never sends a disabled tenant off to find a directory role', () => {
+    render(
+      <AccessFailure
+        error={new ApiError(403, 'This tenant is not enabled.', 'TenantNotAllowed')}
+      />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent(/not been switched on/i)
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/reports reader/i)
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/global administrator/i)
+  })
+
   it('gives the two failures different headings, never one generic message', () => {
     const { unmount } = render(
       <AccessFailure error={new ApiError(403, 'AADSTS65001: not consented')} />,
