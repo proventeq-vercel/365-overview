@@ -65,6 +65,15 @@ describe('graphClient', () => {
     expect(err.code).toBe('AdminConsentRequired')
     expect(err.message).toBe('consent first')
   })
+  it('marks a failure from the proxy as app-only and one from Graph itself as delegated', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: { code: 'Authorization_RequestDenied' } }, 403))
+    const viaProxy = (await createGraphClient(token, fetchImpl, 'https://proxy.example/api/graph')
+      .get('/x')
+      .catch((e) => e)) as ApiError
+    const direct = (await createGraphClient(token, fetchImpl).get('/x').catch((e) => e)) as ApiError
+    expect(viaProxy.appOnly).toBe(true)
+    expect(direct.appOnly).toBe(false)
+  })
   it('posts a $batch of GETs, twenty per request, and returns the sub-responses in call order', async () => {
     const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {
       const { requests } = JSON.parse(init.body as string) as { requests: { id: string; url: string }[] }

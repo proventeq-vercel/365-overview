@@ -38,7 +38,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   it: `/x` → `<origin>/v1.0/x`, `/beta/x` or `/v1.0/x` as given, absolute
   URLs untouched — so `live.ts` names `/beta/reports/…` and the same code
   runs against either. `ApiError` keeps the Graph-shaped `error.code`;
-  `AdminConsentRequired` from the proxy counts as a consent failure. A 429/503/504 — on the request or on
+  `AdminConsentRequired` from the proxy counts as a consent failure. `ApiError.appOnly`
+  marks a failure from the proxy origin: only there does `Authorization_RequestDenied`
+  mean missing consent, and a 403 means a missing role only when it is delegated or the
+  proxy's own `DirectoryRoleRequired`. An MSAL prompt for MFA or Conditional Access
+  (`interaction_required`) is not a consent failure. A 429/503/504 — on the request or on
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`

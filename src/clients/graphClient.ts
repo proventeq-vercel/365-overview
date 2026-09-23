@@ -65,7 +65,7 @@ export function createGraphClient(
       message = body.error?.message ?? message
       code = body.error?.code ?? null
     } catch { /* ignore non-json error bodies */ }
-    return new ApiError(res.status, message, code)
+    return new ApiError(res.status, message, code, origin !== GRAPH_ORIGIN)
   }
 
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
