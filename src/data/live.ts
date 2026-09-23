@@ -79,6 +79,7 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
   }
 
   let directory: Promise<SiteDirectory> | null = null
+  let directoryRefused = false
   const walkDirectory = async (): Promise<SiteDirectory> => {
     const sites: RawDeltaSite[] = []
     let path: string | undefined = siteDirectoryPath()
@@ -96,11 +97,16 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     },
 
     async getSiteDirectory() {
-      directory ??= walkDirectory().catch((error: unknown) => {
-        directory = null
-        if (error instanceof ApiError) return EMPTY_DIRECTORY
-        throw error
-      })
+      if (directoryRefused) return EMPTY_DIRECTORY
+      directory ??= walkDirectory()
+        .catch((error: unknown) => {
+          if (!(error instanceof ApiError)) throw error
+          if (error.isForbidden) directoryRefused = true
+          return EMPTY_DIRECTORY
+        })
+        .finally(() => {
+          directory = null
+        })
       return directory
     },
 

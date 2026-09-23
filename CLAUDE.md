@@ -70,7 +70,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   reaches and the `$batch` path still covers whatever is on screen, so nothing
   is O(all sites). On proventeqe5 it names 98.8% of 1305 rows in one 1.7s walk
   where `$batch` alone named 50. It degrades to an empty directory on any
-  `ApiError` (delegated mode has no app-only delta), never failing the report.
+  `ApiError` (delegated mode has no app-only delta), never failing the report;
+  a 403 is remembered for the session so a delegated token stops asking. Only
+  the in-flight walk is shared, so Refresh data walks again.
   Two consumers: `data/namedSites.nameTopSites` names the
   fifty largest live sites before `buildStorageOverview` (so chart labels and
   the default first page are right), and `hooks/useSiteDetails` names the rows

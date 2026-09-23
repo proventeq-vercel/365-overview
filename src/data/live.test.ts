@@ -255,6 +255,28 @@ describe('getSiteDirectory', () => {
     expect((await ds.getSiteDirectory()).size).toBe(1)
   })
 
+  it('walks again on the next fetch so a refresh picks up new and renamed sites', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockResolvedValueOnce(page(1)).mockResolvedValueOnce(page(2))
+    const ds = createLiveDataSource(graph)
+
+    expect((await ds.getSiteDirectory()).size).toBe(1)
+    expect((await ds.getSiteDirectory()).size).toBe(2)
+  })
+
+  it('stops asking for the delta once Graph refuses it, since a delegated token never can read it', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValue(new ApiError(403, 'Forbidden', 'accessDenied'))
+    const ds = createLiveDataSource(graph)
+
+    await ds.getSiteDirectory()
+    await expect(ds.getSiteDirectory()).resolves.toEqual(new Map())
+
+    expect(get).toHaveBeenCalledTimes(1)
+  })
+
   it('propagates a failure that is not Graph saying no', async () => {
     const { graph } = recordingGraph()
     const get = graph.get as ReturnType<typeof vi.fn>
