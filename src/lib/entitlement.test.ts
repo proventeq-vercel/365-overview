@@ -79,6 +79,12 @@ describe('estimateEntitlement', () => {
     ).toBe(BASE_ENTITLEMENT_BYTES)
   })
 
+  it('never subtracts for a SKU reporting a negative unit count, which P365 skips', () => {
+    expect(
+      estimateEntitlementBytes([sku('ENTERPRISEPACK', -5, ['SHAREPOINTENTERPRISE'])]),
+    ).toBe(BASE_ENTITLEMENT_BYTES)
+  })
+
   it('uses binary GB, matching Microsoft storage accounting', () => {
     expect(GB_IN_BYTES).toBe(1_073_741_824)
     expect(BASE_ENTITLEMENT_BYTES).toBe(1024 * GB_IN_BYTES)

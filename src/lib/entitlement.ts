@@ -45,7 +45,8 @@ export function skuStorageBytesPerLicence(servicePlans: string[]): number {
 
 export function estimateEntitlementBytes(skus: LicenseSku[]): number {
   return skus.reduce(
-    (total, sku) => total + skuStorageBytesPerLicence(sku.servicePlans) * sku.enabled,
+    (total, sku) =>
+      sku.enabled > 0 ? total + skuStorageBytesPerLicence(sku.servicePlans) * sku.enabled : total,
     BASE_ENTITLEMENT_BYTES,
   )
 }
