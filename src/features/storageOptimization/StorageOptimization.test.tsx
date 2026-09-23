@@ -98,6 +98,13 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText(/storage figures are unaffected/i)).toBeInTheDocument()
   })
 
+  it('renders the report with the entitlement unavailable when the licences could not be read', async () => {
+    renderApp('healthy', { getLicenses: async () => null })
+    await reportLoaded()
+    expect(screen.getByText('Capacity forecast unavailable without tenant entitlement')).toBeInTheDocument()
+    expect(screen.getByText('Tenant entitlement unavailable, so quota usage cannot be shown')).toBeInTheDocument()
+  })
+
   it('refuses a forecast on the short-history tenant', async () => {
     renderApp('short-history')
     expect((await screen.findAllByText(/not an all-clear/i)).length).toBeGreaterThan(0)

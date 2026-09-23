@@ -139,7 +139,12 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     },
 
     async getLicenses() {
-      return parseSubscribedSkus(await graph.getAllPages<RawSku>('/subscribedSkus'))
+      try {
+        return parseSubscribedSkus(await graph.getAllPages<RawSku>('/subscribedSkus'))
+      } catch (error) {
+        if (error instanceof ApiError) return null
+        throw error
+      }
     },
 
     async getOrg() {

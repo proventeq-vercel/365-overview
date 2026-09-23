@@ -62,7 +62,7 @@ const inputs = (over: Partial<OverviewInputs> = {}): OverviewInputs => ({
 })
 
 const unknownEntitlement = (over: Partial<OverviewInputs> = {}): OverviewInputs =>
-  inputs({ skus: [], forceUnknownEntitlement: true, ...over })
+  inputs({ skus: null, ...over })
 
 describe('classifyWorkload', () => {
   it('treats Teams channel and group sites as Teams, in the words Graph reports', () => {
@@ -169,8 +169,20 @@ describe('buildStorageOverview entitlement', () => {
 
   it('prices growth without an entitlement, which P365 never gates the cost on', () => {
     const overview = buildStorageOverview(unknownEntitlement())
-    expect(overview.cost.growthAnnual).toBeGreaterThan(0)
-    expect(overview.cost.cumulativeYear3).toBeGreaterThan(0)
+    expect(overview.cost.growthAnnual).toBeCloseTo(288)
+    expect(overview.cost.cumulativeYear3).toBeCloseTo(1296)
+  })
+
+  it('has no licence estimate when the licences could not be read', () => {
+    const overview = buildStorageOverview(unknownEntitlement())
+    expect(overview.sharePoint.licenceEstimateBytes).toBeNull()
+  })
+
+  it('still uses an entered entitlement when the licences could not be read', () => {
+    const overview = buildStorageOverview(unknownEntitlement({ entitlementOverrideBytes: 5000 * GB }))
+    expect(overview.sharePoint.entitledBytes).toBe(5000 * GB)
+    expect(overview.sharePoint.remainingBytes).toBe(4850 * GB)
+    expect(overview.caveats.entitlementIsEstimated).toBe(false)
   })
 })
 

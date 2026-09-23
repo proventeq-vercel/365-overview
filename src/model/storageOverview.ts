@@ -32,13 +32,12 @@ export interface OverviewInputs {
   drives: StorageRow[]
   sharePointTrend: UsagePoint[]
   oneDriveTrend: UsagePoint[]
-  skus: LicenseSku[]
+  skus: LicenseSku[] | null
   reportRefreshDate: string
   ratePerGb: number
   currency: string
   entitlementOverrideBytes: number | null
   now?: Date
-  forceUnknownEntitlement?: boolean
 }
 
 export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
@@ -97,12 +96,11 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     currency,
     entitlementOverrideBytes,
     now = new Date(),
-    forceUnknownEntitlement = false,
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
-  const licenceEstimateBytes = estimateEntitlementBytes(skus)
-  const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
+  const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
+  const entitledBytes = override ?? licenceEstimateBytes
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 
   const sharePointUsed = latest(sharePointTrend)

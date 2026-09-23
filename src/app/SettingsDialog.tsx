@@ -53,7 +53,8 @@ export function SettingsDialog({
   const rateId = useId()
   const entitlementId = useId()
 
-  const licenceEstimate = data ? formatBytes(data.sharePoint.licenceEstimateBytes) : null
+  const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
+  const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const overrideTb =
     settings.entitlementOverrideBytes === null
       ? ''

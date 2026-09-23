@@ -11,7 +11,7 @@ export interface DataSource {
   getDrives(): Promise<StorageRow[]>
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
-  getLicenses(): Promise<LicenseSku[]>
+  getLicenses(): Promise<LicenseSku[] | null>
   getOrg(): Promise<OrgInfo>
   getReportRefreshDate(): Promise<string>
 }

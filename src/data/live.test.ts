@@ -264,4 +264,22 @@ describe('getSiteDirectory', () => {
   })
 })
 
+describe('getLicenses', () => {
+  it('reports licences as unavailable when Graph refuses them, so the report still renders', async () => {
+    const { graph } = recordingGraph()
+    const getAllPages = graph.getAllPages as ReturnType<typeof vi.fn>
+    getAllPages.mockRejectedValue(new ApiError(403, 'Insufficient privileges', 'Authorization_RequestDenied'))
+
+    await expect(createLiveDataSource(graph).getLicenses()).resolves.toBeNull()
+  })
+
+  it('propagates a licence failure that is not Graph saying no', async () => {
+    const { graph } = recordingGraph()
+    const getAllPages = graph.getAllPages as ReturnType<typeof vi.fn>
+    getAllPages.mockRejectedValue(new TypeError('network down'))
+
+    await expect(createLiveDataSource(graph).getLicenses()).rejects.toThrow('network down')
+  })
+})
+
 type DataSourceUnderTest = ReturnType<typeof createLiveDataSource>
