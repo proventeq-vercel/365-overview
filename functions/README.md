@@ -74,7 +74,11 @@ cd ~/projects/365-overview/functions && npm run local
 Starts the fakes on `:7080` (Entra) and `:7090` (Graph) and hosts the proxy in-process on
 `:7071`, then prints a ready user token and a `curl`. Add `--func` to host it under the **Azure
 Functions Core Tools** runtime instead — the same host that runs in Azure, and the one case that
-needs `npm i -g azure-functions-core-tools@4` first:
+needs `func` on the `PATH` first. Install it **outside this package** so it never reaches a
+deployment: `npm i -g azure-functions-core-tools@4`, `winget install
+Microsoft.AzureFunctionsCoreTools`, or into any prefix of your own
+(`npm install --prefix ~/tools/func azure-functions-core-tools@4`, then add
+`~/tools/func/node_modules/.bin` to the `PATH`):
 
 ```bash
 cd ~/projects/365-overview/functions && npm run local -- --func
@@ -98,6 +102,13 @@ cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/gra
 `VITE_LOCAL_AUTH_URL` is honoured **only by the Vite dev server** (`import.meta.env.DEV`); a
 build ignores it, so it cannot ship. The SPA then skips MSAL the way mock mode does, takes its
 caller token from the fake Entra and renders the whole report through the proxy.
+
+The stack allows `http://localhost:5173` and `http://127.0.0.1:5173` — Vite's default. On any
+other port every call dies at the CORS preflight, so name it when starting the stack:
+
+```bash
+cd ~/projects/365-overview/functions && npm run local -- --origin=http://localhost:5017
+```
 
 ## Validating against a real tenant before deploying
 

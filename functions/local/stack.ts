@@ -7,6 +7,16 @@ export const LOCAL_PROXY_AUDIENCE = `api://${LOCAL_GRAPH_CLIENT_ID}`
 export const LOCAL_PROXY_SCOPE = 'access_as_user'
 export const DEFAULT_LOCAL_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
 
+const ORIGIN_ARGUMENT = '--origin='
+
+export function allowedOriginsFrom(argv: readonly string[]): string[] {
+  const named = argv
+    .filter((argument) => argument.startsWith(ORIGIN_ARGUMENT))
+    .map((argument) => argument.slice(ORIGIN_ARGUMENT.length).trim())
+    .filter(Boolean)
+  return [...DEFAULT_LOCAL_ORIGINS, ...named]
+}
+
 export interface LocalStackOptions {
   entraPort?: number
   graphPort?: number

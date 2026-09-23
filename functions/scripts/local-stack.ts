@@ -3,7 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { startNodeHost } from '../local/nodeHost.js'
-import { DEFAULT_LOCAL_ORIGINS, startLocalStack } from '../local/stack.js'
+import { allowedOriginsFrom, startLocalStack } from '../local/stack.js'
 import { createProxyDeps } from '../src/proxy/deps.js'
 
 const ENTRA_PORT = 7080
@@ -12,10 +12,12 @@ const PROXY_PORT = 7071
 const useFunctionsHost = process.argv.includes('--func')
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
+const allowedOrigins = allowedOriginsFrom(process.argv)
+
 const stack = await startLocalStack({
   entraPort: ENTRA_PORT,
   graphPort: GRAPH_PORT,
-  allowedOrigins: DEFAULT_LOCAL_ORIGINS,
+  allowedOrigins,
   graph: { throttleFirstSiteReport: true },
 })
 
@@ -51,6 +53,7 @@ Local stack up (${useFunctionsHost ? 'Azure Functions Core Tools host' : 'in-pro
   fake Entra   ${stack.entra.url}   (JWKS, token endpoint, GET /local/user-token)
   fake Graph   ${stack.graph.url}   (260 sites, 120 drives, first site report call is throttled once)
   proxy        ${proxyUrl}
+  SPA origins  ${allowedOrigins.join(', ')}   (add another with --origin=http://localhost:5017)
 
 Try it:
   curl -H "Authorization: Bearer ${userToken}" "${proxyUrl}/v1.0/organization"
