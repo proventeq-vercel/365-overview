@@ -28,6 +28,9 @@ const TOP_TEMPLATE_SLICES = 8
 
 const TEAMS_TEMPLATE_MARKERS = ['TEAMCHANNEL', 'TEAM CHANNEL', 'GROUP']
 
+export const OTHER_TEMPLATES_SLICE = '__other__'
+export const UNKNOWN_TEMPLATE_SLICE = '__unknown__'
+
 export interface OverviewInputs {
   sites: StorageRow[]
   drives: StorageRow[]
@@ -155,10 +158,11 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         ([name, value]) => ({ name, value }),
       ),
       byTemplate: topNWithOther(
-        totalsBy(liveSites, (site) => site.template || 'Unknown'),
+        totalsBy(liveSites, (site) => site.template || UNKNOWN_TEMPLATE_SLICE),
         TOP_TEMPLATE_SLICES,
         ([, value]) => value,
         ([name]) => name,
+        OTHER_TEMPLATES_SLICE,
       ),
       sites,
       siteCount: liveSites.length,

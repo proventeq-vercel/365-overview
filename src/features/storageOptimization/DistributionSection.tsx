@@ -12,6 +12,7 @@ import {
   SplitGrid,
 } from '@/design/primitives'
 import { P365, monoColor } from '@/design/theme'
+import { OTHER_TEMPLATES_SLICE, UNKNOWN_TEMPLATE_SLICE } from '@/model/storageOverview'
 
 interface Props {
   overview: StorageOverview
@@ -43,6 +44,13 @@ function ShareDoughnut({ slices, ariaLabel }: { slices: Slice[]; ariaLabel: stri
 export function DistributionSection({ overview, delay }: Props) {
   const t = useTranslation()
   const { sharePoint, oneDrive, caveats } = overview
+  const templateLabels = new Map([
+    [OTHER_TEMPLATES_SLICE, t('storageOptimisation.template.other')],
+    [UNKNOWN_TEMPLATE_SLICE, t('storageOptimisation.template.unknown')],
+  ])
+  const templateSlices = shaded(
+    sharePoint.byTemplate.map((slice) => ({ ...slice, name: templateLabels.get(slice.name) ?? slice.name })),
+  )
   const workloadSlices =
     oneDrive.usedBytes === null
       ? sharePoint.byWorkload
@@ -114,14 +122,14 @@ export function DistributionSection({ overview, delay }: Props) {
         <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
         <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
           <MonoDoughnut
-            slices={shaded(sharePoint.byTemplate)}
+            slices={templateSlices}
             formatValue={formatBytes}
             ariaLabel={t('storageOptimisation.template.title')}
           />
           <Legend
             className="max-w-3xl"
             columns={3}
-            items={shaded(sharePoint.byTemplate).map((slice) => ({
+            items={templateSlices.map((slice) => ({
               name: slice.name,
               color: slice.color,
               detail: formatBytes(slice.value),

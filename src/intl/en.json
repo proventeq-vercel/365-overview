@@ -136,6 +136,8 @@
   "storageOptimisation.workload.oneDriveUnavailable": "OneDrive is left out because Microsoft 365 returned no OneDrive storage history",
   "storageOptimisation.workload.groupingNote": "Grouped by site template, which is what Microsoft Graph reports. These counts will not match the SharePoint admin centre, which groups differently.",
   "storageOptimisation.template.title": "Storage by site template",
+  "storageOptimisation.template.other": "Other",
+  "storageOptimisation.template.unknown": "Unknown",
   "storageOptimisation.template.subtitle": "SharePoint storage grouped by the template each site was created from",
 
   "storageOptimisation.growth.sectionTitle": "Future state & growth impact",

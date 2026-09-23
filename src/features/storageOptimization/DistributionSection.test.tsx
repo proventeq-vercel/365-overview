@@ -99,4 +99,26 @@ describe('DistributionSection', () => {
       screen.getByText('OneDrive is left out because Microsoft 365 returned no OneDrive storage history'),
     ).toBeInTheDocument()
   })
+
+  it('names the leftover and template-less slices from the catalogue, and leaves real template names alone', () => {
+    render(
+      <DistributionSection
+        overview={{
+          ...withSlices,
+          sharePoint: {
+            ...withSlices.sharePoint,
+            byTemplate: [
+              { name: 'constructor', value: 300 * GB },
+              { name: '__unknown__', value: 200 * GB },
+              { name: '__other__', value: 100 * GB },
+            ],
+          },
+        }}
+      />,
+    )
+    expect(screen.getByText('Other')).toBeInTheDocument()
+    expect(screen.getByText('Unknown')).toBeInTheDocument()
+    expect(screen.getByText('constructor')).toBeInTheDocument()
+    expect(screen.queryByText(/__other__|__unknown__/)).not.toBeInTheDocument()
+  })
 })

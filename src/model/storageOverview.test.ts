@@ -324,7 +324,16 @@ describe('buildStorageOverview composition', () => {
     const overview = buildStorageOverview(
       inputs({ sites: [site({ template: undefined, storageUsedBytes: 4 * GB })] }),
     )
-    expect(overview.sharePoint.byTemplate).toEqual([{ name: 'Unknown', value: 4 * GB }])
+    expect(overview.sharePoint.byTemplate).toEqual([{ name: '__unknown__', value: 4 * GB }])
+  })
+
+  it('folds the templates past the eighth into one slice the section names', () => {
+    const sites = Array.from({ length: 9 }, (_, i) =>
+      site({ id: `s${i}`, template: `T${i}`, storageUsedBytes: (10 - i) * GB }),
+    )
+    const overview = buildStorageOverview(inputs({ sites }))
+    expect(overview.sharePoint.byTemplate).toHaveLength(9)
+    expect(overview.sharePoint.byTemplate.at(-1)).toEqual({ name: '__other__', value: 2 * GB })
   })
 
   it('carries the report refresh date through untouched', () => {
