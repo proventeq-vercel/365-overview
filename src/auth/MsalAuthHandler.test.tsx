@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, screen } from '@testing-library/react'
 import { render } from '@/test/render'
-import { EventType, InteractionStatus, type AccountInfo } from '@azure/msal-browser'
+import { InteractionStatus, type AccountInfo } from '@azure/msal-browser'
 import { MsalAuthHandler } from './MsalAuthHandler'
 
 const account = { homeAccountId: 'a', name: 'Ada Lovelace' } as AccountInfo
@@ -103,7 +103,11 @@ describe('MsalAuthHandler', () => {
     )
     const [[callback]] = instance.addEventCallback.mock.calls as unknown as [[(event: unknown) => void]]
     act(() => {
-      callback({ eventType: EventType.LOGIN_FAILURE, error: new Error('AADSTS50105: user is not assigned') })
+      callback({
+        eventType: 'msal:acquireTokenFailure',
+        interactionType: 'redirect',
+        error: new Error('AADSTS50105: user is not assigned'),
+      })
     })
     msalState.inProgress = InteractionStatus.None
     view.rerender(
@@ -113,5 +117,32 @@ describe('MsalAuthHandler', () => {
     )
     expect(await screen.findByText(/user is not assigned/)).toBeInTheDocument()
     expect(instance.loginRedirect).not.toHaveBeenCalled()
+  })
+
+  it('keeps going after a silent token failure, which MSAL recovers from by redirecting', () => {
+    instance.getActiveAccount.mockReturnValue(null)
+    msalState.accounts = []
+    msalState.inProgress = InteractionStatus.HandleRedirect
+    const view = render(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    const [[callback]] = instance.addEventCallback.mock.calls as unknown as [[(event: unknown) => void]]
+    act(() => {
+      callback({
+        eventType: 'msal:acquireTokenFailure',
+        interactionType: 'silent',
+        error: new Error('interaction_required'),
+      })
+    })
+    msalState.inProgress = InteractionStatus.None
+    view.rerender(
+      <MsalAuthHandler>
+        <div>protected content</div>
+      </MsalAuthHandler>,
+    )
+    expect(screen.queryByText(/interaction_required/)).not.toBeInTheDocument()
+    expect(instance.loginRedirect).toHaveBeenCalledTimes(1)
   })
 })

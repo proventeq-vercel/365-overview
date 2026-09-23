@@ -29,9 +29,8 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
         setActiveAccount(null)
         setAuthError(null)
       } else if (
-        event.eventType === EventType.LOGIN_FAILURE ||
-        (event.eventType === EventType.ACQUIRE_TOKEN_FAILURE &&
-          event.interactionType === InteractionType.Redirect)
+        event.eventType === EventType.ACQUIRE_TOKEN_FAILURE &&
+        event.interactionType === InteractionType.Redirect
       ) {
         console.error('Login error:', event.error)
         setAuthError(event.error ?? new Error(t('auth.unknownError')))
