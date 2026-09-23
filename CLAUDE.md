@@ -230,7 +230,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   over a SharePoint-only denominator.
 - Growth is measured from the trend report, never reconstructed from site rows.
   Under six months of history → no forecast, and the copy says that is not an
-  all-clear.
+  all-clear. The rate is the **median** month-to-month change of that trend;
+  P365 takes the mean of a zero-filled six-month window of *created* bytes from
+  its own crawl, which Graph does not report. The two rates cannot match, and
+  this divergence is deliberate — the cost formula on top of the rate does
+  match.
 - The entitlement estimate is P365's `TenantEntitlementCalculator`, ported to
   `lib/entitlement.ts`: a SKU contributes storage only by the **service plans**
   it carries (`SHAREPOINTSTANDARD`/`ENTERPRISE` family and Visio/Project
@@ -240,10 +244,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   SKUs, and pricing them by part number produced a 127,743 TiB "entitlement"
   on a real tenant. Those SKUs carry no storage plan, so the allowlist alone
   handles them.
-- Every user-facing string, colour rule and card state comes from P365's
-  `features/storageOptimization` (`storageFormat.ts`, `forecastCallout.ts`,
-  `intl/en.json` under `storageOverview.*`). Change the wording there first, or
-  not at all; `src/intl/en.json` mirrors it. **Pricing mirrors P365 exactly**:
+- Colour rules and card states come from P365's `features/storageOptimization`
+  (`storageFormat.ts`, `forecastCallout.ts`). A string that has a counterpart in
+  P365's `intl/en.json` under `storageOverview.*` mirrors it: change the wording
+  there first, or not at all. About thirty strings describe what only this
+  report shows (the exhausted and indeterminate forecast copy, retained
+  storage, drives near cap, concealed names, the workload grouping note); they
+  have no P365 source, so they follow its tone and are edited here. **Pricing mirrors P365 exactly**:
   the rate default is 0.02 GBP/GB/month (`lib/settings.ts`), which is
   `StorageOverviewService.DefaultCostRatePerGbPerMonth` — there is no
   `StorageOptimisationOptions` class, an earlier note here claimed one. The
