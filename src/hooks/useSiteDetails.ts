@@ -18,6 +18,7 @@ export function useSiteDetails(rows: StorageRow[]) {
     queryFn: () => ds.getSiteDetails(ids),
     enabled: ids.length > 0,
     staleTime: Infinity,
+    gcTime: Infinity,
   })
   const directory = query.data ?? NO_SITES
   const named = useMemo(() => withSiteDirectory(rows, directory), [rows, directory])
