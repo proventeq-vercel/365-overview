@@ -56,7 +56,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   known issue). `DataSource.getSiteDetails(ids)` resolves display name +
   `webUrl` per site id through `graphClient.batchGet` (`$batch`, 20 GETs per
   POST, `Sites.Read.All`); the live source caches found and definitively
-  missing (403/404) ids for the session and shares an in-flight lookup between
+  missing (400/403/404) ids for the session and shares an in-flight lookup between
   overlapping callers, so the top-fifty naming and the first table page never
   ask Graph for the same site twice. **Never walk the tenant** (`/sites?
   search=*`, `getAllSites`) for this from the browser — it is O(all sites)

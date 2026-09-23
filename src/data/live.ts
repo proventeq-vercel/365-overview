@@ -43,7 +43,7 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
-const SETTLED_STATUSES = new Set([200, 403, 404])
+const SETTLED_STATUSES = new Set([200, 400, 403, 404])
 
 export function createLiveDataSource(graph: GraphClient): DataSource {
   let sitePages: Promise<RawSiteRow[]> | null = null

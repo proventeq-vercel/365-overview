@@ -118,11 +118,11 @@ describe('createLiveDataSource', () => {
     it('remembers found and definitively missing sites, so paging back costs no request', async () => {
       const { graph } = recordingGraph()
       const batchGet = graph.batchGet as ReturnType<typeof vi.fn>
-      batchGet.mockResolvedValueOnce([finance, { status: 404 }, { status: 403 }])
+      batchGet.mockResolvedValueOnce([finance, { status: 404 }, { status: 403 }, { status: 400 }])
       const ds = createLiveDataSource(graph)
 
-      await ds.getSiteDetails([FINANCE_ID, 'gone', 'forbidden'])
-      const again = await ds.getSiteDetails([FINANCE_ID.toUpperCase(), 'gone', 'forbidden'])
+      await ds.getSiteDetails([FINANCE_ID, 'gone', 'forbidden', 'malformed'])
+      const again = await ds.getSiteDetails([FINANCE_ID.toUpperCase(), 'gone', 'forbidden', 'malformed'])
 
       expect(batchGet).toHaveBeenCalledTimes(1)
       expect(again.get(FINANCE_ID)?.name).toBe('Finance')
