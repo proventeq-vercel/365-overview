@@ -82,8 +82,10 @@ export function forecastStatusFor(
 
 export function exhaustionDateFor(months: number | null, from: Date): string | null {
   if (months === null || months > HORIZON_MONTHS) return null
-  const exhaustsOn = new Date(from)
-  exhaustsOn.setUTCMonth(exhaustsOn.getUTCMonth() + months)
+  const year = from.getUTCFullYear()
+  const month = from.getUTCMonth() + months
+  const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  const exhaustsOn = new Date(Date.UTC(year, month, Math.min(from.getUTCDate(), lastDayOfMonth)))
   return exhaustsOn.toISOString().slice(0, 10)
 }
 

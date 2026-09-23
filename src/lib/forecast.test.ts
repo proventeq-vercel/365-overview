@@ -180,6 +180,12 @@ describe('exhaustionDateFor', () => {
     expect(exhaustionDateFor(6, from)).toBe('2026-07-15')
   })
 
+  it('stays in the target month when today is past the last day it has', () => {
+    expect(exhaustionDateFor(1, new Date('2026-01-31T00:00:00Z'))).toBe('2026-02-28')
+    expect(exhaustionDateFor(13, new Date('2026-08-31T00:00:00Z'))).toBe('2027-09-30')
+    expect(exhaustionDateFor(1, new Date('2028-01-30T00:00:00Z'))).toBe('2028-02-29')
+  })
+
   it('is null beyond the ten-year horizon, which is no-exhaustion rather than a date', () => {
     expect(exhaustionDateFor(HORIZON_MONTHS + 1, from)).toBeNull()
   })
