@@ -116,19 +116,26 @@ describe('createAppTokenSource', () => {
     expect(error.code).toBe('AdminConsentRequired')
   })
 
-  it('maps a token that carries none of the application permissions to 403 AdminConsentRequired naming all three', async () => {
+  it('maps a token that carries no application permission to 403 AdminConsentRequired naming Reports.Read.All', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(tokenReply('roleless', 3599, []))
     const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.status).toBe(403)
     expect(error.code).toBe('AdminConsentRequired')
-    expect(error.message).toContain('Reports.Read.All, Sites.Read.All, Organization.Read.All')
+    expect(error.message).toContain('permissions Reports.Read.All yet')
   })
 
-  it('names only the application permission the token is missing', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(tokenReply('partial', 3599, ['Reports.Read.All', 'Organization.Read.All']))
+  it('refuses a token holding the optional permissions but not Reports.Read.All', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(tokenReply('no-reports', 3599, ['Sites.Read.All', 'Organization.Read.All']))
     const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.code).toBe('AdminConsentRequired')
-    expect(error.message).toContain('permissions Sites.Read.All yet')
+    expect(error.message).toContain('permissions Reports.Read.All yet')
+  })
+
+  it('accepts a token granted Reports.Read.All alone', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(tokenReply('reports-only', 3599, ['Reports.Read.All']))
+    expect(await createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT)).toBe(
+      appJwt('reports-only', ['Reports.Read.All']),
+    )
   })
 
   it('does not cache a token missing permissions, so a grant takes effect on the next call', async () => {

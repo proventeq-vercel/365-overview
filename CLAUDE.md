@@ -252,7 +252,13 @@ validated parts) → per-tenant app token via certificate client assertion
 (`appToken.ts`, cached only once its `roles` carry all of
 `REQUIRED_APPLICATION_PERMISSIONS`; otherwise `403 AdminConsentRequired` — a
 sign-in approval grants no application permission, and Graph's own 403 would
-read as a role problem) → relay with `nextLink`/`deltaLink` rewritten to the
+read as a role problem). **`REQUIRED_APPLICATION_PERMISSIONS` is
+`Reports.Read.All` alone, on purpose: every permission added there is one more
+thing a prospect's admin must approve.** `Sites.Read.All` and
+`Organization.Read.All` are optional — their calls 403 without them and the
+report degrades (`getLicenses` → `null` → unknown entitlement, never the 1 TiB
+base; site names fall back; header says "Your tenant"). `npm run local --
+--reports-only` runs the stack that way → relay with `nextLink`/`deltaLink` rewritten to the
 proxy (`forward.ts`). `src/functions/graphProxy.ts` is the thin Azure adapter.
 `local/` holds a fake Entra (verifies the assertion signature + `x5t`) and a
 fake Graph; `npm test` runs the handler end to end on them, `npm run local`

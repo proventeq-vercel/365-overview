@@ -20,7 +20,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
 | The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
 | Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; a request carrying any other `Origin` is refused with 403 before the caller's token is read. |
-| Application permissions | Every app token must carry all of `Reports.Read.All`, `Sites.Read.All` and `Organization.Read.All` in its `roles` claim. Approving sign-in grants none of them, so a tenant whose administrator only approved sign-in gets `403 AdminConsentRequired` naming the missing ones, and the SPA shows its admin-consent screen instead of a role screen. A token missing any of them is never cached, so a grant takes effect on the next call. |
+| Application permissions | **`Reports.Read.All` is the only required permission** — kept to one so a prospect's administrator is asked for as little as possible. Approving sign-in does not grant it, so a tenant whose administrator only approved sign-in gets `403 AdminConsentRequired`, and the SPA shows its admin-consent screen instead of a role screen; such a token is never cached, so a grant takes effect on the next call. `Sites.Read.All` (site names) and `Organization.Read.All` (tenant name, licence-based entitlement) are **optional**: when a tenant has not granted them Graph answers those calls `403`, the proxy relays it, and the report degrades — owner/id names, "Your tenant", an unknown entitlement the user can enter in Report settings. |
 | Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants. Unset (the default), the gate is admin consent alone: any tenant that has consented may read **its own** data, which is the multi-tenant behaviour this app is built for. |
 
 Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA's existing
@@ -32,7 +32,7 @@ Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA'
 
 | Setting | Required | Meaning |
 | --- | --- | --- |
-| `GRAPH_CLIENT_ID` | yes | Application (client) id of the registration holding the Graph **application** roles `Sites.Read.All`, `Reports.Read.All`, `Organization.Read.All`. |
+| `GRAPH_CLIENT_ID` | yes | Application (client) id of the registration holding the Graph **application** role `Reports.Read.All` (and, optionally, `Sites.Read.All` / `Organization.Read.All`). |
 | `GRAPH_CERT_PEM` | yes (or a secret) | The PKCS#8 private key **and** the certificate uploaded to that registration, one after the other. The thumbprint Entra matches (`x5t`) is read from the certificate, so it cannot drift. `\n` is unescaped, so a single-line app setting works. `npm run cert:new` produces the file. |
 | `GRAPH_CERT_THUMBPRINT` | only for a key-only PEM | Needed when `GRAPH_CERT_PEM` carries the key alone (a Key Vault *key*, an HSM). If the certificate is present too, this is optional and the proxy refuses to start when the two disagree. |
 | `GRAPH_CLIENT_SECRET` | alternative | Client secret instead of the certificate. Local checks only. |
@@ -135,8 +135,9 @@ cd ~/projects/365-overview/functions && npm run local -- --origin=http://localho
 
 1. **Registration.** On the registration the proxy will use (the multi-tenant *Storage Analyser*
    `84e24db0-…`, or a second one dedicated to the proxy):
-   - **API permissions → Application**: `Sites.Read.All`, `Reports.Read.All`,
-     `Organization.Read.All`.
+   - **API permissions → Application**: `Reports.Read.All` only. Whatever else is listed here is
+     what every prospect's administrator is asked to approve; add `Sites.Read.All` or
+     `Organization.Read.All` only if site names or the licence-based entitlement are worth that ask.
    - **Certificates & secrets**: upload `.temp/graph-proxy.crt`
      (`az ad app credential reset --id <client id> --cert @.temp/graph-proxy.crt --append`).
    - **Expose an API**: set the Application ID URI (`api://<client id>`) and add the scope
