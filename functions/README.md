@@ -135,9 +135,11 @@ cd ~/projects/365-overview/functions && npm run local -- --origin=http://localho
 
 1. **Registration.** On the registration the proxy will use (the multi-tenant *Storage Analyser*
    `84e24db0-…`, or a second one dedicated to the proxy):
-   - **API permissions → Application**: `Reports.Read.All` only. Whatever else is listed here is
-     what every prospect's administrator is asked to approve; add `Sites.Read.All` or
-     `Organization.Read.All` only if site names or the licence-based entitlement are worth that ask.
+   - **API permissions**: delegated `User.Read` (sign-in), application `Reports.Read.All` and
+     application `Organization.Read.All` (tenant name and the licence-based entitlement) — nothing
+     else. Every entry here is a line on each prospect's consent page, so no delegated duplicates of
+     the application permissions (they read as the same permission twice) and no `Sites.Read.All`,
+     which reads every file in every site.
    - **Certificates & secrets**: upload `.temp/graph-proxy.crt`
      (`az ad app credential reset --id <client id> --cert @.temp/graph-proxy.crt --append`).
    - **Expose an API**: set the Application ID URI (`api://<client id>`) and add the scope
