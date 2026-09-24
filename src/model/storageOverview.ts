@@ -1,6 +1,6 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type { Slice, StoragePool, StorageOverview, StorageRow } from '@/types/storage'
-import { estimateEntitlementBytes } from '@/lib/entitlement'
+import { GB_IN_BYTES, estimateEntitlementBytes } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
 import { rowLabel } from '@/lib/rowName'
@@ -141,6 +141,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const points = buildGrowthPoints(buckets, rate, FORECAST_CHART_MONTHS)
 
   const growthGb = annualGrowthGb(rate)
+  const headroomGb = remainingBytes === null ? null : remainingBytes / GB_IN_BYTES
+  const pricedHeadroomGb = headroomGb ?? 0
 
   return {
     reportRefreshDate,
@@ -206,8 +208,10 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     cost: {
       ratePerGb,
       currency,
-      growthAnnual: growthCostAnnual(growthGb, ratePerGb),
-      cumulativeYear3: cumulativeGrowthCost(growthGb, ratePerGb),
+      isBillable: headroomGb !== null,
+      billableAnnual: headroomGb === null ? null : growthCostAnnual(growthGb, ratePerGb, headroomGb),
+      growthAnnual: growthCostAnnual(growthGb, ratePerGb, pricedHeadroomGb),
+      cumulativeYear3: cumulativeGrowthCost(growthGb, ratePerGb, pricedHeadroomGb),
     },
 
     caveats: {

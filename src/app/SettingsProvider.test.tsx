@@ -55,7 +55,7 @@ describe('settings context', () => {
 
     tenantKey.current = 'tenant-a'
     rerender()
-    expect(result.current.settings).toEqual({ ratePerGb: 0.02, currency: 'EUR', entitlementOverrideBytes: 5000 })
+    expect(result.current.settings).toEqual({ ratePerGb: 0.16, currency: 'EUR', entitlementOverrideBytes: 5000 })
     tenantKey.current = 'tenant-b'
     rerender()
     expect(result.current.settings.entitlementOverrideBytes).toBe(7000)

@@ -112,7 +112,11 @@ export function GrowthSection({ overview, delay }: Props) {
             />
           </MiniStatRow>
           <div className="mt-3 flex flex-col gap-1">
-            <PanelLabel>{t('storageOptimisation.growth.costTitle')}</PanelLabel>
+            <PanelLabel>
+              {cost.isBillable
+                ? t('storageOptimisation.growth.costTitle')
+                : t('storageOptimisation.growth.costTitleNotional')}
+            </PanelLabel>
             <dl className="divide-y divide-p365-grey-100">
               <KvRow
                 label={t('storageOptimisation.growth.nextTwelveMonths')}
@@ -123,7 +127,11 @@ export function GrowthSection({ overview, delay }: Props) {
                 value={formatMoney(cost.cumulativeYear3, cost.currency)}
               />
             </dl>
-            <PanelDescription>{t('storageOptimisation.growth.costSubtitle')}</PanelDescription>
+            <PanelDescription>
+              {cost.isBillable
+                ? t('storageOptimisation.growth.costSubtitle')
+                : t('storageOptimisation.growth.costSubtitleNotional')}
+            </PanelDescription>
           </div>
         </Panel>
       </SplitGrid>

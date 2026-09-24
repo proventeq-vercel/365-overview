@@ -48,16 +48,26 @@ export const base: StorageOverview = {
     forecastEndBytes: 560 * GB,
   },
   cost: {
-    ratePerGb: 0.02,
+    ratePerGb: 0.16,
     currency: 'GBP',
-    growthAnnual: 288,
-    cumulativeYear3: 1296,
+    isBillable: true,
+    billableAnnual: 0,
+    growthAnnual: 0,
+    cumulativeYear3: 0,
   },
   caveats: {
     entitlementIsEstimated: true,
     namesAreConcealed: false,
     historyTooShort: false,
   },
+}
+
+const notionalCost: StorageOverview['cost'] = {
+  ...base.cost,
+  isBillable: false,
+  billableAnnual: null,
+  growthAnnual: 230.4,
+  cumulativeYear3: 1036.8,
 }
 
 export const unknownEntitlement: StorageOverview = {
@@ -77,6 +87,7 @@ export const unknownEntitlement: StorageOverview = {
     forecastExhaustionDate: null,
     forecastMonthsToExhaustion: null,
   },
+  cost: notionalCost,
   caveats: { ...base.caveats, entitlementIsEstimated: false },
 }
 
@@ -100,6 +111,7 @@ export const usageUnreported: StorageOverview = {
     forecastMonthsToExhaustion: null,
     forecastEndBytes: null,
   },
+  cost: notionalCost,
   caveats: { ...base.caveats, historyTooShort: true },
 }
 

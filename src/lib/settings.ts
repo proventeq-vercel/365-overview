@@ -13,7 +13,7 @@ export interface StoredSettings {
 export const SETTINGS_STORAGE_KEY = 'm365-storage-settings'
 
 export const DEFAULT_SETTINGS: ReportSettings = {
-  ratePerGb: 0.02,
+  ratePerGb: 0.16,
   currency: 'GBP',
   entitlementOverrideBytes: null,
 }

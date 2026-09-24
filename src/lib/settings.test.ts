@@ -10,7 +10,7 @@ import {
 
 const TENANT_A = 'aaaaaaaa-0000-4000-8000-000000000001'
 const TENANT_B = 'bbbbbbbb-0000-4000-8000-000000000002'
-const EMPTY = { ratePerGb: 0.02, currency: 'GBP', entitlementOverrides: {} }
+const EMPTY = { ratePerGb: 0.16, currency: 'GBP', entitlementOverrides: {} }
 
 describe('settings', () => {
   beforeEach(() => localStorage.clear())
@@ -129,7 +129,7 @@ describe('settings', () => {
   })
 
   it("defaults the rate to P365's DefaultCostRatePerGbPerMonth", () => {
-    expect(DEFAULT_SETTINGS.ratePerGb).toBe(0.02)
+    expect(DEFAULT_SETTINGS.ratePerGb).toBe(0.16)
     expect(DEFAULT_SETTINGS.currency).toBe('GBP')
   })
 

@@ -88,6 +88,8 @@ export interface StorageOverview {
   cost: {
     ratePerGb: number
     currency: string
+    isBillable: boolean
+    billableAnnual: number | null
     growthAnnual: number
     cumulativeYear3: number
   }

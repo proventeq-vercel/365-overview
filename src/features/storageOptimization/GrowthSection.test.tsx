@@ -84,15 +84,16 @@ describe('GrowthSection', () => {
     expect(screen.getByText(/estimated from licence counts/i)).toBeInTheDocument()
   })
 
-  it('prices growth identically whether or not the entitlement is known', () => {
-    const { unmount } = render(<GrowthSection overview={withGrowth} />)
-    expect(
-      screen.getByRole('heading', { name: /projected cost if nothing changes/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288')
-    expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent(
-      '£1,296',
-    )
+  it('prices billable growth when the entitlement is known, and its notional value when it is not', () => {
+    const billable = {
+      ...withGrowth,
+      cost: { ...withGrowth.cost, billableAnnual: 96, growthAnnual: 96, cumulativeYear3: 700 },
+    }
+    const { unmount } = render(<GrowthSection overview={billable} />)
+    expect(screen.getByRole('heading', { name: 'Projected cost if nothing changes' })).toBeInTheDocument()
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£96.00')
+    expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent('£700')
+    expect(screen.queryByText(/not billable spend/)).not.toBeInTheDocument()
     unmount()
 
     render(
@@ -105,7 +106,10 @@ describe('GrowthSection', () => {
         }}
       />,
     )
-    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288')
+    expect(screen.getByRole('heading', { name: 'Projected value of growth' })).toBeInTheDocument()
+    expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£230')
+    expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent('£1,037')
+    expect(screen.getByText(/Your entitlement is unknown, so this is not billable spend/)).toBeInTheDocument()
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('Unknown')
   })
 

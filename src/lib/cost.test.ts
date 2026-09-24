@@ -17,12 +17,16 @@ describe('annualGrowthGb', () => {
 })
 
 describe('growthCostAnnual', () => {
-  it('prices a year of growth at the monthly rate, as P365 does', () => {
+  it('prices a year of growth at the monthly rate when there is no headroom', () => {
     expect(growthCostAnnual(120, 0.2)).toBeCloseTo(288, 2)
   })
 
-  it("prices a year of growth at P365's own default rate", () => {
-    expect(growthCostAnnual(120, 0.02)).toBeCloseTo(28.8, 2)
+  it('prices only the growth past the headroom', () => {
+    expect(growthCostAnnual(120, 0.2, 50)).toBeCloseTo(168, 2)
+  })
+
+  it('is zero when the growth fits inside the headroom', () => {
+    expect(growthCostAnnual(120, 0.2, 500)).toBe(0)
   })
 
   it('is zero for a flat tenant', () => {
@@ -39,6 +43,14 @@ describe('cumulativeGrowthCost', () => {
     expect(cumulativeGrowthCost(100, 1)).toBeCloseTo(450 * 12, 2)
   })
 
+  it('averages each year between its start and end overage past the headroom, as P365', () => {
+    expect(cumulativeGrowthCost(120, 0.2, 50)).toBeCloseTo(996, 2)
+  })
+
+  it('is zero while the growth stays inside the headroom for all three years', () => {
+    expect(cumulativeGrowthCost(100, 1, 300)).toBe(0)
+  })
+
   it('is zero for a flat tenant', () => {
     expect(cumulativeGrowthCost(0, 1)).toBe(0)
   })
@@ -47,19 +59,8 @@ describe('cumulativeGrowthCost', () => {
     expect(cumulativeGrowthCost(-100, 1)).toBe(0)
   })
 
-  it('prices mid-year volume, which is strictly less than year-end volume', () => {
-    const midYear = cumulativeGrowthCost(100, 1, 1)
-    const yearEndVolume = 100 * 1 * 12
-    expect(midYear).toBeCloseTo(50 * 12, 2)
-    expect(midYear).toBeLessThan(yearEndVolume)
-  })
-
   it('accrues over three years by default', () => {
     expect(COST_YEARS).toBe(3)
-    expect(cumulativeGrowthCost(100, 1)).toBe(cumulativeGrowthCost(100, 1, 3))
-  })
-
-  it('scales with the rate', () => {
-    expect(cumulativeGrowthCost(100, 0.02)).toBeCloseTo(450 * 12 * 0.02, 2)
+    expect(cumulativeGrowthCost(100, 1, 0, 1)).toBeCloseTo(50 * 12, 2)
   })
 })

@@ -7,19 +7,21 @@ export function annualGrowthGb(avgMonthlyGrowthBytes: number): number {
   return (avgMonthlyGrowthBytes * MONTHS_PER_YEAR) / GB_IN_BYTES
 }
 
-export function growthCostAnnual(growthGb: number, ratePerGb: number): number {
-  return Math.max(0, growthGb) * ratePerGb * MONTHS_PER_YEAR
+export function growthCostAnnual(growthGb: number, ratePerGb: number, headroomGb = 0): number {
+  return Math.max(0, growthGb - headroomGb) * ratePerGb * MONTHS_PER_YEAR
 }
 
 export function cumulativeGrowthCost(
   growthGbPerYear: number,
   ratePerGb: number,
+  headroomGb = 0,
   years = COST_YEARS,
 ): number {
   let total = 0
   for (let year = 1; year <= years; year++) {
-    const midYearVolumeGb = Math.max(0, growthGbPerYear * (year - 0.5))
-    total += midYearVolumeGb * ratePerGb * MONTHS_PER_YEAR
+    const overageAtStart = Math.max(0, growthGbPerYear * (year - 1) - headroomGb)
+    const overageAtEnd = Math.max(0, growthGbPerYear * year - headroomGb)
+    total += ((overageAtStart + overageAtEnd) / 2) * ratePerGb * MONTHS_PER_YEAR
   }
   return total
 }

@@ -36,20 +36,31 @@ describe('KpiCards', () => {
     expect(card('Remaining')).not.toHaveTextContent('0%')
   })
 
-  it('prices growth as money even when the entitlement is unknown', () => {
+  it('says the cost is unknown, not a notional figure, when the entitlement is unknown, as P365 does', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£288')
-    expect(card('Cost of doing nothing')).not.toHaveTextContent(/unknown/i)
+    expect(card('Cost of doing nothing')).toHaveTextContent('Unknown')
+    expect(card('Cost of doing nothing')).not.toHaveTextContent('£230')
+    expect(card('Cost of doing nothing')).toHaveTextContent(
+      'The tenant entitlement could not be read, so the effect on your bill cannot be calculated. Storage is valued at £0.16/GB per month.',
+    )
   })
 
-  it('shows the annual cost of growth as money', () => {
-    render(<KpiCards overview={{ ...base, cost: { ...base.cost, growthAnnual: 1234.5 } }} />)
+  it('shows the billable annual cost of growth as money', () => {
+    render(<KpiCards overview={{ ...base, cost: { ...base.cost, billableAnnual: 1234.5 } }} />)
     expect(card('Cost of doing nothing')).toHaveTextContent('£1,235')
+  })
+
+  it('says growth that fits inside the entitlement changes nothing today, rather than £0', () => {
+    render(<KpiCards overview={base} />)
+    expect(card('Cost of doing nothing')).toHaveTextContent('No change today')
+    expect(card('Cost of doing nothing')).not.toHaveTextContent('£0.00')
   })
 
   it('quotes the configured rate in the cost hint', () => {
     render(<KpiCards overview={base} />)
-    expect(card('Cost of doing nothing')).toHaveTextContent('£0.02/GB per month')
+    expect(card('Cost of doing nothing')).toHaveTextContent(
+      'What a year of growth would add to your bill, at £0.16/GB per month.',
+    )
   })
 
   it('does not present a forecast when history is too short', () => {

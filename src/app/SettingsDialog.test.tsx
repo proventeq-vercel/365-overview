@@ -121,7 +121,7 @@ describe('SettingsDialog', () => {
     expect(rate).toHaveValue(-2)
     expect(rate).toHaveAttribute('aria-invalid', 'true')
     fireEvent.blur(rate)
-    expect(rate).toHaveValue(0.02)
+    expect(rate).toHaveValue(0.16)
     expect(rate).toHaveAttribute('aria-invalid', 'false')
   })
 
