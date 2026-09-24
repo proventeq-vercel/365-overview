@@ -163,6 +163,17 @@ test.describe('before any script runs', () => {
     expect(logo.mask).toContain('proventeq-logo.svg')
     expect(logo.width).not.toBe('0px')
   })
+
+  test('the tab shows the Proventeq icon proventeq.com uses', async ({ page, request }) => {
+    await page.goto('/')
+    const icon = page.locator('link[rel="icon"]')
+    await expect(icon).toHaveAttribute('href', '/favicon.ico')
+    const served = await request.get('/favicon.ico')
+    expect(served.ok()).toBe(true)
+    const body = await served.body()
+    expect([...body.subarray(0, 6)]).toEqual([0, 0, 1, 0, 5, 0])
+    expect(body.length).toBe(27012)
+  })
 })
 
 test.describe('modes from the URL', () => {
