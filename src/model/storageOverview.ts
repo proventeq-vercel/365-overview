@@ -138,7 +138,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     : historyTooShort || sharePointUsed === null
       ? null
       : runwayMonths(sharePointUsed, entitledBytes, rate)
-  const wholeMonths = monthsToExhaustion(runway)
   const points = buildGrowthPoints(buckets, rate, FORECAST_CHART_MONTHS)
 
   const growthGb = annualGrowthGb(rate)
@@ -199,8 +198,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastStatus: exhausted
         ? 'Critical'
         : forecastStatusFor(runway, historyTooShort, entitledBytes !== null),
-      forecastExhaustionDate: exhausted ? null : exhaustionDateFor(wholeMonths, now),
-      forecastMonthsToExhaustion: wholeMonths,
+      forecastExhaustionDate: exhausted ? null : exhaustionDateFor(runway, now),
+      forecastMonthsToExhaustion: monthsToExhaustion(runway),
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
     },
 

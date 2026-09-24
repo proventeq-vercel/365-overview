@@ -7,6 +7,8 @@ export const WARNING_MONTHS = 36
 export const HORIZON_MONTHS = 120
 export const FORECAST_CHART_MONTHS = 6
 export const VOLATILITY_DIVERGENCE = 0.5
+const AVERAGE_DAYS_PER_MONTH = 30.44
+const MS_PER_DAY = 86_400_000
 
 export interface MonthBucket {
   month: string
@@ -80,16 +82,19 @@ export function forecastStatusFor(
   return 'Healthy'
 }
 
-export function monthsToExhaustion(runway: number | null): number | null {
-  return runway === null ? null : Math.floor(runway)
+function roundHalfToEven(value: number): number {
+  const floor = Math.floor(value)
+  if (value - floor !== 0.5) return Math.round(value)
+  return floor % 2 === 0 ? floor : floor + 1
 }
 
-export function exhaustionDateFor(months: number | null, from: Date): string | null {
-  if (months === null || months > HORIZON_MONTHS) return null
-  const year = from.getUTCFullYear()
-  const month = from.getUTCMonth() + months
-  const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
-  const exhaustsOn = new Date(Date.UTC(year, month, Math.min(from.getUTCDate(), lastDayOfMonth)))
+export function monthsToExhaustion(runway: number | null): number | null {
+  return runway === null ? null : roundHalfToEven(runway)
+}
+
+export function exhaustionDateFor(runway: number | null, from: Date): string | null {
+  if (runway === null || runway > HORIZON_MONTHS) return null
+  const exhaustsOn = new Date(from.getTime() + runway * AVERAGE_DAYS_PER_MONTH * MS_PER_DAY)
   return exhaustsOn.toISOString().slice(0, 10)
 }
 

@@ -225,6 +225,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `ForecastExhaustion` does. A date of "today" for an over-entitlement tenant
   is the bug this rule exists to stop; the "already exceeded" copy only renders
   on that triple.
+- **The runway stays unrounded until it is displayed.** The date is today +
+  runway × 30.44 days, the ten-year horizon is `runway > 120`, and the status
+  grades the same unrounded figure; only `forecastMonthsToExhaustion` is
+  rounded (half to even, as .NET's `Math.Round`). All four as P365's
+  `StorageOverviewService`. A runway of 0.4 months therefore has a date and
+  shows as 0 months — the headline reads the date first, so it never says
+  "already exceeded" for it.
 - `growth.windowMonths` counts the month-to-month deltas the rate was measured
   over (`buckets - 1`), which is what "Added last N mo" labels; the six-month
   history gate still counts buckets.

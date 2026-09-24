@@ -145,9 +145,16 @@ describe('runwayMonths', () => {
 })
 
 describe('monthsToExhaustion', () => {
-  it('counts the whole months of a runway', () => {
-    expect(monthsToExhaustion(12.5)).toBe(12)
+  it('rounds the runway to the nearest month', () => {
+    expect(monthsToExhaustion(12.4)).toBe(12)
+    expect(monthsToExhaustion(12.6)).toBe(13)
     expect(monthsToExhaustion(null)).toBeNull()
+  })
+
+  it("rounds a half month to the even neighbour, as .NET's Math.Round does in P365", () => {
+    expect(monthsToExhaustion(12.5)).toBe(12)
+    expect(monthsToExhaustion(13.5)).toBe(14)
+    expect(monthsToExhaustion(0.5)).toBe(0)
   })
 })
 
@@ -185,18 +192,19 @@ describe('forecastStatusFor', () => {
 describe('exhaustionDateFor', () => {
   const from = new Date('2026-01-15T00:00:00Z')
 
-  it('is a calendar date the given number of months ahead', () => {
-    expect(exhaustionDateFor(6, from)).toBe('2026-07-15')
+  it('is the runway in average months of 30.44 days from today, as P365 places it', () => {
+    expect(exhaustionDateFor(6, from)).toBe('2026-07-16')
+    expect(exhaustionDateFor(1, new Date('2026-01-31T00:00:00Z'))).toBe('2026-03-02')
   })
 
-  it('stays in the target month when today is past the last day it has', () => {
-    expect(exhaustionDateFor(1, new Date('2026-01-31T00:00:00Z'))).toBe('2026-02-28')
-    expect(exhaustionDateFor(13, new Date('2026-08-31T00:00:00Z'))).toBe('2027-09-30')
-    expect(exhaustionDateFor(1, new Date('2028-01-30T00:00:00Z'))).toBe('2028-02-29')
+  it('keeps the fraction of a month instead of rounding the runway first', () => {
+    expect(exhaustionDateFor(0.9, from)).toBe('2026-02-11')
+    expect(exhaustionDateFor(0.5, new Date('2026-09-02T00:00:00Z'))).toBe('2026-09-17')
   })
 
   it('is null beyond the ten-year horizon, which is no-exhaustion rather than a date', () => {
-    expect(exhaustionDateFor(HORIZON_MONTHS + 1, from)).toBeNull()
+    expect(exhaustionDateFor(HORIZON_MONTHS + 0.5, from)).toBeNull()
+    expect(exhaustionDateFor(HORIZON_MONTHS, from)).toBe('2036-01-15')
   })
 
   it('is null when the runway is unknown', () => {

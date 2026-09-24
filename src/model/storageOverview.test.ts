@@ -419,11 +419,26 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastStatus).toBe('Healthy')
   })
 
-  it('keeps an exhaustion date for a tenant that runs out within the current month', () => {
+  it('keeps an exhaustion date for a tenant that runs out within the month, though it shows as 0 months', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 155 * GB }))
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
-    expect(overview.growth.forecastExhaustionDate).toBe('2026-09-02')
+    expect(overview.growth.forecastExhaustionDate).toBe('2026-09-17')
     expect(overview.growth.forecastStatus).toBe('Critical')
+  })
+
+  it('places the exhaustion date at the unrounded runway in 30.44-day months', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 270 * GB }))
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(12)
+    expect(overview.growth.forecastExhaustionDate).toBe('2027-09-02')
+  })
+
+  it('drops the date past the ten-year horizon on the unrounded runway, keeping the rounded months', () => {
+    const atHorizon = buildStorageOverview(inputs({ entitlementOverrideBytes: 1350 * GB }))
+    expect(atHorizon.growth.forecastMonthsToExhaustion).toBe(120)
+    expect(atHorizon.growth.forecastExhaustionDate).toBe('2036-09-01')
+    const pastHorizon = buildStorageOverview(inputs({ entitlementOverrideBytes: 1355 * GB }))
+    expect(pastHorizon.growth.forecastMonthsToExhaustion).toBe(120)
+    expect(pastHorizon.growth.forecastExhaustionDate).toBeNull()
   })
 
   it('ignores a zero entitlement override instead of reporting an exceeded entitlement', () => {
