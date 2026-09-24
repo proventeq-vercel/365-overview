@@ -1,4 +1,5 @@
 import { isConsentRequired } from '../clients/apiError'
+import { RequiredPermissionList } from '../components/RequiredPermissionList'
 import { adminConsentUrl } from '../config/adminConsent'
 import { useTranslation } from '../hooks/useTranslation'
 
@@ -13,6 +14,7 @@ export function AuthErrorScreen({ error }: { error: unknown }) {
         <div className="error-state" style={{ maxWidth: '520px', width: '100%' }} role="alert">
           <p className="error-state__message">{t('auth.consent.title')}</p>
           <p className="error-state__hint">{t('auth.consent.body')}</p>
+          <RequiredPermissionList />
           {consentUrl && (
             <p className="error-state__hint">
               <a href={consentUrl}>{t('auth.consent.link')}</a>

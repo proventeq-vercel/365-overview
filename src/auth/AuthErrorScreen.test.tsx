@@ -15,6 +15,14 @@ describe('AuthErrorScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('has not approved this app yet')
     expect(screen.getByRole('alert')).toHaveTextContent('Global Administrator')
     expect(screen.queryByText('Sign-in failed')).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Permissions the report needs' })).toHaveTextContent(
+      'Reports.Read.All — Microsoft 365 usage reports',
+    )
+  })
+
+  it('lists no permissions on a plain sign-in failure', () => {
+    render(<AuthErrorScreen error={new Error('network unreachable')} />)
+    expect(screen.queryByRole('list', { name: 'Permissions the report needs' })).not.toBeInTheDocument()
   })
 
   it('shows a plain sign-in failure for anything else', () => {
