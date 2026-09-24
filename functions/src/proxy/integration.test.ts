@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { LOCAL_TENANT_ID } from '../../local/fakeEntra.js'
-import { APP_TOKEN_PREFIX, isMissingFromDirectory, siteIdOf } from '../../local/fakeGraph.js'
+import { isMissingFromDirectory, localAppTokenTenant, siteIdOf } from '../../local/fakeGraph.js'
 import { generateLocalAppCertificate } from '../../local/keys.js'
 import { startNodeHost, type NodeHost } from '../../local/nodeHost.js'
 import { startLocalStack, type LocalStack } from '../../local/stack.js'
@@ -9,6 +9,7 @@ const REPORTS_READER = '4a5d8f65-41da-4de4-8968-e035b65339cf'
 import { createProxyDeps } from './deps.js'
 
 const UNCONSENTED_TENANT = '77777777-2222-4333-8444-555555555555'
+const UNGRANTED_TENANT = '88888888-2222-4333-8444-555555555555'
 const SITE_COUNT = 230
 const PAGE_SIZE = 100
 
@@ -19,6 +20,7 @@ let userToken: string
 beforeAll(async () => {
   stack = await startLocalStack({
     unconsentedTenantIds: [UNCONSENTED_TENANT],
+    ungrantedTenantIds: [UNGRANTED_TENANT],
     graph: { siteCount: SITE_COUNT, pageSize: PAGE_SIZE, throttleFirstSiteReport: true },
   })
   host = await startNodeHost(createProxyDeps(stack.env))
@@ -77,7 +79,7 @@ describe('proxy end to end on the local stack', () => {
     const seenByGraph = stack.graph.requests.map((r) => r.authorization)
     expect(seenByGraph.length).toBeGreaterThan(0)
     for (const authorization of seenByGraph) {
-      expect(authorization).toMatch(new RegExp(`^Bearer ${APP_TOKEN_PREFIX}${LOCAL_TENANT_ID}\\.`))
+      expect(localAppTokenTenant(authorization)).toBe(LOCAL_TENANT_ID)
     }
   })
 
@@ -161,6 +163,17 @@ describe('proxy end to end on the local stack', () => {
     const response = await fetch(`${host.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${token}` } })
     expect(response.status).toBe(403)
     expect(((await response.json()) as { error: { code: string } }).error.code).toBe('AdminConsentRequired')
+  })
+
+  it('sends a tenant that approved sign-in but granted no application permissions to admin consent, and never reaches Graph', async () => {
+    const token = await stack.entra.issueUserToken({ tenantId: UNGRANTED_TENANT, wids: [] })
+    const graphCallsBefore = stack.graph.requests.length
+    const response = await fetch(`${host.url}/api/graph/v1.0/organization`, { headers: { authorization: `Bearer ${token}` } })
+    expect(response.status).toBe(403)
+    const { error } = (await response.json()) as { error: { code: string; message: string } }
+    expect(error.code).toBe('AdminConsentRequired')
+    expect(error.message).toContain('Reports.Read.All, Sites.Read.All, Organization.Read.All')
+    expect(stack.graph.requests.length).toBe(graphCallsBefore)
   })
 
   it('serves a signed-in user holding no directory role, the way P365 does', async () => {

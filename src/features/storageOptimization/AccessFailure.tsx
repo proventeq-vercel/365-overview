@@ -1,6 +1,7 @@
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/ErrorState'
+import { RequiredPermissionList } from '@/components/RequiredPermissionList'
 import { adminConsentUrl } from '@/config/adminConsent'
 import { AlertPanel } from '@/design/AlertPanel'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -15,6 +16,7 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
     return (
       <AlertPanel tone="warn" title={t('access.consent.title')}>
         <p className="text-sm text-p365-grey-600">{t('access.consent.body')}</p>
+        <RequiredPermissionList />
         {url && (
           <p className="text-sm text-p365-grey-600">
             {t('access.consent.sendLink')}{' '}

@@ -22,6 +22,7 @@ export interface LocalStackOptions {
   graphPort?: number
   allowedOrigins?: string[]
   unconsentedTenantIds?: string[]
+  ungrantedTenantIds?: string[]
   graph?: FakeGraphOptions
 }
 
@@ -43,6 +44,7 @@ export async function startLocalStack(options: LocalStackOptions = {}): Promise<
     proxyScope: LOCAL_PROXY_SCOPE,
     port: options.entraPort,
     unconsentedTenantIds: options.unconsentedTenantIds,
+    ungrantedTenantIds: options.ungrantedTenantIds,
   })
   const graph = await startFakeGraph({ ...options.graph, port: options.graphPort })
   return {

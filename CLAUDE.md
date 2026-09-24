@@ -249,7 +249,10 @@ check on `wids` only when `PROXY_REQUIRED_DIRECTORY_ROLES` asks for one —
 and demanding one refused accounts that use P365 itself) →
 allowlist (`allowlist.ts`: routes × query options, `$batch` rebuilt from
 validated parts) → per-tenant app token via certificate client assertion
-(`appToken.ts`, cached) → relay with `nextLink`/`deltaLink` rewritten to the
+(`appToken.ts`, cached only once its `roles` carry all of
+`REQUIRED_APPLICATION_PERMISSIONS`; otherwise `403 AdminConsentRequired` — a
+sign-in approval grants no application permission, and Graph's own 403 would
+read as a role problem) → relay with `nextLink`/`deltaLink` rewritten to the
 proxy (`forward.ts`). `src/functions/graphProxy.ts` is the thin Azure adapter.
 `local/` holds a fake Entra (verifies the assertion signature + `x5t`) and a
 fake Graph; `npm test` runs the handler end to end on them, `npm run local`

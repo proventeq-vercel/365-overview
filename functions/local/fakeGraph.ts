@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { decodeJwt } from 'jose'
+import { LOCAL_APP_TOKEN_ISSUER } from './fakeEntra.js'
 
 export interface FakeGraphOptions {
   port?: number
@@ -22,7 +24,16 @@ export interface FakeGraph {
   close(): Promise<void>
 }
 
-export const APP_TOKEN_PREFIX = 'local-app-token.'
+export function localAppTokenTenant(authorization: string | null): string | null {
+  const match = /^Bearer (\S+)$/.exec(authorization ?? '')
+  if (!match) return null
+  try {
+    const claims = decodeJwt(match[1])
+    return claims.iss === LOCAL_APP_TOKEN_ISSUER && typeof claims.tid === 'string' ? claims.tid : null
+  } catch {
+    return null
+  }
+}
 export const REPORT_REFRESH_DATE = '2026-09-19'
 const HOST = 'contoso-local.sharepoint.com'
 const MB = 1_048_576
@@ -154,7 +165,7 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
     const authorization = request.headers.authorization ?? null
     requests.push({ method: request.method ?? '', url: request.url ?? '', authorization })
 
-    if (!authorization?.startsWith(`Bearer ${APP_TOKEN_PREFIX}`)) {
+    if (!localAppTokenTenant(authorization)) {
       return graphError(response, 401, 'InvalidAuthenticationToken', 'Access token is empty or not issued by the local Entra.')
     }
     const path = decodeURIComponent(requestUrl.pathname)

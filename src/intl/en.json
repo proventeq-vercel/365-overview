@@ -43,7 +43,7 @@
   "auth.unknownError": "An unknown authentication error occurred.",
   "auth.signInFailed": "Sign-in failed",
   "auth.consent.title": "Your organisation has not approved this app yet",
-  "auth.consent.body": "This report only reads Microsoft 365 data, and nothing leaves your browser — but a Global Administrator has to grant admin consent once before anyone in your tenant can sign in.",
+  "auth.consent.body": "This report only reads Microsoft 365 data, but a Global Administrator has to grant admin consent once before anyone in your tenant can use it.",
   "auth.consent.link": "Grant admin consent",
   "auth.consent.linkTail": " — you will be asked to review the read-only permissions this report needs, then returned here.",
 
@@ -52,7 +52,12 @@
   "errors.retry": "Try again",
 
   "access.consent.title": "Your organisation has not approved this app yet",
-  "access.consent.body": "Microsoft 365 usage reports need one-off admin consent for the whole tenant. A Global Administrator has to grant it; signing in again will not help until they do.",
+  "access.consent.body": "Approving sign-in is not enough: the report reads your tenant with application permissions, which a Global Administrator has to grant once for the whole tenant. Signing in again will not help until they do.",
+  "access.permissions.intro": "The grant covers these read-only permissions, and Microsoft lists the same ones on its consent page:",
+  "access.permissions.listLabel": "Permissions the report needs",
+  "access.permissions.reports": "Microsoft 365 usage reports: storage per site and per OneDrive",
+  "access.permissions.sites": "site names and links",
+  "access.permissions.organization": "tenant name and licences, for the storage entitlement",
   "access.consent.sendLink": "Send them this link:",
   "access.consent.grant": "grant admin consent",
   "access.tenant.title": "This tenant is not enabled for the report yet",

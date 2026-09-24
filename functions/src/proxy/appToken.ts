@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { importPKCS8, SignJWT, type CryptoKey } from 'jose'
+import { decodeJwt, importPKCS8, SignJWT, type CryptoKey } from 'jose'
 import type { GraphCredential, ProxyConfig } from './config.js'
 import { ProxyError } from './errors.js'
 
@@ -22,6 +22,22 @@ const FALLBACK_LIFETIME_S = 300
 const MAX_CACHED_TENANTS = 200
 const ASSERTION_LIFETIME_S = 600
 const CONSENT_ERROR_CODES = ['AADSTS700016', 'AADSTS65001', 'AADSTS650052']
+
+export const REQUIRED_APPLICATION_PERMISSIONS = ['Reports.Read.All', 'Sites.Read.All', 'Organization.Read.All'] as const
+
+function grantedRoles(accessToken: string): string[] {
+  try {
+    const { roles } = decodeJwt(accessToken)
+    return Array.isArray(roles) ? roles.filter((role): role is string => typeof role === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+export function missingApplicationPermissions(accessToken: string): string[] {
+  const granted = new Set(grantedRoles(accessToken))
+  return REQUIRED_APPLICATION_PERMISSIONS.filter((permission) => !granted.has(permission))
+}
 
 export const tokenEndpoint = (authorityHost: string, tenantId: string) =>
   `${authorityHost}/${tenantId}/oauth2/v2.0/token`
@@ -125,6 +141,14 @@ export function createAppTokenSource(
     }
     const payload = (await response.json().catch(() => ({}))) as TokenResponse
     if (!response.ok || !payload.access_token) throw tokenError(response.status, payload)
+    const missing = missingApplicationPermissions(payload.access_token)
+    if (missing.length > 0) {
+      throw new ProxyError(
+        403,
+        'AdminConsentRequired',
+        `An administrator of this tenant has not granted the application permissions ${missing.join(', ')} yet.`,
+      )
+    }
     const lifetimeMs = (payload.expires_in && payload.expires_in > 0 ? payload.expires_in : FALLBACK_LIFETIME_S) * 1000
     evictStaleTokens()
     cache.set(tenantId, { token: payload.access_token, expiresAt: now() + lifetimeMs })

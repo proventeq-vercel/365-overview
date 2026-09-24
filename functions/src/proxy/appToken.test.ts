@@ -1,8 +1,8 @@
-import { decodeProtectedHeader, jwtVerify } from 'jose'
+import { decodeProtectedHeader, jwtVerify, UnsecuredJWT } from 'jose'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createHash, createPublicKey, X509Certificate } from 'node:crypto'
 import { generateLocalAppCertificate, type LocalAppCertificate } from '../../local/keys.js'
-import { createAppTokenSource, tokenEndpoint } from './appToken.js'
+import { createAppTokenSource, REQUIRED_APPLICATION_PERMISSIONS, tokenEndpoint } from './appToken.js'
 import { readConfig } from './config.js'
 import type { ProxyError } from './errors.js'
 
@@ -35,8 +35,11 @@ const certEnv = () => ({
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
-const tokenReply = (token: string, expiresIn = 3599) =>
-  jsonResponse({ token_type: 'Bearer', access_token: token, expires_in: expiresIn })
+const appJwt = (label: string, roles: readonly string[] = REQUIRED_APPLICATION_PERMISSIONS) =>
+  new UnsecuredJWT({ label, roles: [...roles] }).encode()
+
+const tokenReply = (label: string, expiresIn = 3599, roles?: readonly string[]) =>
+  jsonResponse({ token_type: 'Bearer', access_token: appJwt(label, roles), expires_in: expiresIn })
 
 const formOf = (init: RequestInit | undefined) => new URLSearchParams(init?.body as URLSearchParams)
 
@@ -46,7 +49,7 @@ describe('createAppTokenSource', () => {
     const config = readConfig(certEnv())
     const source = createAppTokenSource(config, fetchImpl)
 
-    expect(await source(TENANT)).toBe('app-1')
+    expect(await source(TENANT)).toBe(appJwt('app-1'))
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit]
     expect(url).toBe(tokenEndpoint('https://login.microsoftonline.com', TENANT))
     const form = formOf(init)
@@ -82,15 +85,15 @@ describe('createAppTokenSource', () => {
       .mockResolvedValueOnce(tokenReply('a-2', 600))
     const source = createAppTokenSource(readConfig(certEnv()), fetchImpl, () => now)
 
-    expect(await source(TENANT)).toBe('a-1')
-    expect(await source(TENANT)).toBe('a-1')
-    expect(await source(OTHER)).toBe('b-1')
+    expect(await source(TENANT)).toBe(appJwt('a-1'))
+    expect(await source(TENANT)).toBe(appJwt('a-1'))
+    expect(await source(OTHER)).toBe(appJwt('b-1'))
     expect(fetchImpl).toHaveBeenCalledTimes(2)
 
     now += 539_000
-    expect(await source(TENANT)).toBe('a-1')
+    expect(await source(TENANT)).toBe(appJwt('a-1'))
     now += 2_000
-    expect(await source(TENANT)).toBe('a-2')
+    expect(await source(TENANT)).toBe(appJwt('a-2'))
     expect(fetchImpl).toHaveBeenCalledTimes(3)
   })
 
@@ -100,7 +103,7 @@ describe('createAppTokenSource', () => {
     )
     const source = createAppTokenSource(readConfig(certEnv()), fetchImpl)
     const tokens = await Promise.all([source(TENANT), source(TENANT), source(TENANT)])
-    expect(tokens).toEqual(['shared', 'shared', 'shared'])
+    expect(tokens).toEqual([appJwt('shared'), appJwt('shared'), appJwt('shared')])
     expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 
@@ -110,6 +113,38 @@ describe('createAppTokenSource', () => {
     )
     const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.status).toBe(403)
+    expect(error.code).toBe('AdminConsentRequired')
+  })
+
+  it('maps a token that carries none of the application permissions to 403 AdminConsentRequired naming all three', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(tokenReply('roleless', 3599, []))
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
+    expect(error.status).toBe(403)
+    expect(error.code).toBe('AdminConsentRequired')
+    expect(error.message).toContain('Reports.Read.All, Sites.Read.All, Organization.Read.All')
+  })
+
+  it('names only the application permission the token is missing', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(tokenReply('partial', 3599, ['Reports.Read.All', 'Organization.Read.All']))
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
+    expect(error.code).toBe('AdminConsentRequired')
+    expect(error.message).toContain('permissions Sites.Read.All yet')
+  })
+
+  it('does not cache a token missing permissions, so a grant takes effect on the next call', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(tokenReply('before-grant', 3599, []))
+      .mockResolvedValueOnce(tokenReply('after-grant'))
+    const source = createAppTokenSource(readConfig(certEnv()), fetchImpl)
+    await expect(source(TENANT)).rejects.toMatchObject({ code: 'AdminConsentRequired' })
+    expect(await source(TENANT)).toBe(appJwt('after-grant'))
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it('treats a token it cannot decode as carrying no permissions', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ token_type: 'Bearer', access_token: 'opaque', expires_in: 3599 }))
+    const error = await rejection(createAppTokenSource(readConfig(certEnv()), fetchImpl)(TENANT))
     expect(error.code).toBe('AdminConsentRequired')
   })
 
@@ -131,7 +166,7 @@ describe('createAppTokenSource', () => {
       .mockResolvedValueOnce(tokenReply('after-retry'))
     const source = createAppTokenSource(readConfig(certEnv()), fetchImpl)
     await expect(source(TENANT)).rejects.toMatchObject({ code: 'TokenAcquisitionFailed' })
-    expect(await source(TENANT)).toBe('after-retry')
+    expect(await source(TENANT)).toBe(appJwt('after-retry'))
   })
 
   it('reports an unreachable authority as 502', async () => {
