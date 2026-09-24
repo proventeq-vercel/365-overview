@@ -2,12 +2,13 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import type { AddressInfo } from 'node:net'
 import { randomUUID, X509Certificate } from 'node:crypto'
 import { decodeProtectedHeader, jwtVerify, SignJWT } from 'jose'
-import { thumbprintToX5t } from '../src/proxy/appToken.js'
+import { REQUIRED_APPLICATION_PERMISSIONS, thumbprintToX5t } from '../src/proxy/appToken.js'
 import { ADMIN_DIRECTORY_ROLES } from '../src/proxy/config.js'
 import type { LocalKeyPair } from './keys.js'
 
 export const LOCAL_TENANT_ID = '11111111-2222-4333-8444-555555555555'
 export const LOCAL_USER_OID = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+export const LOCAL_APP_TOKEN_ISSUER = 'local-entra-app-token'
 const ISSUER_KID = 'local-entra-signing-key'
 const USER_TOKEN_LIFETIME_S = 3600
 const APP_TOKEN_LIFETIME_S = 3599
@@ -25,6 +26,7 @@ export interface FakeEntraOptions {
   proxyScope: string
   port?: number
   unconsentedTenantIds?: string[]
+  ungrantedTenantIds?: string[]
 }
 
 export interface UserTokenClaims {
@@ -61,11 +63,10 @@ const json = (response: ServerResponse, status: number, body: unknown) => {
   response.end(JSON.stringify(body))
 }
 
-const appToken = (tenantId: string, serial: number) => `local-app-token.${tenantId}.${serial}`
-
 export async function startFakeEntra(options: FakeEntraOptions): Promise<FakeEntra> {
   const tokenRequests: FakeEntra['tokenRequests'] = []
   const unconsented = new Set((options.unconsentedTenantIds ?? []).map((id) => id.toLowerCase()))
+  const ungranted = new Set((options.ungrantedTenantIds ?? []).map((id) => id.toLowerCase()))
   let url = ''
 
   const issueUserToken = (claims: UserTokenClaims = {}) => {
@@ -87,6 +88,23 @@ export async function startFakeEntra(options: FakeEntraOptions): Promise<FakeEnt
       .setNotBefore(now)
       .setExpirationTime(now + (claims.expiresInSeconds ?? USER_TOKEN_LIFETIME_S))
       .setJti(randomUUID())
+      .sign(options.issuerKey.privateKey)
+  }
+
+  const issueAppToken = (tenantId: string, serial: number) => {
+    const now = Math.floor(Date.now() / 1000)
+    return new SignJWT({
+      tid: tenantId,
+      appid: options.app.clientId,
+      idtyp: 'app',
+      roles: ungranted.has(tenantId.toLowerCase()) ? [] : [...REQUIRED_APPLICATION_PERMISSIONS],
+      serial,
+    })
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: ISSUER_KID })
+      .setIssuer(LOCAL_APP_TOKEN_ISSUER)
+      .setAudience('https://graph.microsoft.com')
+      .setIssuedAt(now)
+      .setExpirationTime(now + APP_TOKEN_LIFETIME_S)
       .sign(options.issuerKey.privateKey)
   }
 
@@ -141,7 +159,7 @@ export async function startFakeEntra(options: FakeEntraOptions): Promise<FakeEnt
     json(response, 200, {
       token_type: 'Bearer',
       expires_in: APP_TOKEN_LIFETIME_S,
-      access_token: appToken(tenantId, tokenRequests.length),
+      access_token: await issueAppToken(tenantId, tokenRequests.length),
     })
   }
 

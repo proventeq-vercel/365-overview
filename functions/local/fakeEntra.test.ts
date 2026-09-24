@@ -1,4 +1,4 @@
-import { importPKCS8 } from 'jose'
+import { decodeJwt, importPKCS8 } from 'jose'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildClientAssertion, tokenEndpoint } from '../src/proxy/appToken.js'
 import { startFakeEntra, LOCAL_TENANT_ID, type FakeEntra } from './fakeEntra.js'
@@ -48,7 +48,11 @@ describe('the fake Entra token endpoint, as a stand-in for the real one', () => 
   it('issues a token for an assertion signed by the registered certificate', async () => {
     const response = await post(await assertionWith(registered.thumbprintHex))
     expect(response.status).toBe(200)
-    expect(((await response.json()) as { access_token: string }).access_token).toContain(LOCAL_TENANT_ID)
+    const claims = decodeJwt(((await response.json()) as { access_token: string }).access_token)
+    expect(claims).toMatchObject({
+      tid: LOCAL_TENANT_ID,
+      roles: ['Reports.Read.All', 'Sites.Read.All', 'Organization.Read.All'],
+    })
   })
 
   it('refuses an assertion whose x5t names a certificate it never registered', async () => {
