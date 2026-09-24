@@ -53,9 +53,10 @@
 
   "access.consent.title": "Your organisation has not approved this app yet",
   "access.consent.body": "Approving sign-in is not enough: the report reads your tenant with application permissions, which a Global Administrator has to grant once for the whole tenant. Signing in again will not help until they do.",
-  "access.permissions.intro": "The grant covers a single read-only permission, and Microsoft lists the same one on its consent page:",
+  "access.permissions.intro": "The grant covers these read-only permissions, and Microsoft lists the same ones on its consent page:",
   "access.permissions.listLabel": "Permissions the report needs",
   "access.permissions.reports": "Microsoft 365 usage reports: storage per site and per OneDrive",
+  "access.permissions.organization": "tenant name and licences, for the storage entitlement",
   "access.consent.sendLink": "Send them this link:",
   "access.consent.grant": "grant admin consent",
   "access.tenant.title": "This tenant is not enabled for the report yet",

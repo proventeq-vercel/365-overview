@@ -7,4 +7,5 @@ export interface RequiredPermission {
 
 export const REQUIRED_PERMISSIONS: readonly RequiredPermission[] = [
   { name: 'Reports.Read.All', label: 'access.permissions.reports' },
+  { name: 'Organization.Read.All', label: 'access.permissions.organization' },
 ]

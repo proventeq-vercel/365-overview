@@ -17,7 +17,7 @@ describe('AccessFailure', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/not approved this app/i)
   })
 
-  it('sends an admin whose tenant approved sign-in but no application permission to consent, asking for the report permission alone', () => {
+  it('sends an admin whose tenant approved sign-in but no application permission to consent, listing the report and organisation permissions but never sites', () => {
     render(
       <AccessFailure
         error={
@@ -34,7 +34,7 @@ describe('AccessFailure', () => {
     const permissions = screen.getByRole('list', { name: 'Permissions the report needs' })
     expect(permissions).toHaveTextContent('Reports.Read.All')
     expect(permissions).not.toHaveTextContent('Sites.Read.All')
-    expect(permissions).not.toHaveTextContent('Organization.Read.All')
+    expect(permissions).toHaveTextContent('Organization.Read.All')
   })
 
   it('tells a role failure to get a reporting role, not consent', () => {
