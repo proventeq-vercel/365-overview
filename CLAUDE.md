@@ -189,9 +189,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   not "fix" one by analogy with the other.**
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
   `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
-  defect.** The cost figures are the exception and are never null: P365 prices
-  growth from the growth rate alone, so an unknown entitlement does not stop
-  `cost.growthAnnual` / `cost.cumulativeYear3` being real numbers.
+  defect.** The cost figures are the exception and are never null: with an
+  unknown entitlement nothing says the growth fits, so all of it is priced and
+  `cost.growthAnnual` / `cost.cumulativeYear3` stay real numbers.
 - **Components do no arithmetic. If a section needs a number, add it to
   `buildStorageOverview`.** That includes clamps (`remainingBytes` is already
   ≥ 0, as P365's backend returns it), grades (`sharePoint.utilization`), the
@@ -226,15 +226,17 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   not at all; `src/intl/en.json` mirrors it. **Pricing mirrors P365 exactly**:
   the rate default is 0.02 GBP/GB/month (`lib/settings.ts`), which is
   `StorageOverviewService.DefaultCostRatePerGbPerMonth` — there is no
-  `StorageOptimisationOptions` class, an earlier note here claimed one. The
-  cost of doing nothing is the whole projected growth
-  (`annualGrowthGb × rate × 12`), never gated on headroom or on the
-  entitlement being known; the three-year figure prices each year at its
-  **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. An earlier
-  version of this report charged only the growth that overflowed the
-  entitlement and split every figure into notional and billable — it produced
-  a different number from P365 on the same tenant, which is the bug this rule
-  exists to stop.
+  `StorageOptimisationOptions` class, an earlier note here claimed one.
+  **The cost of doing nothing is the one deliberate departure from P365
+  (owner's decision, 2026-09-24): it is `0` while growth stays inside the
+  SharePoint entitlement.** `lib/cost.billableGrowthGb` prices only the growth
+  above the entitlement — nothing under it, the overflow when growth crosses
+  it, all of it once the tenant is already over (today's overage is today's
+  bill, not the cost of doing nothing) and all of it when the entitlement is
+  unknown. The three-year figure applies the same rule to each year's
+  **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. There is no
+  notional/billable split — one figure per card. P365 prices the whole growth
+  ungated, so the two products differ here on purpose.
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.
