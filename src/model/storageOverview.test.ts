@@ -167,7 +167,7 @@ describe('buildStorageOverview entitlement', () => {
     )
   })
 
-  it('prices growth without an entitlement, which P365 never gates the cost on', () => {
+  it('prices all growth without an entitlement, since nothing says it fits', () => {
     const overview = buildStorageOverview(unknownEntitlement())
     expect(overview.cost.growthAnnual).toBeGreaterThan(0)
     expect(overview.cost.cumulativeYear3).toBeGreaterThan(0)
@@ -443,8 +443,20 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastEndBytes).toBe(210 * GB)
   })
 
-  it('prices the whole year of growth, headroom or not, as P365 does', () => {
+  it('costs nothing while three years of growth stay inside the entitlement', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
+    expect(overview.cost.growthAnnual).toBe(0)
+    expect(overview.cost.cumulativeYear3).toBe(0)
+  })
+
+  it('prices only the growth that overflows the entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 200 * GB }))
+    expect(overview.cost.growthAnnual).toBeCloseTo(168, 6)
+    expect(overview.cost.cumulativeYear3).toBeCloseTo(936, 6)
+  })
+
+  it('prices the whole growth of a tenant already over its entitlement', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
     expect(overview.cost.growthAnnual).toBeCloseTo(288, 6)
     expect(overview.cost.cumulativeYear3).toBeCloseTo(1296, 6)
   })
