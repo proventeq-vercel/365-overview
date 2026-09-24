@@ -61,6 +61,20 @@ describe('createLiveDataSource', () => {
     for (const url of urls) expect(url).toContain("(period='D180')")
   })
 
+  it('reads the licences as unavailable when the tenant granted only the report permission', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockRejectedValueOnce(
+      new ApiError(403, 'Insufficient privileges to complete the operation.', 'Authorization_RequestDenied'),
+    )
+    expect(await createLiveDataSource(graph).getLicenses()).toBeNull()
+  })
+
+  it('still fails the licences on anything other than a refusal', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockRejectedValueOnce(new ApiError(500, 'Graph fell over'))
+    await expect(createLiveDataSource(graph).getLicenses()).rejects.toMatchObject({ status: 500 })
+  })
+
   it('leaves the non-report calls on the v1.0 base', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)

@@ -32,7 +32,7 @@ export interface OverviewInputs {
   drives: StorageRow[]
   sharePointTrend: UsagePoint[]
   oneDriveTrend: UsagePoint[]
-  skus: LicenseSku[]
+  skus: LicenseSku[] | null
   reportRefreshDate: string
   ratePerGb: number
   currency: string
@@ -101,7 +101,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
-  const licenceEstimateBytes = estimateEntitlementBytes(skus)
+  const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 

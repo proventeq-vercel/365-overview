@@ -24,15 +24,30 @@ export interface FakeGraph {
   close(): Promise<void>
 }
 
-export function localAppTokenTenant(authorization: string | null): string | null {
+function localAppTokenClaims(authorization: string | null): { tid: string; roles: string[] } | null {
   const match = /^Bearer (\S+)$/.exec(authorization ?? '')
   if (!match) return null
   try {
     const claims = decodeJwt(match[1])
-    return claims.iss === LOCAL_APP_TOKEN_ISSUER && typeof claims.tid === 'string' ? claims.tid : null
+    if (claims.iss !== LOCAL_APP_TOKEN_ISSUER || typeof claims.tid !== 'string') return null
+    const roles = Array.isArray(claims.roles) ? claims.roles.filter((role): role is string => typeof role === 'string') : []
+    return { tid: claims.tid, roles }
   } catch {
     return null
   }
+}
+
+export const localAppTokenTenant = (authorization: string | null): string | null =>
+  localAppTokenClaims(authorization)?.tid ?? null
+
+export function roleRequiredFor(path: string): string {
+  if (path.startsWith('/beta/reports/')) return 'Reports.Read.All'
+  if (path === '/v1.0/subscribedSkus' || path === '/v1.0/organization') return 'Organization.Read.All'
+  return 'Sites.Read.All'
+}
+
+const INSUFFICIENT_PRIVILEGES = {
+  error: { code: 'Authorization_RequestDenied', message: 'Insufficient privileges to complete the operation.' },
 }
 export const REPORT_REFRESH_DATE = '2026-09-19'
 const HOST = 'contoso-local.sharepoint.com'
@@ -165,10 +180,15 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
     const authorization = request.headers.authorization ?? null
     requests.push({ method: request.method ?? '', url: request.url ?? '', authorization })
 
-    if (!localAppTokenTenant(authorization)) {
+    const caller = localAppTokenClaims(authorization)
+    if (!caller) {
       return graphError(response, 401, 'InvalidAuthenticationToken', 'Access token is empty or not issued by the local Entra.')
     }
     const path = decodeURIComponent(requestUrl.pathname)
+    const granted = (graphPath: string) => caller.roles.includes(roleRequiredFor(graphPath))
+    if (path !== '/v1.0/$batch' && !granted(path)) {
+      return json(response, 403, INSUFFICIENT_PRIVILEGES)
+    }
     const skip = Number(requestUrl.searchParams.get('$skiptoken') ?? 0)
     const reportLink = (report: string) => (next: number) =>
       `${url}/beta/reports/${report}(period='D180')?$format=application/json&$skiptoken=${next}`
@@ -223,6 +243,9 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
       const { requests: batch } = JSON.parse(await readBody(request)) as { requests: { id: string; url: string }[] }
       requests[requests.length - 1].batchUrls = batch.map((entry) => entry.url)
       const responses = batch.map(({ id, url: subUrl }) => {
+        if (!granted(`/v1.0${subUrl.split('?')[0]}`)) {
+          return { id, status: 403, headers: { 'content-type': 'application/json' }, body: INSUFFICIENT_PRIVILEGES }
+        }
         const match = /^\/sites\/([^/?]+)/.exec(subUrl)
         const entry = match ? directoryEntry(match[1]) : null
         return entry

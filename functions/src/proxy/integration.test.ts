@@ -10,6 +10,7 @@ import { createProxyDeps } from './deps.js'
 
 const UNCONSENTED_TENANT = '77777777-2222-4333-8444-555555555555'
 const UNGRANTED_TENANT = '88888888-2222-4333-8444-555555555555'
+const REPORTS_ONLY_TENANT = '99999999-2222-4333-8444-555555555555'
 const SITE_COUNT = 230
 const PAGE_SIZE = 100
 
@@ -20,7 +21,7 @@ let userToken: string
 beforeAll(async () => {
   stack = await startLocalStack({
     unconsentedTenantIds: [UNCONSENTED_TENANT],
-    ungrantedTenantIds: [UNGRANTED_TENANT],
+    appRolesByTenant: { [UNGRANTED_TENANT]: [], [REPORTS_ONLY_TENANT]: ['Reports.Read.All'] },
     graph: { siteCount: SITE_COUNT, pageSize: PAGE_SIZE, throttleFirstSiteReport: true },
   })
   host = await startNodeHost(createProxyDeps(stack.env))
@@ -165,6 +166,28 @@ describe('proxy end to end on the local stack', () => {
     expect(((await response.json()) as { error: { code: string } }).error.code).toBe('AdminConsentRequired')
   })
 
+  it('serves the usage reports to a tenant that granted Reports.Read.All alone, and relays Graph refusing the rest', async () => {
+    const token = await stack.entra.issueUserToken({ tenantId: REPORTS_ONLY_TENANT, wids: [] })
+    const call = (path: string, init: RequestInit = {}) =>
+      fetch(`${host.url}/api/graph/${path}`, { ...init, headers: { authorization: `Bearer ${token}`, ...init.headers } })
+
+    const report = await call("beta/reports/getSharePointSiteUsageStorage(period='D180')?$format=application/json")
+    expect(report.status).toBe(200)
+
+    const organization = await call('v1.0/organization')
+    expect(organization.status).toBe(403)
+    expect(((await organization.json()) as { error: { code: string } }).error.code).toBe('Authorization_RequestDenied')
+
+    const batch = await call('v1.0/$batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ requests: [{ id: '0', method: 'GET', url: `/sites/${encodeURIComponent(siteIdOf(0))}?$select=id,displayName,webUrl` }] }),
+    })
+    expect(batch.status).toBe(200)
+    const { responses } = (await batch.json()) as { responses: { status: number }[] }
+    expect(responses.map((r) => r.status)).toEqual([403])
+  })
+
   it('sends a tenant that approved sign-in but granted no application permissions to admin consent, and never reaches Graph', async () => {
     const token = await stack.entra.issueUserToken({ tenantId: UNGRANTED_TENANT, wids: [] })
     const graphCallsBefore = stack.graph.requests.length
@@ -172,7 +195,7 @@ describe('proxy end to end on the local stack', () => {
     expect(response.status).toBe(403)
     const { error } = (await response.json()) as { error: { code: string; message: string } }
     expect(error.code).toBe('AdminConsentRequired')
-    expect(error.message).toContain('Reports.Read.All, Sites.Read.All, Organization.Read.All')
+    expect(error.message).toContain('permissions Reports.Read.All yet')
     expect(stack.graph.requests.length).toBe(graphCallsBefore)
   })
 

@@ -23,7 +23,7 @@ const MAX_CACHED_TENANTS = 200
 const ASSERTION_LIFETIME_S = 600
 const CONSENT_ERROR_CODES = ['AADSTS700016', 'AADSTS65001', 'AADSTS650052']
 
-export const REQUIRED_APPLICATION_PERMISSIONS = ['Reports.Read.All', 'Sites.Read.All', 'Organization.Read.All'] as const
+export const REQUIRED_APPLICATION_PERMISSIONS = ['Reports.Read.All'] as const
 
 function grantedRoles(accessToken: string): string[] {
   try {

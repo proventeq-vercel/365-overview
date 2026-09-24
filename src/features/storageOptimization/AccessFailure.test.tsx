@@ -17,13 +17,13 @@ describe('AccessFailure', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/not approved this app/i)
   })
 
-  it('sends an admin whose tenant approved sign-in but no application permissions to consent, listing every permission', () => {
+  it('sends an admin whose tenant approved sign-in but no application permission to consent, asking for the report permission alone', () => {
     render(
       <AccessFailure
         error={
           new ApiError(
             403,
-            'An administrator of this tenant has not granted the application permissions Reports.Read.All, Sites.Read.All, Organization.Read.All yet.',
+            'An administrator of this tenant has not granted the application permissions Reports.Read.All yet.',
             'AdminConsentRequired',
           )
         }
@@ -33,8 +33,8 @@ describe('AccessFailure', () => {
     expect(screen.getByRole('alert')).not.toHaveTextContent(/reports reader/i)
     const permissions = screen.getByRole('list', { name: 'Permissions the report needs' })
     expect(permissions).toHaveTextContent('Reports.Read.All')
-    expect(permissions).toHaveTextContent('Sites.Read.All')
-    expect(permissions).toHaveTextContent('Organization.Read.All')
+    expect(permissions).not.toHaveTextContent('Sites.Read.All')
+    expect(permissions).not.toHaveTextContent('Organization.Read.All')
   })
 
   it('tells a role failure to get a reporting role, not consent', () => {

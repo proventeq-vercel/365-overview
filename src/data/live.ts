@@ -16,7 +16,7 @@ import type {
   RawDirectorySite,
   SiteDirectory,
 } from '../reports/siteDirectory'
-import { ApiError } from '../clients/apiError'
+import { ApiError, isForbidden } from '../clients/apiError'
 import { parseStorageTrend } from '../reports/storageTrend'
 import type { RawTrendRow } from '../reports/storageTrend'
 import { parseSubscribedSkus } from '../reports/licensing'
@@ -139,7 +139,12 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     },
 
     async getLicenses() {
-      return parseSubscribedSkus(await graph.getAllPages<RawSku>('/subscribedSkus'))
+      try {
+        return parseSubscribedSkus(await graph.getAllPages<RawSku>('/subscribedSkus'))
+      } catch (error) {
+        if (isForbidden(error)) return null
+        throw error
+      }
     },
 
     async getOrg() {

@@ -149,6 +149,20 @@ describe('buildStorageOverview entitlement', () => {
     )
   })
 
+  it('knows no entitlement when the licences could not be read, rather than assuming the 1 TiB base', () => {
+    const overview = buildStorageOverview(inputs({ skus: null }))
+    expect(overview.sharePoint.licenceEstimateBytes).toBeNull()
+    expect(overview.sharePoint.entitledBytes).toBeNull()
+    expect(overview.sharePoint.remainingBytes).toBeNull()
+    expect(overview.growth.forecastStatus).toBe('Unknown')
+  })
+
+  it('takes an entered entitlement when the licences could not be read', () => {
+    const overview = buildStorageOverview(inputs({ skus: null, entitlementOverrideBytes: 2000 * GB }))
+    expect(overview.sharePoint.entitledBytes).toBe(2000 * GB)
+    expect(overview.caveats.entitlementIsEstimated).toBe(false)
+  })
+
   it('yields nulls, never zeros, when the entitlement cannot be established', () => {
     const overview = buildStorageOverview(unknownEntitlement())
     expect(overview.sharePoint.entitledBytes).toBeNull()
