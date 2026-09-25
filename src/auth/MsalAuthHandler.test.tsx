@@ -52,7 +52,7 @@ describe('MsalAuthHandler', () => {
     expect(instance.loginRedirect).not.toHaveBeenCalled()
   })
 
-  it('renders a loading screen while an interaction is in progress', () => {
+  it('renders the report skeleton with the signing-in overlay while an interaction is in progress', () => {
     msalState.inProgress = InteractionStatus.HandleRedirect
     render(
       <MsalAuthHandler>
@@ -60,7 +60,8 @@ describe('MsalAuthHandler', () => {
       </MsalAuthHandler>,
     )
     expect(screen.queryByText('protected content')).toBeNull()
-    expect(screen.getByText('Authenticating…')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Signing you in')
+    expect(screen.getByLabelText('Loading report')).toHaveAttribute('aria-busy', 'true')
   })
 
   it('triggers loginRedirect when there is no account', () => {

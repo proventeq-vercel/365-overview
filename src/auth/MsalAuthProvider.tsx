@@ -2,17 +2,15 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { MsalProvider } from '@azure/msal-react'
 import { getMsalInstance } from './msalConfig'
 import { MsalAuthHandler } from './MsalAuthHandler'
-import { AuthLoadingScreen } from './AuthLoadingScreen'
-import { useTranslation } from '../hooks/useTranslation'
+import { LoadingShell } from '../app/LoadingShell'
 
 /**
  * Initializes the MSAL singleton (MSAL v3+ requires an explicit async
  * `initialize()` before any other API) and then mounts `<MsalProvider>` →
- * `MsalAuthHandler`. Shows a loading screen until initialization completes.
+ * `MsalAuthHandler`. Shows the loading shell until initialization completes.
  * Ported from the ProventeqCloud `MsalAuthProvider`. Only mounted in live mode.
  */
 export function MsalAuthProvider({ children }: { children: ReactNode }) {
-  const t = useTranslation()
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
@@ -28,7 +26,7 @@ export function MsalAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   if (!isInitialized) {
-    return <AuthLoadingScreen title={t('auth.initializing')} />
+    return <LoadingShell stage="starting" />
   }
 
   return (

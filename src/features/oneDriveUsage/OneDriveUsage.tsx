@@ -3,7 +3,7 @@ import { CaveatBanner } from '@/components/CaveatBanner'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
 import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
-import { ReportSkeleton } from '@/design/ReportSkeleton'
+import { ReportLoading } from '@/app/ReportLoading'
 import { AccessFailure } from '@/features/storageOptimization/AccessFailure'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
@@ -20,7 +20,7 @@ export function OneDriveUsage() {
   const { refresh } = useRefreshReport()
 
   if (error) return <AccessFailure error={error} onRetry={refresh} />
-  if (isPending || !data) return <ReportSkeleton />
+  if (isPending || !data) return <ReportLoading stage="loadingReport" />
 
   const { oneDrive, offenders, caveats } = data
 

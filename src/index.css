@@ -136,19 +136,22 @@ body {
   animation: enter 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+@keyframes loading-dot {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.7; }
+}
+
+@utility loading-dot {
+  animation: loading-dot 1.2s ease-in-out infinite;
+}
+
 /* Auth screens — consumed by src/auth/* (shared foundation, kept free of Tailwind classes) */
 .error-state { background:#fff; border:1px solid #dedede; border-left:3px solid #f97f50; border-radius:8px; padding:1rem 1.25rem; }
 .error-state__message { font-weight:600; color:#0f2c3d; }
 .error-state__hint { margin-top:.35rem; font-size:.8rem; color:#535353; }
 .error-state a { color:#34a1a0; font-weight:600; }
 .auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f9fafb; }
-.auth-screen__card { display:flex; flex-direction:column; align-items:center; gap:1.25rem; animation: enter .3s cubic-bezier(0.4, 0, 0.2, 1) both; }
-.auth-screen__card::before { content:''; width:11rem; height:2.1rem; background:#0f2c3d; -webkit-mask:url(/proventeq-logo.svg) no-repeat center / contain; mask:url(/proventeq-logo.svg) no-repeat center / contain; }
-.auth-screen__title { color:#808080; font-size:.875rem; }
-.auth-screen__spinner { width:2.25rem; height:2.25rem; border-radius:50%; border:4px solid #dedede; border-top-color:#34a1a0; animation:auth-spin .8s linear infinite; }
-@keyframes auth-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .auth-screen__spinner { animation: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
