@@ -129,7 +129,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `Logo` (inline SVG of
+  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
@@ -137,8 +137,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
-- `src/app/` — the shell: `AppShell` (sticky `Header` + optional `SideMenu`
-  + `<main>`), `Header` (hamburger only when the menu is on, logo, tenant name
+- `src/app/` — the shell: `AppShell` (`ShellLayout`: sticky `Header` + optional
+  `SideMenu` + `<main>`), `ReportLoading` / `LoadingShell` (the loading page,
+  see "Loading is one screen"), `Header` (hamburger only when the menu is on, logo, tenant name
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
   UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
@@ -324,19 +325,27 @@ typecheck · test · build as a separate job.
   `paths` in tsconfig + `resolve.alias` in `vite.config.ts`/`vitest.config.ts`
   alone; don't add `baseUrl`.
 
-## Auth screens use plain CSS classes
+## Loading is one screen: skeleton + stage overlay
 
-`src/auth/MsalAuthHandler.tsx` and `AuthLoadingScreen.tsx` (untouchable in UI
-work) render `className="error-state*"` and `className="auth-screen*"`. Those
-rules MUST remain in `src/index.css` — a full index.css rewrite once dropped
-`.auth-screen*` and left the live-mode loading screen unstyled. If you prune
-legacy CSS, keep any class still referenced by `src/auth/*`.
+Every wait — the boot HTML, MSAL `initialize()`, the sign-in redirect and the
+report fetch — shows the same page: the shell (`ShellLayout` + `HeaderFrame`)
+with `ReportSkeleton` under `LoadingOverlay`, P365's `DiscoveryOverlay` card
+(badge, ring spinner, title, subtitle, step pill or checklist, dots, footer).
+`app/ReportLoading` maps a `LoadingStage` (`starting` → `signingIn` →
+`loadingReport`) to the `loading.<stage>.*` copy and, when the app signs in
+(`env.usesMsal`), a checklist of the three stages. `LoadingShell` is the
+pre-auth wrapper `MsalAuthProvider` / `MsalAuthHandler` render; the reports
+render `ReportLoading` inside the real `AppShell`. Never add a centred
+spinner or a blank screen for a new wait — pick or add a stage.
 
-`index.html` carries a copy of the `.auth-screen*` rules inline (the boot card
-that shows before the JS bundle arrives, with the vertical loading dots and the
-logo). It cannot import `index.css`, so a change to those rules — colours,
-sizes, the dot animation — has to be made in both places, and the boot-shell
-e2e (`javaScriptEnabled: false`) is what catches a drift in the markup.
+`index.html` carries a static copy of that page (`.boot-*` rules inline) for
+the moments before the JS bundle arrives, showing the `starting` stage. It
+cannot import `index.css` or the catalogue, so a change to the overlay's look
+or the `loading.starting.*` / checklist copy has to be made in both places;
+the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
+
+`AuthErrorScreen` still renders `className="error-state*"` inside
+`className="auth-screen"`; keep those rules in `src/index.css`.
 
 ## Chart data typing
 
@@ -382,7 +391,7 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   it is committed. A test that survives the mutation is replaced, not kept.
 - Keep these ARIA hooks (tests depend on them): `role="status"` on caveat
   banners and `SoftCallout`, `role="alert"` on `AlertPanel`, `aria-busy` on
-  `ReportSkeleton`, `role="dialog"` on the reports menu and the settings dialog, `role="menu"` named "Options", real
+  `ReportSkeleton`, `role="status"` on the `LoadingOverlay` card, `role="dialog"` on the reports menu and the settings dialog, `role="menu"` named "Options", real
   table semantics in `SiteTable`.
 
 ## Known deferred items

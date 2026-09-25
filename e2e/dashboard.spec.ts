@@ -151,14 +151,16 @@ test('every button, link and menu item shows a pointer cursor', async ({ page })
 test.describe('before any script runs', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('the HTML shell already shows the branded loading card', async ({ page }) => {
+  test('the HTML shell already shows the report skeleton under the starting card', async ({ page }) => {
     await page.goto('/')
+    await expect(page.getByLabel('Loading report')).toHaveAttribute('aria-busy', 'true')
     const status = page.getByRole('status')
-    await expect(status).toContainText('Loading…')
-    await expect(status.locator('.auth-screen__spinner')).toBeVisible()
-    const logo = await status.locator('.auth-screen__card').evaluate((card) => {
-      const before = getComputedStyle(card, '::before')
-      return { mask: before.maskImage || before.webkitMaskImage, width: before.width }
+    await expect(status).toContainText('Getting your report ready')
+    await expect(status.locator('li[data-state="active"]')).toHaveText('Prepare sign-in')
+    await expect(status.locator('svg')).toBeVisible()
+    const logo = await page.getByRole('img', { name: 'Proventeq 365' }).evaluate((el) => {
+      const style = getComputedStyle(el)
+      return { mask: style.maskImage || style.webkitMaskImage, width: style.width }
     })
     expect(logo.mask).toContain('proventeq-logo.svg')
     expect(logo.width).not.toBe('0px')

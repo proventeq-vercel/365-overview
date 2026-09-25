@@ -6,7 +6,7 @@ import {
   InteractionStatus,
   InteractionType,
 } from '@azure/msal-browser'
-import { AuthLoadingScreen } from './AuthLoadingScreen'
+import { LoadingShell } from '../app/LoadingShell'
 import { AuthErrorScreen } from './AuthErrorScreen'
 import { useTranslation } from '../hooks/useTranslation'
 
@@ -88,7 +88,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
   }
 
   if (inProgress !== InteractionStatus.None) {
-    return <AuthLoadingScreen title={t('auth.authenticating')} />
+    return <LoadingShell stage="signingIn" />
   }
 
   return <>{children}</>

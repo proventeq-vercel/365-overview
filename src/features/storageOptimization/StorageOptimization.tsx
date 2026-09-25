@@ -1,5 +1,5 @@
 import { useSettings } from '@/app/useSettings'
-import { ReportSkeleton } from '@/design/ReportSkeleton'
+import { ReportLoading } from '@/app/ReportLoading'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -16,7 +16,7 @@ export function StorageOptimization() {
   const { refresh } = useRefreshReport()
 
   if (error) return <AccessFailure error={error} onRetry={refresh} />
-  if (isPending || !data) return <ReportSkeleton />
+  if (isPending || !data) return <ReportLoading stage="loadingReport" />
 
   return (
     <div className="flex flex-col gap-6">
