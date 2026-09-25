@@ -335,14 +335,19 @@ jobs, both from the exact commit CI tested:
 | Job | What it deploys | Where |
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output | the storage account's `$web` container, `az storage blob upload-batch` |
+| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` | the Azure Static Web App `swa-lh-sa-dev` (`https://thankful-desert-059980e03.5.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
 
-Vercel deploys the SPA from `main` on its own, so this workflow is what keeps the **proxy** and
-the **Azure-hosted copy** current.
+The first job checks what each deploy needs and skips a job whose secret is absent, with a note
+in the run summary rather than a failure. The **site** needs only the repo secret
+`AZURE_STATIC_WEB_APPS_API_TOKEN` (the Static Web App's deployment token — no Entra role), so it
+deploys on every green `main`. `public/staticwebapp.config.json` gives it deep-link fallback, a
+Content-Security-Policy limited to Entra, Graph and the proxy, HSTS and `frame-ancestors 'none'`
+— headers the old storage-account host could not send. A new site origin must be added to the
+proxy's `PROXY_ALLOWED_ORIGINS` **and** its platform CORS list, to the CSP's `connect-src` if it is
+a new proxy, and as a SPA redirect URI on the registration.
 
-**It needs credentials the repo does not have yet.** The first job checks for them and, when they
-are absent, skips the deploy with a note in the run summary rather than failing — so the workflow
-is inert until someone configures it, and merging it changes nothing.
+**The proxy still needs credentials the repo does not have yet**, so its job stays inert until
+someone configures them.
 
 The Function App is on a **Flex Consumption** plan, which deploys through Entra RBAC only:
 publish-profile (basic auth) deployment is not supported there, and SCM basic auth is disabled on
