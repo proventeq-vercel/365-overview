@@ -335,7 +335,7 @@ jobs, both from the exact commit CI tested:
 | Job | What it deploys | Where |
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` | the Azure Static Web App `swa-lh-sa-dev` (`https://thankful-desert-059980e03.5.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
+| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` | the Azure Static Web App `p365-lite` (`https://gray-water-0a8893303.1.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
 
 The first job checks what each deploy needs and skips a job whose secret is absent, with a note
 in the run summary rather than a failure. The **site** needs only the repo secret
