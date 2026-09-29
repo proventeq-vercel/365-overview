@@ -212,7 +212,7 @@ The permission model is chosen by the env, per deployment — there is no switch
 | Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
 | Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
 | Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
-| Deployed at | Static Web App `p365-lite` (`site` job) | Static Web App `p365-lite-delegated` (`site-delegated` job) |
+| Deployed at | Static Web App `p365-lite`, `https://gray-water-0a8893303.1.azurestaticapps.net` (`site` job) | Storage static website `p365lite`, `https://p365lite.z33.web.core.windows.net/` (`site-delegated` job) |
 
 The delegated path asks for **`.default`**: the token carries whatever delegated permissions the
 registration was granted, and nothing more is ever requested. So a registration without
@@ -220,6 +220,12 @@ registration was granted, and nothing more is ever requested. So a registration 
 lookups are refused with `403`, which the report treats as "no name" and shows each site by its id;
 without `Organization.Read.All` the licence-based entitlement is unknown. Only `Reports.Read.All`
 is required. The registration must list the deployment's origin as a **SPA redirect URI**.
+
+As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated
+`User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so that
+deployment shows sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
+`p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
+registration to add it first (`Authorization_RequestDenied` otherwise).
 
 ## Hiding names
 
@@ -377,7 +383,7 @@ jobs, both from the exact commit CI tested:
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
 | `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` — **application permissions** | the Azure Static Web App `p365-lite` (`https://gray-water-0a8893303.1.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
-| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the Azure Static Web App `p365-lite-delegated`, secret `AZURE_STATIC_WEB_APPS_API_TOKEN_DELEGATED` |
+| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the storage static website `p365lite` (`https://p365lite.z33.web.core.windows.net/`, account overridable with `vars.AZURE_DELEGATED_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS_DELEGATED` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
 
 The first job checks what each deploy needs and skips a job whose secret is absent, with a note
 in the run summary rather than a failure. The **site** needs only the repo secret
