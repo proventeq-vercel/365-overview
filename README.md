@@ -9,6 +9,19 @@ through an Azure Function that signs them app-only for the signed-in admin's ten
 
 Built with React 19, TypeScript, and Vite.
 
+## Where it lives
+
+| What | URL | Permissions | Hosted on |
+|---|---|---|---|
+| **Report, application permissions** | <https://gray-water-0a8893303.1.azurestaticapps.net> | App-only through the Graph proxy; any signed-in user once an admin has consented | Azure Static Web App `p365-lite` |
+| **Report, delegated permissions** | <https://p365lite.z33.web.core.windows.net/> | The signed-in user's own Graph token (Reports Reader, SharePoint Administrator or Global Administrator) | Azure Storage static website `p365lite` |
+| **Graph proxy** (not a page) | `https://func-lh-sa-dev.azurewebsites.net/api/graph` | Serves the application-permissions report only | Azure Function App `func-lh-sa-dev` |
+
+All three live in the resource group `rg-lh-sa-dev` and are redeployed from `main` by
+`.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
+`?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
+`https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
+
 ## The report
 
 | Section | What it shows |
@@ -212,7 +225,7 @@ The permission model is chosen by the env, per deployment — there is no switch
 | Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
 | Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
 | Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
-| Deployed at | Static Web App `p365-lite`, `https://gray-water-0a8893303.1.azurestaticapps.net` (`site` job) | Storage static website `p365lite`, `https://p365lite.z33.web.core.windows.net/` (`site-delegated` job) |
+| Deployed at | <https://gray-water-0a8893303.1.azurestaticapps.net> — Static Web App `p365-lite` (`site` job) | <https://p365lite.z33.web.core.windows.net/> — storage static website `p365lite` (`site-delegated` job) |
 
 The delegated path asks for **`.default`**: the token carries whatever delegated permissions the
 registration was granted, and nothing more is ever requested. So a registration without
@@ -347,9 +360,10 @@ The output is written to `dist/`. Serve with any static file host.
 
 ### Hosting the build on Azure
 
-The production host is Vercel, but a build can be served from an Azure Storage **static website**
-in the same resource group as the Graph proxy — useful for checking a branch against a real tenant
-without touching the Vercel project. No script, and nothing here is specific to a branch:
+The live sites are on Azure (see *Where it lives*); Vercel no longer serves the app. Any build can
+also be served by hand from an Azure Storage **static website** in the same resource group as the
+Graph proxy — useful for checking a branch against a real tenant without touching the live sites.
+No script, and nothing here is specific to a branch:
 
 ```bash
 cd ~/projects/365-overview
@@ -382,8 +396,8 @@ jobs, both from the exact commit CI tested:
 | Job | What it deploys | Where |
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` — **application permissions** | the Azure Static Web App `p365-lite` (`https://gray-water-0a8893303.1.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
-| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the storage static website `p365lite` (`https://p365lite.z33.web.core.windows.net/`, account overridable with `vars.AZURE_DELEGATED_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS_DELEGATED` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
+| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` — **application permissions** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
+| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_DELEGATED_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS_DELEGATED` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
 
 The first job checks what each deploy needs and skips a job whose secret is absent, with a note
 in the run summary rather than a failure. The **site** needs only the repo secret
