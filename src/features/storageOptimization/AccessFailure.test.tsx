@@ -64,6 +64,15 @@ describe('AccessFailure', () => {
     expect(screen.getByRole('heading').textContent).not.toBe(consentHeading)
   })
 
+  it.each([
+    ['consent', new ApiError(403, 'AADSTS65001: not consented')],
+    ['tenant', new ApiError(403, 'This tenant is not enabled.', 'TenantNotAllowed')],
+    ['role', new ApiError(403, 'Forbidden')],
+  ])('links the %s failure to the access help page', (_kind, error) => {
+    render(<AccessFailure error={error} />)
+    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+  })
+
   it('falls back to the generic error state for anything else', () => {
     render(<AccessFailure error={new ApiError(500, 'Server exploded')} />)
     expect(screen.getByRole('alert')).toHaveTextContent('Server exploded')

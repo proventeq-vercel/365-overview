@@ -10,7 +10,12 @@ describe('BootstrapError', () => {
     render(<BootstrapError message="VITE_CLIENT_ID is not set" overridden={false} />)
     expect(screen.getByRole('alert')).toHaveTextContent("Couldn't start the dashboard")
     expect(screen.getByText('VITE_CLIENT_ID is not set')).toBeInTheDocument()
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Reset the modes for this tab' })).not.toBeInTheDocument()
+  })
+
+  it('links to the access help page', () => {
+    render(<BootstrapError message="VITE_CLIENT_ID is not set" overridden={false} />)
+    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
   })
 
   it('offers the per-tab reset when a URL override may have caused it', () => {

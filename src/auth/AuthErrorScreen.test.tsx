@@ -31,6 +31,14 @@ describe('AuthErrorScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('network unreachable')
   })
 
+  it.each([
+    ['consent', Object.assign(new Error('AADSTS65001: not consented'), { name: 'InteractionRequiredAuthError' })],
+    ['sign-in', new Error('network unreachable')],
+  ])('links the %s failure to the access help page', (_kind, error) => {
+    render(<AuthErrorScreen error={error} />)
+    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+  })
+
   it('survives a thrown non-Error', () => {
     render(<AuthErrorScreen error={'something odd'} />)
     expect(screen.getByRole('alert')).toHaveTextContent('something odd')

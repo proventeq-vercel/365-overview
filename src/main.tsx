@@ -3,6 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { env } from './config/env'
+import { accessModeOf } from './config/accessMode'
+import { adminConsentUrl } from './config/adminConsent'
+import { getConfig } from './config/appConfig'
+import { isHelpPath } from './config/helpPath'
+import { AccessHelpPage } from './app/help/AccessHelpPage'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
 import { AppIntlProvider } from './app/AppIntlProvider'
 import { BootstrapError } from './app/BootstrapError'
@@ -52,8 +57,17 @@ function bootstrap() {
   )
 }
 
+function renderHelp() {
+  render(
+    <AppIntlProvider>
+      <AccessHelpPage mode={accessModeOf(getConfig())} consentUrl={adminConsentUrl()} />
+    </AppIntlProvider>,
+  )
+}
+
 try {
-  bootstrap()
+  if (isHelpPath(window.location.pathname)) renderHelp()
+  else bootstrap()
 } catch (err) {
   renderBootstrapError(err)
 }

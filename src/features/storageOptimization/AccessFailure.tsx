@@ -1,6 +1,7 @@
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/ErrorState'
+import { HelpLink } from '@/components/HelpLink'
 import { RequiredPermissionList } from '@/components/RequiredPermissionList'
 import { adminConsentUrl } from '@/config/adminConsent'
 import { AlertPanel } from '@/design/AlertPanel'
@@ -25,6 +26,7 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
             </a>
           </p>
         )}
+        <HelpLink />
       </AlertPanel>
     )
   }
@@ -33,6 +35,7 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
     return (
       <AlertPanel tone="error" title={t('access.tenant.title')}>
         <p className="text-sm text-p365-grey-600">{t('access.tenant.body')}</p>
+        <HelpLink />
       </AlertPanel>
     )
   }
@@ -41,6 +44,7 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
     return (
       <AlertPanel tone="error" title={t('access.permission.title')}>
         <p className="text-sm text-p365-grey-600">{t('access.permission.body')}</p>
+        <HelpLink />
       </AlertPanel>
     )
   }
