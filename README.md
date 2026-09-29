@@ -250,6 +250,31 @@ no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a vi
 when access is missing links to it — the sign-in error and consent screens, the consent / tenant /
 role panels, an auth error from Graph, and the start-up error.
 
+### Limiting who can open the report
+
+Any user of a consented tenant can sign in by default. To allow only some groups, the tenant's
+admin sets it in Microsoft Entra — nothing in this app or its deployment changes:
+
+1. **Entra admin center → Enterprise applications** → the app with the site's Application ID
+   (`84e24db0-8904-41f8-8556-14a2b6863b1a` for application permissions,
+   `0cedd025-e545-44f2-b3f8-82969e56547a` for delegated).
+2. **Properties → Assignment required? → Yes**, save.
+3. **Users and groups → Add user/group**, pick the groups or users.
+
+Group assignment needs Entra ID P1/P2 (free tier: users one by one) and does not reach nested
+groups. Anyone unassigned is refused at sign-in with `AADSTS50105`; if that error comes back to
+the app, `AuthErrorScreen` shows "Your account is not allowed to use this app" and links `/help`,
+which carries the same steps. With application permissions this limits who sees the report, not
+what the proxy can read.
+
+### Delegated: consent vs role
+
+On the delegated site the app checks the scopes MSAL says the token carries. Without
+`Reports.Read.All` (the tenant never admin-consented the delegated registration) it refreshes the
+token once — a grant made after sign-in shows up without signing out — and otherwise shows the
+admin-consent screen before calling Graph. Graph's own 403 is then left to mean what it says: the
+user lacks a reporting role.
+
 ## Hiding names
 
 `?hideNames=true` (or `VITE_HIDE_NAMES=true` at build time) masks identities for the rest of the

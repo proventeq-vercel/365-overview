@@ -361,7 +361,17 @@ who cannot sign in can still read it. Both hosts serve it through their
 `components/HelpLink`: `AuthErrorScreen` (both branches), the three
 `AccessFailure` panels, `ErrorState` for auth errors, `BootstrapError`. A new
 failure screen gets the link too, and its heading belongs in the page's
-`SYMPTOMS` list.
+`SYMPTOMS` list. `RestrictUsersPanel` documents limiting sign-in to assigned
+groups (Entra "Assignment required"); `AADSTS50105` is `isUserNotAssigned`
+and gets its own `AuthErrorScreen` branch.
+
+Delegated mode checks the token's granted scopes (`acquireToken`'s
+`requiredScope`, `requiredScopeFor(config)` = `Reports.Read.All` with no
+proxy): missing → one `forceRefresh` → still missing → `ApiError` with
+`AdminConsentRequired`, before any Graph call. Without it an unconsented tenant
+got Graph 403s that read as "no reporting role" — verified on proventeqe5,
+whose Gov360 user holds Reports Reader but whose delegated token carried only
+`openid profile email`.
 
 ## Chart data typing
 

@@ -4,28 +4,32 @@ import {
   type AccountInfo,
   type IPublicClientApplication,
 } from '@azure/msal-browser'
+import { ApiError, PROXY_CONSENT_CODE } from '../clients/apiError'
 
-/**
- * Acquire an access token for the given account and scopes.
- *
- * Tries the silent flow first. If that fails with an error that can only be
- * recovered by user interaction — `InteractionRequiredAuthError` (session
- * expired) or `BrowserAuthError` (iframe bridge timeout, often third-party
- * cookie blocking) — it triggers an interactive `acquireTokenRedirect`. That
- * call navigates the browser away, so the returned promise does not resolve to
- * a token in practice. Any other error is rethrown.
- *
- * Mirrors the ProventeqCloud MSAL token-acquisition pattern (redirect, not
- * popup).
- */
+function grants(scopes: readonly string[] | undefined, required: string): boolean {
+  const wanted = required.toLowerCase()
+  return (scopes ?? []).some((scope) => scope.split('/').pop()?.toLowerCase() === wanted)
+}
+
 export async function acquireToken(
   instance: IPublicClientApplication,
   account: AccountInfo,
   scopes: string[],
+  requiredScope?: string,
 ): Promise<string> {
   const request = { account, scopes }
   try {
-    const res = await instance.acquireTokenSilent(request)
+    let res = await instance.acquireTokenSilent(request)
+    if (requiredScope && !grants(res.scopes, requiredScope)) {
+      res = await instance.acquireTokenSilent({ ...request, forceRefresh: true })
+      if (!grants(res.scopes, requiredScope)) {
+        throw new ApiError(
+          403,
+          `An administrator of this tenant has not granted ${requiredScope} to the app yet.`,
+          PROXY_CONSENT_CODE,
+        )
+      }
+    }
     return res.accessToken
   } catch (error) {
     if (
@@ -33,7 +37,6 @@ export async function acquireToken(
       error instanceof BrowserAuthError
     ) {
       await instance.acquireTokenRedirect(request)
-      // The browser redirects; this line is unreachable in practice.
       throw error
     }
     throw error

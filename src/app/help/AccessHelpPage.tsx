@@ -4,11 +4,13 @@ import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { ShellLayout } from '../AppShell'
 import { HeaderFrame } from '../Header'
 import { AccessModePanel } from './AccessModePanel'
+import { RestrictUsersPanel } from './RestrictUsersPanel'
 
 const SYMPTOMS: readonly { label: TranslateKey; help: TranslateKey }[] = [
   { label: 'access.consent.title', help: 'help.fix.consent' },
   { label: 'access.tenant.title', help: 'help.fix.tenant' },
   { label: 'access.permission.title', help: 'help.fix.permission' },
+  { label: 'auth.notAssigned.title', help: 'help.fix.notAssigned' },
   { label: 'auth.signInFailed', help: 'help.fix.signIn' },
   { label: 'help.symptom.names', help: 'help.fix.names' },
 ]
@@ -22,7 +24,15 @@ function OpenReportLink() {
   )
 }
 
-export function AccessHelpPage({ mode, consentUrl }: { mode: AccessMode; consentUrl: string | null }) {
+export function AccessHelpPage({
+  mode,
+  consentUrl,
+  clientId,
+}: {
+  mode: AccessMode
+  consentUrl: string | null
+  clientId: string
+}) {
   const t = useTranslation()
   return (
     <ShellLayout
@@ -44,6 +54,9 @@ export function AccessHelpPage({ mode, consentUrl }: { mode: AccessMode; consent
               <AccessModePanel key={each} mode={each} current={each === mode} consentUrl={consentUrl} />
             ))}
           </div>
+        </Section>
+        <Section title={t('help.restrict.title')} subtitle={t('help.restrict.subtitle')} delay={40}>
+          <RestrictUsersPanel clientId={clientId} />
         </Section>
         <Section title={t('help.symptoms.title')} subtitle={t('help.symptoms.subtitle')} delay={80}>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

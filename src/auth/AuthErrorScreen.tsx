@@ -1,4 +1,4 @@
-import { isConsentRequired } from '../clients/apiError'
+import { isConsentRequired, isUserNotAssigned } from '../clients/apiError'
 import { HelpLink } from '../components/HelpLink'
 import { RequiredPermissionList } from '../components/RequiredPermissionList'
 import { adminConsentUrl } from '../config/adminConsent'
@@ -8,6 +8,19 @@ export function AuthErrorScreen({ error }: { error: unknown }) {
   const t = useTranslation()
   const message = error instanceof Error ? error.message : String(error ?? t('auth.unknownError'))
   const consentUrl = adminConsentUrl()
+
+  if (isUserNotAssigned(error)) {
+    return (
+      <div className="auth-screen">
+        <div className="error-state" style={{ maxWidth: '520px', width: '100%' }} role="alert">
+          <p className="error-state__message">{t('auth.notAssigned.title')}</p>
+          <p className="error-state__hint">{t('auth.notAssigned.body')}</p>
+          <p className="error-state__hint">{message}</p>
+          <HelpLink />
+        </div>
+      </div>
+    )
+  }
 
   if (isConsentRequired(error)) {
     return (
