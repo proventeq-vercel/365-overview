@@ -21,12 +21,7 @@ export function getMsalInstance(): PublicClientApplication {
   return _msalInstance
 }
 
-export const GRAPH_SCOPES = [
-  'User.Read',
-  'Reports.Read.All',
-  'Organization.Read.All',
-  'Sites.Read.All',
-]
+export const GRAPH_SCOPES = ['https://graph.microsoft.com/.default']
 
 export function tokenScopesFor(config: AppConfig): string[] {
   const proxy = graphProxyOf(config)

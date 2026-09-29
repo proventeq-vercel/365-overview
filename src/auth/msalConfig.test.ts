@@ -5,9 +5,9 @@ import { GRAPH_SCOPES, tokenScopesFor } from './msalConfig'
 const ORIGIN = 'https://365-overview.vercel.app'
 
 describe('tokenScopesFor', () => {
-  it('asks Graph directly for the delegated report scopes when no proxy is configured', () => {
+  it('asks Graph directly for what the registration was granted when no proxy is configured, so a missing optional permission never blocks sign-in', () => {
     expect(tokenScopesFor(parseConfig({}, ORIGIN))).toBe(GRAPH_SCOPES)
-    expect(GRAPH_SCOPES).toEqual(['User.Read', 'Reports.Read.All', 'Organization.Read.All', 'Sites.Read.All'])
+    expect(GRAPH_SCOPES).toEqual(['https://graph.microsoft.com/.default'])
   })
 
   it('asks only for the proxy scope when the proxy is configured, so no delegated Graph consent is requested', () => {
