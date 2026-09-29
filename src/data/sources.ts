@@ -1,6 +1,6 @@
 import type { AccountInfo, IPublicClientApplication } from '@azure/msal-browser'
 import { createLocalTokenGetter } from '../auth/localAuth'
-import { tokenScopesFor } from '../auth/msalConfig'
+import { requiredScopeFor, tokenScopesFor } from '../auth/msalConfig'
 import { acquireToken } from '../auth/tokens'
 import { createGraphClient, GRAPH_ORIGIN } from '../clients/graphClient'
 import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
@@ -11,13 +11,14 @@ function makeTokenGetter(
   instance: IPublicClientApplication,
   getAccount: () => AccountInfo | null,
   scopes: string[],
+  requiredScope: string | undefined,
 ): () => Promise<string> {
   return async () => {
     const account = getAccount()
     if (!account) {
       throw new Error('No active MSAL account; sign in before requesting data')
     }
-    return acquireToken(instance, account, scopes)
+    return acquireToken(instance, account, scopes, requiredScope)
   }
 }
 
@@ -30,7 +31,7 @@ export function buildLiveSource(
   config: AppConfig = getConfig(),
 ): DataSource {
   const getAccount = () => instance.getActiveAccount() ?? accounts[0] ?? null
-  const getToken = makeTokenGetter(instance, getAccount, tokenScopesFor(config))
+  const getToken = makeTokenGetter(instance, getAccount, tokenScopesFor(config), requiredScopeFor(config))
   return createLiveDataSource(createGraphClient(getToken, fetch, graphOriginOf(config)), { hideNames })
 }
 

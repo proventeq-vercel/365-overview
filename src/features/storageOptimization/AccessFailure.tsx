@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/ErrorState'
 import { HelpLink } from '@/components/HelpLink'
 import { RequiredPermissionList } from '@/components/RequiredPermissionList'
+import { accessModeOf } from '@/config/accessMode'
 import { adminConsentUrl } from '@/config/adminConsent'
+import { getConfig } from '@/config/appConfig'
 import { AlertPanel } from '@/design/AlertPanel'
 import { useTranslation } from '@/hooks/useTranslation'
 import { consentErrorFor } from './consentError'
@@ -16,7 +18,9 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
     const url = adminConsentUrl()
     return (
       <AlertPanel tone="warn" title={t('access.consent.title')}>
-        <p className="text-sm text-p365-grey-600">{t('access.consent.body')}</p>
+        <p className="text-sm text-p365-grey-600">
+          {accessModeOf(getConfig()) === 'delegated' ? t('access.consent.delegatedBody') : t('access.consent.body')}
+        </p>
         <RequiredPermissionList />
         {url && (
           <p className="text-sm text-p365-grey-600">

@@ -19,15 +19,26 @@ export const PROXY_TENANT_CODE = 'TenantNotAllowed'
 
 const UNGRANTED_APPLICATION_PERMISSION = 'Authorization_RequestDenied'
 
+const USER_NOT_ASSIGNED_CODE = 'AADSTS50105'
+
+function authErrorText(error: object): string {
+  const message = 'message' in error && typeof error.message === 'string' ? error.message : ''
+  const errorCode = 'errorCode' in error && typeof error.errorCode === 'string' ? error.errorCode : ''
+  return `${message} ${errorCode}`
+}
+
+export function isUserNotAssigned(error: unknown): boolean {
+  if (error === null || typeof error !== 'object') return false
+  return authErrorText(error).includes(USER_NOT_ASSIGNED_CODE)
+}
+
 export function isConsentRequired(error: unknown): boolean {
   if (error === null || typeof error !== 'object') return false
   if (error instanceof ApiError && error.code === PROXY_CONSENT_CODE) return true
   if (error instanceof ApiError && error.code === UNGRANTED_APPLICATION_PERMISSION) return true
   const name = 'name' in error && typeof error.name === 'string' ? error.name : ''
   if (name === 'InteractionRequiredAuthError') return true
-  const message = 'message' in error && typeof error.message === 'string' ? error.message : ''
-  const errorCode = 'errorCode' in error && typeof error.errorCode === 'string' ? error.errorCode : ''
-  const haystack = `${message} ${errorCode}`
+  const haystack = authErrorText(error)
   return CONSENT_CODES.some((code) => haystack.includes(code))
 }
 

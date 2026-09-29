@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { ApiError, isConsentRequired, isForbidden, PROXY_CONSENT_CODE } from './apiError'
+import { ApiError, isConsentRequired, isForbidden, isUserNotAssigned, PROXY_CONSENT_CODE } from './apiError'
+
+describe('isUserNotAssigned', () => {
+  it('recognises AADSTS50105 in the message or the MSAL error code', () => {
+    expect(isUserNotAssigned(new Error('AADSTS50105: The signed in user is not assigned'))).toBe(true)
+    expect(isUserNotAssigned({ message: '', errorCode: 'AADSTS50105' })).toBe(true)
+  })
+
+  it('leaves consent, other sign-in failures and non-objects alone', () => {
+    expect(isUserNotAssigned(new Error('AADSTS65001: not consented'))).toBe(false)
+    expect(isUserNotAssigned(new Error('network unreachable'))).toBe(false)
+    expect(isUserNotAssigned('AADSTS50105')).toBe(false)
+    expect(isUserNotAssigned(null)).toBe(false)
+  })
+})
 
 describe('isForbidden', () => {
   it('is true only for a Graph 403', () => {

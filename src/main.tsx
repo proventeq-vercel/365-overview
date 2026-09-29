@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { env } from './config/env'
 import { accessModeOf } from './config/accessMode'
-import { adminConsentUrl } from './config/adminConsent'
+import { adminConsentUrl, consentClientIdFor } from './config/adminConsent'
 import { getConfig } from './config/appConfig'
 import { isHelpPath } from './config/helpPath'
 import { AccessHelpPage } from './app/help/AccessHelpPage'
@@ -60,7 +60,11 @@ function bootstrap() {
 function renderHelp() {
   render(
     <AppIntlProvider>
-      <AccessHelpPage mode={accessModeOf(getConfig())} consentUrl={adminConsentUrl()} />
+      <AccessHelpPage
+        mode={accessModeOf(getConfig())}
+        consentUrl={adminConsentUrl()}
+        clientId={consentClientIdFor(getConfig())}
+      />
     </AppIntlProvider>,
   )
 }

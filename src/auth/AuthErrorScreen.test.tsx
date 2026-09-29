@@ -31,6 +31,19 @@ describe('AuthErrorScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('network unreachable')
   })
 
+  it('tells an unassigned user they are not on the allowed list, not that sign-in broke', () => {
+    render(
+      <AuthErrorScreen
+        error={Object.assign(new Error('AADSTS50105: The signed in user is not assigned to a role for the application.'), {
+          errorCode: 'access_denied',
+        })}
+      />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Your account is not allowed to use this app')
+    expect(screen.queryByText('Sign-in failed')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+  })
+
   it.each([
     ['consent', Object.assign(new Error('AADSTS65001: not consented'), { name: 'InteractionRequiredAuthError' })],
     ['sign-in', new Error('network unreachable')],

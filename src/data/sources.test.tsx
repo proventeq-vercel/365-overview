@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { IPublicClientApplication } from '@azure/msal-browser'
+import { isConsentRequired } from '../clients/apiError'
 import { parseConfig } from '../config/appConfig'
 import { buildLiveSource, buildLocalAuthSource } from './sources'
 
@@ -15,8 +16,8 @@ afterEach(() => {
   fetchSpy.mockReset()
 })
 
-function msalInstance() {
-  const acquireTokenSilent = vi.fn().mockResolvedValue({ accessToken: 'user-token' })
+function msalInstance(scopes?: string[]) {
+  const acquireTokenSilent = vi.fn().mockResolvedValue({ accessToken: 'user-token', scopes })
   const instance = {
     acquireTokenSilent,
     acquireTokenRedirect: vi.fn(),
@@ -28,10 +29,17 @@ function msalInstance() {
 describe('buildLiveSource', () => {
   it('reads Graph directly with whatever the registration was granted when no proxy is configured', async () => {
     fetchSpy.mockResolvedValue(jsonResponse({ value: [{ displayName: 'Contoso', countryLetterCode: 'GB', verifiedDomains: [] }] }))
-    const { instance, acquireTokenSilent } = msalInstance()
+    const { instance, acquireTokenSilent } = msalInstance(['User.Read', 'Reports.Read.All'])
     await buildLiveSource(instance, [], false, parseConfig({}, ORIGIN)).getOrg()
     expect(acquireTokenSilent.mock.calls[0][0].scopes).toEqual(['https://graph.microsoft.com/.default'])
     expect(fetchSpy.mock.calls[0][0]).toBe('https://graph.microsoft.com/v1.0/organization?$format=application/json')
+  })
+
+  it('stops a delegated read before Graph when the tenant never consented to the report scope', async () => {
+    const { instance } = msalInstance(['openid', 'profile', 'email'])
+    const error = await buildLiveSource(instance, [], false, parseConfig({}, ORIGIN)).getOrg().catch((e: unknown) => e)
+    expect(isConsentRequired(error)).toBe(true)
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
   it('reads through the proxy with a token for the proxy scope when one is configured', async () => {
