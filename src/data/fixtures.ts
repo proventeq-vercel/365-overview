@@ -1,10 +1,12 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
+import { hideRowNames } from '../lib/hiddenNames'
 
 export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short-history'
 
 export interface DataSource {
+  readonly namesHidden: boolean
   getSites(): Promise<StorageRow[]>
   getSiteDetails(ids: string[]): Promise<SiteDirectory>
   getSiteDirectory(): Promise<SiteDirectory>
@@ -220,9 +222,22 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   }
 }
 
-export function createMockDataSource(scenario: MockScenario = 'healthy'): DataSource {
-  const data = scenarioData(scenario)
+function withHiddenNames(data: ScenarioData): ScenarioData {
   return {
+    ...data,
+    sites: data.sites.map(hideRowNames),
+    directory: new Map(),
+    drives: data.drives.map(hideRowNames),
+  }
+}
+
+export function createMockDataSource(
+  scenario: MockScenario = 'healthy',
+  { hideNames }: { hideNames: boolean } = { hideNames: false },
+): DataSource {
+  const data = hideNames ? withHiddenNames(scenarioData(scenario)) : scenarioData(scenario)
+  return {
+    namesHidden: hideNames,
     getSites: async () => data.sites,
     getSiteDetails: async (ids) => {
       const found: SiteDirectory = new Map()

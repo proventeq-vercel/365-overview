@@ -3,7 +3,7 @@ import type { Slice, StoragePool, StorageOverview, StorageRow } from '@/types/st
 import { GB_IN_BYTES, estimateEntitlementBytes } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
-import { rowLabel } from '@/lib/rowName'
+import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
@@ -39,6 +39,7 @@ export interface OverviewInputs {
   entitlementOverrideBytes: number | null
   now?: Date
   forceUnknownEntitlement?: boolean
+  namesHidden?: boolean
 }
 
 export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
@@ -72,7 +73,7 @@ function topConsumers(rows: StorageRow[], limit = TOP_CONSUMERS): Slice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
     .slice(0, limit)
-    .map((row) => ({ name: rowLabel(row), value: row.storageUsedBytes }))
+    .map((row) => ({ name: rowName(row), value: row.storageUsedBytes }))
 }
 
 function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
@@ -98,6 +99,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     entitlementOverrideBytes,
     now = new Date(),
     forceUnknownEntitlement = false,
+    namesHidden = false,
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
@@ -208,6 +210,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
       namesAreConcealed: namesAreConcealed(rows),
+      namesHidden,
       historyTooShort,
     },
   }

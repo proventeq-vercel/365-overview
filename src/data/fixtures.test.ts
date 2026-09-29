@@ -3,8 +3,8 @@ import { createMockDataSource } from './fixtures'
 import { buildStorageOverview } from '../model/storageOverview'
 import { loadSettings } from '../lib/settings'
 
-async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0]) {
-  const ds = createMockDataSource(scenario)
+async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0], hideNames = false) {
+  const ds = createMockDataSource(scenario, { hideNames })
   const settings = loadSettings()
   const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
     await Promise.all([
@@ -25,6 +25,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0])
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
     entitlementOverrideBytes: settings.entitlementOverrideBytes,
+    namesHidden: ds.namesHidden,
   })
 }
 
@@ -74,6 +75,7 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.caveats).toEqual({
       entitlementIsEstimated: true,
       namesAreConcealed: false,
+      namesHidden: false,
       historyTooShort: false,
     })
     expect(overview.growth.forecastStatus).not.toBe('Unknown')
@@ -101,6 +103,18 @@ describe('mock scenarios reach every caveat state', () => {
     const rows = [...overview.sharePoint.sites, ...overview.oneDrive.drives]
     expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length)
     expect(rows[0].ownerDisplayName).toMatch(/^[0-9A-F]{32}$/)
+  })
+
+  it('hidden names: no site name, link or owner name survives, every id stays unique, totals unchanged', async () => {
+    const shown = await overviewFor('healthy')
+    const hidden = await overviewFor('healthy', true)
+    const rows = [...hidden.sharePoint.sites, ...hidden.oneDrive.drives]
+    expect(hidden.caveats.namesHidden).toBe(true)
+    expect(rows.every((row) => row.name === undefined && row.url === '')).toBe(true)
+    expect(rows.some((row) => /Owner|User/.test(row.ownerDisplayName))).toBe(false)
+    expect(rows.some((row) => row.id.includes('@'))).toBe(false)
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length)
+    expect(hidden.sharePoint.usedBytes).toBe(shown.sharePoint.usedBytes)
   })
 
   it('short-history: no forecast at all', async () => {

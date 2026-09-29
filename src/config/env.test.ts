@@ -23,6 +23,19 @@ describe('readEnv', () => {
   })
 })
 
+describe('readEnv hideNames', () => {
+  it('shows names unless the env or the URL asks to hide them', () => {
+    expect(readEnv({}).hideNames).toBe(false)
+    expect(readEnv({ VITE_HIDE_NAMES: 'true' }).hideNames).toBe(true)
+    expect(readEnv({}, { hideNames: 'true' }).hideNames).toBe(true)
+  })
+
+  it('lets the URL hide names on a locked build, but never show what the env hides', () => {
+    expect(readEnv({ VITE_MODES_LOCKED: 'true' }, { hideNames: 'true' }).hideNames).toBe(true)
+    expect(readEnv({ VITE_HIDE_NAMES: 'true' }, { hideNames: 'false' }).hideNames).toBe(true)
+  })
+})
+
 describe('readEnv mock scenario', () => {
   it('defaults to the healthy tenant', () => {
     expect(readEnv({}).mockScenario).toBe('healthy')
@@ -131,5 +144,16 @@ describe('env at module load', () => {
     const { env } = await import('./env')
     window.history.replaceState(null, '', '/')
     expect(env.mockScenario).toBe('concealed')
+  })
+
+  it('lets ?hideNames through a locked build while every other override stays locked', async () => {
+    vi.stubEnv('VITE_MODES_LOCKED', 'true')
+    window.history.replaceState(null, '', '/?hideNames=true&scenario=concealed')
+    vi.resetModules()
+    const { env } = await import('./env')
+    window.history.replaceState(null, '', '/')
+    vi.unstubAllEnvs()
+    expect(env.hideNames).toBe(true)
+    expect(env.mockScenario).toBe('healthy')
   })
 })

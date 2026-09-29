@@ -203,6 +203,7 @@
   "storageOptimisation.offenders.all": "All sites and OneDrives",
   "storageOptimisation.offenders.allSubtitle": "Every site and drive in the usage reports, sortable and searchable",
   "storageOptimisation.offenders.tableLabel": "Sites and drives",
+  "storageOptimisation.hiddenNamesNote": "Site names and owners are hidden: sites show as masked ids, owners as initials, and site links are removed. The storage figures are unaffected.",
   "storageOptimisation.concealedNamesNote": "Your tenant conceals user and site names in usage reports, so identities below appear as hashes. The storage figures are unaffected. To show real names: Microsoft 365 admin centre → Settings → Org settings → Reports → uncheck \"Display concealed user, group, and site names\".",
 
   "oneDrive.description": "How much of the tenant sits in personal OneDrives, who holds the most, and which drives are running out of room.",

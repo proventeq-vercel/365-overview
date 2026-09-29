@@ -10,6 +10,7 @@ export interface AppEnv {
   overrides: ModeOverrides
   localAuthUrl: string | null
   usesMsal: boolean
+  hideNames: boolean
 }
 
 const SCENARIOS: MockScenario[] = [
@@ -45,12 +46,14 @@ export function readEnv(
     overrides: active,
     localAuthUrl,
     usesMsal: !useMock && !localAuthUrl,
+    hideNames: source.VITE_HIDE_NAMES === 'true' || overrides.hideNames === 'true',
   }
 }
 
 function browserOverrides(source: Record<string, string | undefined>): ModeOverrides {
-  if (typeof window === 'undefined' || isModesLocked(source)) return {}
-  return readModeOverrides(window.location.search, tabStorage())
+  if (typeof window === 'undefined') return {}
+  const overrides = readModeOverrides(window.location.search, tabStorage())
+  return isModesLocked(source) ? { hideNames: overrides.hideNames } : overrides
 }
 
 const source = import.meta.env as unknown as Record<string, string | undefined>

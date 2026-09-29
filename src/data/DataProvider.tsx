@@ -8,21 +8,24 @@ import { DataSourceContext } from './useDataSource'
 function LiveDataProvider({ children }: { children: ReactNode }) {
   const { instance, accounts } = useMsal()
   const dataSource = useMemo<DataSource>(
-    () => buildLiveSource(instance, accounts),
+    () => buildLiveSource(instance, accounts, env.hideNames),
     [instance, accounts],
   )
   return <DataSourceContext value={dataSource}>{children}</DataSourceContext>
 }
 
 function LocalAuthDataProvider({ localAuthUrl, children }: { localAuthUrl: string; children: ReactNode }) {
-  const dataSource = useMemo<DataSource>(() => buildLocalAuthSource(localAuthUrl), [localAuthUrl])
+  const dataSource = useMemo<DataSource>(
+    () => buildLocalAuthSource(localAuthUrl, env.hideNames),
+    [localAuthUrl],
+  )
   return <DataSourceContext value={dataSource}>{children}</DataSourceContext>
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
   if (env.useMock) {
     return (
-      <DataSourceContext value={createMockDataSource(env.mockScenario)}>
+      <DataSourceContext value={createMockDataSource(env.mockScenario, { hideNames: env.hideNames })}>
         {children}
       </DataSourceContext>
     )

@@ -3,6 +3,7 @@ import { createLiveDataSource } from './live'
 import { ApiError } from '../clients/apiError'
 import { siteDirectoryPath } from '../reports/siteDirectory'
 import type { GraphClient } from '../clients/graphClient'
+import { pseudonymOf } from '../lib/hiddenNames'
 
 function recordingGraph() {
   const urls: string[] = []
@@ -275,6 +276,53 @@ describe('getSiteDirectory', () => {
     get.mockRejectedValue(new TypeError('network down'))
 
     await expect(createLiveDataSource(graph).getSiteDirectory()).rejects.toThrow('network down')
+  })
+})
+
+describe('with names hidden', () => {
+  const siteRow = {
+    siteId: FINANCE_ID,
+    siteUrl: 'https://contoso.sharepoint.com/sites/finance',
+    ownerDisplayName: 'Ada Lovelace',
+    storageUsedInBytes: 10,
+  }
+  const driveRow = {
+    ownerPrincipalName: 'ada@contoso.com',
+    siteUrl: 'https://contoso-my.sharepoint.com/personal/ada_contoso_com',
+    ownerDisplayName: 'Ada Lovelace',
+    storageUsedInBytes: 10,
+  }
+
+  it('masks the site id, owner and URL before the rows are parsed', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockResolvedValueOnce([siteRow])
+    const [site] = await createLiveDataSource(graph, { hideNames: true }).getSites()
+    expect(site).toMatchObject({ id: pseudonymOf(FINANCE_ID), url: '', ownerDisplayName: 'A.L.' })
+  })
+
+  it('masks the account and owner of every drive', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockResolvedValueOnce([driveRow])
+    const [drive] = await createLiveDataSource(graph, { hideNames: true }).getDrives()
+    expect(drive).toMatchObject({ id: pseudonymOf('ada@contoso.com'), url: '', ownerDisplayName: 'A.L.' })
+  })
+
+  it('never asks Graph for a site name', async () => {
+    const { graph, urls } = recordingGraph()
+    const ds = createLiveDataSource(graph, { hideNames: true })
+    expect(await ds.getSiteDirectory()).toEqual(new Map())
+    expect(await ds.getSiteDetails([FINANCE_ID])).toEqual(new Map())
+    expect(urls).toEqual([])
+    expect(ds.namesHidden).toBe(true)
+  })
+
+  it('leaves the rows as Graph sent them when names are shown', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockResolvedValueOnce([siteRow])
+    const ds = createLiveDataSource(graph)
+    const [site] = await ds.getSites()
+    expect(site).toMatchObject({ id: FINANCE_ID, ownerDisplayName: 'Ada Lovelace' })
+    expect(ds.namesHidden).toBe(false)
   })
 })
 

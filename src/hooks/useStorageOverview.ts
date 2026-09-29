@@ -34,11 +34,12 @@ export function useStorageOverview(settings: ReportSettings) {
         ? undefined
         : buildStorageOverview({
             ...inputs,
+            namesHidden: ds.namesHidden,
             ratePerGb: settings.ratePerGb,
             currency: settings.currency,
             entitlementOverrideBytes: settings.entitlementOverrideBytes,
           }),
-    [inputs, settings.ratePerGb, settings.currency, settings.entitlementOverrideBytes],
+    [inputs, ds.namesHidden, settings.ratePerGb, settings.currency, settings.entitlementOverrideBytes],
   )
 
   return { data, error: query.error, isPending: query.isPending }

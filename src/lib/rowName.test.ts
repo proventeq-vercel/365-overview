@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rowLabel, rowName } from './rowName'
+import { rowName } from './rowName'
 
 const withUrl = {
   id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718',
@@ -18,22 +18,11 @@ describe('rowName', () => {
     expect(rowName(withUrl)).toBe('finance')
   })
 
-  it('falls back to the owner when the report carries no URL', () => {
-    expect(rowName(withoutUrl)).toBe('Ada Lovelace')
-  })
-})
-
-describe('rowLabel', () => {
-  it('is the plain name when the URL is present', () => {
-    expect(rowLabel(withUrl)).toBe('finance')
-    expect(rowLabel(named)).toBe('Finance & Treasury')
+  it('falls back to the site id, never the owner, when the report carries no URL', () => {
+    expect(rowName(withoutUrl)).toBe('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')
   })
 
-  it('appends the short id to the owner when the URL is blank', () => {
-    expect(rowLabel(withoutUrl)).toBe('Ada Lovelace · 8f3c1a2b')
-  })
-
-  it('uses the account name of a UPN id, as a OneDrive row carries', () => {
-    expect(rowLabel({ ...withoutUrl, id: 'ada.lovelace@contoso.com' })).toBe('Ada Lovelace · ada.lovelace')
+  it('names an unnamed OneDrive row by its account, not its owner', () => {
+    expect(rowName({ ...withoutUrl, id: 'ada.lovelace@contoso.com' })).toBe('ada.lovelace@contoso.com')
   })
 })

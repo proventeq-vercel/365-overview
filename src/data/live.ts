@@ -23,6 +23,7 @@ import { parseSubscribedSkus } from '../reports/licensing'
 import type { RawSku } from '../reports/licensing'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
+import { hideReportRowNames } from '../lib/hiddenNames'
 import type { DataSource } from './fixtures'
 
 interface JsonReport<T> {
@@ -45,11 +46,21 @@ const reportUrl = (fn: string) =>
 
 const SETTLED_STATUSES = new Set([200, 403, 404])
 
-export function createLiveDataSource(graph: GraphClient): DataSource {
+export interface LiveSourceOptions {
+  hideNames: boolean
+}
+
+export function createLiveDataSource(
+  graph: GraphClient,
+  { hideNames }: LiveSourceOptions = { hideNames: false },
+): DataSource {
+  const concealRows = <T extends object>(rows: T[]): T[] => (hideNames ? rows.map(hideReportRowNames) : rows)
+
   let sitePages: Promise<RawSiteRow[]> | null = null
   const rawSites = () => {
     sitePages ??= graph
       .getAllPages<RawSiteRow>(reportUrl('getSharePointSiteUsageDetail'))
+      .then(concealRows)
       .finally(() => {
         sitePages = null
       })
@@ -91,11 +102,14 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
   }
 
   return {
+    namesHidden: hideNames,
+
     async getSites() {
       return parseSharePointSites(await rawSites())
     },
 
     async getSiteDirectory() {
+      if (hideNames) return EMPTY_DIRECTORY
       directory ??= walkDirectory().catch((error: unknown) => {
         directory = null
         if (error instanceof ApiError) return EMPTY_DIRECTORY
@@ -105,6 +119,7 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
     },
 
     async getSiteDetails(ids) {
+      if (hideNames) return new Map()
       const wanted = [...new Set(ids.map((id) => id.toLowerCase()))]
       const missing = wanted.filter((id) => !siteLookups.has(id))
       if (missing.length > 0) lookUpSites(missing)
@@ -121,7 +136,7 @@ export function createLiveDataSource(graph: GraphClient): DataSource {
       const rows = await graph.getAllPages<RawDriveRow>(
         reportUrl('getOneDriveUsageAccountDetail'),
       )
-      return parseOneDriveAccounts(rows)
+      return parseOneDriveAccounts(concealRows(rows))
     },
 
     async getSharePointTrend() {

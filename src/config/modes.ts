@@ -2,6 +2,7 @@ const MODE_PARAMS = {
   features: 'features',
   useMock: 'mock',
   mockScenario: 'scenario',
+  hideNames: 'hideNames',
 } as const
 
 export const MODES_RESET_PARAM = 'modes'

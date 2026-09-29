@@ -55,6 +55,7 @@ export const base: StorageOverview = {
   caveats: {
     entitlementIsEstimated: true,
     namesAreConcealed: false,
+    namesHidden: false,
     historyTooShort: false,
   },
 }

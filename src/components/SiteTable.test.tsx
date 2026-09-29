@@ -236,11 +236,11 @@ describe('SiteTable', () => {
     expect(getSiteDetails).not.toHaveBeenCalled()
   })
 
-  it('names a URL-less site by its owner and shows the site id underneath', async () => {
+  it('names a URL-less site by its id, once, and never by its owner', async () => {
     const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
     render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)
-    expect(await screen.findByTitle('Ada')).toBeInTheDocument()
-    expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
+    expect(await screen.findAllByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toHaveLength(1)
+    expect(screen.queryByTitle(blank.ownerDisplayName)).not.toBeInTheDocument()
   })
 
   it('finds a URL-less site by its id', async () => {
