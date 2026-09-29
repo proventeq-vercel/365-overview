@@ -1,3 +1,4 @@
+import { HelpLink } from '@/components/HelpLink'
 import { AlertPanel } from '@/design/AlertPanel'
 import { useTranslation } from '@/hooks/useTranslation'
 import { ModesOverrideHint } from './ModesOverrideHint'
@@ -16,6 +17,7 @@ export function BootstrapError({ message, overridden }: BootstrapErrorProps) {
           <p className="text-sm text-p365-grey-600">{t('app.bootstrap.body')}</p>
           {overridden && <ModesOverrideHint />}
           <p className="text-sm break-words text-p365-grey-500">{message}</p>
+          <HelpLink />
         </AlertPanel>
       </div>
     </div>

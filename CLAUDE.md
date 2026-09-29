@@ -351,6 +351,18 @@ the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
 `AuthErrorScreen` still renders `className="error-state*"` inside
 `className="auth-screen"`; keep those rules in `src/index.css`.
 
+## Access help (`/help`)
+
+`main.tsx` renders `app/help/AccessHelpPage` for `isHelpPath` (`config/helpPath.ts`)
+**before** `bootstrap()`, so it never mounts MSAL or the data layer — a visitor
+who cannot sign in can still read it. Both hosts serve it through their
+`index.html` fallback. The mode it marks is `config/accessMode.accessModeOf`
+(proxy set → application). Every failure surface renders
+`components/HelpLink`: `AuthErrorScreen` (both branches), the three
+`AccessFailure` panels, `ErrorState` for auth errors, `BootstrapError`. A new
+failure screen gets the link too, and its heading belongs in the page's
+`SYMPTOMS` list.
+
 ## Chart data typing
 
 Recharts wrapper `data` props are typed `Record<string, unknown>[]`. TS

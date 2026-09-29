@@ -261,3 +261,18 @@ test.describe('modes from the URL', () => {
     await second.close()
   })
 })
+
+test('the access help page stands alone, marks this site’s mode and leads back to the report', async ({ page }) => {
+  await page.goto('/help')
+  const main = page.getByRole('main')
+  await expect(main.getByRole('heading', { name: 'Enabling access to the storage report', level: 1 })).toBeVisible()
+  await expect(page.getByRole('banner')).toContainText('Access help')
+  const delegated = main.locator('div.rounded-lg', {
+    has: page.getByRole('heading', { name: 'Delegated permissions', level: 3 }),
+  })
+  await expect(delegated.getByText('This site', { exact: true })).toBeVisible()
+  await expect(main.getByText('This site', { exact: true })).toHaveCount(1)
+  await page.getByRole('banner').getByRole('link', { name: 'Open the report' }).click()
+  await reportLoaded(page)
+  await expect(page).toHaveURL(/\/$/)
+})

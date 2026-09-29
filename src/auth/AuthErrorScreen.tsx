@@ -1,4 +1,5 @@
 import { isConsentRequired } from '../clients/apiError'
+import { HelpLink } from '../components/HelpLink'
 import { RequiredPermissionList } from '../components/RequiredPermissionList'
 import { adminConsentUrl } from '../config/adminConsent'
 import { useTranslation } from '../hooks/useTranslation'
@@ -22,6 +23,7 @@ export function AuthErrorScreen({ error }: { error: unknown }) {
             </p>
           )}
           <p className="error-state__hint">{message}</p>
+          <HelpLink />
         </div>
       </div>
     )
@@ -32,6 +34,7 @@ export function AuthErrorScreen({ error }: { error: unknown }) {
       <div className="error-state" style={{ maxWidth: '480px', width: '100%' }} role="alert">
         <p className="error-state__message">{t('auth.signInFailed')}</p>
         <p className="error-state__hint">{message}</p>
+        <HelpLink />
       </div>
     </div>
   )

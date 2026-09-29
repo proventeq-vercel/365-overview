@@ -20,6 +20,7 @@ Built with React 19, TypeScript, and Vite.
 All three live in the resource group `rg-lh-sa-dev` and are redeployed from `main` by
 `.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
 `?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
+Each site also serves `/help` — how to enable access, without signing in (see *Access help*).
 `https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
 
 ## The report
@@ -239,6 +240,15 @@ As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) 
 deployment shows sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
 `p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
 registration to add it first (`Authorization_RequestDenied` otherwise).
+
+## Access help
+
+`/help` (e.g. <https://p365lite.z33.web.core.windows.net/help>) explains both permission modes,
+marks the one the site was built for, lists which Graph permissions are required and which are
+optional, gives this site's admin consent link, and says what fixes each failure screen. It needs
+no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a visitor can land on
+when access is missing links to it — the sign-in error and consent screens, the consent / tenant /
+role panels, an auth error from Graph, and the start-up error.
 
 ## Hiding names
 
