@@ -26,17 +26,24 @@ const graphOriginOf = (config: AppConfig) => graphProxyOf(config)?.url ?? GRAPH_
 export function buildLiveSource(
   instance: IPublicClientApplication,
   accounts: AccountInfo[],
+  hideNames: boolean,
   config: AppConfig = getConfig(),
 ): DataSource {
   const getAccount = () => instance.getActiveAccount() ?? accounts[0] ?? null
   const getToken = makeTokenGetter(instance, getAccount, tokenScopesFor(config))
-  return createLiveDataSource(createGraphClient(getToken, fetch, graphOriginOf(config)))
+  return createLiveDataSource(createGraphClient(getToken, fetch, graphOriginOf(config)), { hideNames })
 }
 
-export function buildLocalAuthSource(localAuthUrl: string, config: AppConfig = getConfig()): DataSource {
+export function buildLocalAuthSource(
+  localAuthUrl: string,
+  hideNames: boolean,
+  config: AppConfig = getConfig(),
+): DataSource {
   const proxy = graphProxyOf(config)
   if (!proxy) {
     throw new Error('VITE_LOCAL_AUTH_URL needs VITE_GRAPH_PROXY_URL: local auth only works through the proxy')
   }
-  return createLiveDataSource(createGraphClient(createLocalTokenGetter(localAuthUrl), fetch, proxy.url))
+  return createLiveDataSource(createGraphClient(createLocalTokenGetter(localAuthUrl), fetch, proxy.url), {
+    hideNames,
+  })
 }

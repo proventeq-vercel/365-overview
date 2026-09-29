@@ -18,7 +18,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 ## Architecture (layers)
 
 - `src/auth/` — MSAL (getMsalInstance singleton, redirect login, token acquire).
-  One token audience at a time: `tokenScopes()` is `GRAPH_SCOPES` when the
+  One token audience at a time: `tokenScopes()` is `GRAPH_SCOPES`
+  (`https://graph.microsoft.com/.default` — whatever the registration was
+  granted, so a registration without `Sites.Read.All` or
+  `Organization.Read.All` still signs in and those calls simply 403) when the
   browser calls Graph itself and `[<proxy scope>]` alone when
   `VITE_GRAPH_PROXY_URL` is set (`graphProxyOf(config)` in `appConfig.ts`), so
   proxy mode never asks the prospect for a delegated report scope.
@@ -71,7 +74,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   fifty largest live sites before `buildStorageOverview` (so chart labels and
   the default first page are right), and `hooks/useSiteDetails` names the rows
   of whatever table page is on screen (skeleton while pending). Unresolved
-  rows keep the owner-name / id fallback `rowName` / `rowLabel` provide.
+  rows are named by their id through `rowName` (name → URL leaf → id) —
+  **never by the owner**: one admin often owns hundreds of sites.
   `useKnownSites` merges every `['siteDetails', …]` result already in the
   React Query cache, so a name the user has seen on any page is searchable.
   `DataProvider` picks the source — fixtures, the local-auth stack, or live —
@@ -367,9 +371,19 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   Search and sort changes go back to page one. Rows render plainly, so no jsdom
   layout stubs are needed in tests.
 - Graph's site usage report can return an empty Site URL for every site (the
-  proventeqe5 tenant does). `lib/rowName.ts` then names the row by its owner and
-  shows the site id underneath (`rowDetail`), and chart labels append the short id
-  (`rowLabel`) so same-owner sites stay distinguishable; search matches the id too.
+  proventeqe5 tenant does). `lib/rowName.ts` then names the row by its site id
+  (the table does not repeat it underneath), and chart labels use the same
+  `rowName`; search matches the id too.
+- **Hidden names** (`env.hideNames`: `VITE_HIDE_NAMES=true` or `?hideNames=true`,
+  the one URL override `VITE_MODES_LOCKED` lets through, because it can only
+  hide): `lib/hiddenNames.ts` masks the usage-report rows the moment Graph
+  answers (`live.ts`, before the site memo) — owners to initials, site ids and
+  OneDrive UPNs to a 16-hex pseudonym, URLs dropped — and the name lookups
+  (`getSiteDirectory`, `getSiteDetails`) are skipped, so no real name is ever
+  parsed, cached or searchable. The browser still receives Graph's raw JSON on
+  the delegated path; masking inside the proxy is not built yet. The mock
+  source applies the same masking (`hideRowNames`), and
+  `caveats.namesHidden` drives the banner (`components/NameCaveats`).
 - Component tests import `render` from `@/test/render`, not from
   `@testing-library/react`: it wraps the tree in `AppIntlProvider` (a bare
   render of anything that calls `useTranslation()` throws). The same module

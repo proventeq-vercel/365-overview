@@ -94,6 +94,7 @@ export interface StorageOverview {
   caveats: {
     entitlementIsEstimated: boolean
     namesAreConcealed: boolean
+    namesHidden: boolean
     historyTooShort: boolean
   }
 }

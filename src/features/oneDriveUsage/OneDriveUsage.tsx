@@ -1,5 +1,5 @@
 import { useSettings } from '@/app/useSettings'
-import { CaveatBanner } from '@/components/CaveatBanner'
+import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
 import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
@@ -49,9 +49,7 @@ export function OneDriveUsage() {
         subtitle={t('oneDrive.table.subtitle', { retained: oneDrive.deletedButBilling.count })}
         delay={160}
       >
-        {caveats.namesAreConcealed && (
-          <CaveatBanner tone="info">{t('storageOptimisation.concealedNamesNote')}</CaveatBanner>
-        )}
+        <NameCaveats caveats={caveats} />
         <Panel>
           <PanelLabel>{t('oneDrive.table.label')}</PanelLabel>
           <SiteTable

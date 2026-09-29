@@ -1,4 +1,4 @@
-import { CaveatBanner } from '@/components/CaveatBanner'
+import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
@@ -41,9 +41,7 @@ export function OffendersSection({ overview, delay }: Props) {
       title={t('storageOptimisation.offenders.title')}
       subtitle={t('storageOptimisation.offenders.subtitle')}
     >
-      {overview.caveats.namesAreConcealed && (
-        <CaveatBanner tone="info">{t('storageOptimisation.concealedNamesNote')}</CaveatBanner>
-      )}
+      <NameCaveats caveats={overview.caveats} />
       <Panel>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <PanelLabel>{t('storageOptimisation.offenders.biggest')}</PanelLabel>

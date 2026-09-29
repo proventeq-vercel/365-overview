@@ -81,9 +81,10 @@ app instead of Vercel's 404.
 | `VITE_USE_MOCK` | `false` | Run on fixture data with no auth at all | `?mock=` |
 | `VITE_MOCK_SCENARIO` | `healthy` | Which fixture tenant mock mode serves | `?scenario=` |
 | `VITE_FEATURES` | `optimization.storage.report.overview` | Which reports are routable, and whether the menu exists | `?features=` |
-| `VITE_MODES_LOCKED` | `false` | Ignore every URL override; the one var the URL cannot touch | — |
+| `VITE_MODES_LOCKED` | `false` | Ignore every URL override except `?hideNames`; the one var the URL cannot touch | — |
+| `VITE_HIDE_NAMES` | `false` | Mask site ids, owners and site links (initials / pseudonyms); see *Hiding names* | `?hideNames=true` (honoured even when locked) |
 
-Only the last four have a URL override, and `?modes=reset` forgets all of them for the tab.
+Only those five have a URL override, and `?modes=reset` forgets all of them for the tab.
 Every var is read once at load: `src/config/env.ts` is a module constant, so nothing re-reads
 the env or the URL mid-session.
 
@@ -174,7 +175,7 @@ exists; these steps are for pointing the app at a registration of your own throu
 3. Under **Supported account types**, choose **Accounts in any organizational directory** (`AzureADMultipleOrgs`).
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
-6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read`, `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All`.
+6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read` and `Reports.Read.All` — and, optionally, `Organization.Read.All` (tenant name, licence-based entitlement) and `Sites.Read.All` (site names). The app requests `.default`, so it uses exactly what is listed here and still works without the optional two.
 7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
 `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All` require **admin consent** in each
@@ -187,8 +188,8 @@ every site (a known Microsoft-side issue), so the app looks each site up by the 
 carries (`GET /sites/{id}?$select=id,displayName,webUrl`, twenty at a time through `$batch`) —
 only for the fifty largest sites up front and then for whichever page of the table is on screen,
 so the cost is a few requests per page however many sites the tenant has. A site the lookup does
-not return — a deleted site, or one the signed-in user cannot open — falls back to its owner's
-name and its id.
+not return — a deleted site, one the signed-in user cannot open, or every site when the
+registration has no `Sites.Read.All` — is shown by its site id, never by its owner.
 
 > **Role requirement, and only on this path:** consent alone is not enough. *Delegated*
 > `Reports.Read.All` additionally requires the signed-in user to hold **Global Reader**,
@@ -200,6 +201,45 @@ name and its id.
 > the signed-in user's roles, and any signed-in user of an allowed tenant may read the report —
 > matching P365, which gates on an active licence rather than a directory role. See
 > `functions/README.md`.
+
+## Two deployments: application or delegated permissions
+
+The permission model is chosen by the env, per deployment — there is no switch in the UI:
+
+| | Application permissions | Delegated permissions |
+|---|---|---|
+| Env | `VITE_GRAPH_PROXY_URL` set (+ `VITE_CLIENT_ID` = the Storage Analyser registration, the default) | `VITE_GRAPH_PROXY_URL` **unset**, `VITE_CLIENT_ID=0cedd025-e545-44f2-b3f8-82969e56547a` |
+| Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
+| Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
+| Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
+| Deployed at | Static Web App `p365-lite` (`site` job) | Static Web App `p365-lite-delegated` (`site-delegated` job) |
+
+The delegated path asks for **`.default`**: the token carries whatever delegated permissions the
+registration was granted, and nothing more is ever requested. So a registration without
+`Sites.Read.All` (or `Organization.Read.All`) still signs in and loads the report — the site-name
+lookups are refused with `403`, which the report treats as "no name" and shows each site by its id;
+without `Organization.Read.All` the licence-based entitlement is unknown. Only `Reports.Read.All`
+is required. The registration must list the deployment's origin as a **SPA redirect URI**.
+
+## Hiding names
+
+`?hideNames=true` (or `VITE_HIDE_NAMES=true` at build time) masks identities for the rest of the
+tab, including across the sign-in redirect; `?hideNames=` or `?modes=reset` shows them again. It is
+the one URL override that works on a locked deployment, because it can only take information away.
+With names hidden:
+
+- site ids and OneDrive account names become a stable 16-hex pseudonym, owners become initials
+  (`Ada Lovelace` → `A.L.`), and site links are removed;
+- the site-name lookups (`sites/delta`, `/sites/{id}`) are not made at all;
+- a banner above the tables says names are hidden; every storage figure is unchanged.
+
+The masking happens in the browser, the moment each report response arrives and before anything
+is parsed, cached, shown or searchable. The raw Graph response is still visible in the browser's
+network tab, so this hides names from the screen (a demo, a screen share) — not from the person
+signed in. Masking inside the proxy, so the names never reach the browser on the application path,
+is not built yet.
+
+A site is never named after its owner: with no name and no URL, a row shows its site id.
 
 ---
 
@@ -216,6 +256,7 @@ browser tab with a search param:
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` | `/?mock=true&scenario=concealed` |
+| `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `modes` | `reset` | `/?modes=reset` (forget every override) |
 
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
@@ -335,7 +376,8 @@ jobs, both from the exact commit CI tested:
 | Job | What it deploys | Where |
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` | the Azure Static Web App `p365-lite` (`https://gray-water-0a8893303.1.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
+| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` — **application permissions** | the Azure Static Web App `p365-lite` (`https://gray-water-0a8893303.1.azurestaticapps.net`), `Azure/static-web-apps-deploy` |
+| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the Azure Static Web App `p365-lite-delegated`, secret `AZURE_STATIC_WEB_APPS_API_TOKEN_DELEGATED` |
 
 The first job checks what each deploy needs and skips a job whose secret is absent, with a note
 in the run summary rather than a failure. The **site** needs only the repo secret

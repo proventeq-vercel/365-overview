@@ -196,9 +196,11 @@ export function SiteTable({
               ) : row.url ? (
                 <ExternalUrlLink href={row.url} />
               ) : (
-                <span className="block truncate text-xs text-p365-grey-500" title={row.id}>
-                  {row.id}
-                </span>
+                name !== row.id && (
+                  <span className="block truncate text-xs text-p365-grey-500" title={row.id}>
+                    {row.id}
+                  </span>
+                )
               )}
             </span>
           </span>
