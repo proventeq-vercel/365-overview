@@ -280,7 +280,7 @@
   "oneDrive.overLicence.subtitleUnknown": "Accounts holding more OneDrive storage than any licence in the tenant includes",
   "oneDrive.overLicence.empty": "No OneDrive holds more than {entitlement}",
   "oneDrive.overLicence.unknown": "The tenant's licences could not be read (the Organization.Read.All permission was not granted), so the storage each user is licensed for is unknown. Set it in Options, Report settings.",
-  "oneDrive.overLicence.noSizedPlan": "None of the tenant's licences has a OneDrive allowance this report knows (education allowances vary by agreement; developer and add-on plans publish none), so the storage each user is licensed for is unknown. Set it in Options, Report settings.",
+  "oneDrive.overLicence.noSizedPlan": "None of the tenant's licences has a OneDrive allowance this report knows (education allowances vary by agreement; developer and add-on plans are not sized here), so the storage each user is licensed for is unknown. Set it in Options, Report settings.",
   "oneDrive.overLicence.label": "OneDrives over licensed storage",
   "oneDrive.overLicence.note": "Measured against the most generous plan the tenant holds: 5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline. Microsoft does not report which licence each user holds; set a different figure in Options, Report settings.",
   "oneDrive.overLicence.noteSet": "Measured against the figure set in Options, Report settings. Clear it there to go back to the estimate from licences.",

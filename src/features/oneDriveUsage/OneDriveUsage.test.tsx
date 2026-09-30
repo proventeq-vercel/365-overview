@@ -183,7 +183,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(card('Over licensed storage')).toHaveTextContent(
       /^UnknownOver licensed storageNo licence with a known OneDrive allowance/,
     )
-    expect(screen.getByText(/education allowances vary by agreement; developer and add-on plans publish none/)).toBeInTheDocument()
+    expect(screen.getByText(/education allowances vary by agreement; developer and add-on plans are not sized here/)).toBeInTheDocument()
     expect(screen.queryByText(/could not be read/)).not.toBeInTheDocument()
   })
 
