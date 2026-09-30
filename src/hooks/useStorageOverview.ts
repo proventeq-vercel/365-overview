@@ -38,8 +38,16 @@ export function useStorageOverview(settings: ReportSettings) {
             ratePerGb: settings.ratePerGb,
             currency: settings.currency,
             entitlementOverrideBytes: settings.entitlementOverrideBytes,
+            oneDriveEntitlementOverrideBytes: settings.oneDriveEntitlementOverrideBytes,
           }),
-    [inputs, ds.namesHidden, settings.ratePerGb, settings.currency, settings.entitlementOverrideBytes],
+    [
+      inputs,
+      ds.namesHidden,
+      settings.ratePerGb,
+      settings.currency,
+      settings.entitlementOverrideBytes,
+      settings.oneDriveEntitlementOverrideBytes,
+    ],
   )
 
   return { data, error: query.error, isPending: query.isPending }

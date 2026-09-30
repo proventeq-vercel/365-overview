@@ -6,10 +6,18 @@ import type { StorageOverview } from '@/types/storage'
 
 export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
-  const { usedBytes, driveCount, drivesNearCap, deletedButBilling } = overview.oneDrive
+  const {
+    usedBytes,
+    driveCount,
+    drivesNearCap,
+    deletedButBilling,
+    overEntitlement,
+    entitlementPerUserBytes,
+  } = overview.oneDrive
+  const entitlement = formatBytes(entitlementPerUserBytes)
 
   return (
-    <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" style={{ animationDelay: '40ms' }}>
+    <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ animationDelay: '40ms' }}>
       <StatCard
         label={t('oneDrive.kpi.used')}
         value={formatBytes(usedBytes)}
@@ -27,6 +35,19 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
         value={formatNumber(drivesNearCap)}
         color={drivesNearCap > 0 ? P365.orange : P365.green}
         information={drivesNearCap > 0 ? t('oneDrive.kpi.nearCapHint') : t('oneDrive.kpi.nearCapNone')}
+      />
+      <StatCard
+        label={t('oneDrive.kpi.overLicence')}
+        value={formatNumber(overEntitlement.count)}
+        color={overEntitlement.count > 0 ? P365.orange : P365.green}
+        information={
+          overEntitlement.count > 0
+            ? t('oneDrive.kpi.overLicenceHint', {
+                excess: formatBytes(overEntitlement.excessBytes),
+                entitlement,
+              })
+            : t('oneDrive.kpi.overLicenceNone', { entitlement })
+        }
       />
       <StatCard
         label={t('oneDrive.kpi.retained')}

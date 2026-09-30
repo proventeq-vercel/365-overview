@@ -26,6 +26,8 @@ export const base: StorageOverview = {
     driveCount: 40,
     drivesNearCap: 3,
     deletedButBilling: { bytes: 0, count: 0 },
+    entitlementPerUserBytes: 1024 * GB,
+    overEntitlement: { drives: [], count: 7, excessBytes: 900 * GB },
   },
   offenders: {
     rows: [],

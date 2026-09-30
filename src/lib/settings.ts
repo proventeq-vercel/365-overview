@@ -2,6 +2,7 @@ export interface ReportSettings {
   ratePerGb: number
   currency: string
   entitlementOverrideBytes: number | null
+  oneDriveEntitlementOverrideBytes: number | null
 }
 
 export const SETTINGS_STORAGE_KEY = 'm365-storage-settings'
@@ -10,6 +11,7 @@ export const DEFAULT_SETTINGS: ReportSettings = {
   ratePerGb: 0.02,
   currency: 'GBP',
   entitlementOverrideBytes: null,
+  oneDriveEntitlementOverrideBytes: null,
 }
 
 const CURRENCY_CODE = /^[A-Z]{3}$/
@@ -18,6 +20,9 @@ export function isCurrencyCode(value: unknown): value is string {
   return typeof value === 'string' && CURRENCY_CODE.test(value)
 }
 
+const finiteOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null
+
 const isRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0
 
@@ -25,11 +30,8 @@ export function sanitizeSettings(candidate: Partial<ReportSettings>): ReportSett
   return {
     ratePerGb: isRate(candidate.ratePerGb) ? candidate.ratePerGb : DEFAULT_SETTINGS.ratePerGb,
     currency: isCurrencyCode(candidate.currency) ? candidate.currency : DEFAULT_SETTINGS.currency,
-    entitlementOverrideBytes:
-      typeof candidate.entitlementOverrideBytes === 'number' &&
-      Number.isFinite(candidate.entitlementOverrideBytes)
-        ? candidate.entitlementOverrideBytes
-        : null,
+    entitlementOverrideBytes: finiteOrNull(candidate.entitlementOverrideBytes),
+    oneDriveEntitlementOverrideBytes: finiteOrNull(candidate.oneDriveEntitlementOverrideBytes),
   }
 }
 

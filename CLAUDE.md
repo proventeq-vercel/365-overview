@@ -192,6 +192,15 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   maximum. Never sum it, never take a percentage of it. OneDrive per-drive
   allocation IS the real per-user cap and a percentage of it is meaningful — do
   not "fix" one by analogy with the other.**
+- **"Over licensed storage" is measured against the licence, not the drive's
+  quota.** A user licence includes 1 TB of OneDrive
+  (`ONEDRIVE_PER_USER_ENTITLEMENT_BYTES`); an admin can raise a drive's quota
+  past it, and those drives are what `oneDrive.overEntitlement` lists (live
+  drives only, `used > perUser`, largest first, each row carrying
+  `overEntitlementBytes`). The usage report does not say which licence each
+  user holds, so the per-user figure is one tenant-wide setting
+  (`oneDriveEntitlementOverrideBytes`, null = 1 TB) — frontline tenants set
+  2 GB. Never walk `/users` for per-user licences from here.
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
   `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
   defect.** The cost figures are the exception and are never null: with an

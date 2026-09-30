@@ -25,6 +25,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0],
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
     entitlementOverrideBytes: settings.entitlementOverrideBytes,
+    oneDriveEntitlementOverrideBytes: settings.oneDriveEntitlementOverrideBytes,
     namesHidden: ds.namesHidden,
   })
 }

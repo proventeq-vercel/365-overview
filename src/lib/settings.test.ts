@@ -9,7 +9,12 @@ describe('settings', () => {
   })
 
   it('round-trips saved settings', () => {
-    const custom = { ratePerGb: 0.17, currency: 'EUR', entitlementOverrideBytes: 42 }
+    const custom = {
+      ratePerGb: 0.17,
+      currency: 'EUR',
+      entitlementOverrideBytes: 42,
+      oneDriveEntitlementOverrideBytes: 7,
+    }
     saveSettings(custom)
     expect(loadSettings()).toEqual(custom)
   })
@@ -68,6 +73,20 @@ describe('settings', () => {
     const settings = loadSettings()
     expect(settings.ratePerGb).toBe(0.5)
     expect(settings.currency).toBe(DEFAULT_SETTINGS.currency)
+  })
+
+  it('reads a stored OneDrive per-user override of the wrong shape as no override', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"oneDriveEntitlementOverrideBytes":"1TB"}')
+    expect(loadSettings().oneDriveEntitlementOverrideBytes).toBeNull()
+  })
+
+  it('keeps a stored OneDrive per-user override that is a real number', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"oneDriveEntitlementOverrideBytes":2048}')
+    expect(loadSettings().oneDriveEntitlementOverrideBytes).toBe(2048)
+  })
+
+  it('defaults the OneDrive per-user override to null, so the 1 TB licence is used', () => {
+    expect(DEFAULT_SETTINGS.oneDriveEntitlementOverrideBytes).toBeNull()
   })
 
   it('defaults the entitlement override to null, so the estimate is used', () => {

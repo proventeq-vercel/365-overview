@@ -15,6 +15,7 @@ export interface StorageRow {
   isDeleted: boolean
   template?: string
   allocatedBytes?: number
+  overEntitlementBytes?: number
 }
 
 export interface Slice {
@@ -33,6 +34,12 @@ export type ForecastStatus = 'Healthy' | 'Warning' | 'Critical' | 'Unknown'
 export interface RetainedTotal {
   bytes: number
   count: number
+}
+
+export interface OverEntitlement {
+  drives: StorageRow[]
+  count: number
+  excessBytes: number
 }
 
 export interface StorageOverview {
@@ -61,6 +68,8 @@ export interface StorageOverview {
     driveCount: number
     drivesNearCap: number
     deletedButBilling: RetainedTotal
+    entitlementPerUserBytes: number
+    overEntitlement: OverEntitlement
   }
 
   offenders: {

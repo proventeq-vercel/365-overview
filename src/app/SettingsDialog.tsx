@@ -52,6 +52,7 @@ export function SettingsDialog({
   const currencyId = useId()
   const rateId = useId()
   const entitlementId = useId()
+  const oneDriveEntitlementId = useId()
 
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
@@ -59,6 +60,10 @@ export function SettingsDialog({
     settings.entitlementOverrideBytes === null
       ? ''
       : String(settings.entitlementOverrideBytes / TB_IN_BYTES)
+  const oneDriveOverrideGb =
+    settings.oneDriveEntitlementOverrideBytes === null
+      ? ''
+      : String(settings.oneDriveEntitlementOverrideBytes / GB_IN_BYTES)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,6 +143,29 @@ export function SettingsDialog({
                 update({
                   entitlementOverrideBytes:
                     e.target.value === '' ? null : Number(e.target.value) * TB_IN_BYTES,
+                })
+              }
+            />
+          </Field>
+
+          <Field
+            id={oneDriveEntitlementId}
+            label={t('settings.oneDriveEntitlement')}
+            hint={t('settings.oneDriveEntitlementHint')}
+          >
+            <AdornedInput
+              id={oneDriveEntitlementId}
+              type="number"
+              inputMode="decimal"
+              step="1"
+              min="0"
+              suffix={t('settings.oneDriveEntitlementUnit')}
+              placeholder={t('settings.oneDriveEntitlementPlaceholder')}
+              value={oneDriveOverrideGb}
+              onChange={(e) =>
+                update({
+                  oneDriveEntitlementOverrideBytes:
+                    e.target.value === '' ? null : Number(e.target.value) * GB_IN_BYTES,
                 })
               }
             />

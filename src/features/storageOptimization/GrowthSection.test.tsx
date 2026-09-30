@@ -114,6 +114,7 @@ describe('GrowthSection', () => {
     expect(screen.getByText('Added last 5 mo').nextElementSibling).toHaveTextContent('+50 GB')
     expect(screen.getByText('Live sites').nextElementSibling).toHaveTextContent(/^1,089$/)
     expect(screen.getByText('Drives near cap').nextElementSibling).toHaveTextContent('3')
+    expect(screen.getByText('Drives over licence').nextElementSibling).toHaveTextContent(/^7$/)
     expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('0 B')
