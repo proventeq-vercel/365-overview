@@ -725,6 +725,18 @@ describe('buildStorageOverview inactive sites', () => {
     expect(archive.annualSaving).toBeCloseTo(40 * 0.2 * 12, 6)
   })
 
+  it('measures inactivity from today, instead of crashing, when the report carries no refresh date', () => {
+    const { archive } = buildStorageOverview({ ...tenant(), reportRefreshDate: '' })
+    expect(archive.inactiveSince).toBe('2023-09-02')
+    expect(archive.siteCount).toBe(2)
+  })
+
+  it('builds the report for a tenant whose site report came back empty', () => {
+    const overview = buildStorageOverview(inputs({ sites: [], drives: [], reportRefreshDate: '' }))
+    expect(overview.archive.siteCount).toBe(0)
+    expect(overview.archive.status).toBe('healthy')
+  })
+
   it('needs attention once more than half of site storage is inactive', () => {
     const { archive } = buildStorageOverview({
       ...tenant(),

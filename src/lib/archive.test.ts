@@ -14,14 +14,21 @@ const withActivity = (lastActivityDate: string | null): StorageRow => ({
   isDeleted: false,
 })
 
+const TODAY = new Date('2026-09-30T10:00:00Z')
+
 describe('inactiveSince', () => {
   it('goes back whole years from the report date', () => {
-    expect(inactiveSince('2026-08-30', 3)).toBe('2023-08-30')
-    expect(inactiveSince('2026-08-30', 1)).toBe('2025-08-30')
+    expect(inactiveSince('2026-08-30', 3, TODAY)).toBe('2023-08-30')
+    expect(inactiveSince('2026-08-30', 1, TODAY)).toBe('2025-08-30')
   })
 
   it('rolls a leap day forward rather than inventing 29 February', () => {
-    expect(inactiveSince('2028-02-29', 1)).toBe('2027-03-01')
+    expect(inactiveSince('2028-02-29', 1, TODAY)).toBe('2027-03-01')
+  })
+
+  it('goes back from today when the report carries no usable date', () => {
+    expect(inactiveSince('', 3, TODAY)).toBe('2023-09-30')
+    expect(inactiveSince('not a date', 3, TODAY)).toBe('2023-09-30')
   })
 })
 
