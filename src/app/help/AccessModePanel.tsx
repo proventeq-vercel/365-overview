@@ -15,7 +15,7 @@ const PERMISSIONS: readonly ModePermission[] = [
   { name: 'Sites.Read.All', label: 'help.permission.sites', required: false },
 ]
 
-const STEPS = [1, 2, 3] as const
+const STEPS = [1, 2, 3, 4] as const
 
 export function AccessModePanel({
   mode,

@@ -38,6 +38,17 @@ describe('AccessHelpPage', () => {
     )
   })
 
+  it('says how each mode gets site names, as a last step', () => {
+    render(<AccessHelpPage mode="application" consentUrl={null} clientId={CLIENT_ID} />)
+    const application = within(screen.getByRole('list', { name: 'How to enable Application permissions' })).getAllByRole('listitem')
+    const delegated = within(screen.getByRole('list', { name: 'How to enable Delegated permissions' })).getAllByRole('listitem')
+    expect(application).toHaveLength(4)
+    expect(application[3]).toHaveTextContent("Sites.Read.All application permission (Graph PowerShell: New-MgServicePrincipalAppRoleAssignment)")
+    expect(delegated).toHaveLength(4)
+    expect(delegated[3]).toHaveTextContent('this app does not ask for Sites.Read.All')
+    expect(delegated[1]).toHaveTextContent('Roles & admins → Reports Reader → Add assignments')
+  })
+
   it('offers the admin consent link on this site’s mode only', () => {
     render(<AccessHelpPage mode="delegated" consentUrl={CONSENT_URL} clientId={CLIENT_ID} />)
     expect(within(panelOf('Delegated permissions')).getByRole('link', { name: 'Grant admin consent for this site' })).toHaveAttribute(
