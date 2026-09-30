@@ -18,6 +18,10 @@ export function formatSignedBytes(bytes: number): string {
   return `${bytes > 0 ? '+' : ''}${formatBytes(bytes)}`
 }
 
+export function formatBytesInUnit(bytes: number | null, unitBytes: number): string {
+  return bytes === null ? '' : String(bytes / unitBytes)
+}
+
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat(REPORT_LOCALE).format(n)
 }

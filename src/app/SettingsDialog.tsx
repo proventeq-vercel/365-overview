@@ -8,12 +8,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AdornedInput } from '@/design/AdornedInput'
-import { ByteOverrideInput, inUnits } from '@/design/ByteOverrideInput'
+import { ByteOverrideInput } from '@/design/ByteOverrideInput'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
 import { GB_IN_BYTES } from '@/lib/entitlement'
-import { formatBytes } from '@/lib/format'
+import { formatBytes, formatBytesInUnit } from '@/lib/format'
 import { useSettings } from './useSettings'
 
 const TB_IN_BYTES = 1024 * GB_IN_BYTES
@@ -143,7 +143,7 @@ export function SettingsDialog({
               oneDriveEstimateBytes === null
                 ? t('settings.oneDriveEntitlementHintNoEstimate')
                 : t('settings.oneDriveEntitlementHint', {
-                    estimate: inUnits(oneDriveEstimateBytes, GB_IN_BYTES),
+                    estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
                     unit: t('settings.oneDriveEntitlementUnit'),
                   })
             }

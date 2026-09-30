@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatBytesInUnit } from '@/lib/format'
 import { AdornedInput } from './AdornedInput'
 
 interface ByteOverrideInputProps {
@@ -12,9 +13,6 @@ interface ByteOverrideInputProps {
   onChange: (bytes: number | null) => void
 }
 
-export const inUnits = (bytes: number | null, unitBytes: number): string =>
-  bytes === null ? '' : String(bytes / unitBytes)
-
 export function ByteOverrideInput({
   id,
   valueBytes,
@@ -25,7 +23,7 @@ export function ByteOverrideInput({
   placeholder,
   onChange,
 }: ByteOverrideInputProps) {
-  const [text, setText] = useState(() => inUnits(valueBytes, unitBytes))
+  const [text, setText] = useState(() => formatBytesInUnit(valueBytes, unitBytes))
 
   return (
     <AdornedInput
@@ -41,7 +39,7 @@ export function ByteOverrideInput({
         setText(e.target.value)
         onChange(e.target.value === '' ? null : Number(e.target.value) * unitBytes)
       }}
-      onBlur={() => setText(inUnits(valueBytes, unitBytes))}
+      onBlur={() => setText(formatBytesInUnit(valueBytes, unitBytes))}
     />
   )
 }
