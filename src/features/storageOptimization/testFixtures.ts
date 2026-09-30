@@ -51,10 +51,20 @@ export const base: StorageOverview = {
     forecastMonthsToExhaustion: 50,
     forecastEndBytes: 560 * GB,
   },
+  archive: {
+    inactiveYears: 3,
+    inactiveSince: '2023-08-30',
+    siteCount: 42,
+    bytes: 120 * GB,
+    shareOfSharePoint: 0.24,
+    status: 'watch',
+    annualSaving: 28.8,
+  },
   cost: {
     ratePerGb: 0.02,
     currency: 'GBP',
     growthAnnual: 288,
+    growthAnnualStatus: 'watch',
     cumulativeYear3: 1296,
   },
   caveats: {

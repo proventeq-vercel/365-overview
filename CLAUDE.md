@@ -7,8 +7,9 @@ Guidance for working in this repo. See `README.md` for setup/permissions and
 
 A React 19 + TypeScript + Vite 8 SPA that renders **one report** —
 a sneak-peek of the Proventeq 365 storage-optimisation report — from a Microsoft
-365 tenant's own Graph usage reports. Three sections (Current storage
-distribution · Future state & growth impact · Main offenders) under a KPI row.
+365 tenant's own Graph usage reports. Four sections, in order: Current storage
+distribution · Tenant capacity (the KPI cards) · Future state & growth impact ·
+Main offenders.
 No lead capture, no telemetry. By default nothing leaves the browser; with
 `VITE_GRAPH_PROXY_URL` set the browser's Graph calls go through `functions/`,
 an Azure Functions proxy that signs them app-only (certificate) for the
@@ -332,7 +333,15 @@ typecheck · test · build as a separate job.
   (`sharePoint.utilization`), and both the used-KPI dot and the quota gauge
   take that grade — the gauge never grades itself; `src/lib/forecast.ts`
   grades *runway* (Critical <12 months / Warning <36) and drives the forecast
-  badge. They answer different questions.
+  badge. They answer different questions. The *Tenant capacity* cards (below
+  *Current storage distribution*) carry two more, also graded in the model:
+  `archive.status` (`lib/archive.ts` — archivable share of live site storage,
+  watch >5% / attention >50%; drives both the archive and the saving card) and
+  `cost.growthAnnualStatus` (`lib/cost.ts` — healthy at zero, watch above,
+  attention once the next 12 months bill more than a tenth of the licensed
+  entitlement again; rate-independent). A site is archivable when its
+  `lastActivityDate` is older than `settings.inactiveYears` (default 3) before
+  `reportRefreshDate`; a site with no recorded activity is never counted.
 
 ## Tailwind v4 + shadcn gotchas (learned the hard way)
 

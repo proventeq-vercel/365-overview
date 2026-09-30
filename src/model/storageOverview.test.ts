@@ -602,6 +602,28 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.cost.cumulativeYear3).toBeCloseTo(1296, 6)
   })
 
+  it('grades a cost of nothing as healthy', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
+    expect(overview.cost.growthAnnualStatus).toBe('healthy')
+  })
+
+  it('grades a cost within a tenth of the entitlement bought again as one to watch', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 250 * GB }))
+    expect(overview.cost.growthAnnual).toBeCloseTo(48, 6)
+    expect(overview.cost.growthAnnualStatus).toBe('watch')
+  })
+
+  it('grades a cost beyond a tenth of the entitlement bought again as needing attention', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 200 * GB }))
+    expect(overview.cost.growthAnnualStatus).toBe('attention')
+  })
+
+  it('grades a cost without an entitlement as one to watch, never as needing attention', () => {
+    const overview = buildStorageOverview(unknownEntitlement())
+    expect(overview.cost.growthAnnual).toBeCloseTo(288, 6)
+    expect(overview.cost.growthAnnualStatus).toBe('watch')
+  })
+
   it('passes the rate and currency through untouched', () => {
     const overview = buildStorageOverview(inputs({ ratePerGb: 0.17, currency: 'EUR' }))
     expect(overview.cost.ratePerGb).toBe(0.17)
@@ -652,6 +674,8 @@ describe('buildStorageOverview growth and cost', () => {
     const overview = buildStorageOverview(
       inputs({ sites: [], drives: [], sharePointTrend: [], oneDriveTrend: [] }),
     )
+    expect(overview.archive.shareOfSharePoint).toBe(0)
+    expect(overview.archive.status).toBe('healthy')
     expect(overview.sharePoint.usedBytes).toBe(0)
     expect(overview.oneDrive.usedBytes).toBe(0)
     expect(overview.growth.points).toEqual([])
@@ -659,5 +683,56 @@ describe('buildStorageOverview growth and cost', () => {
     expect(Number.isFinite(overview.cost.growthAnnual)).toBe(true)
     expect(overview.sharePoint.byWorkload).toEqual([])
     expect(overview.oneDrive.drivesNearCap).toBe(0)
+  })
+})
+
+describe('buildStorageOverview inactive sites', () => {
+  const tenant = () =>
+    inputs({
+      sites: [
+        site({ id: 'busy', storageUsedBytes: 60 * GB, lastActivityDate: '2026-08-20' }),
+        site({ id: 'dormant', storageUsedBytes: 30 * GB, lastActivityDate: '2022-05-01' }),
+        site({ id: 'quiet', storageUsedBytes: 10 * GB, lastActivityDate: '2021-01-15' }),
+        site({ id: 'never', storageUsedBytes: 5 * GB, lastActivityDate: null }),
+        site({ id: 'gone', storageUsedBytes: 40 * GB, lastActivityDate: '2019-01-01', isDeleted: true }),
+      ],
+      drives: [drive({ storageUsedBytes: 500 * GB, lastActivityDate: '2018-01-01' })],
+    })
+
+  it('counts live sites with no activity for three years before the report date by default', () => {
+    const { archive } = buildStorageOverview(tenant())
+    expect(archive.inactiveYears).toBe(3)
+    expect(archive.inactiveSince).toBe('2023-08-30')
+    expect(archive.siteCount).toBe(2)
+    expect(archive.bytes).toBe(40 * GB)
+  })
+
+  it('measures the archivable share against live site storage, leaving OneDrive and deleted sites out', () => {
+    const { archive } = buildStorageOverview(tenant())
+    expect(archive.shareOfSharePoint).toBeCloseTo(40 / 105, 10)
+    expect(archive.status).toBe('watch')
+  })
+
+  it('follows the inactivity window from the settings', () => {
+    const { archive } = buildStorageOverview({ ...tenant(), inactiveYears: 5 })
+    expect(archive.inactiveSince).toBe('2021-08-30')
+    expect(archive.siteCount).toBe(1)
+    expect(archive.bytes).toBe(10 * GB)
+  })
+
+  it('values the saving as a year of holding the archivable storage at the configured rate', () => {
+    const { archive } = buildStorageOverview(tenant())
+    expect(archive.annualSaving).toBeCloseTo(40 * 0.2 * 12, 6)
+  })
+
+  it('needs attention once more than half of site storage is inactive', () => {
+    const { archive } = buildStorageOverview({
+      ...tenant(),
+      inactiveYears: 1,
+      reportRefreshDate: '2030-01-01',
+    })
+    expect(archive.siteCount).toBe(3)
+    expect(archive.bytes).toBe(100 * GB)
+    expect(archive.status).toBe('attention')
   })
 })

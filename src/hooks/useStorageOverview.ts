@@ -39,6 +39,7 @@ export function useStorageOverview(settings: ReportSettings) {
             currency: settings.currency,
             entitlementOverrideBytes: settings.entitlementOverrideBytes,
             oneDriveEntitlementOverrideBytes: settings.oneDriveEntitlementOverrideBytes,
+            inactiveYears: settings.inactiveYears,
           }),
     [
       inputs,
@@ -47,6 +48,7 @@ export function useStorageOverview(settings: ReportSettings) {
       settings.currency,
       settings.entitlementOverrideBytes,
       settings.oneDriveEntitlementOverrideBytes,
+      settings.inactiveYears,
     ],
   )
 

@@ -14,9 +14,11 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
 import { GB_IN_BYTES } from '@/lib/entitlement'
 import { formatBytes, formatBytesInUnit } from '@/lib/format'
+import { DEFAULT_SETTINGS, MAX_INACTIVE_YEARS } from '@/lib/settings'
 import { useSettings } from './useSettings'
 
 const TB_IN_BYTES = 1024 * GB_IN_BYTES
+const INACTIVE_YEAR_OPTIONS = Array.from({ length: MAX_INACTIVE_YEARS }, (_, index) => index + 1)
 
 function Field({
   id,
@@ -54,6 +56,7 @@ export function SettingsDialog({
   const rateId = useId()
   const entitlementId = useId()
   const oneDriveEntitlementId = useId()
+  const inactiveYearsId = useId()
 
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
@@ -158,6 +161,30 @@ export function SettingsDialog({
               placeholder={t('settings.oneDriveEntitlementPlaceholder')}
               onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}
             />
+          </Field>
+
+          <Field
+            id={inactiveYearsId}
+            label={t('settings.inactiveYears')}
+            hint={t('settings.inactiveYearsHint', { years: DEFAULT_SETTINGS.inactiveYears })}
+          >
+            <Select
+              value={settings.inactiveYears}
+              onValueChange={(value) => update({ inactiveYears: value ?? settings.inactiveYears })}
+            >
+              <SelectTrigger id={inactiveYearsId} className="h-9 w-full bg-white">
+                <SelectValue>
+                  {(value: number) => t('settings.inactiveYearsOption', { years: value })}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="start" alignItemWithTrigger={false}>
+                {INACTIVE_YEAR_OPTIONS.map((years) => (
+                  <SelectItem key={years} value={years}>
+                    {t('settings.inactiveYearsOption', { years })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         </div>
       </DialogContent>

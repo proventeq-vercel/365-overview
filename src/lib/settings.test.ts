@@ -14,9 +14,28 @@ describe('settings', () => {
       currency: 'EUR',
       entitlementOverrideBytes: 42,
       oneDriveEntitlementOverrideBytes: 7,
+      inactiveYears: 5,
     }
     saveSettings(custom)
     expect(loadSettings()).toEqual(custom)
+  })
+
+  it('counts a site as inactive after three years by default', () => {
+    expect(DEFAULT_SETTINGS.inactiveYears).toBe(3)
+  })
+
+  it('falls back to three years for a stored inactivity window below one year or of the wrong shape', () => {
+    for (const stored of ['0', '-2', '"five"', 'null']) {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, `{"inactiveYears":${stored}}`)
+      expect(loadSettings().inactiveYears).toBe(3)
+    }
+  })
+
+  it('keeps the inactivity window to whole years within ten', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"inactiveYears":25}')
+    expect(loadSettings().inactiveYears).toBe(10)
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"inactiveYears":4.6}')
+    expect(loadSettings().inactiveYears).toBe(5)
   })
 
   it('falls back to defaults on corrupt stored JSON', () => {

@@ -98,10 +98,21 @@ export interface StorageOverview {
     forecastEndBytes: number
   }
 
+  archive: {
+    inactiveYears: number
+    inactiveSince: string
+    siteCount: number
+    bytes: number
+    shareOfSharePoint: number
+    status: HealthStatus
+    annualSaving: number
+  }
+
   cost: {
     ratePerGb: number
     currency: string
     growthAnnual: number
+    growthAnnualStatus: HealthStatus
     cumulativeYear3: number
   }
 

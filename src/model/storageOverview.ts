@@ -7,7 +7,16 @@ import type {
   StorageRow,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
-import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
+import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
+import {
+  annualGrowthGb,
+  billableGrowthGb,
+  cumulativeGrowthCost,
+  growthCostAnnual,
+  growthCostStatus,
+  storageCostAnnual,
+} from '@/lib/cost'
+import { DEFAULT_SETTINGS } from '@/lib/settings'
 import { namesAreConcealed } from '@/lib/concealment'
 import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
@@ -44,6 +53,7 @@ export interface OverviewInputs {
   currency: string
   entitlementOverrideBytes: number | null
   oneDriveEntitlementOverrideBytes: number | null
+  inactiveYears?: number
   now?: Date
   forceUnknownEntitlement?: boolean
   namesHidden?: boolean
@@ -117,6 +127,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     currency,
     entitlementOverrideBytes,
     oneDriveEntitlementOverrideBytes,
+    inactiveYears = DEFAULT_SETTINGS.inactiveYears,
     now = new Date(),
     forceUnknownEntitlement = false,
     namesHidden = false,
@@ -159,6 +170,13 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
   const growthGb = annualGrowthGb(rate)
   const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
+  const growthAnnual = growthCostAnnual(growthGb, ratePerGb, excessGb)
+
+  const archiveCutoff = inactiveSince(reportRefreshDate, inactiveYears)
+  const archivable = liveSites.filter((site) => isInactiveSince(site, archiveCutoff))
+  const archivableBytes = sumBytes(archivable)
+  const liveSiteBytes = sumBytes(liveSites)
+  const archivableShare = liveSiteBytes > 0 ? archivableBytes / liveSiteBytes : 0
 
   return {
     reportRefreshDate,
@@ -232,10 +250,25 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
     },
 
+    archive: {
+      inactiveYears,
+      inactiveSince: archiveCutoff,
+      siteCount: archivable.length,
+      bytes: archivableBytes,
+      shareOfSharePoint: archivableShare,
+      status: archiveStatus(archivableShare),
+      annualSaving: storageCostAnnual(archivableBytes, ratePerGb),
+    },
+
     cost: {
       ratePerGb,
       currency,
-      growthAnnual: growthCostAnnual(growthGb, ratePerGb, excessGb),
+      growthAnnual,
+      growthAnnualStatus: growthCostStatus(
+        growthAnnual,
+        billableGrowthGb(growthGb, excessGb),
+        entitledBytes === null ? null : entitledBytes / GB_IN_BYTES,
+      ),
       cumulativeYear3: cumulativeGrowthCost(growthGb, ratePerGb, excessGb),
     },
 

@@ -1,4 +1,5 @@
-import { formatLongMonthYear } from '@/lib/format'
+import { formatBytes, formatLongMonthYear } from '@/lib/format'
+import { FORECAST_WINDOW_MONTHS } from '@/lib/forecast'
 import type { HealthStatus } from '@/lib/thresholds'
 import type { ForecastStatus, StorageOverview } from '@/types/storage'
 import type { TranslateFn } from '@/hooks/useTranslation'
@@ -36,12 +37,22 @@ export function forecastHeadline(overview: StorageOverview, t: TranslateFn): str
 
 export function forecastHint(overview: StorageOverview, t: TranslateFn): string {
   const { sharePoint, growth } = overview
-  if (sharePoint.entitledBytes === null) return t('storageOptimisation.kpi.forecastUnknownHint')
-  if (exhaustionLabel(overview) !== null) return t('storageOptimisation.kpi.forecastHint')
+  if (sharePoint.entitledBytes === null || sharePoint.remainingBytes === null) {
+    return t('storageOptimisation.kpi.forecastUnknownHint')
+  }
+  const figures = {
+    entitled: formatBytes(sharePoint.entitledBytes),
+    remaining: formatBytes(sharePoint.remainingBytes),
+    growth: formatBytes(growth.avgMonthlyGrowthBytes),
+  }
+  if (exhaustionLabel(overview) !== null) return t('storageOptimisation.kpi.forecastHint', figures)
   if (growth.forecastMonthsToExhaustion === 0) return t('storageOptimisation.growth.alreadyExhaustedNote')
-  return growth.forecastStatus === 'Unknown'
-    ? t('storageOptimisation.kpi.forecastInsufficientHint')
-    : t('storageOptimisation.kpi.forecastHint')
+  if (growth.forecastStatus === 'Unknown') {
+    return t('storageOptimisation.kpi.forecastInsufficientHint', { months: FORECAST_WINDOW_MONTHS })
+  }
+  return growth.forecastMonthsToExhaustion === null
+    ? t('storageOptimisation.kpi.forecastNoGrowthHint', { ...figures, months: growth.windowMonths })
+    : t('storageOptimisation.kpi.forecastBeyondHorizonHint', { ...figures, years: FORECAST_HORIZON_YEARS })
 }
 
 interface ForecastCallout {
