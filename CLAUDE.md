@@ -108,8 +108,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   when `App.tsx` passes `menuEnabled` — the `app.menu` flag, which is **not** in
   `DEFAULT_FEATURES` — *and* more than one report is enabled. Adding a report = a
   flag in `FeatureFlags`, one entry here and one folder under `src/features/`.
-- `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards,
-  top drives, drive table with the per-drive capacity column). Same
+- `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards
+  incl. *Over licensed storage*, top drives, `OverLicenceSection` with the
+  *Over licence by* column, drive table with the per-drive capacity column). Same
   `useStorageOverview` query, so switching reports never refetches.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
@@ -134,7 +135,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
+  `AdornedInput` (prefix/suffix input), `ByteOverrideInput` (a byte figure
+  edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
@@ -151,7 +153,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   fetching), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
-  entitlement in TB with the licence estimate as hint), `SettingsProvider` /
+  entitlement in TB and OneDrive storage per user in GB, each with its
+  licence estimate as hint), `SettingsProvider` /
   `useSettings` (localStorage-backed `ReportSettings` context), `SideMenu`
   (P365's `NavBarComponent` pattern: a navy panel that is always mounted and
   animates `width` 0 ↔ 17.5rem in 260ms `cubic-bezier(0.4,0,0.2,1)` with a
