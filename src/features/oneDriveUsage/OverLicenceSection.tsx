@@ -44,9 +44,11 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
         ) : (
           <EmptyBlock>{t('oneDrive.overLicence.empty', { entitlement })}</EmptyBlock>
         )}
-        <PanelDescription>
-          {entitlementPerUserIsSet ? t('oneDrive.overLicence.noteSet') : t('oneDrive.overLicence.note')}
-        </PanelDescription>
+        {entitlement !== null && (
+          <PanelDescription>
+            {entitlementPerUserIsSet ? t('oneDrive.overLicence.noteSet') : t('oneDrive.overLicence.note')}
+          </PanelDescription>
+        )}
       </Panel>
     </Section>
   )

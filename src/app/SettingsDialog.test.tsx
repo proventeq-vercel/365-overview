@@ -103,7 +103,7 @@ describe('SettingsDialog', () => {
 
   it('tells the admin the OneDrive storage per user the licences give, so they know what they are replacing', async () => {
     renderDialog()
-    expect(await screen.findByText(/^From licences: 5 TB/)).toBeInTheDocument()
+    expect(await screen.findByText(/^From licences: 5 TB \(5120 GB\) — /)).toBeInTheDocument()
   })
 
   it('keeps a half-typed 0 on the way to 0.5 rather than clearing the field', async () => {

@@ -190,7 +190,7 @@ exists; these steps are for pointing the app at a registration of your own throu
 3. Under **Supported account types**, choose **Accounts in any organizational directory** (`AzureADMultipleOrgs`).
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
-6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read` and `Reports.Read.All` — and, optionally, `Organization.Read.All` (tenant name, licence-based entitlement) and `Sites.Read.All` (site names). The app requests `.default`, so it uses exactly what is listed here and still works without the optional two.
+6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read` and `Reports.Read.All` — and, optionally, `Organization.Read.All` (tenant name, licence-based entitlement and OneDrive storage per user) and `Sites.Read.All` (site names). The app requests `.default`, so it uses exactly what is listed here and still works without the optional two.
 7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
 `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All` require **admin consent** in each
@@ -233,7 +233,7 @@ The delegated path asks for **`.default`**: the token carries whatever delegated
 registration was granted, and nothing more is ever requested. So a registration without
 `Sites.Read.All` (or `Organization.Read.All`) still signs in and loads the report — the site-name
 lookups are refused with `403`, which the report treats as "no name" and shows each site by its id;
-without `Organization.Read.All` the licence-based entitlement is unknown. Only `Reports.Read.All`
+without `Organization.Read.All` the licence-based entitlement and the OneDrive storage per user are unknown. Only `Reports.Read.All`
 is required. The registration must list the deployment's origin as a **SPA redirect URI**.
 
 As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated

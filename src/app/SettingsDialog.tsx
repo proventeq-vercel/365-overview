@@ -58,7 +58,6 @@ export function SettingsDialog({
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
-  const oneDriveEstimate = oneDriveEstimateBytes === null ? null : formatBytes(oneDriveEstimateBytes)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,9 +140,12 @@ export function SettingsDialog({
             id={oneDriveEntitlementId}
             label={t('settings.oneDriveEntitlement')}
             hint={
-              oneDriveEstimate
-                ? t('settings.oneDriveEntitlementHint', { estimate: oneDriveEstimate })
-                : t('settings.oneDriveEntitlementHintNoEstimate')
+              oneDriveEstimateBytes === null
+                ? t('settings.oneDriveEntitlementHintNoEstimate')
+                : t('settings.oneDriveEntitlementHint', {
+                    estimate: formatBytes(oneDriveEstimateBytes),
+                    estimateGb: oneDriveEstimateBytes / GB_IN_BYTES,
+                  })
             }
           >
             <ByteOverrideInput

@@ -92,7 +92,7 @@ describe('settings', () => {
     expect(loadSettings().oneDriveEntitlementOverrideBytes).toBeNull()
   })
 
-  it('defaults the OneDrive per-user override to null, so the 1 TB licence is used', () => {
+  it('defaults the OneDrive per-user override to null, so the licence estimate is used', () => {
     expect(DEFAULT_SETTINGS.oneDriveEntitlementOverrideBytes).toBeNull()
   })
 

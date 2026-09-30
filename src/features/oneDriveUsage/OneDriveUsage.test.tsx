@@ -152,6 +152,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
     expect(screen.getByText(/licences could not be read \(the Organization\.Read\.All permission/)).toBeInTheDocument()
     expect(card('Over licensed storage')).toHaveTextContent(/Licences unavailable/)
+    expect(screen.queryByText(/^Measured against/)).not.toBeInTheDocument()
   })
 
   it('says no licence has a known allowance, not that licences were unreadable, on an education-only tenant', async () => {
