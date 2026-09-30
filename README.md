@@ -13,12 +13,13 @@ Built with React 19, TypeScript, and Vite.
 
 | What | URL | Permissions | Hosted on |
 |---|---|---|---|
-| **Report, application permissions** | <https://gray-water-0a8893303.1.azurestaticapps.net> | App-only through the Graph proxy; any signed-in user once an admin has consented | Azure Static Web App `p365-lite` |
-| **Report, delegated permissions** | <https://p365lite.z33.web.core.windows.net/> | The signed-in user's own Graph token (Reports Reader, SharePoint Administrator or Global Administrator) | Azure Storage static website `p365lite` |
+| **Report, delegated permissions — the main site** | <https://gray-water-0a8893303.1.azurestaticapps.net> | The signed-in user's own Graph token (Reports Reader, SharePoint Administrator or Global Administrator) | Azure Static Web App `p365-lite` |
+| **Report, application permissions** | <https://p365lite.z33.web.core.windows.net/> | App-only through the Graph proxy; any signed-in user once an admin has consented | Azure Storage static website `p365lite` |
 | **Graph proxy** (not a page) | `https://func-lh-sa-dev.azurewebsites.net/api/graph` | Serves the application-permissions report only | Azure Function App `func-lh-sa-dev` |
+| **Pull request previews** | posted on each PR by the *Preview* workflow | None — mock data (the Contoso demo tenant), no sign-in | staging environments of the Static Web App `p365-lite` |
 
-All three live in the resource group `rg-lh-sa-dev` and are redeployed from `main` by
-`.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
+All of it lives in the resource group `rg-lh-sa-dev`. Both report sites are redeployed from `main`
+by `.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
 `?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
 Each site also serves `/help` — how to enable access, without signing in (see *Access help*).
 `https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
@@ -28,12 +29,23 @@ Each site also serves `/help` — how to enable access, without signing in (see 
 | Section | What it shows |
 |---|---|
 | **Current storage distribution** | Pooled SharePoint usage against the tenant's entitlement, and usage split by workload and by site template |
+| **Tenant capacity** | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion (see below) |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
-Four KPI cards sit above the sections: storage used, entitlement, remaining headroom and average
-monthly growth. SharePoint and OneDrive are reported as two separate pools — OneDrive volume is
-never counted against the SharePoint entitlement.
+**Tenant capacity** sits under the distribution section, as four cards, each railed green,
+orange or red by its state:
+
+| Card | Value | Green · orange · red |
+|---|---|---|
+| **Inactive sites to archive** | Storage in live SharePoint sites with no activity for the inactivity window (Report settings, default 3 years, before the report date); the share of site storage and the site count in the description. A site with no recorded activity is not counted. | ≤ 5% · ≤ 50% · above 50% of live site storage |
+| **Potential saving per year** | That storage × the cost per GB per month × 12 | as the archive card |
+| **Cost of doing nothing, next 12 months** | The next year's growth beyond the entitlement, priced at the same rate | zero · above zero · the year's billable growth is more than a tenth of the entitlement |
+| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth, explained with the rate and the headroom left | runway ≥ 36 months · ≥ 12 months · under 12 months or already exceeded |
+
+Storage used and remaining headroom are in the *Quota usage* ring above the cards. SharePoint and
+OneDrive are reported as two separate pools — OneDrive volume is never counted against the
+SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
 > The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service
@@ -227,7 +239,7 @@ The permission model is chosen by the env, per deployment — there is no switch
 | Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
 | Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
 | Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
-| Deployed at | <https://gray-water-0a8893303.1.azurestaticapps.net> — Static Web App `p365-lite` (`site` job) | <https://p365lite.z33.web.core.windows.net/> — storage static website `p365lite` (`site-delegated` job) |
+| Deployed at | <https://p365lite.z33.web.core.windows.net/> — storage static website `p365lite` (`site-application` job) | <https://gray-water-0a8893303.1.azurestaticapps.net> — Static Web App `p365-lite`, the main site (`site` job) |
 
 The delegated path asks for **`.default`**: the token carries whatever delegated permissions the
 registration was granted, and nothing more is ever requested. So a registration without
@@ -244,7 +256,7 @@ registration to add it first (`Authorization_RequestDenied` otherwise).
 
 ## Access help
 
-`/help` (e.g. <https://p365lite.z33.web.core.windows.net/help>) explains both permission modes,
+`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) explains both permission modes,
 marks the one the site was built for, lists which Graph permissions are required and which are
 optional, gives this site's admin consent link, and says what fixes each failure screen. It needs
 no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a visitor can land on
@@ -257,10 +269,10 @@ Nothing needs changing on Proventeq's side for a new tenant: both registrations 
 publisher-verified ("Proventeq Ltd") and list both sites as SPA redirect URIs. Everything below is
 done by the customer's administrator. The admin consent link is on each site's `/help` page.
 
-**Application permissions** — <https://gray-water-0a8893303.1.azurestaticapps.net>
+**Application permissions** — <https://p365lite.z33.web.core.windows.net/>
 
 1. A Global Administrator (or Privileged Role Administrator) opens
-   `https://login.microsoftonline.com/organizations/adminconsent?client_id=84e24db0-8904-41f8-8556-14a2b6863b1a&redirect_uri=https%3A%2F%2Fgray-water-0a8893303.1.azurestaticapps.net%2F`,
+   `https://login.microsoftonline.com/organizations/adminconsent?client_id=84e24db0-8904-41f8-8556-14a2b6863b1a&redirect_uri=https%3A%2F%2Fp365lite.z33.web.core.windows.net%2F`,
    signs in and selects **Accept**. This grants `Reports.Read.All` and `Organization.Read.All` as
    application permissions.
 2. Optional, for site names — grant `Sites.Read.All` too (a Global Administrator, in Graph
@@ -278,10 +290,10 @@ done by the customer's administrator. The admin consent link is on each site's `
 3. Optional — allow only some groups (see *Limiting who can open the report*).
 4. Anyone allowed opens the site and signs in. No directory role is needed.
 
-**Delegated permissions** — <https://p365lite.z33.web.core.windows.net/>
+**Delegated permissions (the main site)** — <https://gray-water-0a8893303.1.azurestaticapps.net>
 
 1. A Global Administrator opens
-   `https://login.microsoftonline.com/organizations/adminconsent?client_id=0cedd025-e545-44f2-b3f8-82969e56547a&redirect_uri=https%3A%2F%2Fp365lite.z33.web.core.windows.net%2F`,
+   `https://login.microsoftonline.com/organizations/adminconsent?client_id=0cedd025-e545-44f2-b3f8-82969e56547a&redirect_uri=https%3A%2F%2Fgray-water-0a8893303.1.azurestaticapps.net%2F`,
    signs in and selects **Accept**. This grants the delegated `Reports.Read.All`,
    `Organization.Read.All` and `User.Read`. Until then everyone stops at "Your organisation has
    not approved this app yet".
@@ -472,14 +484,14 @@ Three things have to name the new origin before it works:
 ### Automatic deployment
 
 `.github/workflows/deploy.yml` deploys on every push to `main`, but only **after CI has gone
-green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Two
-jobs, both from the exact commit CI tested:
+green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Three
+jobs, all from the exact commit CI tested:
 
 | Job | What it deploys | Where |
 |---|---|---|
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output, with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_FEATURES`, `VITE_MODES_LOCKED` — **application permissions** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
-| `site-delegated` | the same build with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a` — **delegated permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_DELEGATED_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS_DELEGATED` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
+| `site` | `npm run build` output with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a`, plus the repo variables `VITE_FEATURES`, `VITE_MODES_LOCKED` — **delegated permissions, the main site** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
+| `site-application` | the same build with the repo variables `VITE_GRAPH_PROXY_URL` and `VITE_GRAPH_PROXY_SCOPE` — **application permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
 
 The first job checks what each deploy needs and skips a job whose secret is absent, with a note
 in the run summary rather than a failure. The **site** needs only the repo secret
@@ -492,6 +504,16 @@ a new proxy, and as a SPA redirect URI on the registration.
 
 **The proxy still needs credentials the repo does not have yet**, so its job stays inert until
 someone configures them.
+
+### Pull request previews
+
+`.github/workflows/preview.yml` builds every pull request from this repository in **mock mode**
+(the Contoso demo tenant, `VITE_USE_MOCK=true`) and uploads it to a staging environment of the
+Static Web App `p365-lite`; the action comments the preview URL on the PR and removes the
+environment when the PR closes. Previews never sign in: Entra does not accept wildcard SPA
+redirect URIs, and every PR gets its own host. `?scenario=` still switches the mock tenant (see
+*Modes*). The Free plan holds three staging environments at a time, so a fourth open PR's preview
+fails until one closes — it is not a required check.
 
 The Function App is on a **Flex Consumption** plan, which deploys through Entra RBAC only:
 publish-profile (basic auth) deployment is not supported there, and SCM basic auth is disabled on
