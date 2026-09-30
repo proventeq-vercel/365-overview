@@ -172,7 +172,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
   const growthAnnual = growthCostAnnual(growthGb, ratePerGb, excessGb)
 
-  const archiveCutoff = inactiveSince(reportRefreshDate, inactiveYears)
+  const archiveCutoff = inactiveSince(reportRefreshDate, inactiveYears, now)
   const archivable = liveSites.filter((site) => isInactiveSince(site, archiveCutoff))
   const archivableBytes = sumBytes(archivable)
   const liveSiteBytes = sumBytes(liveSites)
