@@ -45,7 +45,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(card('Drives near capacity')).toHaveTextContent(/90% or more/)
     expect(card('Deleted but still billing')).toHaveTextContent(/deleted drives/)
     expect(card('Over licensed storage')).toHaveTextContent(
-      /^0Over licensed storageEvery drive fits the 5 TB per user the licences include$/,
+      /^0Over licensed storageEvery drive fits within 5 TB per user$/,
     )
   })
 
@@ -53,7 +53,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     renderReport('onedrive-over-licence')
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(card('Over licensed storage')).toHaveTextContent(
-      /^4Over licensed storage1\.1 TB beyond the 5 TB per user the licences include$/,
+      /^4Over licensed storage1\.1 TB beyond 5 TB per user$/,
     )
     const table = screen.getByRole('table', { name: 'OneDrives over licensed storage' })
     expect(within(table).getByRole('columnheader', { name: 'Over licence by' })).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
     expect(
-      screen.getByText('No OneDrive holds more than the 5 TB per user the licences include'),
+      screen.getByText('No OneDrive holds more than 5 TB'),
     ).toBeInTheDocument()
   })
 
@@ -84,7 +84,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(
       screen.getByText(
-        'Accounts holding more OneDrive storage than any licence in the tenant includes (5 GB per user)',
+        'Accounts holding more than the 5 GB of OneDrive storage per user set in Report settings',
       ),
     ).toBeInTheDocument()
     expect(card('Over licensed storage')).toHaveTextContent(/^23Over licensed storage/)
@@ -147,14 +147,36 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(card('Over licensed storage')).toHaveTextContent(/^UnknownOver licensed storage/)
     expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
-    expect(screen.getByText(/licences could not be read/)).toBeInTheDocument()
+    expect(screen.getByText(/licences could not be read \(the Organization\.Read\.All permission/)).toBeInTheDocument()
+    expect(card('Over licensed storage')).toHaveTextContent(/Licences unavailable/)
+  })
+
+  it('says no licence has a known allowance, not that licences were unreadable, on an education-only tenant', async () => {
+    renderReport('onedrive-over-licence', {
+      getLicenses: async () => [
+        {
+          skuId: 'a3',
+          skuPartNumber: 'M365EDU_A3_FACULTY',
+          consumed: 50,
+          enabled: 60,
+          available: 10,
+          servicePlans: ['SHAREPOINTENTERPRISE_EDU'],
+        },
+      ],
+    })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(card('Over licensed storage')).toHaveTextContent(
+      /^UnknownOver licensed storageNo licence with a known OneDrive allowance/,
+    )
+    expect(screen.getByText(/education allowances vary/)).toBeInTheDocument()
+    expect(screen.queryByText(/could not be read/)).not.toBeInTheDocument()
   })
 
   it('explains hidden names before the first table that shows them', async () => {
     renderReport('concealed')
     const banner = await screen.findByText(/appear as hashes/i)
-    const firstTable = screen.getByText('OneDrives over their licensed storage')
-    expect(banner.compareDocumentPosition(firstTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const firstNames = screen.getByRole('heading', { name: 'Top OneDrives by storage' })
+    expect(banner.compareDocumentPosition(firstNames) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('shows the same access failure screens as the storage report', async () => {

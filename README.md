@@ -132,7 +132,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of four fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of five fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -516,7 +516,7 @@ src/
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES + URL overrides), modes.ts, featureFlags.ts, appConfig.ts
-  data/          # live.ts (the five Graph calls), fixtures.ts (four mock tenants + DataSource interface)
+  data/          # live.ts (the five Graph calls), fixtures.ts (five mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format

@@ -26,7 +26,7 @@ export interface DataSource {
 const MB = 1_048_576
 const GB = 1024 * MB
 const ONE_DRIVE_CAP_BYTES = 1024 * GB
-const SUPPORT_RAISED_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
+const BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 
 const MOCK_REFRESH_DATE = '2026-08-30'
 
@@ -131,7 +131,7 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
       lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
-      allocatedBytes: raised ? SUPPORT_RAISED_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
+      allocatedBytes: raised ? BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
     })
   }
   return out

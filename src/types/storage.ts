@@ -36,6 +36,8 @@ export interface RetainedTotal {
   count: number
 }
 
+export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
+
 export interface OverEntitlement {
   drives: StorageRow[]
   count: number
@@ -70,6 +72,8 @@ export interface StorageOverview {
     deletedButBilling: RetainedTotal
     entitlementPerUserBytes: number | null
     licenceEstimatePerUserBytes: number | null
+    entitlementPerUserIsSet: boolean
+    entitlementUnknownReason: OneDriveEntitlementUnknown | null
     overEntitlement: OverEntitlement | null
   }
 

@@ -124,8 +124,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
   const override = positiveOrNull(entitlementOverrideBytes)
   const oneDriveLicencePerUserBytes = skus === null ? null : oneDriveBytesPerUser(skus)
-  const oneDrivePerUserBytes =
-    positiveOrNull(oneDriveEntitlementOverrideBytes) ?? oneDriveLicencePerUserBytes
+  const oneDriveOverrideBytes = positiveOrNull(oneDriveEntitlementOverrideBytes)
+  const oneDrivePerUserBytes = oneDriveOverrideBytes ?? oneDriveLicencePerUserBytes
   const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
@@ -200,6 +200,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       deletedButBilling: retainedTotal(drives),
       entitlementPerUserBytes: oneDrivePerUserBytes,
       licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
+      entitlementPerUserIsSet: oneDriveOverrideBytes !== null,
+      entitlementUnknownReason:
+        oneDrivePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
       overEntitlement:
         oneDrivePerUserBytes === null
           ? null

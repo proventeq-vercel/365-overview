@@ -350,6 +350,22 @@ describe('buildStorageOverview composition', () => {
       expect(overview.oneDrive.entitlementPerUserBytes).toBeNull()
       expect(overview.oneDrive.licenceEstimatePerUserBytes).toBeNull()
       expect(overview.oneDrive.overEntitlement).toBeNull()
+      expect(overview.oneDrive.entitlementUnknownReason).toBe('licencesUnavailable')
+    })
+
+    it('says no plan is sized, rather than that licences were unreadable, when they were read', () => {
+      const overview = buildStorageOverview(
+        inputs({ skus: [planSku('EXCHANGE_S_STANDARD', 40)], drives: [drive({ storageUsedBytes: 9000 * GB })] }),
+      )
+      expect(overview.oneDrive.overEntitlement).toBeNull()
+      expect(overview.oneDrive.entitlementUnknownReason).toBe('noSizedPlan')
+    })
+
+    it('has no unknown reason and marks the figure as set when an override is in force', () => {
+      const overview = buildStorageOverview(inputs({ skus: null, oneDriveEntitlementOverrideBytes: 2 * GB }))
+      expect(overview.oneDrive.entitlementUnknownReason).toBeNull()
+      expect(overview.oneDrive.entitlementPerUserIsSet).toBe(true)
+      expect(buildStorageOverview(inputs()).oneDrive.entitlementPerUserIsSet).toBe(false)
     })
 
     it('measures against the per-user storage set in the report settings, even without licences', () => {

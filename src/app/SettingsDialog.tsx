@@ -150,8 +150,8 @@ export function SettingsDialog({
               id={oneDriveEntitlementId}
               valueBytes={settings.oneDriveEntitlementOverrideBytes}
               unitBytes={GB_IN_BYTES}
-              step="1"
-              min="1"
+              step="0.5"
+              min="0.5"
               suffix={t('settings.oneDriveEntitlementUnit')}
               placeholder={t('settings.oneDriveEntitlementPlaceholder')}
               onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}

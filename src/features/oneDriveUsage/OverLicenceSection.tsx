@@ -8,7 +8,8 @@ const OVER_LICENCE_COLUMNS = ['name', 'owner', 'used', 'overEntitlement', 'capac
 
 export function OverLicenceSection({ overview, delay }: { overview: StorageOverview; delay?: number }) {
   const t = useTranslation()
-  const { overEntitlement, entitlementPerUserBytes, usedBytes } = overview.oneDrive
+  const { overEntitlement, entitlementPerUserBytes, entitlementPerUserIsSet, entitlementUnknownReason, usedBytes } =
+    overview.oneDrive
   const entitlement = entitlementPerUserBytes === null ? null : formatBytes(entitlementPerUserBytes)
 
   return (
@@ -17,14 +18,20 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
       subtitle={
         entitlement === null
           ? t('oneDrive.overLicence.subtitleUnknown')
-          : t('oneDrive.overLicence.subtitle', { entitlement })
+          : entitlementPerUserIsSet
+            ? t('oneDrive.overLicence.subtitleSet', { entitlement })
+            : t('oneDrive.overLicence.subtitle', { entitlement })
       }
       delay={delay}
     >
       <Panel>
         <PanelLabel>{t('oneDrive.overLicence.label')}</PanelLabel>
         {overEntitlement === null || entitlement === null ? (
-          <EmptyBlock>{t('oneDrive.overLicence.unknown')}</EmptyBlock>
+          <EmptyBlock>
+            {entitlementUnknownReason === 'noSizedPlan'
+              ? t('oneDrive.overLicence.noSizedPlan')
+              : t('oneDrive.overLicence.unknown')}
+          </EmptyBlock>
         ) : overEntitlement.count > 0 ? (
           <SiteTable
             rows={overEntitlement.drives}

@@ -9,7 +9,7 @@ test('the OneDrive report lists the accounts over their licensed storage, and th
   await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible({ timeout: 30_000 })
 
   const card = page.locator('[data-slot="stat-card"]', { hasText: 'Over licensed storage' })
-  await expect(card).toHaveText(/^4Over licensed storage1\.1 TB beyond the 5 TB per user the licences include$/)
+  await expect(card).toHaveText(/^4Over licensed storage1\.1 TB beyond 5 TB per user$/)
 
   const table = page.getByRole('table', { name: 'OneDrives over licensed storage' })
   const rows = table.getByRole('row').filter({ has: page.getByRole('cell') })
@@ -22,9 +22,9 @@ test('the OneDrive report lists the accounts over their licensed storage, and th
   await page.getByLabel('OneDrive storage per user').fill('6144')
   await page.keyboard.press('Escape')
 
-  await expect(card).toHaveText(/^0Over licensed storageEvery drive fits the 6 TB per user the licences include$/)
+  await expect(card).toHaveText(/^0Over licensed storageEvery drive fits within 6 TB per user$/)
   await expect(table).toHaveCount(0)
-  await expect(page.getByText('No OneDrive holds more than the 6 TB per user the licences include')).toBeVisible()
+  await expect(page.getByText('No OneDrive holds more than 6 TB')).toBeVisible()
 })
 
 test('the storage report counts the drives over their licence beside the drives near cap', async ({ page }) => {

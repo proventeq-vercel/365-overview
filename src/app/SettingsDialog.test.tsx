@@ -119,6 +119,16 @@ describe('SettingsDialog', () => {
     )
   })
 
+  it('puts the saved value back when the field is left holding one the report ignores', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+    const field = screen.getByLabelText('OneDrive storage per user')
+    await user.type(field, '0')
+    expect(field).toHaveValue(0)
+    await user.tab()
+    expect(field).toHaveValue(null)
+  })
+
   it('tells the admin what the licence estimate is, so they know what they are replacing', async () => {
     renderDialog()
     expect(await screen.findByText(/estimated from licences: 7\.8 TB/i)).toBeInTheDocument()

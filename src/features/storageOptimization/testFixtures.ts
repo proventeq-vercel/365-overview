@@ -28,6 +28,8 @@ export const base: StorageOverview = {
     deletedButBilling: { bytes: 0, count: 0 },
     entitlementPerUserBytes: 1024 * GB,
     licenceEstimatePerUserBytes: 1024 * GB,
+    entitlementPerUserIsSet: false,
+    entitlementUnknownReason: null,
     overEntitlement: { drives: [], count: 7, excessBytes: 900 * GB },
   },
   offenders: {

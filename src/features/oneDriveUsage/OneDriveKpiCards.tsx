@@ -2,7 +2,7 @@ import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
-import type { OverEntitlement, StorageOverview } from '@/types/storage'
+import type { OneDriveEntitlementUnknown, OverEntitlement, StorageOverview } from '@/types/storage'
 
 export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
@@ -13,6 +13,7 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
     deletedButBilling,
     overEntitlement,
     entitlementPerUserBytes,
+    entitlementUnknownReason,
   } = overview.oneDrive
 
   return (
@@ -38,6 +39,7 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
       <OverLicenceCard
         overEntitlement={overEntitlement}
         entitlementPerUserBytes={entitlementPerUserBytes}
+        unknownReason={entitlementUnknownReason}
       />
       <StatCard
         label={t('oneDrive.kpi.retained')}
@@ -56,9 +58,11 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
 function OverLicenceCard({
   overEntitlement,
   entitlementPerUserBytes,
+  unknownReason,
 }: {
   overEntitlement: OverEntitlement | null
   entitlementPerUserBytes: number | null
+  unknownReason: OneDriveEntitlementUnknown | null
 }) {
   const t = useTranslation()
   if (overEntitlement === null || entitlementPerUserBytes === null) {
@@ -67,7 +71,11 @@ function OverLicenceCard({
         label={t('oneDrive.kpi.overLicence')}
         value={t('storageOptimisation.kpi.unknown')}
         color={P365.grey400}
-        information={t('oneDrive.kpi.overLicenceUnknown')}
+        information={
+          unknownReason === 'noSizedPlan'
+            ? t('oneDrive.kpi.overLicenceNoSizedPlan')
+            : t('oneDrive.kpi.overLicenceUnknown')
+        }
       />
     )
   }
