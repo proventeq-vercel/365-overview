@@ -64,6 +64,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(rows[0]).toHaveTextContent('430 GB')
     expect(rows[3]).toHaveTextContent('User 50')
     expect(rows[3]).toHaveTextContent('130 GB')
+    expect(screen.getByText(/^Measured against the most generous plan the tenant holds/)).toBeInTheDocument()
   })
 
   it('says no account is over its licence rather than showing an empty table', async () => {
@@ -91,6 +92,8 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(
       within(screen.getByRole('table', { name: 'OneDrives over licensed storage' })).getAllByRole('row'),
     ).toHaveLength(24)
+    expect(screen.getByText(/^Measured against the figure set in Options, Report settings\./)).toBeInTheDocument()
+    expect(screen.queryByText(/^Measured against the most generous plan/)).not.toBeInTheDocument()
   })
 
   it('lists the top drives and a per-drive capacity column, headed Drive not Site', async () => {
