@@ -251,6 +251,46 @@ no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a vi
 when access is missing links to it — the sign-in error and consent screens, the consent / tenant /
 role panels, an auth error from Graph, and the start-up error.
 
+### Setting up a tenant
+
+Nothing needs changing on Proventeq's side for a new tenant: both registrations are multi-tenant,
+publisher-verified ("Proventeq Ltd") and list both sites as SPA redirect URIs. Everything below is
+done by the customer's administrator. The admin consent link is on each site's `/help` page.
+
+**Application permissions** — <https://gray-water-0a8893303.1.azurestaticapps.net>
+
+1. A Global Administrator (or Privileged Role Administrator) opens
+   `https://login.microsoftonline.com/organizations/adminconsent?client_id=84e24db0-8904-41f8-8556-14a2b6863b1a&redirect_uri=https%3A%2F%2Fgray-water-0a8893303.1.azurestaticapps.net%2F`,
+   signs in and selects **Accept**. This grants `Reports.Read.All` and `Organization.Read.All` as
+   application permissions.
+2. Optional, for site names — grant `Sites.Read.All` too (a Global Administrator, in Graph
+   PowerShell):
+
+   ```powershell
+   Connect-MgGraph -Scopes "AppRoleAssignment.ReadWrite.All","Application.Read.All"
+   $app   = Get-MgServicePrincipal -Filter "appId eq '84e24db0-8904-41f8-8556-14a2b6863b1a'"
+   $graph = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+   New-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $app.Id -PrincipalId $app.Id `
+     -ResourceId $graph.Id -AppRoleId 332a536c-c7ef-4017-ab91-336970924f0d
+   ```
+
+   Without it every site is listed by its id; with it the proxy names every site in one pass.
+3. Optional — allow only some groups (see *Limiting who can open the report*).
+4. Anyone allowed opens the site and signs in. No directory role is needed.
+
+**Delegated permissions** — <https://p365lite.z33.web.core.windows.net/>
+
+1. A Global Administrator opens
+   `https://login.microsoftonline.com/organizations/adminconsent?client_id=0cedd025-e545-44f2-b3f8-82969e56547a&redirect_uri=https%3A%2F%2Fp365lite.z33.web.core.windows.net%2F`,
+   signs in and selects **Accept**. This grants the delegated `Reports.Read.All`,
+   `Organization.Read.All` and `User.Read`. Until then everyone stops at "Your organisation has
+   not approved this app yet".
+2. Every person who opens the report holds Reports Reader (the least privilege), Global Reader,
+   SharePoint Administrator or Global Administrator: **Entra admin center → Roles & admins →
+   Reports Reader → Add assignments**.
+3. They open the site and sign in. Sites are listed by id: the delegated registration does not ask
+   for `Sites.Read.All`, and even with it a user could only name the sites they can open.
+
 ### Limiting who can open the report
 
 Any user of a consented tenant can sign in by default. To allow only some groups, the tenant's
