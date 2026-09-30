@@ -25,6 +25,7 @@ export type ColumnKey =
   | 'lastActivity'
   | 'template'
   | 'capacity'
+  | 'overEntitlement'
 
 interface SiteTableProps {
   rows: StorageRow[]
@@ -108,6 +109,13 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
     sortable: true,
     width: '120px',
     sortValue: capacityRatio,
+  },
+  overEntitlement: {
+    label: 'table.column.overEntitlement',
+    help: 'table.column.help.overEntitlement',
+    sortable: true,
+    width: '120px',
+    sortValue: (r) => r.overEntitlementBytes ?? 0,
   },
 }
 
@@ -248,6 +256,12 @@ export function SiteTable({
             {row.allocatedBytes !== undefined && row.allocatedBytes > 0
               ? formatPercent(capacityRatio(row))
               : ''}
+          </span>
+        )
+      case 'overEntitlement':
+        return (
+          <span role="cell" key={key} className="tabular font-semibold text-p365-navy">
+            {row.overEntitlementBytes === undefined ? '' : formatBytes(row.overEntitlementBytes)}
           </span>
         )
       case 'share': {

@@ -74,6 +74,14 @@ export function GrowthSection({ overview, delay }: Props) {
               label={t('storageOptimisation.growth.drivesNearCap')}
               value={formatNumber(oneDrive.drivesNearCap)}
             />
+            <MiniStat
+              label={t('storageOptimisation.growth.drivesOverLicence')}
+              value={
+                oneDrive.overEntitlement === null
+                  ? t('storageOptimisation.kpi.unknown')
+                  : formatNumber(oneDrive.overEntitlement.count)
+              }
+            />
           </MiniStatRow>
         </Panel>
 

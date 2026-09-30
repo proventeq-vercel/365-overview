@@ -58,7 +58,7 @@ describe('AccessHelpPage', () => {
     const rows = within(permissions).getAllByRole('listitem')
     expect(rows.map((row) => row.textContent)).toEqual([
       'Reports.Read.AllRequiredMicrosoft 365 usage reports: storage per site and per OneDrive',
-      'Organization.Read.AllOptionaltenant name and licences, for the storage entitlement',
+      'Organization.Read.AllOptionaltenant name and licences, for the storage entitlement and OneDrive storage per user',
       'Sites.Read.AllOptionalsite names; without it every site is listed by its id',
     ])
   })

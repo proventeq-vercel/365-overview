@@ -20,7 +20,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
 | The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
 | Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; a request carrying any other `Origin` is refused with 403 before the caller's token is read. |
-| Application permissions | **`Reports.Read.All` is the only required permission** — kept to one so a prospect's administrator is asked for as little as possible. Approving sign-in does not grant it, so a tenant whose administrator only approved sign-in gets `403 AdminConsentRequired`, and the SPA shows its admin-consent screen instead of a role screen; such a token is never cached, so a grant takes effect on the next call. `Sites.Read.All` (site names) and `Organization.Read.All` (tenant name, licence-based entitlement) are **optional**: when a tenant has not granted them Graph answers those calls `403`, the proxy relays it, and the report degrades — sites named by id, "Your tenant", an unknown entitlement the user can enter in Report settings. |
+| Application permissions | **`Reports.Read.All` is the only required permission** — kept to one so a prospect's administrator is asked for as little as possible. Approving sign-in does not grant it, so a tenant whose administrator only approved sign-in gets `403 AdminConsentRequired`, and the SPA shows its admin-consent screen instead of a role screen; such a token is never cached, so a grant takes effect on the next call. `Sites.Read.All` (site names) and `Organization.Read.All` (tenant name, licence-based entitlement, OneDrive storage per user) are **optional**: when a tenant has not granted them Graph answers those calls `403`, the proxy relays it, and the report degrades — sites named by id, "Your tenant", an unknown entitlement the user can enter in Report settings. |
 | Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants. Unset (the default), the gate is admin consent alone: any tenant that has consented may read **its own** data, which is the multi-tenant behaviour this app is built for. |
 
 Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA's existing
@@ -136,7 +136,7 @@ cd ~/projects/365-overview/functions && npm run local -- --origin=http://localho
 1. **Registration.** On the registration the proxy will use (the multi-tenant *Storage Analyser*
    `84e24db0-…`, or a second one dedicated to the proxy):
    - **API permissions**: delegated `User.Read` (sign-in), application `Reports.Read.All` and
-     application `Organization.Read.All` (tenant name and the licence-based entitlement) — nothing
+     application `Organization.Read.All` (tenant name, the licence-based entitlement and OneDrive storage per user) — nothing
      else. Every entry here is a line on each prospect's consent page, so no delegated duplicates of
      the application permissions (they read as the same permission twice) and no `Sites.Read.All`,
      which reads every file in every site.

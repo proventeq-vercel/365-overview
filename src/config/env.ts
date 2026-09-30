@@ -13,12 +13,15 @@ export interface AppEnv {
   hideNames: boolean
 }
 
-const SCENARIOS: MockScenario[] = [
-  'healthy',
-  'over-entitlement',
-  'concealed',
-  'short-history',
-]
+const SCENARIO_SET: Record<MockScenario, true> = {
+  healthy: true,
+  'over-entitlement': true,
+  concealed: true,
+  'short-history': true,
+  'onedrive-over-licence': true,
+}
+
+const SCENARIOS = Object.keys(SCENARIO_SET) as MockScenario[]
 
 function readScenario(value: string | undefined): MockScenario {
   return SCENARIOS.find((scenario) => scenario === value) ?? 'healthy'

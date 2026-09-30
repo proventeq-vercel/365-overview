@@ -49,6 +49,9 @@ describe('readEnv mock scenario', () => {
     expect(readEnv({ VITE_MOCK_SCENARIO: 'short-history' }).mockScenario).toBe(
       'short-history',
     )
+    expect(readEnv({ VITE_MOCK_SCENARIO: 'onedrive-over-licence' }).mockScenario).toBe(
+      'onedrive-over-licence',
+    )
   })
 
   it('falls back to healthy for an unknown scenario rather than failing to boot', () => {

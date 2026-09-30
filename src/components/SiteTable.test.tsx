@@ -129,6 +129,34 @@ describe('SiteTable', () => {
     expect(cells.at(-2)).toHaveTextContent('personal/d')
   })
 
+  it('sorts by how far a drive is over its licence, not by how much it holds', async () => {
+    const user = userEvent.setup()
+    render(
+      <SiteTable
+        rows={[
+          { ...drive, id: 'x', url: 'https://c-my.sharepoint.com/personal/x', storageUsedBytes: 900, allocatedBytes: 10_000, overEntitlementBytes: 100 },
+          { ...drive, id: 'y', url: 'https://c-my.sharepoint.com/personal/y', storageUsedBytes: 800, allocatedBytes: 100_000, overEntitlementBytes: 300 },
+        ]}
+        totalUsedBytes={1700}
+        columns={['name', 'overEntitlement']}
+      />,
+    )
+    expect(screen.getAllByRole('cell')[0]).toHaveTextContent('personal/x')
+    await user.click(screen.getByRole('columnheader', { name: /over licence by/i }))
+    expect(screen.getAllByRole('cell')[0]).toHaveTextContent('personal/y')
+  })
+
+  it('writes the over-licence excess in navy, which keeps body-text contrast on white', () => {
+    render(
+      <SiteTable
+        rows={[{ ...drive, overEntitlementBytes: 300 }]}
+        totalUsedBytes={500}
+        columns={['name', 'overEntitlement']}
+      />,
+    )
+    expect(screen.getAllByRole('cell')[1]).toHaveClass('text-p365-navy')
+  })
+
   it('filters on search across url and owner', async () => {
     const user = userEvent.setup()
     render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'owner']} />)

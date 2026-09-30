@@ -132,7 +132,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of four fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of five fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -142,6 +142,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `over-entitlement` | Already using more than the estimated entitlement — no exhaustion date to project |
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
 | `short-history` | Fewer than six months of trend data — no forecast, explicitly not an all-clear |
+| `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -189,7 +190,7 @@ exists; these steps are for pointing the app at a registration of your own throu
 3. Under **Supported account types**, choose **Accounts in any organizational directory** (`AzureADMultipleOrgs`).
 4. Under **Redirect URI**, select platform **Single-page application (SPA)** and enter the URI where the app is served (e.g. `http://localhost:5173/` for dev, your production URL for prod). This must match `VITE_REDIRECT_URI`.
 5. Under **Branding & properties**, set a **verified publisher domain** — without it, tenant administrators see an unverified-publisher warning on the consent prompt.
-6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read` and `Reports.Read.All` — and, optionally, `Organization.Read.All` (tenant name, licence-based entitlement) and `Sites.Read.All` (site names). The app requests `.default`, so it uses exactly what is listed here and still works without the optional two.
+6. Go to **API permissions > Add a permission > Microsoft Graph > Delegated permissions** and add `User.Read` and `Reports.Read.All` — and, optionally, `Organization.Read.All` (tenant name, licence-based entitlement and OneDrive storage per user) and `Sites.Read.All` (site names). The app requests `.default`, so it uses exactly what is listed here and still works without the optional two.
 7. Copy the **Application (client) ID** into `VITE_CLIENT_ID` and set `VITE_AUTHORITY_URI` to `https://login.microsoftonline.com/organizations`.
 
 `Reports.Read.All`, `Organization.Read.All` and `Sites.Read.All` require **admin consent** in each
@@ -232,7 +233,7 @@ The delegated path asks for **`.default`**: the token carries whatever delegated
 registration was granted, and nothing more is ever requested. So a registration without
 `Sites.Read.All` (or `Organization.Read.All`) still signs in and loads the report — the site-name
 lookups are refused with `403`, which the report treats as "no name" and shows each site by its id;
-without `Organization.Read.All` the licence-based entitlement is unknown. Only `Reports.Read.All`
+without `Organization.Read.All` the licence-based entitlement and the OneDrive storage per user are unknown. Only `Reports.Read.All`
 is required. The registration must list the deployment's origin as a **SPA redirect URI**.
 
 As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated
@@ -309,7 +310,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `modes` | `reset` | `/?modes=reset` (forget every override) |
 
@@ -343,11 +344,17 @@ unless it is asked for** — from the env or from `?features=`. With it off ther
 hamburger and the side menu is not mounted at all, however many reports are enabled; with
 it on and two or more reports enabled, the hamburger opens the side menu of them. The root
 path falls back to the first enabled report. The OneDrive Usage report is the proof of
-concept for a second report and reuses the same model and data.
+concept for a second report and reuses the same model and data. Beside the largest drives and
+every drive, it lists the **OneDrives over their licensed storage**: accounts holding more than
+any licence in the tenant includes per user — 5 TB where the tenant has five or more E3/E5-class
+licences (SharePoint or OneDrive Plan 2), 1 TB on Business plans, 2 GB on frontline. Microsoft
+does not report which licence each user holds, so the most generous plan present sets the line
+and only drives no licence could cover are listed; with the licences unreadable, or none of them
+carrying a known OneDrive allowance (education, developer and add-on plans), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
-picked from a list), and the SharePoint entitlement in TB — the licence estimate is shown as the
-hint so the admin knows what they are replacing. Settings live in the browser's
+picked from a list), the SharePoint entitlement in TB and the OneDrive storage per user in GB —
+each shows its licence estimate as the hint so the admin knows what they are replacing. Settings live in the browser's
 localStorage only.
 
 ## Running the app
@@ -509,7 +516,7 @@ src/
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES + URL overrides), modes.ts, featureFlags.ts, appConfig.ts
-  data/          # live.ts (the five Graph calls), fixtures.ts (four mock tenants + DataSource interface)
+  data/          # live.ts (the five Graph calls), fixtures.ts (five mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format

@@ -25,6 +25,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0],
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
     entitlementOverrideBytes: settings.entitlementOverrideBytes,
+    oneDriveEntitlementOverrideBytes: settings.oneDriveEntitlementOverrideBytes,
     namesHidden: ds.namesHidden,
   })
 }
@@ -44,7 +45,7 @@ describe('mock data source', () => {
     expect(drives.every((d) => d.template === undefined)).toBe(true)
   })
 
-  it.each(['healthy', 'over-entitlement', 'concealed', 'short-history'] as const)(
+  it.each(['healthy', 'over-entitlement', 'concealed', 'short-history', 'onedrive-over-licence'] as const)(
     '%s: each pool trend ends at the sum of its own rows',
     async (scenario) => {
       const ds = createMockDataSource(scenario)

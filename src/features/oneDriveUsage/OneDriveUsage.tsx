@@ -10,6 +10,7 @@ import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
 import { OneDriveKpiCards } from './OneDriveKpiCards'
+import { OverLicenceSection } from './OverLicenceSection'
 
 const DRIVE_COLUMNS = ['name', 'owner', 'used', 'capacity', 'files', 'active', 'lastActivity'] as const
 
@@ -34,6 +35,7 @@ export function OneDriveUsage() {
         </p>
       </div>
       <OneDriveKpiCards overview={data} />
+      <NameCaveats caveats={caveats} />
       <Section title={t('oneDrive.top.title')} subtitle={t('oneDrive.top.subtitle')} delay={80}>
         <Panel>
           <FacetBars
@@ -44,12 +46,12 @@ export function OneDriveUsage() {
           <PanelDescription>{t('oneDrive.allocationNote')}</PanelDescription>
         </Panel>
       </Section>
+      <OverLicenceSection overview={data} delay={120} />
       <Section
         title={t('oneDrive.table.title')}
         subtitle={t('oneDrive.table.subtitle', { retained: oneDrive.deletedButBilling.count })}
         delay={160}
       >
-        <NameCaveats caveats={caveats} />
         <Panel>
           <PanelLabel>{t('oneDrive.table.label')}</PanelLabel>
           <SiteTable

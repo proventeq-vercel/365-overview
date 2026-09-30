@@ -46,8 +46,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
-  tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
+- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (five mock
+  tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
+  `onedrive-over-licence`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
@@ -107,8 +108,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   when `App.tsx` passes `menuEnabled` — the `app.menu` flag, which is **not** in
   `DEFAULT_FEATURES` — *and* more than one report is enabled. Adding a report = a
   flag in `FeatureFlags`, one entry here and one folder under `src/features/`.
-- `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards,
-  top drives, drive table with the per-drive capacity column). Same
+- `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards
+  incl. *Over licensed storage*, top drives, `OverLicenceSection` with the
+  *Over licence by* column, drive table with the per-drive capacity column). Same
   `useStorageOverview` query, so switching reports never refetches.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
@@ -133,7 +135,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
+  `AdornedInput` (prefix/suffix input), `ByteOverrideInput` (a byte figure
+  edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
@@ -150,7 +153,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   fetching), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
-  entitlement in TB with the licence estimate as hint), `SettingsProvider` /
+  entitlement in TB and OneDrive storage per user in GB, each with its
+  licence estimate as hint), `SettingsProvider` /
   `useSettings` (localStorage-backed `ReportSettings` context), `SideMenu`
   (P365's `NavBarComponent` pattern: a navy panel that is always mounted and
   animates `width` 0 ↔ 17.5rem in 260ms `cubic-bezier(0.4,0,0.2,1)` with a
@@ -192,6 +196,30 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   maximum. Never sum it, never take a percentage of it. OneDrive per-drive
   allocation IS the real per-user cap and a percentage of it is meaningful — do
   not "fix" one by analogy with the other.**
+- **"Over licensed storage" is measured against the licence, not the drive's
+  quota.** Per Microsoft's OneDrive service description a user licence
+  includes 1 TB on Business plans, 1 TB **raisable to 5 TB** on E3/E5 (five or
+  more licences) and 2 GB on F3. `lib/entitlement.oneDriveBytesPerUser` takes
+  the **most generous** plan the tenant holds (SharePoint/OneDrive Plan 2 ×≥5 →
+  5 TB, Plan 1 → 1 TB, `SHAREPOINTDESKLESS` → 2 GB), because the usage report
+  does not say which licence each user holds — so, without an override, a
+  listed drive is one no licence in the tenant could cover. The plan sets are
+  checked against Microsoft's "Product names and service plan identifiers"
+  CSV, not memory: Project, Visio and Dynamics SKUs (`POWERAPPS_DYN_APPS`)
+  carry SharePoint for their own sites and get no tier, and any SKU with an
+  `_EDU` plan gets none (education allowances vary by agreement, and Apps for
+  Students carries `ONEDRIVESTANDARD`). Never flag against a flat 1 TB: an E3
+  tenant's legally raised 5 TB drives would read as over licence.
+  `SHAREPOINTENTERPRISE_MIDMARKET` counts as Plan 2: it is carried by E5 EEA
+  with Calling Minutes as well as the retired Midsize Business. No readable
+  licences, or none with a known allowance (`entitlementUnknownReason`
+  `licencesUnavailable` / `noSizedPlan`), and no override →
+  `entitlementPerUserBytes` and `overEntitlement` are `null` (shown
+  *Unknown*), never a guessed default.
+  `oneDrive.overEntitlement` lists live drives with `used > perUser`, largest
+  first, each row a copy carrying `overEntitlementBytes`; the setting
+  `oneDriveEntitlementOverrideBytes` (null or ≤ 0 = the estimate) replaces the
+  estimate. Never walk `/users` for per-user licences from here.
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
   `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
   defect.** The cost figures are the exception and are never null: with an
@@ -284,7 +312,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`) for the other tenants. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`) for the other tenants. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

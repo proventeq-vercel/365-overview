@@ -1,6 +1,12 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
-import type { Slice, StoragePool, StorageOverview, StorageRow } from '@/types/storage'
-import { GB_IN_BYTES, estimateEntitlementBytes } from '@/lib/entitlement'
+import type {
+  OverEntitlement,
+  Slice,
+  StoragePool,
+  StorageOverview,
+  StorageRow,
+} from '@/types/storage'
+import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { annualGrowthGb, cumulativeGrowthCost, growthCostAnnual } from '@/lib/cost'
 import { namesAreConcealed } from '@/lib/concealment'
 import { rowName } from '@/lib/rowName'
@@ -37,6 +43,7 @@ export interface OverviewInputs {
   ratePerGb: number
   currency: string
   entitlementOverrideBytes: number | null
+  oneDriveEntitlementOverrideBytes: number | null
   now?: Date
   forceUnknownEntitlement?: boolean
   namesHidden?: boolean
@@ -83,6 +90,18 @@ function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
   )
 }
 
+function drivesOverEntitlement(liveDrives: StorageRow[], perUserBytes: number): OverEntitlement {
+  const over = liveDrives
+    .filter((drive) => drive.storageUsedBytes > perUserBytes)
+    .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
+    .map((drive) => ({ ...drive, overEntitlementBytes: drive.storageUsedBytes - perUserBytes }))
+  return {
+    drives: over,
+    count: over.length,
+    excessBytes: over.reduce((total, drive) => total + drive.overEntitlementBytes, 0),
+  }
+}
+
 const positiveOrNull = (bytes: number | null): number | null =>
   bytes !== null && bytes > 0 ? bytes : null
 
@@ -97,12 +116,16 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     ratePerGb,
     currency,
     entitlementOverrideBytes,
+    oneDriveEntitlementOverrideBytes,
     now = new Date(),
     forceUnknownEntitlement = false,
     namesHidden = false,
   } = inputs
 
   const override = positiveOrNull(entitlementOverrideBytes)
+  const oneDriveLicencePerUserBytes = skus === null ? null : oneDriveBytesPerUser(skus)
+  const oneDriveOverrideBytes = positiveOrNull(oneDriveEntitlementOverrideBytes)
+  const oneDrivePerUserBytes = oneDriveOverrideBytes ?? oneDriveLicencePerUserBytes
   const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
@@ -175,6 +198,15 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           drive.storageUsedBytes / drive.allocatedBytes >= NEAR_CAP_RATIO,
       ).length,
       deletedButBilling: retainedTotal(drives),
+      entitlementPerUserBytes: oneDrivePerUserBytes,
+      licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
+      entitlementPerUserIsSet: oneDriveOverrideBytes !== null,
+      entitlementUnknownReason:
+        oneDrivePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
+      overEntitlement:
+        oneDrivePerUserBytes === null
+          ? null
+          : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
     },
 
     offenders: {

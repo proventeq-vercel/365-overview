@@ -3,7 +3,12 @@ import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
 import { hideRowNames } from '../lib/hiddenNames'
 
-export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short-history'
+export type MockScenario =
+  | 'healthy'
+  | 'over-entitlement'
+  | 'concealed'
+  | 'short-history'
+  | 'onedrive-over-licence'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -21,6 +26,7 @@ export interface DataSource {
 const MB = 1_048_576
 const GB = 1024 * MB
 const ONE_DRIVE_CAP_BYTES = 1024 * GB
+const BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 
 const MOCK_REFRESH_DATE = '2026-08-30'
 
@@ -104,11 +110,16 @@ function namedSites(concealed: boolean): StorageRow[] {
   }))
 }
 
-function generateDrives(count: number, concealed = false): StorageRow[] {
+function generateDrives(count: number, concealed = false, overLicence = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
     const nearCap = i % 200 === 0
-    const mb = nearCap ? (950 + (i % 40)) * 1024 : 200 + ((i * 13) % 8000)
+    const raised = overLicence && i % 100 === 50
+    const mb = raised
+      ? (5200 + i) * 1024
+      : nearCap
+        ? (950 + (i % 40)) * 1024
+        : 200 + ((i * 13) % 8000)
     out.push({
       pool: 'OneDrive',
       id: concealed ? hashName(2000 + i) : `user${i}@contoso.com`,
@@ -120,7 +131,7 @@ function generateDrives(count: number, concealed = false): StorageRow[] {
       lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
-      allocatedBytes: ONE_DRIVE_CAP_BYTES,
+      allocatedBytes: raised ? BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
     })
   }
   return out
@@ -208,7 +219,7 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   const { sites, directory } = splitDirectory(
     scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites,
   )
-  const drives = generateDrives(400, concealed)
+  const drives = generateDrives(400, concealed, scenario === 'onedrive-over-licence')
   const sharePointCurve =
     scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
   const months = scenario === 'short-history' ? 2 : 6

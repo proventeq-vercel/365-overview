@@ -93,7 +93,7 @@ describe('HeaderActions', () => {
     ])
     for (const item of items) expect(item.querySelector('svg')).not.toBeNull()
     expect(menu).toHaveTextContent('Reload the report from Microsoft Graph')
-    expect(menu).toHaveTextContent('Currency, cost per GB and the SharePoint entitlement')
+    expect(menu).toHaveTextContent('Currency, cost per GB, the SharePoint entitlement and OneDrive storage per user')
     expect(menu).toHaveTextContent('Sign in with a different Microsoft account')
     expect(menu).toHaveTextContent('End this session')
     expect(screen.getByRole('separator')).toBeInTheDocument()

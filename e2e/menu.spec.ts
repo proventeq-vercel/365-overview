@@ -65,8 +65,8 @@ test('the OneDrive report is reachable from the menu and renders its own cards a
   await page.getByRole('link', { name: 'OneDrive Usage' }).click()
   await expect(page).toHaveURL(/\/onedrive-usage$/)
   await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible()
-  await expect(page.locator('[data-slot="stat-card"]')).toHaveCount(4)
-  await expect(page.getByRole('table', { name: 'OneDrives' })).toBeVisible()
+  await expect(page.locator('[data-slot="stat-card"]')).toHaveCount(5)
+  await expect(page.getByRole('table', { name: 'OneDrives', exact: true })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'Drive' })).toBeVisible()
   await expect(page.getByRole('banner')).toContainText('Contoso Ltd')
 
@@ -111,7 +111,7 @@ test('the options menu opens the settings dialog by keyboard and hands focus bac
 test('the OneDrive table pages through the drives fifty at a time', async ({ page }) => {
   await page.goto('/onedrive-usage')
   await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible()
-  const table = page.getByRole('table', { name: 'OneDrives' })
+  const table = page.getByRole('table', { name: 'OneDrives', exact: true })
   const rows = table.getByRole('row').filter({ has: page.getByRole('cell') })
   await expect(rows).toHaveCount(50)
   await expect(page.getByText('1–50 of 400')).toBeVisible()

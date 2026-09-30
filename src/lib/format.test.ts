@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   formatBytes,
+  formatBytesInUnit,
   formatLongMonthYear,
   formatShortMonthYear,
   formatNumber,
@@ -27,6 +28,19 @@ describe('formatBytes', () => {
 
   it('handles TB', () => {
     expect(formatBytes(1024 ** 4)).toBe('1 TB')
+  })
+})
+
+describe('formatBytesInUnit', () => {
+  const GIB = 1024 ** 3
+
+  it('writes bytes as a plain number of the unit, the way an input field holds it', () => {
+    expect(formatBytesInUnit(5 * 1024 * GIB, GIB)).toBe('5120')
+    expect(formatBytesInUnit(GIB / 2, GIB)).toBe('0.5')
+  })
+
+  it('is empty for no value, so the field shows its placeholder', () => {
+    expect(formatBytesInUnit(null, GIB)).toBe('')
   })
 })
 
