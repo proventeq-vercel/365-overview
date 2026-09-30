@@ -91,13 +91,31 @@ describe('SettingsDialog', () => {
     )
   })
 
-  it('clears the OneDrive per-user override when emptied, going back to the 1 TB licence', async () => {
+  it('clears the OneDrive per-user override when emptied, going back to the licence estimate', async () => {
     const user = userEvent.setup()
     const { onChange } = renderDialog({ oneDriveEntitlementOverrideBytes: 2048 * GB })
     expect(screen.getByLabelText('OneDrive storage per user')).toHaveValue(2048)
     await user.clear(screen.getByLabelText('OneDrive storage per user'))
     expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ oneDriveEntitlementOverrideBytes: null }),
+    )
+  })
+
+  it('tells the admin the OneDrive storage per user the licences give, so they know what they are replacing', async () => {
+    renderDialog()
+    expect(await screen.findByText(/^From licences: 5 TB/)).toBeInTheDocument()
+  })
+
+  it('keeps a half-typed 0 on the way to 0.5 rather than clearing the field', async () => {
+    const user = userEvent.setup()
+    const { onChange } = renderDialog()
+    const field = screen.getByLabelText('OneDrive storage per user')
+    await user.type(field, '0')
+    expect(field).toHaveValue(0)
+    await user.type(field, '.5')
+    expect(field).toHaveValue(0.5)
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ oneDriveEntitlementOverrideBytes: GB / 2 }),
     )
   })
 

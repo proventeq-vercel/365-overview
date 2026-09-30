@@ -142,6 +142,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `over-entitlement` | Already using more than the estimated entitlement — no exhaustion date to project |
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
 | `short-history` | Fewer than six months of trend data — no forecast, explicitly not an all-clear |
+| `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -309,7 +310,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `modes` | `reset` | `/?modes=reset` (forget every override) |
 
@@ -343,11 +344,17 @@ unless it is asked for** — from the env or from `?features=`. With it off ther
 hamburger and the side menu is not mounted at all, however many reports are enabled; with
 it on and two or more reports enabled, the hamburger opens the side menu of them. The root
 path falls back to the first enabled report. The OneDrive Usage report is the proof of
-concept for a second report and reuses the same model and data.
+concept for a second report and reuses the same model and data. Beside the largest drives and
+every drive, it lists the **OneDrives over their licensed storage**: accounts holding more than
+any licence in the tenant includes per user — 5 TB where the tenant has five or more E3/E5-class
+licences (SharePoint or OneDrive Plan 2), 1 TB on Business plans, 2 GB on frontline. Microsoft
+does not report which licence each user holds, so the most generous plan present sets the line
+and only drives no licence could cover are listed; with the licences unreadable the figure is
+*Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
-picked from a list), and the SharePoint entitlement in TB — the licence estimate is shown as the
-hint so the admin knows what they are replacing. Settings live in the browser's
+picked from a list), the SharePoint entitlement in TB and the OneDrive storage per user in GB —
+each shows its licence estimate as the hint so the admin knows what they are replacing. Settings live in the browser's
 localStorage only.
 
 ## Running the app

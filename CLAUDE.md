@@ -46,8 +46,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (four mock
-  tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`) +
+- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (five mock
+  tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
+  `onedrive-over-licence`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
@@ -193,14 +194,20 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   allocation IS the real per-user cap and a percentage of it is meaningful — do
   not "fix" one by analogy with the other.**
 - **"Over licensed storage" is measured against the licence, not the drive's
-  quota.** A user licence includes 1 TB of OneDrive
-  (`ONEDRIVE_PER_USER_ENTITLEMENT_BYTES`); an admin can raise a drive's quota
-  past it, and those drives are what `oneDrive.overEntitlement` lists (live
-  drives only, `used > perUser`, largest first, each row carrying
-  `overEntitlementBytes`). The usage report does not say which licence each
-  user holds, so the per-user figure is one tenant-wide setting
-  (`oneDriveEntitlementOverrideBytes`, null = 1 TB) — frontline tenants set
-  2 GB. Never walk `/users` for per-user licences from here.
+  quota.** Per Microsoft's OneDrive service description a user licence
+  includes 1 TB on Business plans, 1 TB **raisable to 5 TB** on E3/E5 (five or
+  more licences) and 2 GB on F3. `lib/entitlement.oneDriveBytesPerUser` takes
+  the **most generous** plan the tenant holds (SharePoint/OneDrive Plan 2 ×≥5 →
+  5 TB, Plan 1 → 1 TB, `SHAREPOINTDESKLESS` → 2 GB), because the usage report
+  does not say which licence each user holds — so a listed drive is one no
+  licence in the tenant could cover. Never flag against a flat 1 TB: an E3
+  tenant's legally raised 5 TB drives would read as over licence. No readable
+  licences and no override → `entitlementPerUserBytes` and `overEntitlement`
+  are `null` (shown *Unknown*), never a guessed default.
+  `oneDrive.overEntitlement` lists live drives with `used > perUser`, largest
+  first, each row a copy carrying `overEntitlementBytes`; the setting
+  `oneDriveEntitlementOverrideBytes` (null or ≤ 0 = the estimate) replaces the
+  estimate. Never walk `/users` for per-user licences from here.
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
   `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
   defect.** The cost figures are the exception and are never null: with an
@@ -293,7 +300,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`) for the other tenants. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`) for the other tenants. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

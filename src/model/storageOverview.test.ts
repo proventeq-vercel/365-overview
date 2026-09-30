@@ -286,67 +286,106 @@ describe('buildStorageOverview composition', () => {
   })
 
   describe('OneDrives over their licensed storage', () => {
-    it('lists live drives holding more than the 1 TB each licence includes, largest first, with the excess', () => {
+    const planSku = (plan: string, enabled: number): LicenseSku => ({
+      ...sku(plan, enabled),
+      servicePlans: [plan],
+    })
+
+    it('lists live drives holding more than the 5 TB an E3/E5 tenant licenses, largest first, with the excess', () => {
       const overview = buildStorageOverview(
         inputs({
           drives: [
-            drive({ id: 'under', storageUsedBytes: 1000 * GB }),
-            drive({ id: 'small-over', storageUsedBytes: 1100 * GB, allocatedBytes: 5120 * GB }),
-            drive({ id: 'big-over', storageUsedBytes: 3000 * GB, allocatedBytes: 5120 * GB }),
+            drive({ id: 'raised-inside-licence', storageUsedBytes: 4000 * GB, allocatedBytes: 5120 * GB }),
+            drive({ id: 'small-over', storageUsedBytes: 5200 * GB, allocatedBytes: 25_600 * GB }),
+            drive({ id: 'big-over', storageUsedBytes: 8000 * GB, allocatedBytes: 25_600 * GB }),
           ],
         }),
       )
-      const { overEntitlement, entitlementPerUserBytes } = overview.oneDrive
-      expect(entitlementPerUserBytes).toBe(1024 * GB)
-      expect(overEntitlement.count).toBe(2)
-      expect(overEntitlement.drives.map((row) => row.id)).toEqual(['big-over', 'small-over'])
-      expect(overEntitlement.drives.map((row) => row.overEntitlementBytes)).toEqual([
-        1976 * GB,
-        76 * GB,
-      ])
-      expect(overEntitlement.excessBytes).toBe(2052 * GB)
+      const { overEntitlement, entitlementPerUserBytes, licenceEstimatePerUserBytes } = overview.oneDrive
+      expect(entitlementPerUserBytes).toBe(5120 * GB)
+      expect(licenceEstimatePerUserBytes).toBe(5120 * GB)
+      expect(overEntitlement?.count).toBe(2)
+      expect(overEntitlement?.drives.map((row) => row.id)).toEqual(['big-over', 'small-over'])
+      expect(overEntitlement?.drives.map((row) => row.overEntitlementBytes)).toEqual([2880 * GB, 80 * GB])
+      expect(overEntitlement?.excessBytes).toBe(2960 * GB)
+    })
+
+    it('never flags a drive an admin raised above 1 TB on a tenant whose licences allow 5 TB', () => {
+      const overview = buildStorageOverview(
+        inputs({ drives: [drive({ storageUsedBytes: 1200 * GB, allocatedBytes: 5120 * GB })] }),
+      )
+      expect(overview.oneDrive.overEntitlement?.count).toBe(0)
+    })
+
+    it('draws the line at 1 TB on a Business-plan tenant', () => {
+      const overview = buildStorageOverview(
+        inputs({
+          skus: [planSku('SHAREPOINTSTANDARD', 40)],
+          drives: [drive({ storageUsedBytes: 1200 * GB, allocatedBytes: 1300 * GB })],
+        }),
+      )
+      expect(overview.oneDrive.entitlementPerUserBytes).toBe(1024 * GB)
+      expect(overview.oneDrive.overEntitlement?.drives[0].overEntitlementBytes).toBe(176 * GB)
     })
 
     it('does not count a drive holding exactly its licensed storage', () => {
       const overview = buildStorageOverview(
-        inputs({ drives: [drive({ storageUsedBytes: 1024 * GB, allocatedBytes: 5120 * GB })] }),
+        inputs({ drives: [drive({ storageUsedBytes: 5120 * GB, allocatedBytes: 25_600 * GB })] }),
       )
-      expect(overview.oneDrive.overEntitlement.count).toBe(0)
-      expect(overview.oneDrive.overEntitlement.excessBytes).toBe(0)
+      expect(overview.oneDrive.overEntitlement?.count).toBe(0)
+      expect(overview.oneDrive.overEntitlement?.excessBytes).toBe(0)
     })
 
     it('leaves a deleted-but-retained drive to the retained total', () => {
       const overview = buildStorageOverview(
-        inputs({ drives: [drive({ storageUsedBytes: 2048 * GB, isDeleted: true })] }),
+        inputs({ drives: [drive({ storageUsedBytes: 9000 * GB, isDeleted: true })] }),
       )
-      expect(overview.oneDrive.overEntitlement.count).toBe(0)
+      expect(overview.oneDrive.overEntitlement?.count).toBe(0)
     })
 
-    it('measures against the per-user storage set in the report settings', () => {
+    it('is unknown, not a guessed 1 TB, when the licences cannot be read', () => {
+      const overview = buildStorageOverview(
+        inputs({ skus: null, drives: [drive({ storageUsedBytes: 9000 * GB })] }),
+      )
+      expect(overview.oneDrive.entitlementPerUserBytes).toBeNull()
+      expect(overview.oneDrive.licenceEstimatePerUserBytes).toBeNull()
+      expect(overview.oneDrive.overEntitlement).toBeNull()
+    })
+
+    it('measures against the per-user storage set in the report settings, even without licences', () => {
       const overview = buildStorageOverview(
         inputs({
+          skus: null,
           oneDriveEntitlementOverrideBytes: 2 * GB,
           drives: [drive({ id: 'frontline', storageUsedBytes: 5 * GB })],
         }),
       )
       expect(overview.oneDrive.entitlementPerUserBytes).toBe(2 * GB)
-      expect(overview.oneDrive.overEntitlement.drives[0].overEntitlementBytes).toBe(3 * GB)
+      expect(overview.oneDrive.overEntitlement?.drives[0].overEntitlementBytes).toBe(3 * GB)
     })
 
-    it('falls back to the 1 TB licence when the setting is zero or negative', () => {
-      const overview = buildStorageOverview(
-        inputs({
-          oneDriveEntitlementOverrideBytes: 0,
-          drives: [drive({ storageUsedBytes: 5 * GB })],
-        }),
-      )
-      expect(overview.oneDrive.entitlementPerUserBytes).toBe(1024 * GB)
-      expect(overview.oneDrive.overEntitlement.count).toBe(0)
+    it('keeps reporting the licence estimate beside an override, for the settings hint', () => {
+      const overview = buildStorageOverview(inputs({ oneDriveEntitlementOverrideBytes: 2 * GB }))
+      expect(overview.oneDrive.entitlementPerUserBytes).toBe(2 * GB)
+      expect(overview.oneDrive.licenceEstimatePerUserBytes).toBe(5120 * GB)
+    })
+
+    it('ignores a zero or negative setting and keeps the licence estimate', () => {
+      for (const override of [0, -2 * GB]) {
+        const overview = buildStorageOverview(
+          inputs({
+            oneDriveEntitlementOverrideBytes: override,
+            drives: [drive({ storageUsedBytes: 5 * GB })],
+          }),
+        )
+        expect(overview.oneDrive.entitlementPerUserBytes).toBe(5120 * GB)
+        expect(overview.oneDrive.overEntitlement?.count).toBe(0)
+      }
     })
 
     it('does not change the drive rows the rest of the report lists', () => {
-      const over = drive({ storageUsedBytes: 2048 * GB })
-      const overview = buildStorageOverview(inputs({ drives: [over] }))
+      const overview = buildStorageOverview(inputs({ drives: [drive({ storageUsedBytes: 9000 * GB })] }))
+      expect(overview.oneDrive.overEntitlement?.count).toBe(1)
       expect(overview.oneDrive.drives[0].overEntitlementBytes).toBeUndefined()
     })
   })

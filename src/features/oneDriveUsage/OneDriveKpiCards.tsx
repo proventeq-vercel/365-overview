@@ -2,7 +2,7 @@ import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
-import type { StorageOverview } from '@/types/storage'
+import type { OverEntitlement, StorageOverview } from '@/types/storage'
 
 export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
@@ -14,7 +14,6 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
     overEntitlement,
     entitlementPerUserBytes,
   } = overview.oneDrive
-  const entitlement = formatBytes(entitlementPerUserBytes)
 
   return (
     <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" style={{ animationDelay: '40ms' }}>
@@ -36,18 +35,9 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
         color={drivesNearCap > 0 ? P365.orange : P365.green}
         information={drivesNearCap > 0 ? t('oneDrive.kpi.nearCapHint') : t('oneDrive.kpi.nearCapNone')}
       />
-      <StatCard
-        label={t('oneDrive.kpi.overLicence')}
-        value={formatNumber(overEntitlement.count)}
-        color={overEntitlement.count > 0 ? P365.orange : P365.green}
-        information={
-          overEntitlement.count > 0
-            ? t('oneDrive.kpi.overLicenceHint', {
-                excess: formatBytes(overEntitlement.excessBytes),
-                entitlement,
-              })
-            : t('oneDrive.kpi.overLicenceNone', { entitlement })
-        }
+      <OverLicenceCard
+        overEntitlement={overEntitlement}
+        entitlementPerUserBytes={entitlementPerUserBytes}
       />
       <StatCard
         label={t('oneDrive.kpi.retained')}
@@ -60,5 +50,41 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
         }
       />
     </div>
+  )
+}
+
+function OverLicenceCard({
+  overEntitlement,
+  entitlementPerUserBytes,
+}: {
+  overEntitlement: OverEntitlement | null
+  entitlementPerUserBytes: number | null
+}) {
+  const t = useTranslation()
+  if (overEntitlement === null || entitlementPerUserBytes === null) {
+    return (
+      <StatCard
+        label={t('oneDrive.kpi.overLicence')}
+        value={t('storageOptimisation.kpi.unknown')}
+        color={P365.grey400}
+        information={t('oneDrive.kpi.overLicenceUnknown')}
+      />
+    )
+  }
+  const entitlement = formatBytes(entitlementPerUserBytes)
+  return (
+    <StatCard
+      label={t('oneDrive.kpi.overLicence')}
+      value={formatNumber(overEntitlement.count)}
+      color={overEntitlement.count > 0 ? P365.orange : P365.green}
+      information={
+        overEntitlement.count > 0
+          ? t('oneDrive.kpi.overLicenceHint', {
+              excess: formatBytes(overEntitlement.excessBytes),
+              entitlement,
+            })
+          : t('oneDrive.kpi.overLicenceNone', { entitlement })
+      }
+    />
   )
 }

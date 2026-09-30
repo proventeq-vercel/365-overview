@@ -23,6 +23,9 @@ export function isCurrencyCode(value: unknown): value is string {
 const finiteOrNull = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) ? value : null
 
+const positiveOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
+
 const isRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0
 
@@ -31,7 +34,7 @@ export function sanitizeSettings(candidate: Partial<ReportSettings>): ReportSett
     ratePerGb: isRate(candidate.ratePerGb) ? candidate.ratePerGb : DEFAULT_SETTINGS.ratePerGb,
     currency: isCurrencyCode(candidate.currency) ? candidate.currency : DEFAULT_SETTINGS.currency,
     entitlementOverrideBytes: finiteOrNull(candidate.entitlementOverrideBytes),
-    oneDriveEntitlementOverrideBytes: finiteOrNull(candidate.oneDriveEntitlementOverrideBytes),
+    oneDriveEntitlementOverrideBytes: positiveOrNull(candidate.oneDriveEntitlementOverrideBytes),
   }
 }
 

@@ -68,8 +68,9 @@ export interface StorageOverview {
     driveCount: number
     drivesNearCap: number
     deletedButBilling: RetainedTotal
-    entitlementPerUserBytes: number
-    overEntitlement: OverEntitlement
+    entitlementPerUserBytes: number | null
+    licenceEstimatePerUserBytes: number | null
+    overEntitlement: OverEntitlement | null
   }
 
   offenders: {

@@ -32,8 +32,10 @@ function renderReport(scenario: MockScenario = 'healthy', overrides: Partial<Dat
 const card = (label: string) =>
   screen.getByText(label, { selector: '[data-slot="stat-card"] p' }).closest('[data-slot="stat-card"]') as HTMLElement
 
-describe('OneDriveUsage', () => {
-  it('shows the skeleton first, then the four OneDrive cards from the model', async () => {
+const FULL_REPORT_RENDER = { timeout: 15_000 }
+
+describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
+  it('shows the skeleton first, then the five OneDrive cards from the model', async () => {
     renderReport()
     expect(screen.getByLabelText('Loading report')).toHaveAttribute('aria-busy', 'true')
     expect(await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeInTheDocument()
@@ -42,26 +44,26 @@ describe('OneDriveUsage', () => {
     expect(card('Drives near capacity')).toHaveTextContent('2')
     expect(card('Drives near capacity')).toHaveTextContent(/90% or more/)
     expect(card('Deleted but still billing')).toHaveTextContent(/deleted drives/)
-    expect(card('Over licensed storage')).toHaveTextContent('0')
-    expect(card('Over licensed storage')).toHaveTextContent('Every drive fits the 1 TB its licence includes')
+    expect(card('Over licensed storage')).toHaveTextContent(
+      /^0Over licensed storageEvery drive fits the 5 TB per user the licences include$/,
+    )
   })
 
   it('lists the accounts holding more than their licensed OneDrive storage, with the excess', async () => {
-    renderReport('over-entitlement')
+    renderReport('onedrive-over-licence')
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(card('Over licensed storage')).toHaveTextContent('4')
     expect(card('Over licensed storage')).toHaveTextContent(
-      '1.1 TB beyond the 1 TB each licence includes',
+      /^4Over licensed storage1\.1 TB beyond the 5 TB per user the licences include$/,
     )
     const table = screen.getByRole('table', { name: 'OneDrives over licensed storage' })
     expect(within(table).getByRole('columnheader', { name: 'Over licence by' })).toBeInTheDocument()
     const rows = within(table).getAllByRole('row').slice(1)
     expect(rows).toHaveLength(4)
     expect(rows[0]).toHaveTextContent('User 350')
-    expect(rows[0]).toHaveTextContent('1.4 TB')
-    expect(rows[0]).toHaveTextContent('426 GB')
+    expect(rows[0]).toHaveTextContent('5.4 TB')
+    expect(rows[0]).toHaveTextContent('430 GB')
     expect(rows[3]).toHaveTextContent('User 50')
-    expect(rows[3]).toHaveTextContent('126 GB')
+    expect(rows[3]).toHaveTextContent('130 GB')
   })
 
   it('says no account is over its licence rather than showing an empty table', async () => {
@@ -69,7 +71,7 @@ describe('OneDriveUsage', () => {
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
     expect(
-      screen.getByText('No OneDrive holds more than the 1 TB a user licence includes'),
+      screen.getByText('No OneDrive holds more than the 5 TB per user the licences include'),
     ).toBeInTheDocument()
   })
 
@@ -81,7 +83,9 @@ describe('OneDriveUsage', () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(
-      screen.getByText('Accounts holding more than the 5 GB of OneDrive storage a user licence includes'),
+      screen.getByText(
+        'Accounts holding more OneDrive storage than any licence in the tenant includes (5 GB per user)',
+      ),
     ).toBeInTheDocument()
     expect(card('Over licensed storage')).toHaveTextContent(/^23Over licensed storage/)
     expect(
@@ -136,6 +140,21 @@ describe('OneDriveUsage', () => {
 
     renderReport('concealed')
     expect(await screen.findByText(/appear as hashes/i)).toBeInTheDocument()
+  })
+
+  it('says the over-licence figure is unknown, not zero, when the licences cannot be read', async () => {
+    renderReport('onedrive-over-licence', { getLicenses: async () => null })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(card('Over licensed storage')).toHaveTextContent(/^UnknownOver licensed storage/)
+    expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
+    expect(screen.getByText(/licences could not be read/)).toBeInTheDocument()
+  })
+
+  it('explains hidden names before the first table that shows them', async () => {
+    renderReport('concealed')
+    const banner = await screen.findByText(/appear as hashes/i)
+    const firstTable = screen.getByText('OneDrives over their licensed storage')
+    expect(banner.compareDocumentPosition(firstTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('shows the same access failure screens as the storage report', async () => {

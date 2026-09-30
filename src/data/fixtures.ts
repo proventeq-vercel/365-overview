@@ -3,7 +3,12 @@ import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
 import { hideRowNames } from '../lib/hiddenNames'
 
-export type MockScenario = 'healthy' | 'over-entitlement' | 'concealed' | 'short-history'
+export type MockScenario =
+  | 'healthy'
+  | 'over-entitlement'
+  | 'concealed'
+  | 'short-history'
+  | 'onedrive-over-licence'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -21,7 +26,7 @@ export interface DataSource {
 const MB = 1_048_576
 const GB = 1024 * MB
 const ONE_DRIVE_CAP_BYTES = 1024 * GB
-const RAISED_ONE_DRIVE_CAP_BYTES = 5 * ONE_DRIVE_CAP_BYTES
+const SUPPORT_RAISED_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 
 const MOCK_REFRESH_DATE = '2026-08-30'
 
@@ -111,7 +116,7 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
     const nearCap = i % 200 === 0
     const raised = overLicence && i % 100 === 50
     const mb = raised
-      ? (1100 + i) * 1024
+      ? (5200 + i) * 1024
       : nearCap
         ? (950 + (i % 40)) * 1024
         : 200 + ((i * 13) % 8000)
@@ -126,7 +131,7 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
       lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
-      allocatedBytes: raised ? RAISED_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
+      allocatedBytes: raised ? SUPPORT_RAISED_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
     })
   }
   return out
@@ -214,7 +219,7 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   const { sites, directory } = splitDirectory(
     scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites,
   )
-  const drives = generateDrives(400, concealed, scenario === 'over-entitlement')
+  const drives = generateDrives(400, concealed, scenario === 'onedrive-over-licence')
   const sharePointCurve =
     scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
   const months = scenario === 'short-history' ? 2 : 6

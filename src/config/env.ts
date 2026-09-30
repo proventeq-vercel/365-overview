@@ -18,6 +18,7 @@ const SCENARIOS: MockScenario[] = [
   'over-entitlement',
   'concealed',
   'short-history',
+  'onedrive-over-licence',
 ]
 
 function readScenario(value: string | undefined): MockScenario {

@@ -119,4 +119,16 @@ describe('GrowthSection', () => {
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('0 B')
   })
+
+  it('shows drives over licence as unknown when the licences cannot be read', () => {
+    render(
+      <GrowthSection
+        overview={{
+          ...withGrowth,
+          oneDrive: { ...withGrowth.oneDrive, entitlementPerUserBytes: null, overEntitlement: null },
+        }}
+      />,
+    )
+    expect(screen.getByText('Drives over licence').nextElementSibling).toHaveTextContent(/^Unknown$/)
+  })
 })

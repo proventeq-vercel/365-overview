@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AdornedInput } from '@/design/AdornedInput'
+import { ByteOverrideInput } from '@/design/ByteOverrideInput'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
@@ -56,14 +57,8 @@ export function SettingsDialog({
 
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
-  const overrideTb =
-    settings.entitlementOverrideBytes === null
-      ? ''
-      : String(settings.entitlementOverrideBytes / TB_IN_BYTES)
-  const oneDriveOverrideGb =
-    settings.oneDriveEntitlementOverrideBytes === null
-      ? ''
-      : String(settings.oneDriveEntitlementOverrideBytes / GB_IN_BYTES)
+  const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
+  const oneDriveEstimate = oneDriveEstimateBytes === null ? null : formatBytes(oneDriveEstimateBytes)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,44 +125,36 @@ export function SettingsDialog({
                 : t('settings.entitlementHintNoEstimate')
             }
           >
-            <AdornedInput
+            <ByteOverrideInput
               id={entitlementId}
-              type="number"
-              inputMode="decimal"
+              valueBytes={settings.entitlementOverrideBytes}
+              unitBytes={TB_IN_BYTES}
               step="0.5"
               min="0"
               suffix={t('settings.entitlementUnit')}
               placeholder={t('settings.entitlementPlaceholder')}
-              value={overrideTb}
-              onChange={(e) =>
-                update({
-                  entitlementOverrideBytes:
-                    e.target.value === '' ? null : Number(e.target.value) * TB_IN_BYTES,
-                })
-              }
+              onChange={(bytes) => update({ entitlementOverrideBytes: bytes })}
             />
           </Field>
 
           <Field
             id={oneDriveEntitlementId}
             label={t('settings.oneDriveEntitlement')}
-            hint={t('settings.oneDriveEntitlementHint')}
+            hint={
+              oneDriveEstimate
+                ? t('settings.oneDriveEntitlementHint', { estimate: oneDriveEstimate })
+                : t('settings.oneDriveEntitlementHintNoEstimate')
+            }
           >
-            <AdornedInput
+            <ByteOverrideInput
               id={oneDriveEntitlementId}
-              type="number"
-              inputMode="decimal"
+              valueBytes={settings.oneDriveEntitlementOverrideBytes}
+              unitBytes={GB_IN_BYTES}
               step="1"
-              min="0"
+              min="1"
               suffix={t('settings.oneDriveEntitlementUnit')}
               placeholder={t('settings.oneDriveEntitlementPlaceholder')}
-              value={oneDriveOverrideGb}
-              onChange={(e) =>
-                update({
-                  oneDriveEntitlementOverrideBytes:
-                    e.target.value === '' ? null : Number(e.target.value) * GB_IN_BYTES,
-                })
-              }
+              onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}
             />
           </Field>
         </div>

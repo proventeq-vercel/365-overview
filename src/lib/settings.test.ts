@@ -85,6 +85,13 @@ describe('settings', () => {
     expect(loadSettings().oneDriveEntitlementOverrideBytes).toBe(2048)
   })
 
+  it('reads a zero or negative OneDrive per-user override as no override, so the field and the report agree', () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"oneDriveEntitlementOverrideBytes":0}')
+    expect(loadSettings().oneDriveEntitlementOverrideBytes).toBeNull()
+    localStorage.setItem(SETTINGS_STORAGE_KEY, '{"oneDriveEntitlementOverrideBytes":-5}')
+    expect(loadSettings().oneDriveEntitlementOverrideBytes).toBeNull()
+  })
+
   it('defaults the OneDrive per-user override to null, so the 1 TB licence is used', () => {
     expect(DEFAULT_SETTINGS.oneDriveEntitlementOverrideBytes).toBeNull()
   })

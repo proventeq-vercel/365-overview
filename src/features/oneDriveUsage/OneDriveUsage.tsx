@@ -2,7 +2,7 @@ import { useSettings } from '@/app/useSettings'
 import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
-import { EmptyBlock, Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
+import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { ReportLoading } from '@/app/ReportLoading'
 import { AccessFailure } from '@/features/storageOptimization/AccessFailure'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
@@ -10,9 +10,9 @@ import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
 import { OneDriveKpiCards } from './OneDriveKpiCards'
+import { OverLicenceSection } from './OverLicenceSection'
 
 const DRIVE_COLUMNS = ['name', 'owner', 'used', 'capacity', 'files', 'active', 'lastActivity'] as const
-const OVER_LICENCE_COLUMNS = ['name', 'owner', 'used', 'overEntitlement', 'capacity', 'lastActivity'] as const
 
 export function OneDriveUsage() {
   const t = useTranslation()
@@ -24,7 +24,6 @@ export function OneDriveUsage() {
   if (isPending || !data) return <ReportLoading stage="loadingReport" />
 
   const { oneDrive, offenders, caveats } = data
-  const entitlement = formatBytes(oneDrive.entitlementPerUserBytes)
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,6 +35,7 @@ export function OneDriveUsage() {
         </p>
       </div>
       <OneDriveKpiCards overview={data} />
+      <NameCaveats caveats={caveats} />
       <Section title={t('oneDrive.top.title')} subtitle={t('oneDrive.top.subtitle')} delay={80}>
         <Panel>
           <FacetBars
@@ -46,34 +46,12 @@ export function OneDriveUsage() {
           <PanelDescription>{t('oneDrive.allocationNote')}</PanelDescription>
         </Panel>
       </Section>
-      <Section
-        title={t('oneDrive.overLicence.title')}
-        subtitle={t('oneDrive.overLicence.subtitle', { entitlement })}
-        delay={120}
-      >
-        <Panel>
-          <PanelLabel>{t('oneDrive.overLicence.label')}</PanelLabel>
-          {oneDrive.overEntitlement.count > 0 ? (
-            <SiteTable
-              rows={oneDrive.overEntitlement.drives}
-              totalUsedBytes={oneDrive.usedBytes}
-              columns={[...OVER_LICENCE_COLUMNS]}
-              label={t('oneDrive.overLicence.label')}
-              nameHeader={t('oneDrive.table.driveHeader')}
-              nameHelp={t('table.column.help.drive')}
-            />
-          ) : (
-            <EmptyBlock>{t('oneDrive.overLicence.empty', { entitlement })}</EmptyBlock>
-          )}
-          <PanelDescription>{t('oneDrive.overLicence.note')}</PanelDescription>
-        </Panel>
-      </Section>
+      <OverLicenceSection overview={data} delay={120} />
       <Section
         title={t('oneDrive.table.title')}
         subtitle={t('oneDrive.table.subtitle', { retained: oneDrive.deletedButBilling.count })}
         delay={160}
       >
-        <NameCaveats caveats={caveats} />
         <Panel>
           <PanelLabel>{t('oneDrive.table.label')}</PanelLabel>
           <SiteTable
