@@ -199,8 +199,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   more licences) and 2 GB on F3. `lib/entitlement.oneDriveBytesPerUser` takes
   the **most generous** plan the tenant holds (SharePoint/OneDrive Plan 2 ×≥5 →
   5 TB, Plan 1 → 1 TB, `SHAREPOINTDESKLESS` → 2 GB), because the usage report
-  does not say which licence each user holds — so a listed drive is one no
-  licence in the tenant could cover. Never flag against a flat 1 TB: an E3
+  does not say which licence each user holds — so, without an override, a
+  listed drive is one no licence in the tenant could cover. The plan sets are
+  checked against Microsoft's "Product names and service plan identifiers"
+  CSV, not memory: Project, Visio and Dynamics SKUs (`POWERAPPS_DYN_APPS`)
+  carry SharePoint for their own sites and get no tier, and any SKU with an
+  `_EDU` plan gets none (education allowances vary by agreement, and Apps for
+  Students carries `ONEDRIVESTANDARD`). Never flag against a flat 1 TB: an E3
   tenant's legally raised 5 TB drives would read as over licence. No readable
   licences and no override → `entitlementPerUserBytes` and `overEntitlement`
   are `null` (shown *Unknown*), never a guessed default.

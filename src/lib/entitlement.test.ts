@@ -160,14 +160,14 @@ describe('oneDriveBytesPerUser', () => {
     ).toBeNull()
   })
 
-  it.each(['SHAREPOINTENTERPRISE', 'SHAREPOINTENTERPRISE_GOV', 'ONEDRIVEENTERPRISE'])(
+  it.each(['SHAREPOINTENTERPRISE', 'SHAREPOINTENTERPRISE_GOV', 'SHAREPOINTENTERPRISE_MIDMARKET', 'ONEDRIVEENTERPRISE'])(
     'counts %s as Plan 2, raisable to 5 TB',
     (servicePlan) => {
       expect(oneDriveBytesPerUser([plan('SKU', 5, [servicePlan])])).toBe(5 * TB)
     },
   )
 
-  it.each(['SHAREPOINTSTANDARD', 'SHAREPOINTSTANDARD_GOV', 'SHAREPOINTENTERPRISE_MIDMARKET', 'ONEDRIVESTANDARD'])(
+  it.each(['SHAREPOINTSTANDARD', 'ONEDRIVESTANDARD'])(
     'counts %s as a 1 TB plan',
     (servicePlan) => {
       expect(oneDriveBytesPerUser([plan('SKU', 50, [servicePlan])])).toBe(TB)
@@ -182,6 +182,10 @@ describe('oneDriveBytesPerUser', () => {
     'SHAREPOINT_PROJECT',
     'VISIO_CLIENT_SUBSCRIPTION',
     'VISIOONLINE',
+    'PROJECT_ESSENTIALS_GOV',
+    'PROJECT_CLIENT_SUBSCRIPTION_GOV',
+    'SHAREPOINT_PROJECT_GOV',
+    'POWERAPPS_DYN_APPS',
   ])('gives no OneDrive tier to a SKU carrying the companion plan %s', (companion) => {
     expect(oneDriveBytesPerUser([plan('SKU', 40, [companion, 'SHAREPOINTENTERPRISE'])])).toBeNull()
   })
@@ -193,6 +197,36 @@ describe('oneDriveBytesPerUser', () => {
   it('has no tier for education plans, whose allowances vary by agreement', () => {
     expect(oneDriveBytesPerUser([plan('A3', 500, ['SHAREPOINTENTERPRISE_EDU'])])).toBeNull()
     expect(oneDriveBytesPerUser([plan('A1', 500, ['SHAREPOINTSTANDARD_EDU'])])).toBeNull()
+  })
+
+  it('keeps an education tenant unknown when it also holds Apps for Students, which carries OneDrive Plan 1', () => {
+    expect(
+      oneDriveBytesPerUser([
+        plan('M365EDU_A3_FACULTY', 500, ['SHAREPOINTENTERPRISE_EDU']),
+        plan('OFFICESUBSCRIPTION_STUDENT', 5000, ['ONEDRIVESTANDARD', 'SHAREPOINTWAC_EDU']),
+      ]),
+    ).toBeNull()
+  })
+
+  it('gives Microsoft 365 E5 EEA with Calling Minutes, which carries the midmarket plan, the raised 5 TB', () => {
+    expect(
+      oneDriveBytesPerUser([
+        plan('Microsoft_365_E5_EEA_(no_Teams)_with_Calling_Minutes', 200, ['SHAREPOINTENTERPRISE_MIDMARKET', 'SHAREPOINTWAC']),
+      ]),
+    ).toBe(5 * TB)
+  })
+
+  it('does not raise a Business tenant to 5 TB because it also holds Dynamics 365 Contact Center', () => {
+    expect(
+      oneDriveBytesPerUser([
+        plan('DYNAMICS_365_CONTACT_CENTER', 10, ['DYN365_CC', 'POWERAPPS_DYN_APPS', 'SHAREPOINTENTERPRISE']),
+        plan('SPB', 40, ['SHAREPOINTSTANDARD']),
+      ]),
+    ).toBe(TB)
+  })
+
+  it('gives Microsoft 365 F3 GCC the frontline 2 GB', () => {
+    expect(oneDriveBytesPerUser([plan('M365_F1_GOV', 30, ['SHAREPOINTDESKLESS_GOV', 'SHAREPOINTWAC_GOV'])])).toBe(2 * GB_IN_BYTES)
   })
 
   it('skips a SKU whose seat count is not a number rather than losing the whole tier', () => {
