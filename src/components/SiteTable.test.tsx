@@ -146,6 +146,17 @@ describe('SiteTable', () => {
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('personal/y')
   })
 
+  it('writes the over-licence excess in navy, which keeps body-text contrast on white', () => {
+    render(
+      <SiteTable
+        rows={[{ ...drive, overEntitlementBytes: 300 }]}
+        totalUsedBytes={500}
+        columns={['name', 'overEntitlement']}
+      />,
+    )
+    expect(screen.getAllByRole('cell')[1]).toHaveClass('text-p365-navy')
+  })
+
   it('filters on search across url and owner', async () => {
     const user = userEvent.setup()
     render(<SiteTable rows={rows} totalUsedBytes={1000} columns={['name', 'owner']} />)

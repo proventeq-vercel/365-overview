@@ -260,7 +260,7 @@ export function SiteTable({
         )
       case 'overEntitlement':
         return (
-          <span role="cell" key={key} className="tabular font-semibold text-p365-orange">
+          <span role="cell" key={key} className="tabular font-semibold text-p365-navy">
             {row.overEntitlementBytes === undefined ? '' : formatBytes(row.overEntitlementBytes)}
           </span>
         )
