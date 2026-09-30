@@ -52,12 +52,36 @@ describe('forecastHeadline', () => {
 })
 
 describe('forecastHint', () => {
-  it('asks for the entitlement when it is unknown', () => {
-    expect(forecastHint(unknownEntitlement, t)).toBe('Needs tenant entitlement')
+  it('asks for the entitlement, and says where to enter it, when it is unknown', () => {
+    expect(forecastHint(unknownEntitlement, t)).toBe(
+      'Needs the tenant entitlement. Enter it in Report settings to see when SharePoint storage runs out.',
+    )
   })
 
-  it('qualifies a date with the growth assumption', () => {
-    expect(forecastHint(base, t)).toBe('At current growth')
+  it('explains a date by the entitlement, the growth assumption and the headroom left', () => {
+    expect(forecastHint(base, t)).toBe(
+      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left.',
+    )
+  })
+
+  it('quotes the headroom left, not the storage used', () => {
+    const tighter: StorageOverview = {
+      ...base,
+      sharePoint: { ...base.sharePoint, usedBytes: 620 * 1_073_741_824, remainingBytes: 380 * 1_073_741_824 },
+    }
+    expect(forecastHint(tighter, t)).toMatch(/380 GB of headroom is left\.$/)
+  })
+
+  it('explains beyond-horizon by how long the headroom lasts', () => {
+    expect(forecastHint(beyondHorizon, t)).toBe(
+      'At 10 GB a month, the 500 GB of headroom left under your 1000 GB entitlement lasts more than 10 years.',
+    )
+  })
+
+  it('explains no forecast for a flat tenant by the window it did not grow over', () => {
+    expect(forecastHint(flat, t)).toBe(
+      'SharePoint storage has not grown over the last 5 months, so it is not on course to pass your 1000 GB entitlement.',
+    )
   })
 
   it('explains zero runway with the already-exhausted note', () => {
@@ -65,7 +89,9 @@ describe('forecastHint', () => {
   })
 
   it('explains a short window', () => {
-    expect(forecastHint(shortHistory, t)).toBe('Too few months of measured growth')
+    expect(forecastHint(shortHistory, t)).toBe(
+      'A forecast needs 6 months of measured storage history. This is not an all-clear — it appears once Microsoft 365 has reported enough.',
+    )
   })
 })
 

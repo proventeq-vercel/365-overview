@@ -9,7 +9,7 @@ import { P365 } from '@/design/theme'
 afterEach(cleanup)
 
 function railOf(label: string): string {
-  const card = screen.getByText(label).parentElement as HTMLElement
+  const card = screen.getByText(label).closest('[data-slot="stat-card"]') as HTMLElement
   return card.style.borderLeftColor
 }
 
@@ -18,6 +18,21 @@ function rgb(hex: string): string {
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
 }
 
+const ARCHIVE = 'Inactive sites to archive'
+const SAVING = 'Potential saving per year'
+const COST = 'Cost of doing nothing, next 12 months'
+const FORECAST = 'Forecast exhaustion'
+
+const withArchive = (status: StorageOverview['archive']['status']): StorageOverview => ({
+  ...base,
+  archive: { ...base.archive, status },
+})
+
+const withCost = (growthAnnualStatus: StorageOverview['cost']['growthAnnualStatus']): StorageOverview => ({
+  ...base,
+  cost: { ...base.cost, growthAnnualStatus },
+})
+
 describe('KpiCards', () => {
   it('rails the forecast card red on a critical forecast and green on a healthy one', () => {
     const critical: StorageOverview = {
@@ -25,25 +40,35 @@ describe('KpiCards', () => {
       growth: { ...base.growth, forecastStatus: 'Critical' },
     }
     const { unmount } = render(<KpiCards overview={critical} />)
-    expect(railOf('Forecast exhaustion')).toBe(rgb(P365.red))
+    expect(railOf(FORECAST)).toBe(rgb(P365.red))
     unmount()
 
     render(<KpiCards overview={base} />)
-    expect(railOf('Forecast exhaustion')).toBe(rgb(P365.green))
+    expect(railOf(FORECAST)).toBe(rgb(P365.green))
   })
 
-  it('greys the remaining and forecast cards, but not the cost, when the entitlement is unknown', () => {
+  it('greys the forecast card, but not the cost, when the entitlement is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(railOf('Storage used')).toBe(rgb(P365.navy))
-    expect(railOf('Remaining')).toBe(rgb(P365.grey400))
-    expect(railOf('Cost of doing nothing')).toBe(rgb(P365.yellow))
-    expect(railOf('Forecast exhaustion')).toBe(rgb(P365.grey400))
-    expect(screen.getAllByText('Unknown')).toHaveLength(2)
+    expect(railOf(COST)).toBe(rgb(P365.orange))
+    expect(railOf(FORECAST)).toBe(rgb(P365.grey400))
   })
 
-  it('rails remaining green and cost yellow on a known entitlement', () => {
-    render(<KpiCards overview={base} />)
-    expect(railOf('Remaining')).toBe(rgb(P365.green))
-    expect(railOf('Cost of doing nothing')).toBe(rgb(P365.yellow))
+  it.each([
+    ['healthy', P365.green],
+    ['watch', P365.orange],
+    ['attention', P365.red],
+  ] as const)('rails the archive and saving cards by a %s archive grade', (status, color) => {
+    render(<KpiCards overview={withArchive(status)} />)
+    expect(railOf(ARCHIVE)).toBe(rgb(color))
+    expect(railOf(SAVING)).toBe(rgb(color))
+  })
+
+  it.each([
+    ['healthy', P365.green],
+    ['watch', P365.orange],
+    ['attention', P365.red],
+  ] as const)('rails the cost card by a %s cost grade', (status, color) => {
+    render(<KpiCards overview={withCost(status)} />)
+    expect(railOf(COST)).toBe(rgb(color))
   })
 })

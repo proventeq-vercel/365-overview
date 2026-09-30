@@ -29,6 +29,7 @@ const ONE_DRIVE_CAP_BYTES = 1024 * GB
 const BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 
 const MOCK_REFRESH_DATE = '2026-08-30'
+const DORMANT_YEAR = 2022
 
 const TEMPLATES = ['Team Site', 'Group', 'Team Channel', 'Site Page Publishing', 'Publishing Site']
 
@@ -80,7 +81,8 @@ function generateSites(count: number, concealed = false): StorageRow[] {
       storageUsedBytes: mb * MB,
       fileCount,
       activeFileCount: Math.round(fileCount * 0.1),
-      lastActivityDate: i % 17 === 0 ? null : `2026-0${(i % 8) + 1}-1${i % 10}`,
+      lastActivityDate:
+        i % 17 === 0 ? null : `${i % 6 === 1 ? DORMANT_YEAR : 2026}-0${(i % 8) + 1}-1${i % 10}`,
       isDeleted: i % 500 === 3,
       template: TEMPLATES[i % TEMPLATES.length],
     })

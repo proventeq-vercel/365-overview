@@ -18,7 +18,7 @@ concurrency:
 env:
   FUNCTION_APP: func-lh-sa-dev
   DELEGATED_CLIENT_ID: 0cedd025-e545-44f2-b3f8-82969e56547a
-  DELEGATED_STORAGE_ACCOUNT: p365lite
+  STORAGE_ACCOUNT: p365lite
 
 jobs:
   credentials:
@@ -32,7 +32,7 @@ jobs:
     outputs:
       ready: ${{ steps.check.outputs.ready }}
       site-ready: ${{ steps.check.outputs.site-ready }}
-      delegated-site-ready: ${{ steps.check.outputs.delegated-site-ready }}
+      application-site-ready: ${{ steps.check.outputs.application-site-ready }}
     steps:
       - id: check
         env:
@@ -40,7 +40,7 @@ jobs:
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          DELEGATED_SAS: ${{ secrets.AZURE_STORAGE_SAS_DELEGATED }}
+          STORAGE_SAS: ${{ secrets.AZURE_STORAGE_SAS }}
         run: |
           if [ -n "$CLIENT_ID" ] && [ -n "$TENANT_ID" ] && [ -n "$SUBSCRIPTION_ID" ]; then
             echo 'ready=true' >> "$GITHUB_OUTPUT"
@@ -52,13 +52,13 @@ jobs:
             echo 'site-ready=true' >> "$GITHUB_OUTPUT"
           else
             echo 'site-ready=false' >> "$GITHUB_OUTPUT"
-            echo 'No AZURE_STATIC_WEB_APPS_API_TOKEN secret: skipping the site deploy.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'No AZURE_STATIC_WEB_APPS_API_TOKEN secret: skipping the main (delegated) site deploy.' >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ -n "$DELEGATED_SAS" ]; then
-            echo 'delegated-site-ready=true' >> "$GITHUB_OUTPUT"
+          if [ -n "$STORAGE_SAS" ]; then
+            echo 'application-site-ready=true' >> "$GITHUB_OUTPUT"
           else
-            echo 'delegated-site-ready=false' >> "$GITHUB_OUTPUT"
-            echo 'No AZURE_STORAGE_SAS_DELEGATED secret: skipping the delegated site deploy.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'application-site-ready=false' >> "$GITHUB_OUTPUT"
+            echo 'No AZURE_STORAGE_SAS secret: skipping the application-permissions site deploy.' >> "$GITHUB_STEP_SUMMARY"
           fi
 
   proxy:
@@ -94,9 +94,36 @@ jobs:
           remote-build: false
 
   site:
-    name: SPA, application permissions → Azure Static Web App
+    name: SPA, delegated permissions (main) → Azure Static Web App
     needs: credentials
     if: needs.credentials.outputs.site-ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_CLIENT_ID: ${{ vars.VITE_DELEGATED_CLIENT_ID || env.DELEGATED_CLIENT_ID }}
+          VITE_FEATURES: ${{ vars.VITE_FEATURES }}
+          VITE_MODES_LOCKED: ${{ vars.VITE_MODES_LOCKED }}
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: dist
+          skip_app_build: true
+          skip_api_build: true
+
+  site-application:
+    name: SPA, application permissions → Azure Storage static website
+    needs: credentials
+    if: needs.credentials.outputs.application-site-ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,37 +140,10 @@ jobs:
           VITE_GRAPH_PROXY_SCOPE: ${{ vars.VITE_GRAPH_PROXY_SCOPE }}
           VITE_FEATURES: ${{ vars.VITE_FEATURES }}
           VITE_MODES_LOCKED: ${{ vars.VITE_MODES_LOCKED }}
-      - uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: upload
-          app_location: dist
-          skip_app_build: true
-          skip_api_build: true
-
-  site-delegated:
-    name: SPA, delegated permissions → Azure Storage static website
-    needs: credentials
-    if: needs.credentials.outputs.delegated-site-ready == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-        env:
-          VITE_CLIENT_ID: ${{ vars.VITE_DELEGATED_CLIENT_ID || env.DELEGATED_CLIENT_ID }}
-          VITE_FEATURES: ${{ vars.VITE_FEATURES }}
-          VITE_MODES_LOCKED: ${{ vars.VITE_MODES_LOCKED }}
       - name: upload to the static website
         env:
-          ACCOUNT: ${{ vars.AZURE_DELEGATED_STORAGE_ACCOUNT || env.DELEGATED_STORAGE_ACCOUNT }}
-          SAS: ${{ secrets.AZURE_STORAGE_SAS_DELEGATED }}
+          ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT || env.STORAGE_ACCOUNT }}
+          SAS: ${{ secrets.AZURE_STORAGE_SAS }}
         run: |
           az storage blob upload-batch --account-name "$ACCOUNT" --sas-token "$SAS" \
             --destination '$web' --source dist --overwrite --only-show-errors

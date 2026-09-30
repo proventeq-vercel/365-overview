@@ -29,8 +29,8 @@ export function StorageOptimization() {
           {t('app.reportLagNote')}
         </p>
       </div>
-      <KpiCards overview={data} />
-      <DistributionSection overview={data} delay={80} />
+      <DistributionSection overview={data} delay={40} />
+      <KpiCards overview={data} delay={120} />
       <GrowthSection overview={data} delay={160} />
       <OffendersSection overview={data} delay={240} />
     </div>

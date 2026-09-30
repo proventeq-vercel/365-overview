@@ -1,3 +1,4 @@
+import type { HealthStatus } from '@/lib/thresholds'
 import type { ForecastStatus } from '@/types/storage'
 
 export const P365 = {
@@ -31,6 +32,12 @@ export const RISK_COLOR: Record<ForecastStatus, string> = {
   Warning: P365.orange,
   Critical: P365.red,
   Unknown: P365.grey400,
+}
+
+export const HEALTH_COLOR: Record<HealthStatus, string> = {
+  healthy: P365.green,
+  watch: P365.orange,
+  attention: P365.red,
 }
 
 export const RISK_LABEL: Record<ForecastStatus, LabelTone> = {

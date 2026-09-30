@@ -36,8 +36,10 @@ async function chooseOption(user: ReturnType<typeof userEvent.setup>, name: RegE
   await user.click(screen.getByRole('button', { name: 'Options' }))
   await user.click(await screen.findByRole('menuitem', { name }))
 }
-const costCard = () =>
-  screen.getByText('Cost of doing nothing').closest('[data-slot="stat-card"]') as HTMLElement
+const statCard = (label: string) =>
+  screen.getByText(label).closest('[data-slot="stat-card"]') as HTMLElement
+const costCard = () => statCard('Cost of doing nothing, next 12 months')
+const archiveCard = () => statCard('Inactive sites to archive')
 
 const SETTINGS_ROUND_TRIP = { timeout: 15_000 }
 
@@ -49,13 +51,17 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeInTheDocument()
     const cards = screen.getAllByText(/./, { selector: '[data-slot="stat-card"] > p:nth-child(2)' })
     expect(cards.map((card) => card.textContent)).toEqual([
-      'Storage used',
-      'Remaining',
-      'Cost of doing nothing',
+      'Inactive sites to archive',
+      'Potential saving per year',
+      'Cost of doing nothing, next 12 months',
       'Forecast exhaustion',
     ])
-    expect(screen.getByRole('heading', { name: /current storage distribution/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /future state & growth impact/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
+      'Current storage distribution',
+      'Tenant capacity',
+      'Future state & growth impact',
+      'Main offenders',
+    ])
     expect(screen.getByRole('heading', { name: 'Top SharePoint sites by storage' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Sites and drives' })).toBeInTheDocument()
@@ -147,6 +153,23 @@ describe('Storage Optimisation app', () => {
     expect(costCard()).toHaveTextContent('€')
     expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
       currency: 'EUR',
+    })
+  })
+
+  it('recounts inactive sites for a changed inactivity window without re-issuing the Graph calls', SETTINGS_ROUND_TRIP, async () => {
+    const user = userEvent.setup()
+    const { ds } = renderApp()
+    await reportLoaded()
+    expect(archiveCard()).toHaveTextContent('no activity for 3 years (since August 2023)')
+
+    await chooseOption(user, /report settings/i)
+    await user.click(screen.getByRole('combobox', { name: 'Archive sites inactive for' }))
+    await user.click(await screen.findByRole('option', { name: '5 years' }))
+
+    expect(archiveCard()).toHaveTextContent('No site has gone 5 years without activity (since August 2021).')
+    expect(ds.getSites).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
+      inactiveYears: 5,
     })
   })
 
