@@ -206,9 +206,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   carry SharePoint for their own sites and get no tier, and any SKU with an
   `_EDU` plan gets none (education allowances vary by agreement, and Apps for
   Students carries `ONEDRIVESTANDARD`). Never flag against a flat 1 TB: an E3
-  tenant's legally raised 5 TB drives would read as over licence. No readable
-  licences and no override → `entitlementPerUserBytes` and `overEntitlement`
-  are `null` (shown *Unknown*), never a guessed default.
+  tenant's legally raised 5 TB drives would read as over licence.
+  `SHAREPOINTENTERPRISE_MIDMARKET` counts as Plan 2: it is carried by E5 EEA
+  with Calling Minutes as well as the retired Midsize Business. No readable
+  licences, or none with a known allowance (`entitlementUnknownReason`
+  `licencesUnavailable` / `noSizedPlan`), and no override →
+  `entitlementPerUserBytes` and `overEntitlement` are `null` (shown
+  *Unknown*), never a guessed default.
   `oneDrive.overEntitlement` lists live drives with `used > perUser`, largest
   first, each row a copy carrying `overEntitlementBytes`; the setting
   `oneDriveEntitlementOverrideBytes` (null or ≤ 0 = the estimate) replaces the

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AdornedInput } from '@/design/AdornedInput'
-import { ByteOverrideInput } from '@/design/ByteOverrideInput'
+import { ByteOverrideInput, inUnits } from '@/design/ByteOverrideInput'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { currencyName, currencyOptions, currencySymbol } from '@/lib/currencies'
@@ -143,8 +143,8 @@ export function SettingsDialog({
               oneDriveEstimateBytes === null
                 ? t('settings.oneDriveEntitlementHintNoEstimate')
                 : t('settings.oneDriveEntitlementHint', {
-                    estimate: formatBytes(oneDriveEstimateBytes),
-                    estimateGb: oneDriveEstimateBytes / GB_IN_BYTES,
+                    estimate: inUnits(oneDriveEstimateBytes, GB_IN_BYTES),
+                    unit: t('settings.oneDriveEntitlementUnit'),
                   })
             }
           >

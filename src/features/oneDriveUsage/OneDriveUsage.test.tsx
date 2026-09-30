@@ -155,6 +155,17 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(screen.queryByText(/^Measured against/)).not.toBeInTheDocument()
   })
 
+  it('does not promise an estimate to go back to when an override is set and the licences cannot be read', async () => {
+    localStorage.setItem(
+      'm365-storage-settings',
+      JSON.stringify({ oneDriveEntitlementOverrideBytes: 500 * 1_073_741_824 }),
+    )
+    renderReport('onedrive-over-licence', { getLicenses: async () => null })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(screen.getByText(/clearing it leaves the figure unknown\.$/)).toBeInTheDocument()
+    expect(screen.queryByText(/go back to the estimate from licences/)).not.toBeInTheDocument()
+  })
+
   it('says no licence has a known allowance, not that licences were unreadable, on an education-only tenant', async () => {
     renderReport('onedrive-over-licence', {
       getLicenses: async () => [

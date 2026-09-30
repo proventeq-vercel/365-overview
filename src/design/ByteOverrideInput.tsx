@@ -12,7 +12,7 @@ interface ByteOverrideInputProps {
   onChange: (bytes: number | null) => void
 }
 
-const inUnits = (bytes: number | null, unitBytes: number): string =>
+export const inUnits = (bytes: number | null, unitBytes: number): string =>
   bytes === null ? '' : String(bytes / unitBytes)
 
 export function ByteOverrideInput({

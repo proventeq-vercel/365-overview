@@ -167,7 +167,7 @@ describe('oneDriveBytesPerUser', () => {
     },
   )
 
-  it.each(['SHAREPOINTSTANDARD', 'ONEDRIVESTANDARD'])(
+  it.each(['SHAREPOINTSTANDARD', 'SHAREPOINTSTANDARD_GOV', 'ONEDRIVESTANDARD'])(
     'counts %s as a 1 TB plan',
     (servicePlan) => {
       expect(oneDriveBytesPerUser([plan('SKU', 50, [servicePlan])])).toBe(TB)

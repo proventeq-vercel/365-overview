@@ -349,8 +349,8 @@ every drive, it lists the **OneDrives over their licensed storage**: accounts ho
 any licence in the tenant includes per user — 5 TB where the tenant has five or more E3/E5-class
 licences (SharePoint or OneDrive Plan 2), 1 TB on Business plans, 2 GB on frontline. Microsoft
 does not report which licence each user holds, so the most generous plan present sets the line
-and only drives no licence could cover are listed; with the licences unreadable the figure is
-*Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
+and only drives no licence could cover are listed; with the licences unreadable, or none of them
+carrying a known OneDrive allowance (education), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
 picked from a list), the SharePoint entitlement in TB and the OneDrive storage per user in GB —

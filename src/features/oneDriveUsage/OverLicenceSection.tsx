@@ -8,8 +8,14 @@ const OVER_LICENCE_COLUMNS = ['name', 'owner', 'used', 'overEntitlement', 'capac
 
 export function OverLicenceSection({ overview, delay }: { overview: StorageOverview; delay?: number }) {
   const t = useTranslation()
-  const { overEntitlement, entitlementPerUserBytes, entitlementPerUserIsSet, entitlementUnknownReason, usedBytes } =
-    overview.oneDrive
+  const {
+    overEntitlement,
+    entitlementPerUserBytes,
+    entitlementPerUserIsSet,
+    entitlementUnknownReason,
+    licenceEstimatePerUserBytes,
+    usedBytes,
+  } = overview.oneDrive
   const entitlement = entitlementPerUserBytes === null ? null : formatBytes(entitlementPerUserBytes)
 
   return (
@@ -46,7 +52,11 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
         )}
         {entitlement !== null && (
           <PanelDescription>
-            {entitlementPerUserIsSet ? t('oneDrive.overLicence.noteSet') : t('oneDrive.overLicence.note')}
+            {!entitlementPerUserIsSet
+              ? t('oneDrive.overLicence.note')
+              : licenceEstimatePerUserBytes === null
+                ? t('oneDrive.overLicence.noteSetNoEstimate')
+                : t('oneDrive.overLicence.noteSet')}
           </PanelDescription>
         )}
       </Panel>
