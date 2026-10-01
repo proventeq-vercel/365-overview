@@ -270,8 +270,8 @@ more*; the ⋯ menu has **Help**; every screen a visitor can land on when access
 to troubleshooting.
 
 The pages are markdown in [`docs/help/`](docs/help/README.md) — update them with every
-user-visible change. They are also published for agents as `/llms.txt`, `/llms-full.txt` and each page's source
-file under `/help/` (`/help/reports/storage-optimisation/index.md`, …), so the pages' relative
+user-visible change. They are also published for agents as `/llms.txt`, `/llms-full.txt` and each page's markdown
+at its source path under `/help/` (`/help/reports/storage-optimisation/index.md`, …), so the pages' relative
 links still resolve. Both hosts serve `.md` and `.txt` as UTF-8 text: `staticwebapp.config.json`
 `mimeTypes` on the Static Web App, explicit `--content-type` uploads in `deploy.yml` on the storage
 website.

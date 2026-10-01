@@ -40,8 +40,8 @@ the history API; no router is needed.
   nestable. A page with an audience block gets the audience switch; `?audience=<id>` selects one.
 - **Variables**: `{{name}}`, from `variables(audience)`; missing ones render empty.
 - **Theme**: override the `--hc-*` custom properties on `.hc` (accent, ink, text, borders, widths).
-- **Keyboard**: while mounted it listens on `window`: `/` (outside a field, without Ctrl, Alt or
-  Cmd alone) focuses the search, opening the topic list if it is hidden, and `Escape` closes an
+- **Keyboard**: while mounted it listens on `window`: `/` (outside a field, without Cmd, or Ctrl or
+  Alt alone) focuses the search, opening the topic list if it is hidden, and `Escape` closes an
   open topic list. A host with its own `/` or `Escape` shortcuts must not bind them on this page.
 
 `catalogue.ts`, `prepare.ts`, `links.ts`, `search.ts` and `llms.ts` are framework-free, so a host
@@ -59,8 +59,9 @@ plugins: [helpLlms({ dir: 'docs/help', sections, basePath: '/help', title: 'My a
 It serves `/llms.txt` (an index of pages with descriptions), `/llms-full.txt` (every page's
 markdown) and each page's markdown (title and description on top, frontmatter removed) under
 `<basePath>/` at its source path (`index.md` pages included, so relative links between pages
-still resolve) from the dev server, and emits all of them into the build. A page that uses `:::`
-blocks or `{{variables}}` gets a line explaining them, and each page in `/llms-full.txt` starts
-with the file it is published at so its relative links can be resolved. The index links the `.md` files, not the rendered pages: a page address
-returns the SPA shell, which an agent cannot read. The host must serve existing files before its
+still resolve) from the dev server, and emits all of them into the build. A page's `.md` file
+that uses `:::` blocks or `{{variables}}` gets a line explaining them (`/llms-full.txt` explains
+them once, at the top), and each page in `/llms-full.txt` starts with the file it is published at
+so its relative links can be resolved. The index links the `.md` files, not the rendered pages: a
+page address returns the SPA shell, which an agent cannot read. The host must serve existing files before its
 SPA fallback and serve `.md` and `.txt` as UTF-8 text.

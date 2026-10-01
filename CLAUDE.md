@@ -403,8 +403,9 @@ the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
 setting, colour rule, permission and error screen, and it is the first place to
 read what the app does.** Any user-visible change updates the matching page in
 the same PR (`docs/help/README.md` is the authoring guide). It is served at
-`/help/*`, indexed at `/llms.txt`, in full at `/llms-full.txt` and page by page as
-the source files under `/help/` (`/help/<path>.md`).
+`/help/*`, indexed at `/llms.txt`, in full at `/llms-full.txt` and page by page at
+their source paths under `/help/` (`/help/<path>.md`, frontmatter swapped for the title and
+description).
 
 - `src/help-center/` is a reusable module (own README, own `--hc-*` CSS, no
   imports from the app — `isolation.test.ts`): catalogue/frontmatter, `:::`
