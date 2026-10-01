@@ -21,7 +21,7 @@ Built with React 19, TypeScript, and Vite.
 All of it lives in the resource group `rg-lh-sa-dev`. Both report sites are redeployed from `main`
 by `.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
 `?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
-Each site also serves `/help` — how to enable access, without signing in (see *Access help*).
+Each site also serves `/help` — the help center for every report and for enabling access, without signing in (see *Help center*).
 `https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
 
 ## The report
@@ -254,20 +254,31 @@ deployment shows sites by id — and lists `https://p365lite.z33.web.core.window
 `p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
 registration to add it first (`Authorization_RequestDenied` otherwise).
 
-## Access help
+## Help center
 
-`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) explains both permission modes,
-marks the one the site was built for, lists which Graph permissions are required and which are
-optional, gives this site's admin consent link, and says what fixes each failure screen. It needs
-no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a visitor can land on
-when access is missing links to it — the sign-in error and consent screens, the consent / tenant /
-role panels, an auth error from Graph, and the start-up error.
+`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) is a full help center:
+getting started (enabling access, permissions, limiting who can sign in, troubleshooting every
+failure screen), a page per report section, and reference pages (settings, how each figure is
+calculated, site names, data and privacy). It has a sidebar, search (`/` focuses it),
+breadcrumbs, an on-page outline and previous/next links. It needs no sign-in: `main.tsx`
+renders it before MSAL is ever created.
+
+Setup pages show the steps for the site's own permission mode, with its admin consent link; a
+switch at the top right of the page shows the other mode (`?audience=application` or
+`?audience=delegated`). Every report section has a **?** with a one-line explanation and *See
+more*; the ⋯ menu has **Help**; every screen a visitor can land on when access is missing links
+to troubleshooting.
+
+The pages are markdown in [`docs/help/`](docs/help/README.md) — update them with every
+user-visible change. They are also published for agents as `/llms.txt` and `/llms-full.txt`.
+The renderer, `src/help-center/`, has no dependency on this app and can be reused on another
+site (see its README).
 
 ### Setting up a tenant
 
 Nothing needs changing on Proventeq's side for a new tenant: both registrations are multi-tenant,
 publisher-verified ("Proventeq Ltd") and list both sites as SPA redirect URIs. Everything below is
-done by the customer's administrator. The admin consent link is on each site's `/help` page.
+done by the customer's administrator. The admin consent link is on each site's `/help/getting-started/enable-access` page.
 
 **Application permissions** — <https://p365lite.z33.web.core.windows.net/>
 
@@ -317,7 +328,7 @@ admin sets it in Microsoft Entra — nothing in this app or its deployment chang
 
 Group assignment needs Entra ID P1/P2 (free tier: users one by one) and does not reach nested
 groups. Anyone unassigned is refused at sign-in with `AADSTS50105`; if that error comes back to
-the app, `AuthErrorScreen` shows "Your account is not allowed to use this app" and links `/help`,
+the app, `AuthErrorScreen` shows "Your account is not allowed to use this app" and links `/help/getting-started/troubleshooting`,
 which carries the same steps. With application permissions this limits who sees the report, not
 what the proxy can read.
 

@@ -41,15 +41,15 @@ describe('AuthErrorScreen', () => {
     )
     expect(screen.getByRole('alert')).toHaveTextContent('Your account is not allowed to use this app')
     expect(screen.queryByText('Sign-in failed')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it.each([
     ['consent', Object.assign(new Error('AADSTS65001: not consented'), { name: 'InteractionRequiredAuthError' })],
     ['sign-in', new Error('network unreachable')],
-  ])('links the %s failure to the access help page', (_kind, error) => {
+  ])('links the %s failure to troubleshooting in the help', (_kind, error) => {
     render(<AuthErrorScreen error={error} />)
-    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('survives a thrown non-Error', () => {

@@ -2,21 +2,46 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import type { LabelTone } from './theme'
 
+export function PageHeader({
+  title,
+  help,
+  children,
+}: {
+  title: string
+  help: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div className="enter-rise flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-semibold text-p365-navy">{title}</h1>
+        {help}
+      </div>
+      <p className="text-sm text-p365-grey-500">{children}</p>
+    </div>
+  )
+}
+
 export function Section({
   title,
   subtitle,
+  help,
   delay = 0,
   children,
 }: {
   title: string
   subtitle: string
+  help: ReactNode
   delay?: number
   children: ReactNode
 }) {
   return (
     <section className="enter-rise flex flex-col gap-4" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold text-p365-navy">{title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold text-p365-navy">{title}</h2>
+          {help}
+        </div>
         <p className="text-sm text-p365-grey-500">{subtitle}</p>
       </div>
       {children}

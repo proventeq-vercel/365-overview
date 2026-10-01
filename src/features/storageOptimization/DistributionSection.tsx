@@ -1,3 +1,4 @@
+import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { Slice, StorageOverview } from '@/types/storage'
@@ -53,6 +54,7 @@ export function DistributionSection({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.distribution.title')}
       subtitle={t('storageOptimisation.distribution.subtitle')}
+      help={<HelpButton topic="storageDistribution" />}
     >
       <SplitGrid className="lg:grid-cols-2">
         <Panel>

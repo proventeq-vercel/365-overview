@@ -152,6 +152,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
+- `docs/help/` + `src/help-center/` + `src/app/help/` — the help center, see
+  "Help center" below.
 - `src/app/` — the shell: `AppShell` (`ShellLayout`: sticky `Header` + optional
   `SideMenu` + `<main>`), `ReportLoading` / `LoadingShell` (the loading page,
   see "Loading is one screen"), `Header` (hamburger only when the menu is on, logo, tenant name
@@ -395,19 +397,38 @@ the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
 `AuthErrorScreen` still renders `className="error-state*"` inside
 `className="auth-screen"`; keep those rules in `src/index.css`.
 
-## Access help (`/help`)
+## Help center (`/help/*`) — the product reference
 
-`main.tsx` renders `app/help/AccessHelpPage` for `isHelpPath` (`config/helpPath.ts`)
-**before** `bootstrap()`, so it never mounts MSAL or the data layer — a visitor
-who cannot sign in can still read it. Both hosts serve it through their
-`index.html` fallback. The mode it marks is `config/accessMode.accessModeOf`
-(proxy set → application). Every failure surface renders
-`components/HelpLink`: `AuthErrorScreen` (both branches), the three
-`AccessFailure` panels, `ErrorState` for auth errors, `BootstrapError`. A new
-failure screen gets the link too, and its heading belongs in the page's
-`SYMPTOMS` list. `RestrictUsersPanel` documents limiting sign-in to assigned
-groups (Entra "Assignment required"); `AADSTS50105` is `isUserNotAssigned`
-and gets its own `AuthErrorScreen` branch.
+**`docs/help/*.md` is the user-facing documentation of every report, card, column,
+setting, colour rule, permission and error screen, and it is the first place to
+read what the app does.** Any user-visible change updates the matching page in
+the same PR (`docs/help/README.md` is the authoring guide). It is served at
+`/help/*`, indexed at `/llms.txt` and in full at `/llms-full.txt`.
+
+- `src/help-center/` is a reusable module (own README, own `--hc-*` CSS, no
+  imports from the app — `isolation.test.ts`): catalogue/frontmatter, `:::`
+  audience/if/unless blocks, `{{variables}}`, search, history routing,
+  `HelpCenter` layout, and the `helpLlms` Vite plugin. Keep it app-agnostic.
+- `main.tsx` lazy-loads `app/help/HelpPage` for `isHelpPath` (`/help` and
+  everything under it) **before** `bootstrap()`, so it never mounts MSAL or the
+  data layer — a visitor who cannot sign in can still read it. Both hosts serve
+  it through their `index.html` fallback. The page shows this site's mode
+  (`config/accessMode.accessModeOf`, proxy set → application) and a switch at the
+  top right shows the other one (`?audience=`); `{{consentUrl}}` / `{{clientId}}`
+  are filled only for the site's own mode.
+- Every report section and title has a P365-style **?** (`app/help/HelpButton`,
+  a required `help` slot on `Section` and `PageHeader`): a dialog with the page's
+  `description` and *See more* in a new tab. Topics → slugs are
+  `app/help/topics.ts`. The ⋯ menu has *Help* (new tab).
+- Every failure surface renders `components/HelpLink` → troubleshooting:
+  `AuthErrorScreen` (all branches), the three `AccessFailure` panels,
+  `ErrorState` for auth errors, `BootstrapError`. A new failure screen gets the
+  link, and its title becomes an `##` heading in
+  `docs/help/getting-started/troubleshooting.md` (the content test checks).
+  `AADSTS50105` is `isUserNotAssigned` and gets its own `AuthErrorScreen` branch.
+- `app/help/helpContent.test.ts` fails on a broken link or anchor (per
+  audience), an unknown variable, a topic or report without a page, or a failure
+  screen missing from troubleshooting. It cannot tell a page is out of date.
 
 Delegated mode checks the token's granted scopes (`acquireToken`'s
 `requiredScope`, `requiredScopeFor(config)` = `Reports.Read.All` with no

@@ -12,7 +12,7 @@ const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
   'pagination.jump.': 4,
   'table.pool.': 2,
   'loading.': 18,
-  'help.mode.': 12,
+  'help.audience.': 2,
 }
 const DYNAMIC_PREFIXES = Object.keys(DYNAMIC_PREFIX_SIZES)
 

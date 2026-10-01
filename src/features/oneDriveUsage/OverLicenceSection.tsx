@@ -1,3 +1,4 @@
+import { HelpButton } from '@/app/help/HelpButton'
 import { SiteTable } from '@/components/SiteTable'
 import { EmptyBlock, Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -21,6 +22,7 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
   return (
     <Section
       title={t('oneDrive.overLicence.title')}
+      help={<HelpButton topic="oneDriveOverLicence" />}
       subtitle={
         entitlement === null
           ? t('oneDrive.overLicence.subtitleUnknown')

@@ -8,7 +8,6 @@ import { adminConsentUrl, consentClientIdFor } from './config/adminConsent'
 import { getConfig } from './config/appConfig'
 import { isHelpPath } from './config/helpPath'
 import { takeConsentReturn } from './config/consentReturn'
-import { AccessHelpPage } from './app/help/AccessHelpPage'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
 import { AppIntlProvider } from './app/AppIntlProvider'
 import { BootstrapError } from './app/BootstrapError'
@@ -58,10 +57,11 @@ function bootstrap() {
   )
 }
 
-function renderHelp() {
+async function renderHelp() {
+  const { HelpPage } = await import('./app/help/HelpPage')
   render(
     <AppIntlProvider>
-      <AccessHelpPage
+      <HelpPage
         mode={accessModeOf(getConfig())}
         consentUrl={adminConsentUrl()}
         clientId={consentClientIdFor(getConfig())}
@@ -77,7 +77,7 @@ function settleConsentReturn() {
 
 try {
   settleConsentReturn()
-  if (isHelpPath(window.location.pathname)) renderHelp()
+  if (isHelpPath(window.location.pathname)) renderHelp().catch(renderBootstrapError)
   else bootstrap()
 } catch (err) {
   renderBootstrapError(err)

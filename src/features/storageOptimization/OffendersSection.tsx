@@ -1,3 +1,4 @@
+import { HelpButton } from '@/app/help/HelpButton'
 import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -40,6 +41,7 @@ export function OffendersSection({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.offenders.title')}
       subtitle={t('storageOptimisation.offenders.subtitle')}
+      help={<HelpButton topic="mainOffenders" />}
     >
       <NameCaveats caveats={overview.caveats} />
       <Panel>

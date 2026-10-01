@@ -90,9 +90,9 @@ describe('AccessFailure', () => {
     ['consent', new ApiError(403, 'AADSTS65001: not consented')],
     ['tenant', new ApiError(403, 'This tenant is not enabled.', 'TenantNotAllowed')],
     ['role', new ApiError(403, 'Forbidden')],
-  ])('links the %s failure to the access help page', (_kind, error) => {
+  ])('links the %s failure to troubleshooting in the help', (_kind, error) => {
     render(<AccessFailure error={error} />)
-    expect(screen.getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('falls back to the generic error state for anything else', () => {

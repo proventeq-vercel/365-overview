@@ -274,17 +274,66 @@ test.describe('modes from the URL', () => {
   })
 })
 
-test('the access help page stands alone, marks this site’s mode and leads back to the report', async ({ page }) => {
+test('the help center stands alone, shows this site’s mode and leads back to the report', async ({ page }) => {
   await page.goto('/help')
   const main = page.getByRole('main')
-  await expect(main.getByRole('heading', { name: 'Enabling access to the storage report', level: 1 })).toBeVisible()
-  await expect(page.getByRole('banner')).toContainText('Access help')
-  const delegated = main.locator('div.rounded-lg', {
-    has: page.getByRole('heading', { name: 'Delegated permissions', level: 3 }),
-  })
-  await expect(delegated.getByText('This site', { exact: true })).toBeVisible()
-  await expect(main.getByText('This site', { exact: true })).toHaveCount(1)
+  await expect(main.getByRole('heading', { name: 'Proventeq 365 storage report help', level: 1 })).toBeVisible()
+  await expect(page.getByRole('banner')).toContainText('Help center')
+  await page.getByRole('navigation', { name: 'Help topics' }).getByRole('link', { name: 'Enable access' }).click()
+  await expect(page).toHaveURL(/\/help\/getting-started\/enable-access$/)
+  const modes = page.getByRole('group', { name: 'Setup shown on this page' })
+  await expect(modes).toContainText('Showing: Delegated permissionsThis site')
+  await expect(main.getByText('Give readers a reporting role.')).toBeVisible()
+  await modes.getByRole('link', { name: 'Show Application permissions' }).click()
+  await expect(page).toHaveURL(/\?audience=application$/)
+  await expect(main.getByText('Get your tenant switched on.')).toBeVisible()
+  await expect(main.getByText('Give readers a reporting role.')).toHaveCount(0)
+  await page.reload()
+  await expect(main.getByText('Get your tenant switched on.')).toBeVisible()
   await page.getByRole('banner').getByRole('link', { name: 'Open the report' }).click()
   await reportLoaded(page)
   await expect(page).toHaveURL(/\/$/)
+})
+
+test('every report section explains itself and links to its help page', async ({ page, context }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const main = page.getByRole('main')
+  for (const title of [
+    'Storage Optimisation',
+    'Current storage distribution',
+    'Tenant capacity',
+    'Future state & growth impact',
+    'Main offenders',
+  ]) {
+    await expect(main.getByRole('button', { name: `About ${title}` })).toBeVisible()
+  }
+  await main.getByRole('button', { name: 'About Tenant capacity' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Tenant capacity' })
+  await expect(dialog).toContainText('what archiving inactive sites would save')
+  const opened = context.waitForEvent('page')
+  await dialog.getByRole('link', { name: 'See more' }).click()
+  const help = await opened
+  await expect(help.getByRole('heading', { name: 'Tenant capacity', level: 1 })).toBeVisible()
+  await expect(help).toHaveURL(/\/help\/reports\/storage-optimisation\/tenant-capacity$/)
+})
+
+test('the options menu opens the help in a new tab', async ({ page, context }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await page.getByRole('button', { name: 'Options' }).click()
+  const opened = context.waitForEvent('page')
+  await page.getByRole('menuitem', { name: /^Help/ }).click()
+  const help = await opened
+  await expect(help.getByRole('heading', { name: 'Proventeq 365 storage report help', level: 1 })).toBeVisible()
+})
+
+test('the help is searchable and published for agents as llms.txt', async ({ page, request }) => {
+  await page.goto('/help')
+  await page.getByRole('searchbox', { name: 'Search help' }).fill('inactive')
+  await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /^Tenant capacity/ }).click()
+  await expect(page.getByRole('heading', { name: 'Tenant capacity', level: 1 })).toBeVisible()
+  const llms = await request.get('/llms.txt')
+  expect(llms.ok()).toBe(true)
+  expect(await llms.text()).toContain('- [Tenant capacity](/help/reports/storage-optimisation/tenant-capacity): ')
 })
