@@ -54,6 +54,18 @@ describe('helpLlms dev server', () => {
     expect(response.setHeader).toHaveBeenCalledWith('Content-Type', 'text/plain; charset=utf-8')
   })
 
+  it.each(['raw', 't=1&raw', 'url', 'inline', 'import'])('passes on the Vite module request ?%s', (query) => {
+    const { response, next } = serve('/help', `/help/guide/setup.md?${query}`)
+    expect(next).toHaveBeenCalled()
+    expect(response.end).not.toHaveBeenCalled()
+  })
+
+  it.each(['ts=1', 'rawx', 'v=raw'])('serves a page file with the ordinary query ?%s', (query) => {
+    const { response, next } = serve('/help', `/help/guide/setup.md?${query}`)
+    expect(next).not.toHaveBeenCalled()
+    expect(response.end).toHaveBeenCalledWith('# Setup\n\n> Steps.\n\nDo it.\n')
+  })
+
   it('passes on a markdown request outside its base path without building the help', () => {
     writeFileSync(join(dir, 'guide.md'), '---\ntitle: Clash\ndescription: Same address.\nsection: start\n---\nX.')
     writeFileSync(join(dir, 'guide', 'index.md'), '---\ntitle: Guide\ndescription: Folder.\nsection: start\n---\nY.')
