@@ -82,7 +82,7 @@ export function HelpCenter({
   const closeNav = useCallback(() => {
     if (!navOpenRef.current) return
     setNavOpen(false)
-    toggleRef.current?.focus()
+    toggleRef.current?.focus({ preventScroll: true })
   }, [])
 
   const go = (href: string) => {

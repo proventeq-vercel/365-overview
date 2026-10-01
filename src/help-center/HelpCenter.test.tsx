@@ -188,6 +188,15 @@ describe('HelpCenter', () => {
     expect(toggle).toHaveFocus()
   })
 
+  it('hands focus back to the toggle without scrolling the page', async () => {
+    open('/help')
+    const toggle = screen.getByRole('button', { name: 'Browse help' })
+    await userEvent.click(toggle)
+    const focus = vi.spyOn(toggle, 'focus')
+    await userEvent.keyboard('{Escape}')
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true })
+  })
+
   it('hands focus back to the toggle when the backdrop closes the topic list', async () => {
     const { container } = open('/help')
     const toggle = screen.getByRole('button', { name: 'Browse help' })
