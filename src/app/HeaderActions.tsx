@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMsal } from '@azure/msal-react'
 import { EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
-import { tokenScopes } from '@/auth/msalConfig'
+import { loginRequest } from '@/auth/msalConfig'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -45,7 +45,7 @@ function AccountItems() {
         label={t('header.switchAccount')}
         description={t('header.switchAccountHint')}
         onClick={() => {
-          void instance.loginRedirect({ scopes: tokenScopes(), prompt: 'select_account' })
+          void instance.loginRedirect({ ...loginRequest(), prompt: 'select_account' })
         }}
       />
       <DescribedMenuItem

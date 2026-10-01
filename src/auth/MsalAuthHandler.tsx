@@ -8,6 +8,7 @@ import {
 } from '@azure/msal-browser'
 import { LoadingShell } from '../app/LoadingShell'
 import { AuthErrorScreen } from './AuthErrorScreen'
+import { loginRequest } from './msalConfig'
 import { useTranslation } from '../hooks/useTranslation'
 
 /**
@@ -77,7 +78,7 @@ export function MsalAuthHandler({ children }: { children: ReactNode }) {
       accounts.length === 0 &&
       inProgress === InteractionStatus.None
     ) {
-      instance.loginRedirect().catch((error: unknown) => {
+      instance.loginRedirect(loginRequest()).catch((error: unknown) => {
         console.error('Login redirect error', error)
       })
     }
