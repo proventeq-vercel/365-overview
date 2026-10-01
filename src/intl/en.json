@@ -117,6 +117,12 @@
   "help.center.audienceShown": "Showing: {audience}",
   "help.center.thisSite": "This site",
   "help.center.showAudience": "Show {audience}",
+  "help.center.homeEyebrow": "Proventeq 365 · Storage report",
+  "help.center.quickLinks": "Quick links",
+  "help.center.browseByArea": "Browse by area",
+  "help.center.areaCount": "{areas, plural, one {# area} other {# areas}} · {articles, plural, one {# article} other {# articles}}",
+  "help.center.areaArticles": "{articles, plural, one {# article} other {# articles}}",
+  "help.center.viewMarkdown": "View as Markdown",
   "helpButton.label": "About {title}",
   "helpButton.seeMore": "See more",
 

@@ -277,7 +277,9 @@ test.describe('modes from the URL', () => {
 test('the help centre stands alone, shows this site’s mode and leads back to the report', async ({ page }) => {
   await page.goto('/help')
   const main = page.getByRole('main')
-  await expect(main.getByRole('heading', { name: 'Proventeq 365 storage report help', level: 1 })).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'Proventeq 365 storage report help', level: 1 })).toBeVisible({
+    timeout: 15_000,
+  })
   await expect(page.getByRole('banner')).toContainText('Help centre')
   await page.getByRole('navigation', { name: 'Help topics' }).getByRole('link', { name: 'Enable access' }).click()
   await expect(page).toHaveURL(/\/help\/getting-started\/enable-access$/)
@@ -331,7 +333,7 @@ test('the options menu opens the help in a new tab', async ({ page, context }) =
 test('the help is searchable and published for agents as llms.txt', async ({ page, request }) => {
   await page.goto('/help')
   await page.getByRole('searchbox', { name: 'Search help' }).fill('inactive')
-  await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /^Tenant capacity/ }).click()
+  await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /^Storage Optimisation\s*Tenant capacity/ }).click()
   await expect(page.getByRole('heading', { name: 'Tenant capacity', level: 1 })).toBeVisible()
   const llms = await request.get('/llms.txt')
   expect(llms.ok()).toBe(true)

@@ -16,7 +16,7 @@ one way only:
   only for the tenant you signed in to.
 
 Nobody picks the mode at sign-in. This page shows the steps for this site's mode. To see the
-other mode, use the switch at the top right of this page.
+other mode, use the switch under the page title.
 
 ::: audience delegated
 ## How delegated access works

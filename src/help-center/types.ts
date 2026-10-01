@@ -1,6 +1,7 @@
 export interface HelpSection {
   id: string
   label: string
+  description?: string
 }
 
 export interface HelpAudience {

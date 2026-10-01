@@ -41,7 +41,7 @@ order: 20
 
 Each deployment reads Graph one way: delegated (the main site) or application permissions (the
 proxy site). Put content that differs in blocks; the page then shows the site's own mode, with a
-switch at the top right to read the other one:
+switch under the page title to read the other one:
 
 ```markdown
 ::: audience delegated

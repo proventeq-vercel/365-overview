@@ -34,6 +34,25 @@ describe('HelpPage', () => {
     expect(screen.getByRole('link', { name: 'Open the report' })).toHaveAttribute('href', '/')
   })
 
+  it('opens each area of the landing page on its first page, under its own icon', () => {
+    openHelp('/help', 'delegated')
+    const areas = screen.getByRole('region', { name: 'Browse by area' })
+    expect(areas).toHaveTextContent('4 areas · 17 articles')
+    const cards = within(areas).getAllByRole('link')
+    expect(cards.map((card) => card.getAttribute('href'))).toEqual([
+      '/help/getting-started/enable-access',
+      '/help/reports/storage-optimisation',
+      '/help/reports/onedrive-usage',
+      '/help/reference/settings',
+    ])
+    expect(cards.map((card) => card.querySelector('.hc-area-icon svg')?.getAttribute('class'))).toEqual([
+      expect.stringContaining('lucide-rocket'),
+      expect.stringContaining('lucide-chart-pie'),
+      expect.stringContaining('lucide-hard-drive'),
+      expect.stringContaining('lucide-book-open'),
+    ])
+  })
+
   it('shows a delegated site only the delegated steps, marked as this site', () => {
     openHelp('/help/getting-started/enable-access', 'delegated')
     const group = screen.getByRole('group', { name: 'Setup shown on this page' })

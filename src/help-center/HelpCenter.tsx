@@ -1,11 +1,15 @@
-import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AudienceSwitch } from './AudienceSwitch'
 import type { HelpCatalogue } from './catalogue'
 import { HelpAnchor } from './HelpAnchor'
+import { HelpBreadcrumbs } from './HelpBreadcrumbs'
+import { HelpHome } from './HelpHome'
 import { HelpMarkdown } from './HelpMarkdown'
 import { HelpPager } from './HelpPager'
+import { HelpSearch } from './HelpSearch'
 import { HelpSidebar } from './HelpSidebar'
-import { HelpToolbar } from './HelpToolbar'
+import { HelpTopBar } from './HelpTopBar'
+import { FileTextIcon } from './icons'
 import { DEFAULT_HELP_LABELS, type HelpCenterLabels } from './labels'
 import { helpHref } from './links'
 import { outline, prepareBody } from './prepare'
@@ -21,23 +25,23 @@ export interface HelpCenterProps {
   audiences: readonly HelpAudience[]
   defaultAudience: string
   variables?: (audience: string) => HelpVariables
-  header?: ReactNode
-  stickyOffset?: string
+  brand?: ReactNode
+  actions?: ReactNode
+  sectionIcons?: Readonly<Record<string, ReactNode>>
+  markdownLinks?: boolean
   labels?: Partial<HelpCenterLabels>
 }
 
 const NO_VARIABLES: HelpVariables = {}
 const NO_VARIABLES_FOR = () => NO_VARIABLES
+const NO_ICONS: Readonly<Record<string, ReactNode>> = {}
 
 const audienceQueryOf = (audience: string, defaultAudience: string) =>
   audience === defaultAudience ? '' : `?${AUDIENCE_PARAM}=${encodeURIComponent(audience)}`
 
-function isShortcut(event: KeyboardEvent): boolean {
-  return event.metaKey || event.ctrlKey !== event.altKey
-}
-
-function isHidden(element: HTMLElement): boolean {
-  return getComputedStyle(element).visibility === 'hidden'
+function isSearchShortcut(event: KeyboardEvent, typing: boolean): boolean {
+  if (event.key === '/') return !typing && !event.metaKey && event.ctrlKey === event.altKey
+  return event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey
 }
 
 export function HelpCenter({
@@ -46,8 +50,10 @@ export function HelpCenter({
   audiences,
   defaultAudience,
   variables = NO_VARIABLES_FOR,
-  header,
-  stickyOffset = '0px',
+  brand,
+  actions,
+  sectionIcons = NO_ICONS,
+  markdownLinks = false,
   labels: labelOverrides,
 }: HelpCenterProps) {
   const labels = { ...DEFAULT_HELP_LABELS, ...labelOverrides }
@@ -55,7 +61,6 @@ export function HelpCenter({
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [navOpen, setNavOpen] = useState(false)
-  const [focusSearch, setFocusSearch] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const navOpenRef = useRef(navOpen)
@@ -102,11 +107,12 @@ export function HelpCenter({
         closeNav()
         return
       }
-      const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')
-      if (event.key !== '/' || typing || isShortcut(event)) return
+      const typing =
+        event.target instanceof HTMLElement &&
+        event.target.closest('input, textarea, select, [contenteditable]') !== null
+      if (!isSearchShortcut(event, typing)) return
       event.preventDefault()
-      if (searchRef.current && isHidden(searchRef.current)) setNavOpen(true)
-      setFocusSearch(true)
+      searchRef.current?.focus()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -116,19 +122,37 @@ export function HelpCenter({
     navOpenRef.current = navOpen
   }, [navOpen])
 
-  useEffect(() => {
-    const search = searchRef.current
-    if (!focusSearch || !search) return
-    setFocusSearch(false)
-    search.focus()
-  }, [focusSearch])
-
   const section = page ? catalogue.sections.find((each) => each.id === page.section) : undefined
   const { previous, next } = page ? catalogue.neighbours(page.slug) : { previous: null, next: null }
+  const showAudienceSwitch = page !== undefined && page.hasAudienceContent && audiences.length > 1
+  const markdown = page && (
+    <HelpMarkdown body={body} file={page.file} basePath={basePath} query={audienceQuery} onNavigate={go} />
+  )
 
   return (
-    <div className="hc" style={{ '--hc-sticky-top': stickyOffset } as CSSProperties}>
-      {header}
+    <div className="hc">
+      <HelpTopBar
+        brand={brand}
+        actions={actions}
+        navOpen={navOpen}
+        sidebarId={sidebarId}
+        toggleRef={toggleRef}
+        labels={labels}
+        onToggleNav={() => setNavOpen((open) => !open)}
+        search={
+          <HelpSearch
+            query={query}
+            searchedFor={deferredQuery}
+            results={results}
+            sections={catalogue.sections}
+            inputRef={searchRef}
+            labels={labels}
+            hrefOf={pageHref}
+            onQueryChange={setQuery}
+            onNavigate={go}
+          />
+        }
+      />
       <div className="hc-layout">
         <div
           className={navOpen ? 'hc-backdrop hc-backdrop-open' : 'hc-backdrop'}
@@ -140,70 +164,85 @@ export function HelpCenter({
           open={navOpen}
           catalogue={catalogue}
           currentSlug={page?.slug}
-          query={query}
-          searchedFor={deferredQuery}
-          results={results}
-          searchRef={searchRef}
+          sectionIcons={sectionIcons}
           labels={labels}
           hrefOf={pageHref}
-          onQueryChange={setQuery}
           onNavigate={go}
         />
 
-        <main className="hc-main">
-          <HelpToolbar
-            page={page}
-            section={section}
-            navOpen={navOpen}
-            sidebarId={sidebarId}
-            toggleRef={toggleRef}
-            labels={labels}
-            homeHref={pageHref('')}
-            onToggleNav={() => setNavOpen((open) => !open)}
-            onNavigate={go}
-          >
-            {page?.hasAudienceContent && audiences.length > 1 && (
-              <AudienceSwitch
-                audiences={audiences}
-                current={audience}
-                defaultAudience={defaultAudience}
-                labels={labels}
-                hrefFor={(id) => helpHref(basePath, { slug: page.slug, hash: '' }, audienceQueryOf(id, defaultAudience))}
-                onNavigate={go}
-              />
+        <div className="hc-content">
+          <main className="hc-main">
+            {page?.slug === '' ? (
+              <article className="hc-article hc-article-home" key={`${page.slug}:${audience.id}`}>
+                <HelpHome
+                  home={page}
+                  catalogue={catalogue}
+                  sectionIcons={sectionIcons}
+                  labels={labels}
+                  hrefOf={pageHref}
+                  onNavigate={go}
+                >
+                  {markdown}
+                </HelpHome>
+              </article>
+            ) : page ? (
+              <article className="hc-article" key={`${page.slug}:${audience.id}`}>
+                <div className="hc-page-header">
+                  <HelpBreadcrumbs
+                    page={page}
+                    section={section}
+                    labels={labels}
+                    homeHref={pageHref('')}
+                    onNavigate={go}
+                  />
+                  <h1>{page.title}</h1>
+                  <p className="hc-lead">{page.description}</p>
+                  {(showAudienceSwitch || markdownLinks) && (
+                    <div className="hc-meta">
+                      {showAudienceSwitch && (
+                        <AudienceSwitch
+                          audiences={audiences}
+                          current={audience}
+                          defaultAudience={defaultAudience}
+                          labels={labels}
+                          hrefFor={(id) =>
+                            helpHref(basePath, { slug: page.slug, hash: '' }, audienceQueryOf(id, defaultAudience))
+                          }
+                          onNavigate={go}
+                        />
+                      )}
+                      {markdownLinks && (
+                        <a className="hc-meta-action" href={`${basePath}/${page.file}`} target="_blank" rel="noopener">
+                          <FileTextIcon size={13} />
+                          {labels.viewMarkdown}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="hc-prose">{markdown}</div>
+                <HelpPager previous={previous} next={next} labels={labels} hrefOf={pageHref} onNavigate={go} />
+              </article>
+            ) : (
+              <article className="hc-article">
+                <div className="hc-page-header">
+                  <h1>{labels.notFoundTitle}</h1>
+                  <p className="hc-lead">{labels.notFoundBody}</p>
+                </div>
+                <HelpAnchor href={pageHref('')} onNavigate={go} className="hc-button">
+                  {labels.notFoundBack}
+                </HelpAnchor>
+              </article>
             )}
-          </HelpToolbar>
+          </main>
 
-          {page ? (
-            <article className="hc-article" key={`${page.slug}:${audience.id}`}>
-              <div className="hc-page-header">
-                <h1>{page.title}</h1>
-                <p className="hc-lead">{page.description}</p>
-              </div>
-              <div className="hc-prose">
-                <HelpMarkdown body={body} file={page.file} basePath={basePath} query={audienceQuery} onNavigate={go} />
-              </div>
-              <HelpPager previous={previous} next={next} labels={labels} hrefOf={pageHref} onNavigate={go} />
-            </article>
-          ) : (
-            <article className="hc-article">
-              <div className="hc-page-header">
-                <h1>{labels.notFoundTitle}</h1>
-                <p className="hc-lead">{labels.notFoundBody}</p>
-              </div>
-              <HelpAnchor href={pageHref('')} onNavigate={go} className="hc-button">
-                {labels.notFoundBack}
-              </HelpAnchor>
-            </article>
-          )}
-        </main>
-
-        <TableOfContents
-          headings={headings}
-          label={labels.onThisPage}
-          href={(hash) => (page ? pageHref(page, hash) : '#')}
-          onNavigate={go}
-        />
+          <TableOfContents
+            headings={headings}
+            label={labels.onThisPage}
+            href={(hash) => (page ? pageHref(page, hash) : '#')}
+            onNavigate={go}
+          />
+        </div>
       </div>
     </div>
   )

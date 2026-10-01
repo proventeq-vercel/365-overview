@@ -415,9 +415,18 @@ description).
   everything under it) **before** `bootstrap()`, so it never mounts MSAL or the
   data layer — a visitor who cannot sign in can still read it. Both hosts serve
   it through their `index.html` fallback. The page shows this site's mode
-  (`config/accessMode.accessModeOf`, proxy set → application) and a switch at the
-  top right shows the other one (`?audience=`); `{{consentUrl}}` / `{{clientId}}`
-  are filled only for the site's own mode.
+  (`config/accessMode.accessModeOf`, proxy set → application) and a switch
+  under the page title shows the other one (`?audience=`); `{{consentUrl}}` /
+  `{{clientId}}` are filled only for the site's own mode.
+- **The help centre looks like learn.proventeq.com, not like the report.** Its
+  layout (sticky top bar with inline search, landing hero + *Browse by area*
+  cards, collapsible sidebar sections, breadcrumb / title / meta header, TOC,
+  pager) and its palette (navy accent, warm off-white, IBM Plex falling back to
+  Open Sans) copy the Proventeq Help Center (`proventeq-vercel/p365-help-web`,
+  `app/globals.css`), so the tokens in `help-center.css` are learn's, not the
+  `--color-p365-*` ones — do not re-theme `.hc` with P365 teal. Section cards take
+  `description` from `helpSections.ts` and icons from `HelpPage`'s
+  `SECTION_ICONS`.
 - Every report section and title has a P365-style **?** (`app/help/HelpButton`,
   a required `help` slot on `Section` and `PageHeader`): a dialog with the page's
   `description` and *See more* in a new tab. Topics → slugs are

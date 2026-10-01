@@ -40,7 +40,7 @@ const AUDIENCES = [
 
 const variables = (audience: string) => (audience === 'application' ? { consentUrl: 'https://consent.example' } : {})
 
-function open(path: string, defaultAudience = 'delegated') {
+function open(path: string, defaultAudience = 'delegated', markdownLinks = false) {
   window.history.replaceState(null, '', path)
   return render(
     <HelpCenter
@@ -49,10 +49,14 @@ function open(path: string, defaultAudience = 'delegated') {
       audiences={AUDIENCES}
       defaultAudience={defaultAudience}
       variables={variables}
-      header={<header>Host header</header>}
+      brand={<span>Host brand</span>}
+      actions={<a href="/">Host action</a>}
+      markdownLinks={markdownLinks}
     />,
   )
 }
+
+const topics = () => screen.getByRole('navigation', { name: 'Help topics' })
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
@@ -65,11 +69,14 @@ afterEach(() => {
 })
 
 describe('HelpCenter', () => {
-  it('renders the page the address names, with its title, lead and the host header', () => {
+  it('renders the page the address names, with its title, lead and the host brand and actions in the top bar', () => {
     open('/help/reference/settings')
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
     expect(screen.getByText('Every option.')).toBeInTheDocument()
-    expect(screen.getByText('Host header')).toBeInTheDocument()
+    const banner = screen.getByRole('banner')
+    expect(banner).toHaveTextContent('Host brand')
+    expect(within(banner).getByRole('link', { name: 'Host action' })).toHaveAttribute('href', '/')
+    expect(within(banner).getByRole('searchbox', { name: 'Search help' })).toBeInTheDocument()
     expect(document.title).toBe('Settings · Help')
   })
 
@@ -109,7 +116,7 @@ describe('HelpCenter', () => {
 
   it('goes back to the previous page on browser back', async () => {
     open('/help')
-    await userEvent.click(screen.getByRole('link', { name: 'Setup' }))
+    await userEvent.click(within(topics()).getByRole('link', { name: 'Setup' }))
     window.history.back()
     expect(await screen.findByRole('heading', { level: 1, name: 'Help home' })).toBeInTheDocument()
   })
@@ -162,18 +169,77 @@ describe('HelpCenter', () => {
     expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
   })
 
-  it('opens the topic list on slash when it is hidden on a small screen, then focuses the search', async () => {
-    const drawer = document.createElement('style')
-    drawer.textContent = '.hc-sidebar { visibility: hidden } .hc-sidebar-open { visibility: visible }'
-    document.head.append(drawer)
-    try {
-      open('/help')
-      await userEvent.keyboard('/')
-      expect(screen.getByRole('button', { name: 'Browse help' })).toHaveAttribute('aria-expanded', 'true')
-      expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
-    } finally {
-      drawer.remove()
-    }
+  it('focuses the search on Ctrl+K and Cmd+K', async () => {
+    open('/help')
+    await userEvent.keyboard('{Control>}k{/Control}')
+    const search = screen.getByRole('searchbox', { name: 'Search help' })
+    expect(search).toHaveFocus()
+    search.blur()
+    await userEvent.keyboard('{Meta>}K{/Meta}')
+    expect(search).toHaveFocus()
+  })
+
+  it('moves through the results with the arrow keys and opens the highlighted one on Enter', async () => {
+    open('/help')
+    const search = screen.getByRole('searchbox', { name: 'Search help' })
+    await userEvent.type(search, 'set')
+    const results = await screen.findByRole('list', { name: 'Search results' })
+    const items = within(results).getAllByRole('listitem')
+    expect(items.map((item) => item.querySelector('.hc-result-title')?.textContent)).toEqual(['Set it up', 'Settings', 'Help home'])
+    expect(search).toHaveAttribute('aria-activedescendant', items[0].id)
+    await userEvent.keyboard('{ArrowDown}')
+    expect(search).toHaveAttribute('aria-activedescendant', items[1].id)
+    await userEvent.keyboard('{Enter}')
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
+  })
+
+  it('names each result’s section', async () => {
+    open('/help')
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search help' }), 'currency')
+    const results = await screen.findByRole('list', { name: 'Search results' })
+    expect(within(results).getByRole('link')).toHaveTextContent(/^ReferenceSettings/)
+  })
+
+  it('clears the search on Escape', async () => {
+    open('/help')
+    const search = screen.getByRole('searchbox', { name: 'Search help' })
+    await userEvent.type(search, 'currency')
+    await screen.findByRole('list', { name: 'Search results' })
+    await userEvent.keyboard('{Escape}')
+    expect(search).toHaveValue('')
+    expect(screen.queryByRole('list', { name: 'Search results' })).not.toBeInTheDocument()
+  })
+
+  it('opens the overview as a landing page with quick links and a card per area', () => {
+    open('/help')
+    expect(screen.getByRole('heading', { level: 1, name: 'Help home' })).toBeInTheDocument()
+    const quick = screen.getByRole('list', { name: 'Quick links' })
+    expect(within(quick).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/help/setup'])
+    const areas = screen.getByRole('region', { name: 'Browse by area' })
+    expect(areas).toHaveTextContent('2 areas · 2 articles')
+    const cards = within(areas).getAllByRole('link')
+    expect(cards.map((link) => link.getAttribute('href'))).toEqual(['/help/setup', '/help/reference/settings'])
+    expect(cards[1]).toHaveTextContent('ReferenceSettings1 article')
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).not.toBeInTheDocument()
+  })
+
+  it('collapses and expands a topic section', async () => {
+    open('/help/setup')
+    const heading = within(topics()).getByRole('button', { name: 'Reference' })
+    expect(heading).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.click(heading)
+    expect(heading).toHaveAttribute('aria-expanded', 'false')
+    expect(within(topics()).queryByRole('link', { name: 'Settings' })).not.toBeInTheDocument()
+    await userEvent.click(heading)
+    expect(within(topics()).getByRole('link', { name: 'Settings' })).toBeInTheDocument()
+  })
+
+  it('links each page’s markdown source only when the host serves it', () => {
+    open('/help/setup', 'delegated', true)
+    expect(screen.getByRole('link', { name: 'View as Markdown' })).toHaveAttribute('href', '/help/setup.md')
+    cleanup()
+    open('/help/setup')
+    expect(screen.queryByRole('link', { name: 'View as Markdown' })).not.toBeInTheDocument()
   })
 
   it('closes the topic list on Escape', async () => {
@@ -248,7 +314,7 @@ describe('HelpCenter', () => {
     expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
   })
 
-  it('leaves the topic list closed on slash when the search is already on screen', async () => {
+  it('leaves the topic list closed when slash focuses the search', async () => {
     open('/help')
     await userEvent.keyboard('/')
     expect(screen.getByRole('button', { name: 'Browse help' })).toHaveAttribute('aria-expanded', 'false')
@@ -271,7 +337,7 @@ describe('HelpCenter', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await userEvent.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    await userEvent.click(screen.getByRole('link', { name: 'Settings' }))
+    await userEvent.click(within(topics()).getByRole('link', { name: 'Settings' }))
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
   })
 })

@@ -18,6 +18,12 @@ export interface HelpCenterLabels {
   audienceShown: (audience: string) => string
   thisSite: string
   showAudience: (audience: string) => string
+  homeEyebrow: string
+  quickLinks: string
+  browseByArea: string
+  areaCount: (areas: number, articles: number) => string
+  areaArticles: (articles: number) => string
+  viewMarkdown: string
 }
 
 export const DEFAULT_HELP_LABELS: HelpCenterLabels = {
@@ -40,4 +46,10 @@ export const DEFAULT_HELP_LABELS: HelpCenterLabels = {
   audienceShown: (audience) => `Showing: ${audience}`,
   thisSite: 'This site',
   showAudience: (audience) => `Show ${audience}`,
+  homeEyebrow: 'Help centre',
+  quickLinks: 'Quick links',
+  browseByArea: 'Browse by area',
+  areaCount: (areas, articles) => `${areas} ${areas === 1 ? 'area' : 'areas'} · ${articles} ${articles === 1 ? 'article' : 'articles'}`,
+  areaArticles: (articles) => `${articles} ${articles === 1 ? 'article' : 'articles'}`,
+  viewMarkdown: 'View as Markdown',
 }
