@@ -34,15 +34,17 @@ export function helpLlms(options: HelpLlmsOptions): Plugin {
     }
   }
   const contentType = (name: string) => (name.endsWith('.md') ? 'text/markdown' : 'text/plain')
-  const pagePrefix = `${options.basePath.replace(/^\/+|\/+$/g, '')}/`
+  const baseFolder = options.basePath.replace(/^\/+|\/+$/g, '')
+  const pagePrefix = baseFolder ? `${baseFolder}/` : ''
   const served = (name: string) =>
     name === 'llms.txt' || name === 'llms-full.txt' || (name.startsWith(pagePrefix) && name.endsWith('.md'))
   return {
     name: 'help-center-llms',
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        const name = (request.url?.split('?')[0] ?? '').replace(/^\//, '')
-        if (!served(name)) return next()
+        const [path, query] = (request.url ?? '').split('?')
+        const name = path.replace(/^\//, '')
+        if (query !== undefined || !served(name)) return next()
         let body: string | undefined
         try {
           body = files()[name]

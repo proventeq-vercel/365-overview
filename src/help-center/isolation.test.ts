@@ -6,7 +6,7 @@ const SOURCES = import.meta.glob<string>('/src/help-center/**/*.{ts,tsx}', {
   eager: true,
 })
 
-const ALLOWED_PACKAGES = new Set(['node:fs', 'node:path', 'vite', 'react', 'react-markdown', 'remark-gfm', 'rehype-slug', 'github-slugger', 'vitest', '@testing-library/react', '@testing-library/user-event'])
+const ALLOWED_PACKAGES = new Set(['node:fs', 'node:os', 'node:path', 'vite', 'react', 'react-markdown', 'remark-gfm', 'rehype-slug', 'github-slugger', 'vitest', '@testing-library/react', '@testing-library/user-event'])
 
 function importsOf(source: string): string[] {
   return [...source.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((match) => match[1])
