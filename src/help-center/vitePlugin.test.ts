@@ -48,9 +48,17 @@ describe('helpLlms dev server', () => {
     expect(response.end).not.toHaveBeenCalled()
   })
 
-  it('passes on a markdown request outside its base path', () => {
+  it('serves the index with a cache-busting query', () => {
+    const { response, next } = serve('/help', '/llms.txt?ts=1')
+    expect(next).not.toHaveBeenCalled()
+    expect(response.setHeader).toHaveBeenCalledWith('Content-Type', 'text/plain; charset=utf-8')
+  })
+
+  it('passes on a markdown request outside its base path without building the help', () => {
+    writeFileSync(join(dir, 'guide.md'), '---\ntitle: Clash\ndescription: Same address.\nsection: start\n---\nX.')
+    writeFileSync(join(dir, 'guide', 'index.md'), '---\ntitle: Guide\ndescription: Folder.\nsection: start\n---\nY.')
     const { response, next } = serve('/help', '/guide/setup.md')
-    expect(next).toHaveBeenCalled()
+    expect(next).toHaveBeenCalledWith()
     expect(response.end).not.toHaveBeenCalled()
   })
 })

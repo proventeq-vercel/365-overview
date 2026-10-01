@@ -10,6 +10,8 @@ export interface HelpLlmsOptions extends LlmsOptions {
   sections: readonly HelpSection[]
 }
 
+const VITE_MODULE_QUERY = /(?:^|&)(?:raw|url|inline|import)(?:[=&]|$)/
+
 function markdownFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name)
@@ -44,7 +46,7 @@ export function helpLlms(options: HelpLlmsOptions): Plugin {
       server.middlewares.use((request, response, next) => {
         const [path, query] = (request.url ?? '').split('?')
         const name = path.replace(/^\//, '')
-        if (query !== undefined || !served(name)) return next()
+        if (VITE_MODULE_QUERY.test(query ?? '') || !served(name)) return next()
         let body: string | undefined
         try {
           body = files()[name]
