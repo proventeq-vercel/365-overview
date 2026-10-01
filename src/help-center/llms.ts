@@ -8,19 +8,21 @@ export interface LlmsOptions {
 }
 
 const AUDIENCE_LEGEND =
-  'Blocks fenced by `::: audience <id>` apply to that audience only; `{{name}}` is filled in by the site.'
+  'Blocks fenced by `::: audience <id>` apply to that audience only, and `::: if <name>` / `::: unless <name>` to whether the site sets that value; `{{name}}` is filled in by the site.'
+const SITE_SPECIFIC = /^:::|\{\{/m
 
-export function markdownPath(basePath: string, slug: string): string {
-  return `${basePath.replace(/\/+$/, '')}/${slug || 'index'}.md`
+function markdownPath(basePath: string, page: HelpPage): string {
+  return `${basePath.replace(/\/+$/, '')}/${page.file}`
 }
 
-export function buildLlmsPage(page: HelpPage): string {
-  return `# ${page.title}\n\n> ${page.description}\n\n${page.body}\n`
+function buildLlmsPage(page: HelpPage): string {
+  const legend = SITE_SPECIFIC.test(page.body) ? `${AUDIENCE_LEGEND}\n\n` : ''
+  return `# ${page.title}\n\n> ${page.description}\n\n${legend}${page.body}\n`
 }
 
 export function buildLlmsPages(catalogue: HelpCatalogue, { basePath }: LlmsOptions): Record<string, string> {
   return Object.fromEntries(
-    catalogue.pages.map((page) => [markdownPath(basePath, page.slug).replace(/^\/+/, ''), buildLlmsPage(page)]),
+    catalogue.pages.map((page) => [markdownPath(basePath, page).replace(/^\/+/, ''), buildLlmsPage(page)]),
   )
 }
 
@@ -31,7 +33,7 @@ export function buildLlmsIndex(catalogue: HelpCatalogue, { title, summary, baseP
     if (pages.length === 0) continue
     lines.push(`## ${section.label}`, '')
     for (const page of pages) {
-      lines.push(`- [${page.title}](${markdownPath(basePath, page.slug)}): ${page.description}`)
+      lines.push(`- [${page.title}](${markdownPath(basePath, page)}): ${page.description}`)
     }
     lines.push('')
   }
@@ -41,7 +43,7 @@ export function buildLlmsIndex(catalogue: HelpCatalogue, { title, summary, baseP
 export function buildLlmsFull(catalogue: HelpCatalogue, { title, summary }: LlmsOptions): string {
   const parts = [`# ${title}`, `> ${summary}`, AUDIENCE_LEGEND]
   for (const page of catalogue.pages) {
-    parts.push(`---\n\n${buildLlmsPage(page).trimEnd()}`)
+    parts.push(`---\n\n# ${page.title}\n\n> ${page.description}\n\n${page.body}`)
   }
   return `${parts.join('\n\n')}\n`
 }

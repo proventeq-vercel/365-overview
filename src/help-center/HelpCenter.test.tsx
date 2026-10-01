@@ -110,7 +110,7 @@ describe('HelpCenter', () => {
     expect(screen.getByText('Assign Reports Reader.')).toBeInTheDocument()
     expect(screen.queryByText(/Approve the app/)).not.toBeInTheDocument()
     const group = screen.getByRole('group', { name: 'Setup shown on this page' })
-    expect(group).toHaveTextContent('Showing the setup for Delegated permissionsThis site')
+    expect(group).toHaveTextContent('Showing: Delegated permissionsThis site')
     expect(within(group).getByRole('link', { name: 'Show Application permissions' })).toHaveAttribute(
       'href',
       '/help/setup?audience=application',
@@ -165,6 +165,21 @@ describe('HelpCenter', () => {
     } finally {
       drawer.remove()
     }
+  })
+
+  it('closes the topic list on Escape', async () => {
+    open('/help')
+    const toggle = screen.getByRole('button', { name: 'Browse help' })
+    await userEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.keyboard('{Escape}')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('leaves a browser shortcut such as Ctrl+/ alone', async () => {
+    open('/help')
+    await userEvent.keyboard('{Control>}/{/Control}')
+    expect(screen.getByRole('searchbox', { name: 'Search help' })).not.toHaveFocus()
   })
 
   it('leaves the topic list closed on slash when the search is already on screen', async () => {

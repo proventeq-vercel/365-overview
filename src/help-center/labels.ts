@@ -37,7 +37,7 @@ export const DEFAULT_HELP_LABELS: HelpCenterLabels = {
   notFoundBody: 'It may have moved. Start from the overview, or search the help.',
   notFoundBack: 'Go to the help overview',
   audienceGroup: 'Setup shown on this page',
-  audienceShown: (audience) => `Showing the setup for ${audience}`,
+  audienceShown: (audience) => `Showing: ${audience}`,
   thisSite: 'This site',
   showAudience: (audience) => `Show ${audience}`,
 }

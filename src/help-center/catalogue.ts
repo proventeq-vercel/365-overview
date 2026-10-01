@@ -81,7 +81,12 @@ export function createHelpCatalogue(
       a.order - b.order ||
       a.slug.localeCompare(b.slug),
   )
-  const bySlug = new Map(pages.map((page) => [page.slug, page]))
+  const bySlug = new Map<string, HelpPage>()
+  for (const page of pages) {
+    const taken = bySlug.get(page.slug)
+    if (taken) throw new Error(`Help pages ${taken.file} and ${page.file} share the address "/${page.slug}"`)
+    bySlug.set(page.slug, page)
+  }
 
   return {
     pages,

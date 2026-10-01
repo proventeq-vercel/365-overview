@@ -84,6 +84,18 @@ describe('createHelpCatalogue', () => {
     expect(catalogue.neighbours('missing')).toEqual({ previous: null, next: null })
   })
 
+  it('refuses two files that would be served at the same address', () => {
+    expect(() =>
+      createHelpCatalogue(
+        {
+          'a.md': page('title: A\ndescription: d\nsection: start'),
+          'a/index.md': page('title: A again\ndescription: d\nsection: start'),
+        },
+        SECTIONS,
+      ),
+    ).toThrow('share the address "/a"')
+  })
+
   it('refuses a page in a section the host did not declare', () => {
     expect(() =>
       createHelpCatalogue({ 'x.md': page('title: X\ndescription: d\nsection: nowhere') }, SECTIONS),

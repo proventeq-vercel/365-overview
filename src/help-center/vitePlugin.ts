@@ -34,13 +34,21 @@ export function helpLlms(options: HelpLlmsOptions): Plugin {
     }
   }
   const contentType = (name: string) => (name.endsWith('.md') ? 'text/markdown' : 'text/plain')
+  const pagePrefix = `${options.basePath.replace(/^\/+|\/+$/g, '')}/`
+  const served = (name: string) =>
+    name === 'llms.txt' || name === 'llms-full.txt' || (name.startsWith(pagePrefix) && name.endsWith('.md'))
   return {
     name: 'help-center-llms',
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         const name = (request.url?.split('?')[0] ?? '').replace(/^\//, '')
-        if (!name.endsWith('.txt') && !name.endsWith('.md')) return next()
-        const body = files()[name]
+        if (!served(name)) return next()
+        let body: string | undefined
+        try {
+          body = files()[name]
+        } catch (error) {
+          return next(error)
+        }
         if (body === undefined) return next()
         response.setHeader('Content-Type', `${contentType(name)}; charset=utf-8`)
         response.end(body)

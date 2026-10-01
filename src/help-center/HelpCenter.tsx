@@ -85,8 +85,12 @@ export function HelpCenter({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setNavOpen(false)
+        return
+      }
       const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')
-      if (event.key !== '/' || typing) return
+      if (event.key !== '/' || typing || event.ctrlKey || event.metaKey || event.altKey) return
       event.preventDefault()
       if (searchRef.current && isHidden(searchRef.current)) setNavOpen(true)
       setFocusSearch(true)
