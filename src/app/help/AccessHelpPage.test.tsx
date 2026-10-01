@@ -45,7 +45,7 @@ describe('AccessHelpPage', () => {
     expect(application).toHaveLength(4)
     expect(application[3]).toHaveTextContent("Sites.Read.All application permission (Graph PowerShell: New-MgServicePrincipalAppRoleAssignment)")
     expect(delegated).toHaveLength(4)
-    expect(delegated[3]).toHaveTextContent('this app does not ask for Sites.Read.All')
+    expect(delegated[3]).toHaveTextContent('a site gets its name only when the signed-in user can open it')
     expect(delegated[1]).toHaveTextContent('Roles & admins → Reports Reader → Add assignments')
   })
 
@@ -70,7 +70,7 @@ describe('AccessHelpPage', () => {
     expect(rows.map((row) => row.textContent)).toEqual([
       'Reports.Read.AllRequiredMicrosoft 365 usage reports: storage per site and per OneDrive',
       'Organization.Read.AllOptionaltenant name and licences, for the storage entitlement and OneDrive storage per user',
-      'Sites.Read.AllOptionalsite names; without it every site is listed by its id',
+      "Sites.Read.AllOptionalevery site's name; without it a site is listed by its id unless the viewer can open it on the delegated site",
     ])
   })
 

@@ -300,8 +300,9 @@ done by the customer's administrator. The admin consent link is on each site's `
 2. Every person who opens the report holds Reports Reader (the least privilege), Global Reader,
    SharePoint Administrator or Global Administrator: **Entra admin center → Roles & admins →
    Reports Reader → Add assignments**.
-3. They open the site and sign in. Sites are listed by id: the delegated registration does not ask
-   for `Sites.Read.All`, and even with it a user could only name the sites they can open.
+3. They open the site and sign in. The delegated registration does not ask for `Sites.Read.All`,
+   so a site is named only when the signed-in user can open it; the rest are listed by id. On
+   proventeqe5 that named 31 of the 50 largest sites for a Reports Reader (2026-10-01).
 
 ### Limiting who can open the report
 
