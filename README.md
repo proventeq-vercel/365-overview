@@ -329,6 +329,20 @@ token once — a grant made after sign-in shows up without signing out — and o
 admin-consent screen before calling Graph. Graph's own 403 is then left to mean what it says: the
 user lacks a reporting role.
 
+Sign-in asks for the token audience straight away (`loginRequest()`: `.default` on the delegated
+site, the proxy scope on the application site), so a user of a consented tenant sees one prompt,
+not a sign-in prompt followed by a second one for the report.
+
+### After access is granted
+
+A refused report does not stay refused. While the report shows a consent, tenant or role failure,
+it asks again every 30 seconds and whenever the tab regains focus, so a grant made in another tab
+or by another administrator shows up without a reload. The admin-consent link returns to the site
+with `?admin_consent=True`; `main.tsx` strips the response from the address and records the grant
+for the tab, and for the next two minutes a consent refusal shows the loading screen and is
+retried every 3 seconds while Entra propagates the grant. Once the report loads, every other query
+(the tenant name in the header among them) is fetched again.
+
 ## Hiding names
 
 `?hideNames=true` (or `VITE_HIDE_NAMES=true` at build time) masks identities for the rest of the
@@ -598,7 +612,7 @@ functions/       # The Graph proxy (Azure Functions v4) with its own package.jso
 
 ## Data flow
 
-1. In live mode, `MsalAuthProvider` initialises the MSAL singleton and `MsalAuthHandler` gates the app — with no signed-in account it calls `loginRedirect()`.
+1. In live mode, `MsalAuthProvider` initialises the MSAL singleton and `MsalAuthHandler` gates the app — with no signed-in account it calls `loginRedirect(loginRequest())`, asking for the report's scopes in the same prompt.
 2. `useStorageOverview` issues the five Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs — plus `/organization` for the header. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
 3. The parsed inputs go through `buildStorageOverview`, which produces every figure the screen shows. Sections render the model; none of them compute a number.
 4. The Graph scopes are consented on the first token round-trip, so an unconsented organisation fails there with `AADSTS65001`: `MsalAuthHandler` keeps the error object and `AuthErrorScreen` shows the Global Administrator action with the admin-consent link (built for the multi-tenant `organizations` endpoint, `redirect_uri` included). Once signed in, a failed Graph call is classified the same way in `AccessFailure`: consent error → consent screen; the proxy's `TenantNotAllowed` → the tenant screen, which says no role or consent will change it; any other authorisation failure → the role screen; anything else → the generic error state.

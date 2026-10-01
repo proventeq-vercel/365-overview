@@ -23,8 +23,11 @@ export function render(ui: ReactNode, { wrapper: Inner, ...options }: RenderOpti
 
 export const NO_SITE_DETAILS: DataSource['getSiteDetails'] = async () => new Map()
 
-export function renderWithData(ui: ReactNode, source: Partial<DataSource> = {}) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+export function renderWithData(
+  ui: ReactNode,
+  source: Partial<DataSource> = {},
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   const ds = { getSiteDetails: NO_SITE_DETAILS, ...source } as DataSource
   function Wrapper({ children }: { children: ReactNode }) {
     return (

@@ -5,6 +5,8 @@ import { HelpLink } from '@/components/HelpLink'
 import { RequiredPermissionList } from '@/components/RequiredPermissionList'
 import { accessModeOf } from '@/config/accessMode'
 import { adminConsentUrl } from '@/config/adminConsent'
+import { consentRecentlyGranted } from '@/config/consentReturn'
+import { ReportLoading } from '@/app/ReportLoading'
 import { getConfig } from '@/config/appConfig'
 import { AlertPanel } from '@/design/AlertPanel'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -13,6 +15,10 @@ import { consentErrorFor } from './consentError'
 export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const t = useTranslation()
   const kind = consentErrorFor(error)
+
+  if (kind === 'consent' && consentRecentlyGranted(Date.now())) {
+    return <ReportLoading stage="loadingReport" />
+  }
 
   if (kind === 'consent') {
     const url = adminConsentUrl()

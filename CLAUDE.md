@@ -34,7 +34,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   error **object** and `AuthErrorScreen` turns `AADSTS65001` into the
   admin-consent screen — the consent round-trip happens on the first
   `acquireTokenRedirect`, before any Graph call, so `AccessFailure` alone
-  would never see it. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
+  would never see it. Sign-in requests the same audience (`loginRequest()`),
+  so a delegated user consents to sign-in and the report in one prompt.
+  A refused report revalidates itself: `hooks/accessRevalidation.ts` rechecks
+  `storageInputs` every 30 s and on focus while the error is an access
+  failure, `config/consentReturn.ts` turns the admin-consent return
+  (`?admin_consent=True`) into a two-minute settling window (3 s rechecks,
+  `AccessFailure` shows the loading screen instead of the refusal), and
+  recovery invalidates every other query. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
   kept byte-identical with a `365-oversharing` sibling; that app is dropped.)
 - `src/clients/` — `graphClient` fetch wrapper (`get`, `getAllPages`,
   `batchGet` over `$batch`) + `apiError`. It takes an **origin**

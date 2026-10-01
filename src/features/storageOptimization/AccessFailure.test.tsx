@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { screen, cleanup, fireEvent } from '@testing-library/react'
 import { render } from '@/test/render'
 import { ApiError } from '@/clients/apiError'
+import { CONSENT_GRANTED_KEY, CONSENT_SETTLE_MS } from '@/config/consentReturn'
 import { AccessFailure } from './AccessFailure'
 
 afterEach(cleanup)
@@ -35,6 +36,27 @@ describe('AccessFailure', () => {
     expect(permissions).toHaveTextContent('Reports.Read.All')
     expect(permissions).not.toHaveTextContent('Sites.Read.All')
     expect(permissions).toHaveTextContent('Organization.Read.All')
+  })
+
+  it('shows the report loading, not the refusal, while a consent just granted settles', () => {
+    sessionStorage.setItem(CONSENT_GRANTED_KEY, String(Date.now()))
+    try {
+      render(<AccessFailure error={new ApiError(403, 'not granted yet', 'AdminConsentRequired')} />)
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('Loading report')).toHaveAttribute('aria-busy', 'true')
+    } finally {
+      sessionStorage.clear()
+    }
+  })
+
+  it('shows the refusal again once the settling window has passed', () => {
+    sessionStorage.setItem(CONSENT_GRANTED_KEY, String(Date.now() - CONSENT_SETTLE_MS))
+    try {
+      render(<AccessFailure error={new ApiError(403, 'not granted yet', 'AdminConsentRequired')} />)
+      expect(screen.getByRole('alert')).toHaveTextContent(/not approved this app/i)
+    } finally {
+      sessionStorage.clear()
+    }
   })
 
   it('tells a role failure to get a reporting role, not consent', () => {
