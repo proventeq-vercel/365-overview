@@ -178,6 +178,26 @@ describe('HelpCenter', () => {
     expect(toggle).toHaveFocus()
   })
 
+  it('hands focus back to the toggle when a topic picked from the open list closes it', async () => {
+    open('/help')
+    const toggle = screen.getByRole('button', { name: 'Browse help' })
+    await userEvent.click(toggle)
+    within(screen.getByRole('navigation', { name: 'Help topics' })).getByRole('link', { name: 'Settings' }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
+    expect(toggle).toHaveFocus()
+  })
+
+  it('hands focus back to the toggle when the backdrop closes the topic list', async () => {
+    const { container } = open('/help')
+    const toggle = screen.getByRole('button', { name: 'Browse help' })
+    await userEvent.click(toggle)
+    screen.getByRole('searchbox', { name: 'Search help' }).focus()
+    await userEvent.click(container.querySelector('.hc-backdrop') as HTMLElement)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveFocus()
+  })
+
   it('keeps the topic list open on an Escape that only cancels an input-method composition', async () => {
     open('/help')
     const toggle = screen.getByRole('button', { name: 'Browse help' })

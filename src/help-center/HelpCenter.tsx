@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { AudienceSwitch } from './AudienceSwitch'
 import type { HelpCatalogue } from './catalogue'
 import { HelpAnchor } from './HelpAnchor'
@@ -79,8 +79,14 @@ export function HelpCenter({
   const pageHref = (target: HelpPage | string, hash = '') =>
     helpHref(basePath, { slug: typeof target === 'string' ? target : target.slug, hash }, audienceQuery)
 
-  const go = (href: string) => {
+  const closeNav = useCallback(() => {
+    if (!navOpenRef.current) return
     setNavOpen(false)
+    toggleRef.current?.focus()
+  }, [])
+
+  const go = (href: string) => {
+    closeNav()
     setQuery('')
     navigate(href)
   }
@@ -93,9 +99,7 @@ export function HelpCenter({
     const onKey = (event: KeyboardEvent) => {
       if (event.isComposing) return
       if (event.key === 'Escape') {
-        if (!navOpenRef.current) return
-        setNavOpen(false)
-        toggleRef.current?.focus()
+        closeNav()
         return
       }
       const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')
@@ -106,7 +110,7 @@ export function HelpCenter({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [closeNav])
 
   useEffect(() => {
     navOpenRef.current = navOpen
@@ -129,7 +133,7 @@ export function HelpCenter({
         <div
           className={navOpen ? 'hc-backdrop hc-backdrop-open' : 'hc-backdrop'}
           aria-hidden="true"
-          onClick={() => setNavOpen(false)}
+          onClick={closeNav}
         />
         <HelpSidebar
           id={sidebarId}
