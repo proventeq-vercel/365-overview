@@ -43,6 +43,35 @@ export interface SiteRow {
   linksPerFile: number | null
 }
 
+export type LinkAudience = 'anyone' | 'organization' | 'guest' | 'member'
+
+export type SiteType = 'groupConnected' | 'communication' | 'teamSite' | 'other'
+
+export interface SiteEvidenceRow extends SiteRow {
+  siteType: SiteType
+  broadLinks: number
+  broadLinksPerFile: number | null
+  audiences: LinkAudience[]
+  severity: Severity | null
+}
+
+export interface FacetItem {
+  id: string
+  name: string
+  count: number
+}
+
+export interface SiteFacets {
+  audience: FacetItem[]
+  site: FacetItem[]
+  siteType: FacetItem[]
+}
+
+export interface ExternalFacets {
+  domain: FacetItem[]
+  sharer: FacetItem[]
+}
+
 export interface UserSharingActivity {
   userPrincipalName: string
   sharedInternally: number
@@ -183,6 +212,7 @@ export interface ExternalAccess {
   trendDays: number | null
   topSharers: SharerRow[] | null
   sitesExternalWithoutLabel: number | null
+  facets: ExternalFacets
 }
 
 export interface Caveats {
@@ -198,7 +228,8 @@ export interface OversharingOverview {
   links: LinkTotals | null
   risk: RiskTotals | null
   cards: Record<CardKey, CardStat | null>
-  sites: SiteRow[] | null
+  sites: SiteEvidenceRow[] | null
+  facets: SiteFacets | null
   external: ExternalAccess
   audience: GroupTotals | null
   posture: TenantSharingSettings | null

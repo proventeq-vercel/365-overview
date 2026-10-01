@@ -9,6 +9,7 @@ import type {
   UnifiedGroup,
   UserSharingActivity,
 } from '../types/oversharing'
+import { isGroupConnectedTemplate } from '../reports/siteUsage'
 import type { SiteUsageReport } from './dataSource'
 
 export const FIXTURE_TENANT_KEYS = ['exposed', 'locked-down', 'concealed', 'reports-reader'] as const
@@ -74,6 +75,15 @@ const CLOSED_INVITES: GuestInvitePolicy = {
   guestUserRole: 'restrictedGuest',
 }
 
+const SITE_TEMPLATES = [
+  'Group',
+  'Team Site',
+  'Communication Site',
+  'Group',
+  'Redirect Site',
+  'Group',
+]
+
 const DEPARTMENTS = [
   'Marketing', 'Finance', 'Legal', 'Sales', 'Engineering', 'Support', 'People', 'Design',
   'Research', 'Operations', 'Procurement', 'Facilities',
@@ -121,7 +131,8 @@ export function generateSites({ count, exposureRate, conceal }: SiteGenerationOp
   for (let index = 0; index < count; index += 1) {
     const department = DEPARTMENTS[index % DEPARTMENTS.length]
     const [ownerDisplayName, ownerPrincipalName] = OWNERS[index % OWNERS.length]
-    const isGroupConnected = index % 3 === 0
+    const template = SITE_TEMPLATES[index % SITE_TEMPLATES.length]
+    const isGroupConnected = isGroupConnectedTemplate(template)
     const fileCount = Math.round(random() * 4000)
     const exposed = random() < exposureRate
     const anonymousLinks = exposed ? skewed(random, 900) : 0
@@ -133,7 +144,7 @@ export function generateSites({ count, exposureRate, conceal }: SiteGenerationOp
     sites.push({
       siteId: `site-${index}`,
       siteUrl: conceal ? concealed(url, index) : url,
-      template: isGroupConnected ? 'Group' : 'STS',
+      template,
       isGroupConnected,
       ownerDisplayName: conceal ? concealed(ownerDisplayName, index) : ownerDisplayName,
       ownerPrincipalName: conceal ? concealed(ownerPrincipalName, index) : ownerPrincipalName,
