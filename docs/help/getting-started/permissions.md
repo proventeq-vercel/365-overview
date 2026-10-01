@@ -28,8 +28,9 @@ This site acts as the signed-in user, so two things decide what it can read:
   Communications Administrator, Skype for Business Administrator or Global Administrator. Global Reader and Usage Summary Reports
   Reader see tenant totals only, which is not enough for this report.
 
-A site shows its name when the signed-in user can open that site. The rest are listed by their
-id.
+Without `Sites.Read.All`, Microsoft refuses every site lookup, so sites are listed by their id.
+A tenant whose earlier approval still includes `Sites.Read.All` sees the names of the sites the
+signed-in user can open.
 :::
 
 ::: audience application

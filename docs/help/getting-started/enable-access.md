@@ -39,9 +39,11 @@ of those roles.
    reads. To assign the least of these, go to the Microsoft Entra admin centre → **Roles &
    admins** → **Reports Reader** → **Add assignments**.
 3. **Open the report.** They open this site and sign in with that work account.
-4. **Site names.** On this site, a site shows its name only when the signed-in user can open it.
-   Other sites are listed by their id. Use the application-permissions site when every name
-   matters (see [Site names](../reference/site-names.md)).
+4. **Site names.** This site does not ask for `Sites.Read.All`, which Microsoft requires for a
+   site lookup, so sites are listed by their id. A tenant whose earlier approval still includes
+   `Sites.Read.All` sees the names of the sites the signed-in user can open. Use the
+   application-permissions site when every name matters (see
+   [Site names](../reference/site-names.md)).
 
 ::: if consentUrl
 [Grant admin consent for this site]({{consentUrl}})

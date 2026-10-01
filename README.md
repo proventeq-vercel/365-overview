@@ -250,8 +250,8 @@ without `Organization.Read.All` the licence-based entitlement and the OneDrive s
 is required. The registration must list the deployment's origin as a **SPA redirect URI**.
 
 As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated
-`User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so that
-deployment names only the sites the signed-in user can open and shows the rest by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
+`User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so a tenant
+consented under it gets `403` on every name lookup and sees sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
 `p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
 registration to add it first (`Authorization_RequestDenied` otherwise).
 
@@ -314,11 +314,13 @@ done by the customer's administrator. The admin consent link is on each site's `
    `Organization.Read.All` and `User.Read`. Until then everyone stops at "Your organisation has
    not approved this app yet".
 2. Every person who opens the report holds Reports Reader (the least privilege), SharePoint
-   Administrator or Global Administrator (Global Reader sees tenant totals only, not enough): **Entra admin center → Roles & admins →
-   Reports Reader → Add assignments**.
+   Administrator or Global Administrator (Global Reader sees tenant totals only, not enough):
+   **Entra admin center → Roles & admins → Reports Reader → Add assignments**.
 3. They open the site and sign in. The delegated registration does not ask for `Sites.Read.All`,
-   so a site is named only when the signed-in user can open it; the rest are listed by id. On
-   proventeqe5 that named 31 of the 50 largest sites for a Reports Reader (2026-10-01).
+   which Graph requires for `GET /sites/{id}`, so sites are listed by id. A tenant whose earlier
+   consent still carries `Sites.Read.All` names the sites the signed-in user can open: proventeqe5
+   named 31 of the 50 largest for a Reports Reader (2026-10-01), most likely through such a grant
+   (not verified).
 
 ### Limiting who can open the report
 

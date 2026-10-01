@@ -47,8 +47,8 @@ to add you, or a group you are in, under the app's **Users and groups**. See
 ## Sign-in failed
 
 Use a work or school account from a Microsoft 365 tenant. Personal Microsoft accounts cannot sign
-in. To pick a different account, open the report in a private window, or use **Options (⋯) →
-Switch account**.
+in. To pick a different account, open the report in a private window. Once you are signed in,
+**Options (⋯) → Switch account** does the same.
 
 ## Insufficient permissions
 

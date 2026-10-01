@@ -13,7 +13,8 @@ beside it:
 - **Top SharePoint sites by storage**: the five largest sites.
 - **Top OneDrives by storage**: the five largest personal drives.
 
-The names come from the site directory, or from the sites you can open on the delegated site.
+The names come from the site directory on the application-permissions site, or from a lookup as
+the signed-in user on the delegated site.
 When a name cannot be found, the row is listed by its id (see
 [Site names](../../reference/site-names.md)).
 

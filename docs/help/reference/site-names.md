@@ -20,8 +20,10 @@ appears on screen. Without
 :::
 
 ::: audience delegated
-On this site, the report looks up names as the signed-in user. A site gets its name when you can
-open it, and the rest are listed by their id. The application-permissions site names every site.
+On this site, the report looks up names as the signed-in user, and Microsoft answers only when
+your organisation's approval includes `Sites.Read.All`. This site does not ask for it, so sites are
+usually listed by their id; where an earlier approval still includes it, a site gets its name when
+you can open it. The application-permissions site names every site.
 :::
 
 A name you have seen anywhere in the report becomes searchable in the table.
