@@ -153,10 +153,35 @@ describe('HelpCenter', () => {
     expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
   })
 
+  it('opens the topic list on slash when it is hidden on a small screen, then focuses the search', async () => {
+    const drawer = document.createElement('style')
+    drawer.textContent = '.hc-sidebar { visibility: hidden } .hc-sidebar-open { visibility: visible }'
+    document.head.append(drawer)
+    try {
+      open('/help')
+      await userEvent.keyboard('/')
+      expect(screen.getByRole('button', { name: 'Browse help' })).toHaveAttribute('aria-expanded', 'true')
+      expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
+    } finally {
+      drawer.remove()
+    }
+  })
+
+  it('leaves the topic list closed on slash when the search is already on screen', async () => {
+    open('/help')
+    await userEvent.keyboard('/')
+    expect(screen.getByRole('button', { name: 'Browse help' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
   it('shows a way back for an address with no page', () => {
     open('/help/no-such-page')
     expect(screen.getByRole('heading', { level: 1, name: 'This help page does not exist' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to the help overview' })).toHaveAttribute('href', '/help')
+  })
+
+  it('shows the missing page, not a blank screen, for an address with a malformed escape', () => {
+    open('/help/%E0%A4%A#%E0')
+    expect(screen.getByRole('heading', { level: 1, name: 'This help page does not exist' })).toBeInTheDocument()
   })
 
   it('opens and closes the topic list on small screens', async () => {

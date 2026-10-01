@@ -15,6 +15,10 @@ describe('parseFrontmatter', () => {
     expect(body).toBe('\nText')
   })
 
+  it('reads the frontmatter of a file saved with a byte-order mark', () => {
+    expect(parseFrontmatter('﻿---\ntitle: Saved by Notepad\n---\nText').fields).toEqual({ title: 'Saved by Notepad' })
+  })
+
   it('treats a file without frontmatter as all body', () => {
     expect(parseFrontmatter('# Just text')).toEqual({ fields: {}, body: '# Just text' })
   })
@@ -47,6 +51,11 @@ describe('parseHelpPage', () => {
     const split = parseHelpPage('b.md', page('title: T\ndescription: d\nsection: start', '::: audience one\nY\n:::'))
     expect(plain.hasAudienceContent).toBe(false)
     expect(split.hasAudienceContent).toBe(true)
+  })
+
+  it('does not count an audience block shown as an example inside a code fence', () => {
+    const example = parseHelpPage('c.md', page('title: T\ndescription: d\nsection: start', '```\n::: audience one\nY\n:::\n```'))
+    expect(example.hasAudienceContent).toBe(false)
   })
 })
 

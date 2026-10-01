@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createHelpCatalogue } from './catalogue'
-import { buildSearchIndex, searchHelp } from './search'
+import { buildHelpSearchIndex, searchHelp } from './search'
 
 const catalogue = createHelpCatalogue(
   {
@@ -12,8 +12,8 @@ const catalogue = createHelpCatalogue(
   [{ id: 's', label: 'S' }],
 )
 
-const delegated = buildSearchIndex(catalogue.pages, { audience: 'delegated', variables: {} })
-const application = buildSearchIndex(catalogue.pages, { audience: 'application', variables: {} })
+const delegated = buildHelpSearchIndex(catalogue.pages, { audience: 'delegated', variables: {} })
+const application = buildHelpSearchIndex(catalogue.pages, { audience: 'application', variables: {} })
 const slugs = (query: string, index = delegated) => searchHelp(index, query).map((result) => result.page.slug)
 
 describe('searchHelp', () => {

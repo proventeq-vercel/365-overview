@@ -36,12 +36,20 @@ export function helpHref(basePath: string, target: HelpTarget, query = ''): stri
   return `${path}${query}${target.hash ? `#${target.hash}` : ''}`
 }
 
+export function decodePart(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 export function slugOfPath(basePath: string, pathname: string): string | null {
   const base = basePath.replace(/\/+$/, '')
   const path = pathname.replace(/\/+$/, '')
   if (path === base) return ''
   if (!path.startsWith(`${base}/`)) return null
-  return decodeURIComponent(path.slice(base.length + 1))
+  return decodePart(path.slice(base.length + 1))
 }
 
 export function isPlainClick(event: { button: number; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }) {

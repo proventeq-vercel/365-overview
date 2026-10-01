@@ -1,8 +1,8 @@
+import { hasAudienceBlocks } from './prepare'
 import type { HelpPage, HelpSection } from './types'
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 const FIELD = /^([A-Za-z][\w-]*):\s*(.*)$/
-const AUDIENCE_BLOCK = /^:::\s+audience\s+\S+\s*$/m
 const AUTHORING_GUIDE = 'README.md'
 
 export interface HelpCatalogue {
@@ -20,14 +20,15 @@ function unquote(value: string): string {
 }
 
 export function parseFrontmatter(raw: string): { fields: Record<string, string>; body: string } {
-  const match = FRONTMATTER.exec(raw)
-  if (!match) return { fields: {}, body: raw }
+  const source = raw.replace(/^\uFEFF/, '')
+  const match = FRONTMATTER.exec(source)
+  if (!match) return { fields: {}, body: source }
   const fields: Record<string, string> = {}
   for (const line of match[1].split(/\r?\n/)) {
     const field = FIELD.exec(line)
     if (field) fields[field[1]] = unquote(field[2])
   }
-  return { fields, body: raw.slice(match[0].length) }
+  return { fields, body: source.slice(match[0].length) }
 }
 
 export function slugOfFile(file: string): string {
@@ -56,7 +57,7 @@ export function parseHelpPage(file: string, raw: string): HelpPage {
     section: required(fields, 'section', file),
     order: Number.isFinite(order) ? order : 0,
     body: body.trim(),
-    hasAudienceContent: AUDIENCE_BLOCK.test(body),
+    hasAudienceContent: hasAudienceBlocks(body),
   }
 }
 

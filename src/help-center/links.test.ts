@@ -47,6 +47,11 @@ describe('slugOfPath', () => {
     expect(slugOfPath('/help', '/help/reports/a')).toBe('reports/a')
   })
 
+  it('keeps a malformed escape as it is instead of throwing, so the page reads as not found', () => {
+    expect(slugOfPath('/help', '/help/reports/%E0%A4%A')).toBe('reports/%E0%A4%A')
+    expect(slugOfPath('/help', '/help/site%20names')).toBe('site names')
+  })
+
   it('returns null outside the base path', () => {
     expect(slugOfPath('/help', '/helpdesk')).toBeNull()
     expect(slugOfPath('/help', '/')).toBeNull()

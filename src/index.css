@@ -158,3 +158,14 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+body .hc {
+  --hc-accent: var(--color-p365-teal);
+  --hc-accent-soft: var(--color-p365-soft-green);
+  --hc-ink: var(--color-p365-navy);
+  --hc-text: var(--color-p365-grey-700);
+  --hc-muted: var(--color-p365-grey-500);
+  --hc-border: var(--color-p365-grey-100);
+  --hc-page: var(--color-p365-page);
+  --hc-code: var(--color-p365-grey-50);
+}

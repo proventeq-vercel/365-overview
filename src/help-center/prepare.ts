@@ -41,6 +41,15 @@ export function selectBlocks(body: string, context: HelpContext): string {
   return kept.join('\n').replace(/\n{3,}/g, '\n\n')
 }
 
+export function hasAudienceBlocks(body: string): boolean {
+  let inFence = false
+  for (const line of body.split(/\r?\n/)) {
+    if (FENCE.test(line)) inFence = !inFence
+    else if (!inFence && BLOCK_OPEN.exec(line)?.[1] === 'audience') return true
+  }
+  return false
+}
+
 export function fillVariables(body: string, variables: HelpVariables): string {
   return body.replace(VARIABLE, (_, name: string) => variables[name] ?? '')
 }

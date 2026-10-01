@@ -53,5 +53,8 @@ import { helpLlms } from './src/help-center/vitePlugin'
 plugins: [helpLlms({ dir: 'docs/help', sections, basePath: '/help', title: 'My app', summary: '…' })]
 ```
 
-It serves `/llms.txt` (an index of pages with descriptions) and `/llms-full.txt` (every page's
-markdown) from the dev server and emits both into the build.
+It serves `/llms.txt` (an index of pages with descriptions), `/llms-full.txt` (every page's
+markdown) and one `<basePath>/<slug>.md` per page (`<basePath>/index.md` for the home page) from
+the dev server, and emits all of them into the build. The index links the `.md` files, not the
+rendered pages: a page address returns the SPA shell, which an agent cannot read. The host must
+serve existing files before its SPA fallback and give `.md` a text content type.

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import type { Plugin } from 'vite'
 import { createHelpCatalogue } from './catalogue'
-import { buildLlmsFull, buildLlmsIndex, type LlmsOptions } from './llms'
+import { buildLlmsFull, buildLlmsIndex, buildLlmsPages, type LlmsOptions } from './llms'
 import type { HelpSection } from './types'
 
 export interface HelpLlmsOptions extends LlmsOptions {
@@ -25,18 +25,24 @@ function readSources(dir: string): Record<string, string> {
 }
 
 export function helpLlms(options: HelpLlmsOptions): Plugin {
-  const files = () => {
+  const files = (): Record<string, string> => {
     const catalogue = createHelpCatalogue(readSources(options.dir), options.sections)
-    return { 'llms.txt': buildLlmsIndex(catalogue, options), 'llms-full.txt': buildLlmsFull(catalogue, options) }
+    return {
+      'llms.txt': buildLlmsIndex(catalogue, options),
+      'llms-full.txt': buildLlmsFull(catalogue, options),
+      ...buildLlmsPages(catalogue, options),
+    }
   }
+  const contentType = (name: string) => (name.endsWith('.md') ? 'text/markdown' : 'text/plain')
   return {
     name: 'help-center-llms',
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        const name = request.url?.split('?')[0].replace(/^\//, '')
-        const body = name === 'llms.txt' || name === 'llms-full.txt' ? files()[name] : undefined
+        const name = (request.url?.split('?')[0] ?? '').replace(/^\//, '')
+        if (!name.endsWith('.txt') && !name.endsWith('.md')) return next()
+        const body = files()[name]
         if (body === undefined) return next()
-        response.setHeader('Content-Type', 'text/plain; charset=utf-8')
+        response.setHeader('Content-Type', `${contentType(name)}; charset=utf-8`)
         response.end(body)
       })
     },

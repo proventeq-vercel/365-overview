@@ -34,7 +34,7 @@ export const DEFAULT_HELP_LABELS: HelpCenterLabels = {
   previous: 'Previous',
   next: 'Next',
   notFoundTitle: 'This help page does not exist',
-  notFoundBody: 'It may have moved. Start from the overview or search the help.',
+  notFoundBody: 'It may have moved. Start from the overview, or search the help.',
   notFoundBack: 'Go to the help overview',
   audienceGroup: 'Setup shown on this page',
   audienceShown: (audience) => `Showing the setup for ${audience}`,

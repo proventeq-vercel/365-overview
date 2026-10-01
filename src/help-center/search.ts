@@ -17,7 +17,7 @@ const TITLE_WEIGHT = 10
 const DESCRIPTION_WEIGHT = 4
 const SNIPPET_RADIUS = 70
 
-export function buildSearchIndex(pages: readonly HelpPage[], context: HelpContext): HelpSearchEntry[] {
+export function buildHelpSearchIndex(pages: readonly HelpPage[], context: HelpContext): HelpSearchEntry[] {
   return pages.map((page) => ({
     page,
     title: page.title.toLowerCase(),

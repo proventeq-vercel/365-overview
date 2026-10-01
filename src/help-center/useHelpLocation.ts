@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { slugOfPath } from './links'
+import { decodePart, slugOfPath } from './links'
 
 export const AUDIENCE_PARAM = 'audience'
 
@@ -13,7 +13,7 @@ function readLocation(basePath: string): HelpLocation {
   const { pathname, search, hash } = window.location
   return {
     slug: slugOfPath(basePath, pathname),
-    hash: decodeURIComponent(hash.replace(/^#/, '')),
+    hash: decodePart(hash.replace(/^#/, '')),
     audience: new URLSearchParams(search).get(AUDIENCE_PARAM),
   }
 }

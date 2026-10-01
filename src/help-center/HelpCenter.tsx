@@ -1,11 +1,17 @@
 import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { AudienceSwitch } from './AudienceSwitch'
 import type { HelpCatalogue } from './catalogue'
+import { HelpAnchor } from './HelpAnchor'
 import { HelpMarkdown } from './HelpMarkdown'
+import { HelpPager } from './HelpPager'
+import { HelpSidebar } from './HelpSidebar'
+import { HelpToolbar } from './HelpToolbar'
 import { DEFAULT_HELP_LABELS, type HelpCenterLabels } from './labels'
-import { helpHref, isPlainClick } from './links'
+import { helpHref } from './links'
 import { outline, prepareBody } from './prepare'
-import { buildSearchIndex, searchHelp } from './search'
-import type { HelpAudience, HelpHeading, HelpPage, HelpVariables } from './types'
+import { buildHelpSearchIndex, searchHelp } from './search'
+import { TableOfContents } from './TableOfContents'
+import type { HelpAudience, HelpPage, HelpVariables } from './types'
 import { AUDIENCE_PARAM, useHelpLocation } from './useHelpLocation'
 import './help-center.css'
 
@@ -23,119 +29,11 @@ export interface HelpCenterProps {
 const NO_VARIABLES: HelpVariables = {}
 const NO_VARIABLES_FOR = () => NO_VARIABLES
 
-function Link({
-  href,
-  onNavigate,
-  children,
-  className,
-  current,
-}: {
-  href: string
-  onNavigate: (href: string) => void
-  children: ReactNode
-  className?: string
-  current?: boolean
-}) {
-  return (
-    <a
-      href={href}
-      className={className}
-      aria-current={current ? 'page' : undefined}
-      onClick={(event) => {
-        if (!isPlainClick(event)) return
-        event.preventDefault()
-        onNavigate(href)
-      }}
-    >
-      {children}
-    </a>
-  )
-}
+const audienceQueryOf = (audience: string, defaultAudience: string) =>
+  audience === defaultAudience ? '' : `?${AUDIENCE_PARAM}=${encodeURIComponent(audience)}`
 
-function useActiveHeading(headings: readonly HelpHeading[]): string | null {
-  const [active, setActive] = useState<string | null>(null)
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined' || headings.length === 0) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting)
-        if (visible.length > 0) setActive(visible[0].target.id)
-      },
-      { rootMargin: '0px 0px -70% 0px' },
-    )
-    for (const heading of headings) {
-      const element = document.getElementById(heading.id)
-      if (element) observer.observe(element)
-    }
-    return () => observer.disconnect()
-  }, [headings])
-  return active
-}
-
-function TableOfContents({
-  headings,
-  label,
-  href,
-  onNavigate,
-}: {
-  headings: readonly HelpHeading[]
-  label: string
-  href: (hash: string) => string
-  onNavigate: (href: string) => void
-}) {
-  const active = useActiveHeading(headings)
-  if (headings.length === 0) return null
-  return (
-    <nav className="hc-toc" aria-label={label}>
-      <p className="hc-toc-title">{label}</p>
-      <ul>
-        {headings.map((heading) => (
-          <li key={heading.id} className={heading.depth === 3 ? 'hc-toc-sub' : undefined}>
-            <Link
-              href={href(heading.id)}
-              onNavigate={onNavigate}
-              className={heading.id === active ? 'hc-toc-active' : undefined}
-            >
-              {heading.text}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
-}
-
-function AudienceSwitch({
-  audiences,
-  current,
-  defaultAudience,
-  labels,
-  hrefFor,
-  onNavigate,
-}: {
-  audiences: readonly HelpAudience[]
-  current: HelpAudience
-  defaultAudience: string
-  labels: HelpCenterLabels
-  hrefFor: (audience: string) => string
-  onNavigate: (href: string) => void
-}) {
-  return (
-    <div className="hc-audience" role="group" aria-label={labels.audienceGroup}>
-      <span className="hc-audience-current">
-        {labels.audienceShown(current.label)}
-        {current.id === defaultAudience && <span className="hc-badge">{labels.thisSite}</span>}
-      </span>
-      {audiences
-        .filter((audience) => audience.id !== current.id)
-        .map((audience) => (
-          <Link key={audience.id} href={hrefFor(audience.id)} onNavigate={onNavigate} className="hc-audience-link">
-            {labels.showAudience(audience.label)}
-            {audience.id === defaultAudience && ` (${labels.thisSite.toLowerCase()})`}
-          </Link>
-        ))}
-    </div>
-  )
+function isHidden(element: HTMLElement): boolean {
+  return getComputedStyle(element).visibility === 'hidden'
 }
 
 export function HelpCenter({
@@ -153,6 +51,7 @@ export function HelpCenter({
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [navOpen, setNavOpen] = useState(false)
+  const [focusSearch, setFocusSearch] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const sidebarId = useId()
 
@@ -160,7 +59,7 @@ export function HelpCenter({
     audiences.find((each) => each.id === location.audience) ??
     audiences.find((each) => each.id === defaultAudience) ??
     audiences[0]
-  const audienceQuery = audience.id === defaultAudience ? '' : `?${AUDIENCE_PARAM}=${encodeURIComponent(audience.id)}`
+  const audienceQuery = audienceQueryOf(audience.id, defaultAudience)
   const context = useMemo(
     () => ({ audience: audience.id, variables: variables(audience.id) }),
     [audience.id, variables],
@@ -168,7 +67,7 @@ export function HelpCenter({
   const page = location.slug === null ? undefined : catalogue.page(location.slug)
   const body = useMemo(() => (page ? prepareBody(page.body, context) : ''), [page, context])
   const headings = useMemo(() => outline(body), [body])
-  const searchIndex = useMemo(() => buildSearchIndex(catalogue.pages, context), [catalogue, context])
+  const searchIndex = useMemo(() => buildHelpSearchIndex(catalogue.pages, context), [catalogue, context])
   const results = useMemo(() => searchHelp(searchIndex, deferredQuery), [searchIndex, deferredQuery])
 
   const pageHref = (target: HelpPage | string, hash = '') =>
@@ -181,21 +80,27 @@ export function HelpCenter({
   }
 
   useEffect(() => {
-    const titled = page ? `${page.title} · ${labels.home}` : labels.home
-    document.title = titled
+    document.title = page ? `${page.title} · ${labels.home}` : labels.home
   }, [page, labels.home])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')
-      if (event.key === '/' && !typing) {
-        event.preventDefault()
-        searchRef.current?.focus()
-      }
+      if (event.key !== '/' || typing) return
+      event.preventDefault()
+      if (searchRef.current && isHidden(searchRef.current)) setNavOpen(true)
+      setFocusSearch(true)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => {
+    const search = searchRef.current
+    if (!focusSearch || !search || isHidden(search)) return
+    setFocusSearch(false)
+    search.focus()
+  }, [focusSearch, navOpen])
 
   const section = page ? catalogue.sections.find((each) => each.id === page.section) : undefined
   const { previous, next } = page ? catalogue.neighbours(page.slug) : { previous: null, next: null }
@@ -209,105 +114,43 @@ export function HelpCenter({
           aria-hidden="true"
           onClick={() => setNavOpen(false)}
         />
-        <aside id={sidebarId} className={navOpen ? 'hc-sidebar hc-sidebar-open' : 'hc-sidebar'}>
-          <div className="hc-search">
-            <input
-              ref={searchRef}
-              type="search"
-              value={query}
-              aria-label={labels.searchLabel}
-              placeholder={labels.searchPlaceholder}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <kbd aria-hidden="true">/</kbd>
-          </div>
-          {deferredQuery.trim() ? (
-            <div className="hc-results">
-              {results.length === 0 ? (
-                <p className="hc-muted">{labels.noResults(deferredQuery.trim())}</p>
-              ) : (
-                <ul aria-label={labels.searchResults}>
-                  {results.map((result) => (
-                    <li key={result.page.slug}>
-                      <Link href={pageHref(result.page)} onNavigate={go}>
-                        <span className="hc-result-title">{result.page.title}</span>
-                        <span className="hc-result-snippet">{result.snippet}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : (
-            <nav className="hc-nav" aria-label={labels.navigation}>
-              {catalogue.sections.map((each) => {
-                const pages = catalogue.pagesIn(each.id)
-                if (pages.length === 0) return null
-                return (
-                  <div key={each.id} className="hc-nav-group">
-                    <p className="hc-nav-heading">{each.label}</p>
-                    <ul>
-                      {pages.map((entry) => (
-                        <li key={entry.slug}>
-                          <Link
-                            href={pageHref(entry)}
-                            onNavigate={go}
-                            current={entry.slug === page?.slug}
-                            className="hc-nav-link"
-                          >
-                            {entry.navTitle}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })}
-            </nav>
-          )}
-        </aside>
+        <HelpSidebar
+          id={sidebarId}
+          open={navOpen}
+          catalogue={catalogue}
+          currentSlug={page?.slug}
+          query={query}
+          searchedFor={deferredQuery}
+          results={results}
+          searchRef={searchRef}
+          labels={labels}
+          hrefOf={pageHref}
+          onQueryChange={setQuery}
+          onNavigate={go}
+        />
 
         <main className="hc-main">
-          <div className="hc-toolbar">
-            <button
-              type="button"
-              className="hc-browse"
-              aria-expanded={navOpen}
-              aria-controls={sidebarId}
-              onClick={() => setNavOpen((open) => !open)}
-            >
-              {labels.browse}
-            </button>
-            {page && (
-              <nav className="hc-breadcrumbs" aria-label={labels.breadcrumbs}>
-                <ol>
-                  <li>
-                    <Link href={pageHref('')} onNavigate={go}>
-                      {labels.home}
-                    </Link>
-                  </li>
-                  {page.slug !== '' && section && <li>{section.label}</li>}
-                  {page.slug !== '' && <li aria-current="page">{page.navTitle}</li>}
-                </ol>
-              </nav>
-            )}
+          <HelpToolbar
+            page={page}
+            section={section}
+            navOpen={navOpen}
+            sidebarId={sidebarId}
+            labels={labels}
+            homeHref={pageHref('')}
+            onToggleNav={() => setNavOpen((open) => !open)}
+            onNavigate={go}
+          >
             {page?.hasAudienceContent && audiences.length > 1 && (
               <AudienceSwitch
                 audiences={audiences}
                 current={audience}
                 defaultAudience={defaultAudience}
                 labels={labels}
-                hrefFor={(id) =>
-                  helpHref(
-                    basePath,
-                    { slug: page.slug, hash: '' },
-                    id === defaultAudience ? '' : `?${AUDIENCE_PARAM}=${encodeURIComponent(id)}`,
-                  )
-                }
+                hrefFor={(id) => helpHref(basePath, { slug: page.slug, hash: '' }, audienceQueryOf(id, defaultAudience))}
                 onNavigate={go}
               />
             )}
-          </div>
+          </HelpToolbar>
 
           {page ? (
             <article className="hc-article" key={`${page.slug}:${audience.id}`}>
@@ -318,24 +161,7 @@ export function HelpCenter({
               <div className="hc-prose">
                 <HelpMarkdown body={body} file={page.file} basePath={basePath} query={audienceQuery} onNavigate={go} />
               </div>
-              {(previous || next) && (
-                <nav className="hc-pager" aria-label={labels.pager}>
-                  {previous ? (
-                    <Link href={pageHref(previous)} onNavigate={go} className="hc-pager-link">
-                      <span className="hc-pager-label">{labels.previous}</span>
-                      <span className="hc-pager-title">{previous.navTitle}</span>
-                    </Link>
-                  ) : (
-                    <span />
-                  )}
-                  {next && (
-                    <Link href={pageHref(next)} onNavigate={go} className="hc-pager-link hc-pager-next">
-                      <span className="hc-pager-label">{labels.next}</span>
-                      <span className="hc-pager-title">{next.navTitle}</span>
-                    </Link>
-                  )}
-                </nav>
-              )}
+              <HelpPager previous={previous} next={next} labels={labels} hrefOf={pageHref} onNavigate={go} />
             </article>
           ) : (
             <article className="hc-article">
@@ -343,9 +169,9 @@ export function HelpCenter({
                 <h1>{labels.notFoundTitle}</h1>
                 <p className="hc-lead">{labels.notFoundBody}</p>
               </div>
-              <Link href={pageHref('')} onNavigate={go} className="hc-button">
+              <HelpAnchor href={pageHref('')} onNavigate={go} className="hc-button">
                 {labels.notFoundBack}
-              </Link>
+              </HelpAnchor>
             </article>
           )}
         </main>
