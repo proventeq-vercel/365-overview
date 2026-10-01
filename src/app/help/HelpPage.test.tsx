@@ -38,7 +38,7 @@ describe('HelpPage', () => {
     openHelp('/help/getting-started/enable-access', 'delegated')
     const group = screen.getByRole('group', { name: 'Setup shown on this page' })
     expect(group).toHaveTextContent('Showing: Delegated permissionsThis site')
-    expect(steps()).toHaveTextContent('Reports Reader, Global Reader, SharePoint Administrator or Global Administrator')
+    expect(steps()).toHaveTextContent('Global Reader and Usage Summary Reports Reader are not enough')
     expect(screen.queryByText(/Get your tenant switched on/)).not.toBeInTheDocument()
   })
 

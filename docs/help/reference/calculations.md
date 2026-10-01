@@ -16,7 +16,7 @@ estimates it from your licences, the same way Proventeq 365 does:
 
 - **1 TB** for the tenant,
 - **plus 10 GB** for each licence whose plans include SharePoint (Plan 1, Plan 2 and the
-  equivalent government plans, and Project and Visio plans that carry SharePoint),
+  equivalent education and government plans) and for each Project or Visio licence,
 - **plus 1 GB** for each unit of the Office 365 Extra File Storage add-on,
 - **plus 0.5 GB** for each OneDrive-only licence.
 

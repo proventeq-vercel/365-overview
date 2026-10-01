@@ -238,7 +238,7 @@ The permission model is chosen by the env, per deployment — there is no switch
 | Env | `VITE_GRAPH_PROXY_URL` set (+ `VITE_CLIENT_ID` = the Storage Analyser registration, the default) | `VITE_GRAPH_PROXY_URL` **unset**, `VITE_CLIENT_ID=0cedd025-e545-44f2-b3f8-82969e56547a` |
 | Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
 | Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
-| Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
+| Who can open the report | any signed-in user once an admin consented | a user holding a role Microsoft gives detailed usage reports to, such as Reports Reader, SharePoint Administrator or Global Administrator (Global Reader sees tenant totals only) |
 | Deployed at | <https://p365lite.z33.web.core.windows.net/> — storage static website `p365lite` (`site-application` job) | <https://gray-water-0a8893303.1.azurestaticapps.net> — Static Web App `p365-lite`, the main site (`site` job) |
 
 The delegated path asks for **`.default`**: the token carries whatever delegated permissions the

@@ -23,8 +23,10 @@ This site acts as the signed-in user, so two things decide what it can read:
 
 - **The admin consent.** A Global Administrator grants it once, and it covers
   `Reports.Read.All` and `Organization.Read.All`. This site does not ask for `Sites.Read.All`.
-- **The user's role.** Microsoft only gives usage reports to accounts that hold Reports Reader,
-  Global Reader, SharePoint Administrator or Global Administrator.
+- **The user's role.** Microsoft gives detailed usage reports only to accounts that hold Reports
+  Reader, SharePoint Administrator, Exchange Administrator, Teams Administrator, Teams
+  Communications Administrator or Global Administrator. Global Reader and Usage Summary Reports
+  Reader see tenant totals only, which is not enough for this report.
 
 A site shows its name when the signed-in user can open that site. The rest are listed by their
 id.
@@ -46,6 +48,8 @@ Users need no admin role. Anyone in the tenant can open the report unless an adm
 ## Things the report never does
 
 - It never lists every site in your tenant one by one from the browser. On large tenants that
-  would take hours, so the report reads names only for the sites it shows.
+  would take hours, so the report reads names only for the sites it shows, plus, on the
+  application-permissions site, one capped directory of the first 5,000 sites. See
+  [Site names](../reference/site-names.md).
 - It does not read files, lists, mail or user profiles.
 - It does not store your tenant's data anywhere. See [Data and privacy](../reference/data-and-privacy.md).
