@@ -16,6 +16,7 @@ const CONTEXTS = ACCESS_MODES.flatMap((audience) => [
 
 const FAILURE_SCREENS = [
   messages['access.consent.title'],
+  messages['auth.consent.title'],
   messages['access.tenant.title'],
   messages['access.permission.title'],
   messages['auth.notAssigned.title'],

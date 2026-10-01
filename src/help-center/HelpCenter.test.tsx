@@ -98,6 +98,15 @@ describe('HelpCenter', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Set it up' })).toBeInTheDocument()
   })
 
+  it('scrolls to the heading an outline link names, and to the top for a page without a hash', async () => {
+    open('/help/setup')
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 })
+    const outline = screen.getByRole('navigation', { name: 'On this page' })
+    await userEvent.click(within(outline).getByRole('link', { name: 'Afterwards' }))
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
+    expect(vi.mocked(Element.prototype.scrollIntoView).mock.contexts.at(-1)).toHaveAttribute('id', 'afterwards')
+  })
+
   it('goes back to the previous page on browser back', async () => {
     open('/help')
     await userEvent.click(screen.getByRole('link', { name: 'Setup' }))

@@ -21,6 +21,18 @@ describe('searchHelp', () => {
     expect(slugs('cost')).toEqual(['cost', 'settings'])
   })
 
+  it('weighs one title match above two body matches', () => {
+    const pages = createHelpCatalogue(
+      {
+        'body.md': '---\ntitle: Alpha\ndescription: First.\nsection: s\norder: 1\n---\nquota quota',
+        'title.md': '---\ntitle: Quota\ndescription: Second.\nsection: s\norder: 2\n---\nNothing else.',
+      },
+      [{ id: 's', label: 'S' }],
+    ).pages
+    const index = buildHelpSearchIndex(pages, { audience: 'delegated', variables: {} })
+    expect(searchHelp(index, 'quota').map((result) => result.page.slug)).toEqual(['title', 'body'])
+  })
+
   it('needs every term to match somewhere', () => {
     expect(slugs('cost rate')).toEqual(['settings'])
   })
