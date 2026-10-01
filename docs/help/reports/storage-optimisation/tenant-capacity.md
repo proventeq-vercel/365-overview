@@ -10,9 +10,9 @@ of its state.
 
 | Card | Green | Orange | Red | Grey |
 | --- | --- | --- | --- | --- |
-| Inactive sites to archive | 5% of SharePoint storage or less | above 5%, up to 50% | above 50% | — |
+| Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
 | Potential saving per year | follows *Inactive sites to archive* | | | — |
-| Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement | — |
+| Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
 | Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months, or already exceeded | Unknown |
 
 ## Inactive sites to archive
@@ -20,7 +20,7 @@ of its state.
 The storage held by live SharePoint sites with **no activity for the inactivity window**. The
 window is 3 years by default, and you can set 1 to 10 years in
 [Report settings](../../reference/settings.md#archive-sites-inactive-for). The description gives
-the share of SharePoint storage, the number of sites and the cutoff date.
+the share of live site storage, the number of sites and the cutoff date.
 
 - The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
   window, a site last active before 30 August 2023 counts.
@@ -47,7 +47,9 @@ entitlement**, at the configured rate. It is **zero while growth stays within th
 The growth rate is the typical month-to-month growth from the storage trend
 ([how](../../reference/calculations.md#growth-rate)). The card turns red once the next 12 months'
 billable growth is more than a tenth of the entitlement. That rule does not depend on the rate,
-so changing the currency or price never changes the colour.
+so changing the currency or price does not change the colour, except a price of 0, which leaves
+nothing to pay and turns the card green. With an unknown entitlement there is nothing to compare
+with, so the card stays orange however large the growth.
 
 > This figure is a deliberate departure from the full Proventeq 365 product, which prices all
 > growth. Here, growth already covered by your entitlement is treated as free.

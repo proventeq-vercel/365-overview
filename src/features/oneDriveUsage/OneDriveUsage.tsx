@@ -37,7 +37,7 @@ export function OneDriveUsage() {
       <Section
         title={t('oneDrive.top.title')}
         subtitle={t('oneDrive.top.subtitle')}
-        help={<HelpButton topic="oneDriveDrives" />}
+        help={<HelpButton topic="oneDriveTopDrives" />}
         delay={80}
       >
         <Panel>

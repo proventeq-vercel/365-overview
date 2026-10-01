@@ -274,11 +274,11 @@ test.describe('modes from the URL', () => {
   })
 })
 
-test('the help center stands alone, shows this site’s mode and leads back to the report', async ({ page }) => {
+test('the help centre stands alone, shows this site’s mode and leads back to the report', async ({ page }) => {
   await page.goto('/help')
   const main = page.getByRole('main')
   await expect(main.getByRole('heading', { name: 'Proventeq 365 storage report help', level: 1 })).toBeVisible()
-  await expect(page.getByRole('banner')).toContainText('Help center')
+  await expect(page.getByRole('banner')).toContainText('Help centre')
   await page.getByRole('navigation', { name: 'Help topics' }).getByRole('link', { name: 'Enable access' }).click()
   await expect(page).toHaveURL(/\/help\/getting-started\/enable-access$/)
   const modes = page.getByRole('group', { name: 'Setup shown on this page' })

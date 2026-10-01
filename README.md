@@ -21,7 +21,7 @@ Built with React 19, TypeScript, and Vite.
 All of it lives in the resource group `rg-lh-sa-dev`. Both report sites are redeployed from `main`
 by `.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
 `?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
-Each site also serves `/help` — the help center for every report and for enabling access, without signing in (see *Help center*).
+Each site also serves `/help` — the help centre for every report and for enabling access, without signing in (see *Help centre*).
 `https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
 
 ## The report
@@ -250,13 +250,13 @@ is required. The registration must list the deployment's origin as a **SPA redir
 
 As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated
 `User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so that
-deployment shows sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
+deployment names only the sites the signed-in user can open and shows the rest by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
 `p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
 registration to add it first (`Authorization_RequestDenied` otherwise).
 
-## Help center
+## Help centre
 
-`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) is a full help center:
+`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) is a full help centre:
 getting started (enabling access, permissions, limiting who can sign in, troubleshooting every
 failure screen), a page per report section, and reference pages (settings, how each figure is
 calculated, site names, data and privacy). It has a sidebar, search (`/` focuses it),
@@ -270,7 +270,8 @@ more*; the ⋯ menu has **Help**; every screen a visitor can land on when access
 to troubleshooting.
 
 The pages are markdown in [`docs/help/`](docs/help/README.md) — update them with every
-user-visible change. They are also published for agents as `/llms.txt` and `/llms-full.txt`.
+user-visible change. They are also published for agents as `/llms.txt`, `/llms-full.txt` and one `/help/<page>.md`
+per page (`staticwebapp.config.json` gives `.md` its content type).
 The renderer, `src/help-center/`, has no dependency on this app and can be reused on another
 site (see its README).
 

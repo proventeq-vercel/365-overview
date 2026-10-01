@@ -14,7 +14,8 @@ correct either way.
 
 ::: audience application
 On this site, the report reads the tenant's site directory once with `Sites.Read.All`. It reads
-up to the first 5,000 sites, and names any others one by one as they appear on screen. Without
+up to the first 5,000 entries (subsites count too), and names any other site one by one as it
+appears on screen. Without
 `Sites.Read.All`, every site is listed by its id.
 :::
 
@@ -29,7 +30,7 @@ A name you have seen anywhere in the report becomes searchable in the table.
 
 Microsoft 365 can conceal user, group and site names in all usage reports. Identities then appear
 as hashes, and the report says so in a note. To show real names, go to the Microsoft 365 admin
-center → **Settings → Org settings → Reports** and clear **Display concealed user, group, and
+centre → **Settings → Org settings → Reports** and clear **Display concealed user, group, and
 site names**. Microsoft can take a while to apply it.
 
 ## Hidden names
@@ -37,5 +38,6 @@ site names**. Microsoft can take a while to apply it.
 Add `?hideNames=true` to the report's address to hide identities, for example before you share
 your screen. Sites then show as masked ids, owners as initials, and site links are removed. The
 report does not look up names at all while they are hidden. It stays on for the rest of the tab,
-including after signing in again. `?hideNames=` turns it off. A note on the report says when
+including after signing in again. `?hideNames=` turns it off, unless the site itself is set up
+to hide names. A note on the report says when
 names are hidden.

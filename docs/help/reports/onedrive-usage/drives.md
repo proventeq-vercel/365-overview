@@ -1,17 +1,9 @@
 ---
-title: Top OneDrives and all OneDrives
-nav: Top and all OneDrives
-description: The five largest personal drives, and every drive with how much of its own allocation it uses.
+title: All OneDrives
+description: Every personal drive in the usage report, with how much of its own allocation it uses.
 section: onedrive-usage
 order: 20
 ---
-
-## Top OneDrives by storage
-
-The five largest personal drives, ranked by storage used. Each OneDrive has its own allocation,
-so capacity means something per drive. It is not pooled with SharePoint.
-
-## All OneDrives
 
 Every personal drive in the usage report. Deleted drives still under retention are included, and
 the subtitle says how many.

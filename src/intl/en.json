@@ -94,7 +94,7 @@
   "access.permission.title": "Your account cannot read usage reports",
   "access.permission.body": "You are signed in and your organisation has approved the app, but reading tenant usage reports needs an administrative role. Microsoft requires Global Reader, Reports Reader, or an equivalent role — ask an administrator to assign one.",
   "help.link": "Help with access",
-  "help.header": "Help center",
+  "help.header": "Help centre",
   "help.openReport": "Open the report",
   "help.audience.delegated": "Delegated permissions",
   "help.audience.application": "Application permissions",

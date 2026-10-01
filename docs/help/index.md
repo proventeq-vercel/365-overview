@@ -49,6 +49,6 @@ You can replace either in [Report settings](reference/settings.md).
 
 - **Options (⋯)**, top right, lets you refresh the data, open Report settings, open this help,
   switch account or sign out.
-- With more than one report enabled, the menu button at the top left lists them.
+- On a site set up with a report menu, the menu button at the top left lists the reports.
 - [Data and privacy](reference/data-and-privacy.md) explains what leaves your browser and what
   does not.

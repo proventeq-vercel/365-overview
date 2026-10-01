@@ -29,7 +29,7 @@ when none of them has a OneDrive allowance the report knows. Set the figure in
 
 ## Sections
 
-- [Top OneDrives and all OneDrives](drives.md): the five largest drives, and a table of every
-  drive with how much of its allocation it uses.
+- [Top OneDrives by storage](top-drives.md): the five largest drives.
 - [OneDrives over their licensed storage](over-licence.md): the drives that hold more than any
   licence in the tenant includes.
+- [All OneDrives](drives.md): every drive, with how much of its allocation it uses.

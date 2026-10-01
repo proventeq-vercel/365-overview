@@ -34,9 +34,10 @@ id.
 ## On this site (application permissions)
 
 This site reads with the app's own permissions, through Proventeq's Graph proxy. It reads only
-for the tenant the user signed in to. The admin consent link grants `Reports.Read.All`, and
-nothing else is needed to load the report. Grant `Organization.Read.All` and `Sites.Read.All` as
-application permissions too, for licence-based figures and site names.
+for the tenant the user signed in to. The admin consent link grants `Reports.Read.All` and
+`Organization.Read.All` as application permissions. Only `Reports.Read.All` is needed to load the
+report. `Sites.Read.All` is granted separately, for site names (see
+[Enable access](enable-access.md)).
 
 Users need no admin role. Anyone in the tenant can open the report unless an administrator
 [limits who can open it](limit-access.md).

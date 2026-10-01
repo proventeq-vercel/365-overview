@@ -1,9 +1,9 @@
 import { createHelpCatalogue } from '@/help-center/catalogue'
 import { HELP_SECTIONS } from './helpSections'
 
-export const HELP_SOURCE_ROOT = '/docs/help/'
+const HELP_SOURCE_ROOT = '/docs/help/'
 
-export const HELP_SOURCES = import.meta.glob<string>('/docs/help/**/*.md', {
+const HELP_SOURCES = import.meta.glob<string>('/docs/help/**/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,

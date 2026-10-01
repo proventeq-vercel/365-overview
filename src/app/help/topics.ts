@@ -1,5 +1,4 @@
 export const HELP_TOPICS = {
-  overview: '',
   enableAccess: 'getting-started/enable-access',
   troubleshooting: 'getting-started/troubleshooting',
   storageOptimisation: 'reports/storage-optimisation',
@@ -9,6 +8,7 @@ export const HELP_TOPICS = {
   mainOffenders: 'reports/storage-optimisation/main-offenders',
   oneDriveUsage: 'reports/onedrive-usage',
   oneDriveOverLicence: 'reports/onedrive-usage/over-licence',
+  oneDriveTopDrives: 'reports/onedrive-usage/top-drives',
   oneDriveDrives: 'reports/onedrive-usage/drives',
 } as const
 

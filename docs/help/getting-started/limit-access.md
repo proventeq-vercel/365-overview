@@ -12,11 +12,11 @@ chosen groups or users in Microsoft Entra. Nothing on this site needs to change.
 ## Steps
 
 ::: if clientId
-1. In the Microsoft Entra admin center, open **Enterprise applications** and find the app with
+1. In the Microsoft Entra admin centre, open **Enterprise applications** and find the app with
    this Application ID: `{{clientId}}`
 :::
 ::: unless clientId
-1. In the Microsoft Entra admin center, open **Enterprise applications** and find the report's
+1. In the Microsoft Entra admin centre, open **Enterprise applications** and find the report's
    app. Its Application ID is in the admin consent link, after `client_id=`.
 :::
 2. Under **Properties**, set **Assignment required** to **Yes** and save.

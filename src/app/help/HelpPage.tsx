@@ -36,7 +36,7 @@ export function HelpPage({
     (audience: string) => (audience === mode ? { consentUrl, clientId } : {}),
     [mode, consentUrl, clientId],
   )
-  const labels = useMemo<Partial<HelpCenterLabels>>(
+  const labels = useMemo<HelpCenterLabels>(
     () => ({
       home: t('help.center.home'),
       navigation: t('help.center.navigation'),

@@ -24,7 +24,7 @@ A licence counts only through the service plans it carries, never by its name. F
 licences carry no storage plan, so their large seat counts add nothing. Only enabled licences
 count.
 
-The estimate can differ from the SharePoint admin center, for example when storage was bought
+The estimate can differ from the SharePoint admin centre, for example when storage was bought
 another way. Enter the real figure in [Report settings](settings.md#sharepoint-entitlement).
 
 ## OneDrive storage per user
@@ -78,4 +78,4 @@ When the median and the start-to-end average disagree by more than half, the ser
 
 ## Units
 
-Sizes use binary units: 1 GB is 1,024 MB and 1 TB is 1,024 GB, as in the SharePoint admin center.
+Sizes use binary units: 1 GB is 1,024 MB and 1 TB is 1,024 GB, as in the SharePoint admin centre.

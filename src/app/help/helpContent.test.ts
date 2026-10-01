@@ -3,7 +3,6 @@ import { REPORTS } from '@/features/registry'
 import { resolveDocLink } from '@/help-center/links'
 import { outline, prepareBody, variablesUsed } from '@/help-center/prepare'
 import { ACCESS_MODES } from '@/config/accessMode'
-import { TROUBLESHOOTING_SLUG } from '@/components/HelpLink'
 import messages from '@/intl/en.json'
 import { helpCatalogue } from './helpContent'
 import { HELP_TOPICS } from './topics'
@@ -21,6 +20,8 @@ const FAILURE_SCREENS = [
   messages['access.permission.title'],
   messages['auth.notAssigned.title'],
   messages['auth.signInFailed'],
+  messages['app.bootstrap.title'],
+  messages['errors.insufficientPermissions'].split(' — ')[0],
 ]
 
 function linksOf(body: string): string[] {
@@ -65,7 +66,6 @@ describe('help content', () => {
   it('has a page for every help topic the app links to', () => {
     const missing = Object.entries(HELP_TOPICS).filter(([, slug]) => !helpCatalogue.page(slug))
     expect(missing).toEqual([])
-    expect(helpCatalogue.page(TROUBLESHOOTING_SLUG)).toBeDefined()
   })
 
   it('documents every report in the registry', () => {
@@ -74,7 +74,7 @@ describe('help content', () => {
   })
 
   it('names every failure screen as a troubleshooting heading', () => {
-    const troubleshooting = helpCatalogue.page(TROUBLESHOOTING_SLUG)!
+    const troubleshooting = helpCatalogue.page(HELP_TOPICS.troubleshooting)!
     const headings = outline(troubleshooting.body).map((heading) => heading.text)
     expect(FAILURE_SCREENS.filter((title) => !headings.includes(title))).toEqual([])
   })

@@ -96,6 +96,15 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(screen.queryByText(/^Measured against the most generous plan/)).not.toBeInTheDocument()
   })
 
+  it('gives every section its own help, so no two help buttons share a name', async () => {
+    renderReport()
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    const names = screen.getAllByRole('button', { name: /^About / }).map((button) => button.getAttribute('aria-label'))
+    expect(names).toContain('About Top OneDrives by storage')
+    expect(names).toContain('About All OneDrives')
+    expect(new Set(names).size).toBe(names.length)
+  })
+
   it('lists the top drives and a per-drive capacity column, headed Drive not Site', async () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })

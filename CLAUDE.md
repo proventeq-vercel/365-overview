@@ -152,8 +152,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
-- `docs/help/` + `src/help-center/` + `src/app/help/` — the help center, see
-  "Help center" below.
+- `docs/help/` + `src/help-center/` + `src/app/help/` — the help centre, see
+  "Help centre" below.
 - `src/app/` — the shell: `AppShell` (`ShellLayout`: sticky `Header` + optional
   `SideMenu` + `<main>`), `ReportLoading` / `LoadingShell` (the loading page,
   see "Loading is one screen"), `Header` (hamburger only when the menu is on, logo, tenant name
@@ -397,13 +397,14 @@ the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
 `AuthErrorScreen` still renders `className="error-state*"` inside
 `className="auth-screen"`; keep those rules in `src/index.css`.
 
-## Help center (`/help/*`) — the product reference
+## Help centre (`/help/*`) — the product reference
 
 **`docs/help/*.md` is the user-facing documentation of every report, card, column,
 setting, colour rule, permission and error screen, and it is the first place to
 read what the app does.** Any user-visible change updates the matching page in
 the same PR (`docs/help/README.md` is the authoring guide). It is served at
-`/help/*`, indexed at `/llms.txt` and in full at `/llms-full.txt`.
+`/help/*`, indexed at `/llms.txt`, in full at `/llms-full.txt` and page by page at
+`/help/<slug>.md`.
 
 - `src/help-center/` is a reusable module (own README, own `--hc-*` CSS, no
   imports from the app — `isolation.test.ts`): catalogue/frontmatter, `:::`
@@ -429,6 +430,13 @@ the same PR (`docs/help/README.md` is the authoring guide). It is served at
 - `app/help/helpContent.test.ts` fails on a broken link or anchor (per
   audience), an unknown variable, a topic or report without a page, or a failure
   screen missing from troubleshooting. It cannot tell a page is out of date.
+- The pages and the section labels in `app/help/helpSections.ts` are this app's
+  own prose, the one exception to "every user-facing string comes from P365":
+  P365 has no such docs. On-screen labels quoted in them still match `en.json`.
+- `app/help/helpContent.ts` imports the markdown eagerly, so the catalogue
+  (~45 kB of markdown) is in the main bundle: the **?** buttons need each page's
+  title and description synchronously. The page renderer, search and
+  react-markdown stay in the lazy `HelpPage` chunk.
 
 Delegated mode checks the token's granted scopes (`acquireToken`'s
 `requiredScope`, `requiredScopeFor(config)` = `Reports.Read.All` with no

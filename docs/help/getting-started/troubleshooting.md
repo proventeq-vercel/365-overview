@@ -41,13 +41,26 @@ Use a work or school account from a Microsoft 365 tenant. Personal Microsoft acc
 in. To pick a different account, open the report in a private window, or use **Options (⋯) →
 Switch account**.
 
+## Insufficient permissions
+
+This note sits under an error Microsoft Graph returned when it refused a request. Either your
+organisation has not approved the app, or your account has no reporting role: see
+[Your organisation has not approved this app yet](#your-organisation-has-not-approved-this-app-yet)
+and [Your account cannot read usage reports](#your-account-cannot-read-usage-reports).
+
+## Couldn't start the dashboard
+
+The report could not start in your browser. Refresh the page. If the screen says the tab
+overrides the deployed modes, select **Reset the modes for this tab**. If it keeps happening,
+send Proventeq the message shown under the heading.
+
 ## Sites are listed by an id instead of a name
 
 The figures are still correct. The name is missing for one of these reasons:
 
 - The app has no `Sites.Read.All`. With delegated permissions, the signed-in user cannot open
   that site.
-- Your tenant conceals names in usage reports. In the Microsoft 365 admin center, go to
+- Your tenant conceals names in usage reports. In the Microsoft 365 admin centre, go to
   **Settings → Org settings → Reports**.
 - The link turned on hidden names (`?hideNames=true`).
 

@@ -26,7 +26,7 @@ Storage split between **SharePoint**, **Teams** and **OneDrive**, as Microsoft 3
 
 Microsoft Graph does not say which sites belong to Teams. The report groups by the template each
 site was created from: Team Channel and Group templates count as Teams, and everything else
-counts as SharePoint. So these counts will not match the SharePoint admin center, which groups
+counts as SharePoint. So these counts will not match the SharePoint admin centre, which groups
 differently. Deleted sites are left out.
 
 ## Storage by site template

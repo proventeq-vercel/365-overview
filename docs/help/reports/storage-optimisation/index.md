@@ -37,5 +37,5 @@ today's position to the actions that would change it:
 - **Your storage quota was estimated from licence counts.** The entitlement is
   [worked out from your licences](../../reference/calculations.md#sharepoint-entitlement), so
   headroom and cost figures are approximate. Enter the real figure from the SharePoint admin
-  center in Report settings to remove the note.
+  centre in Report settings to remove the note.
 - **Concealed or hidden names.** See [Site names](../../reference/site-names.md).

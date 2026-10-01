@@ -14,16 +14,22 @@ describes yesterday's behaviour, so review that by hand.
 
 ```markdown
 ---
-title: Tenant capacity          # the h1; don't repeat it in the body
-nav: Short sidebar label        # optional; defaults to the title
-description: One sentence.      # lead paragraph, "?" dialog text, search, llms.txt
-section: storage-optimisation   # an id from src/app/help/helpSections.ts
-order: 20                       # position within the section
+title: Tenant capacity
+nav: Capacity
+description: One sentence.
+section: storage-optimisation
+order: 20
 ---
 
 ## Second-level headings only
 ```
 
+- `title` is the h1; don't repeat it in the body.
+- `nav` is the sidebar label; optional, it defaults to the title.
+- `description` is the lead paragraph, the **?** dialog text, a search field and the `llms.txt`
+  summary.
+- `section` is an id from `src/app/help/helpSections.ts`; `order` is the position within it.
+- Frontmatter values are plain text: no `#` comments, no multi-line values.
 - The path is the address: `reports/storage-optimisation/tenant-capacity.md` →
   `/help/reports/storage-optimisation/tenant-capacity`; `index.md` is the folder's page.
 - Link other pages relatively, to the `.md` file: `[Settings](../../reference/settings.md#currency)`.

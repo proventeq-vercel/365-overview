@@ -35,8 +35,15 @@ the estimate.
 
 ## The table
 
-Largest first. It has the same columns as the drive table, plus **Over licence by**: how much
-more the drive holds than the storage per user. **Capacity used** is measured against the drive's
-own allocation, which can be higher than the licence.
+Largest first.
+
+| Column | Meaning |
+| --- | --- |
+| Drive | The OneDrive account, named after its owner, with a link to the drive. |
+| Owner | The drive's owner. |
+| Storage used | Storage consumed as of the report date. |
+| Over licence by | How much more the drive holds than the storage per user. |
+| Capacity used | How much of the drive's own allocation is used. The allocation can be higher than the licence. |
+| Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
 
 Deleted drives are not listed.

@@ -30,7 +30,7 @@ describe('HelpPage', () => {
   it('opens on the overview inside the app header, leading back to the report', () => {
     openHelp('/help', 'delegated')
     expect(screen.getByRole('heading', { level: 1, name: 'Proventeq 365 storage report help' })).toBeInTheDocument()
-    expect(screen.getByRole('banner')).toHaveTextContent('Help center')
+    expect(screen.getByRole('banner')).toHaveTextContent('Help centre')
     expect(screen.getByRole('link', { name: 'Open the report' })).toHaveAttribute('href', '/')
   })
 
