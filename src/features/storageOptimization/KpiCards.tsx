@@ -1,3 +1,4 @@
+import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatLongMonthYear, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import { forecastHeadline, forecastHint } from './forecastCopy'
@@ -27,6 +28,7 @@ export function KpiCards({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.capacity.title')}
       subtitle={t('storageOptimisation.capacity.subtitle')}
+      help={<HelpButton topic="tenantCapacity" />}
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard

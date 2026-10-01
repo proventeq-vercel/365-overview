@@ -1,3 +1,5 @@
+import { HelpButton } from '@/app/help/HelpButton'
+import { PageHeader } from '@/design/primitives'
 import { useSettings } from '@/app/useSettings'
 import { ReportLoading } from '@/app/ReportLoading'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
@@ -20,15 +22,13 @@ export function StorageOptimization() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="enter-rise flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-p365-navy">
-          {t('reports.storageOptimisation.title')}
-        </h1>
-        <p className="text-sm text-p365-grey-500">
-          {t('storageOptimisation.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
-          {t('app.reportLagNote')}
-        </p>
-      </div>
+      <PageHeader
+        title={t('reports.storageOptimisation.title')}
+        help={<HelpButton topic="storageOptimisation" />}
+      >
+        {t('storageOptimisation.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
+        {t('app.reportLagNote')}
+      </PageHeader>
       <DistributionSection overview={data} delay={40} />
       <KpiCards overview={data} delay={120} />
       <GrowthSection overview={data} delay={160} />

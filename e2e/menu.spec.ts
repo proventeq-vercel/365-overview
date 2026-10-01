@@ -56,7 +56,7 @@ test('the header keeps the options button and the tenant next to the menu button
   await expect(banner.getByRole('button', { name: 'Options' })).toBeVisible()
   await banner.getByRole('button', { name: 'Options' }).click()
   const menu = page.getByRole('menu', { name: 'Options' })
-  await expect(menu.getByRole('menuitem')).toHaveText([/Refresh data/, /Report settings/])
+  await expect(menu.getByRole('menuitem')).toHaveText([/Refresh data/, /Report settings/, /Help/])
 })
 
 test('the OneDrive report is reachable from the menu and renders its own cards and table', async ({ page }) => {

@@ -147,6 +147,12 @@ jobs:
         run: |
           az storage blob upload-batch --account-name "$ACCOUNT" --sas-token "$SAS" \
             --destination '$web' --source dist --overwrite --only-show-errors
+          az storage blob upload-batch --account-name "$ACCOUNT" --sas-token "$SAS" \
+            --destination '$web' --source dist --pattern '*.md' \
+            --content-type 'text/markdown; charset=utf-8' --overwrite --only-show-errors
+          az storage blob upload-batch --account-name "$ACCOUNT" --sas-token "$SAS" \
+            --destination '$web' --source dist --pattern '*.txt' \
+            --content-type 'text/plain; charset=utf-8' --overwrite --only-show-errors
           az storage blob upload --account-name "$ACCOUNT" --sas-token "$SAS" \
             --container-name '$web' --name index.html --file dist/index.html --overwrite \
             --content-type 'text/html' --content-cache-control 'no-cache' --only-show-errors

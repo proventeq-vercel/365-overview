@@ -88,12 +88,14 @@ describe('HeaderActions', () => {
     expect(items.map((item) => item.querySelector('span > span')?.textContent)).toEqual([
       'Refresh data',
       'Report settings',
+      'Help',
       'Switch account',
       'Sign out',
     ])
     for (const item of items) expect(item.querySelector('svg')).not.toBeNull()
     expect(menu).toHaveTextContent('Reload the report from Microsoft Graph')
     expect(menu).toHaveTextContent('Currency, cost per GB, the SharePoint entitlement and OneDrive storage per user')
+    expect(menu).toHaveTextContent('How each report works, its settings and setting up access')
     expect(menu).toHaveTextContent('Sign in with a different Microsoft account')
     expect(menu).toHaveTextContent('End this session')
     expect(screen.getByRole('separator')).toBeInTheDocument()
@@ -104,9 +106,19 @@ describe('HeaderActions', () => {
     const user = userEvent.setup()
     renderActions()
     await openOptions(user)
-    expect(screen.getAllByRole('menuitem')).toHaveLength(2)
+    expect(screen.getAllByRole('menuitem')).toHaveLength(3)
     expect(screen.queryByRole('menuitem', { name: /sign out/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('separator')).not.toBeInTheDocument()
+  })
+
+  it('opens the help in a new tab', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+    const user = userEvent.setup()
+    renderActions()
+    await openOptions(user)
+    await user.click(screen.getByRole('menuitem', { name: /^help/i }))
+    expect(open).toHaveBeenCalledWith('/help', '_blank', 'noopener')
+    open.mockRestore()
   })
 
   it('opens the report settings dialog from its item and closes the menu', async () => {

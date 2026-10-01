@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
+import { CircleHelp, EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
 import { loginRequest } from '@/auth/msalConfig'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { env } from '@/config/env'
+import { HELP_PATH } from '@/config/helpPath'
 import { DescribedMenuItem } from '@/design/DescribedMenuItem'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -82,6 +83,14 @@ export function HeaderActions() {
             label={t('header.settings')}
             description={t('header.settingsHint')}
             onClick={() => setSettingsOpen(true)}
+          />
+          <DescribedMenuItem
+            icon={CircleHelp}
+            label={t('header.help')}
+            description={t('header.helpHint')}
+            onClick={() => {
+              window.open(HELP_PATH, '_blank', 'noopener')
+            }}
           />
           {env.usesMsal && <AccountItems />}
         </DropdownMenuContent>

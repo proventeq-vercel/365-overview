@@ -21,14 +21,14 @@ describe('ErrorState', () => {
     expect(getByText(/Insufficient permissions/i)).toBeInTheDocument()
   })
 
-  it('links an auth failure to the access help page', () => {
+  it('links an auth failure to troubleshooting in the help', () => {
     const { getByRole } = render(<ErrorState error={new ApiError(401, 'unauthorized')} />)
-    expect(getByRole('link', { name: 'How to enable access' })).toHaveAttribute('href', '/help')
+    expect(getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('sends no one to the access help for a failure access cannot fix', () => {
     const { queryByRole } = render(<ErrorState error={new ApiError(500, 'Server exploded')} />)
-    expect(queryByRole('link', { name: 'How to enable access' })).toBeNull()
+    expect(queryByRole('link', { name: 'Troubleshooting' })).toBeNull()
   })
 
   it('shows fallback for unknown error type', () => {

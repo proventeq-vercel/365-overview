@@ -21,7 +21,7 @@ Built with React 19, TypeScript, and Vite.
 All of it lives in the resource group `rg-lh-sa-dev`. Both report sites are redeployed from `main`
 by `.github/workflows/deploy.yml` once CI is green (see *Automatic deployment*). Append
 `?hideNames=true` to either report URL to mask site names and owners (see *Hiding names*).
-Each site also serves `/help` — how to enable access, without signing in (see *Access help*).
+Each site also serves `/help` — the help centre for every report and for enabling access, without signing in (see *Help centre*).
 `https://365-overview.vercel.app/` no longer serves the app (it answers `404`).
 
 ## The report
@@ -219,8 +219,9 @@ not return — a deleted site, one the signed-in user cannot open, or every site
 registration has no `Sites.Read.All` — is shown by its site id, never by its owner.
 
 > **Role requirement, and only on this path:** consent alone is not enough. *Delegated*
-> `Reports.Read.All` additionally requires the signed-in user to hold **Global Reader**,
-> **Reports Reader** or an equivalent directory role — Microsoft's rule, not ours. A consented user
+> `Reports.Read.All` additionally requires the signed-in user to hold **Reports Reader** or
+> another role Microsoft gives detailed usage reports to (Global Reader sees tenant totals only) —
+> Microsoft's rule, not ours. A consented user
 > without such a role gets a permission failure, and the app tells them which role to ask for
 > rather than asking them to consent again.
 >
@@ -238,7 +239,7 @@ The permission model is chosen by the env, per deployment — there is no switch
 | Env | `VITE_GRAPH_PROXY_URL` set (+ `VITE_CLIENT_ID` = the Storage Analyser registration, the default) | `VITE_GRAPH_PROXY_URL` **unset**, `VITE_CLIENT_ID=0cedd025-e545-44f2-b3f8-82969e56547a` |
 | Graph is read by | the proxy (`functions/`), app-only, certificate | the browser, as the signed-in user |
 | Token the SPA asks for | the proxy scope `api://<client id>/access_as_user` | `https://graph.microsoft.com/.default` |
-| Who can open the report | any signed-in user once an admin consented | a user holding Reports Reader, SharePoint Administrator or Global Administrator |
+| Who can open the report | any signed-in user once an admin consented | a user holding a role Microsoft gives detailed usage reports to, such as Reports Reader, SharePoint Administrator or Global Administrator (Global Reader sees tenant totals only) |
 | Deployed at | <https://p365lite.z33.web.core.windows.net/> — storage static website `p365lite` (`site-application` job) | <https://gray-water-0a8893303.1.azurestaticapps.net> — Static Web App `p365-lite`, the main site (`site` job) |
 
 The delegated path asks for **`.default`**: the token carries whatever delegated permissions the
@@ -249,25 +250,40 @@ without `Organization.Read.All` the licence-based entitlement and the OneDrive s
 is required. The registration must list the deployment's origin as a **SPA redirect URI**.
 
 As of 2026-09-29 `0cedd025-…` (*Proventeq365 - Storage Analyser - Delegated*) grants delegated
-`User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so that
-deployment shows sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
+`User.Read`, `Reports.Read.All` and `Organization.Read.All` — **no `Sites.Read.All`**, so a tenant
+consented under it gets `403` on every name lookup and sees sites by id — and lists `https://p365lite.z33.web.core.windows.net/` and the
 `p365-lite` Static Web App as redirect URIs. A new host needs someone with write access to the
 registration to add it first (`Authorization_RequestDenied` otherwise).
 
-## Access help
+## Help centre
 
-`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) explains both permission modes,
-marks the one the site was built for, lists which Graph permissions are required and which are
-optional, gives this site's admin consent link, and says what fixes each failure screen. It needs
-no sign-in: `main.tsx` renders it before MSAL is ever created. Every screen a visitor can land on
-when access is missing links to it — the sign-in error and consent screens, the consent / tenant /
-role panels, an auth error from Graph, and the start-up error.
+`/help` (e.g. <https://gray-water-0a8893303.1.azurestaticapps.net/help>) is a full help centre:
+getting started (enabling access, permissions, limiting who can sign in, troubleshooting every
+failure screen), a page per report section, and reference pages (settings, how each figure is
+calculated, site names, data and privacy). It has a sidebar, search (`/` focuses it),
+breadcrumbs, an on-page outline and previous/next links. It needs no sign-in: `main.tsx`
+renders it before MSAL is ever created.
+
+Setup pages show the steps for the site's own permission mode, with its admin consent link; a
+switch at the top right of the page shows the other mode (`?audience=application` or
+`?audience=delegated`). Every report section has a **?** with a one-line explanation and *See
+more*; the ⋯ menu has **Help**; every screen a visitor can land on when access is missing links
+to troubleshooting.
+
+The pages are markdown in [`docs/help/`](docs/help/README.md) — update them with every
+user-visible change. They are also published for agents as `/llms.txt`, `/llms-full.txt` and each page's markdown
+at its source path under `/help/` (`/help/reports/storage-optimisation/index.md`, …), so the pages' relative
+links still resolve. Both hosts serve `.md` and `.txt` as UTF-8 text: `staticwebapp.config.json`
+`mimeTypes` on the Static Web App, explicit `--content-type` uploads in `deploy.yml` on the storage
+website.
+The renderer, `src/help-center/`, has no dependency on this app and can be reused on another
+site (see its README).
 
 ### Setting up a tenant
 
 Nothing needs changing on Proventeq's side for a new tenant: both registrations are multi-tenant,
 publisher-verified ("Proventeq Ltd") and list both sites as SPA redirect URIs. Everything below is
-done by the customer's administrator. The admin consent link is on each site's `/help` page.
+done by the customer's administrator. The admin consent link is on each site's `/help/getting-started/enable-access` page.
 
 **Application permissions** — <https://p365lite.z33.web.core.windows.net/>
 
@@ -297,12 +313,14 @@ done by the customer's administrator. The admin consent link is on each site's `
    signs in and selects **Accept**. This grants the delegated `Reports.Read.All`,
    `Organization.Read.All` and `User.Read`. Until then everyone stops at "Your organisation has
    not approved this app yet".
-2. Every person who opens the report holds Reports Reader (the least privilege), Global Reader,
-   SharePoint Administrator or Global Administrator: **Entra admin center → Roles & admins →
-   Reports Reader → Add assignments**.
+2. Every person who opens the report holds Reports Reader (the least privilege), SharePoint
+   Administrator or Global Administrator (Global Reader sees tenant totals only, not enough):
+   **Entra admin center → Roles & admins → Reports Reader → Add assignments**.
 3. They open the site and sign in. The delegated registration does not ask for `Sites.Read.All`,
-   so a site is named only when the signed-in user can open it; the rest are listed by id. On
-   proventeqe5 that named 31 of the 50 largest sites for a Reports Reader (2026-10-01).
+   which Graph requires for `GET /sites/{id}`, so sites are listed by id. A tenant whose earlier
+   consent still carries `Sites.Read.All` names the sites the signed-in user can open: proventeqe5
+   named 31 of the 50 largest for a Reports Reader (2026-10-01), most likely through such a grant
+   (not verified).
 
 ### Limiting who can open the report
 
@@ -317,7 +335,7 @@ admin sets it in Microsoft Entra — nothing in this app or its deployment chang
 
 Group assignment needs Entra ID P1/P2 (free tier: users one by one) and does not reach nested
 groups. Anyone unassigned is refused at sign-in with `AADSTS50105`; if that error comes back to
-the app, `AuthErrorScreen` shows "Your account is not allowed to use this app" and links `/help`,
+the app, `AuthErrorScreen` shows "Your account is not allowed to use this app" and links `/help/getting-started/troubleshooting`,
 which carries the same steps. With application permissions this limits who sees the report, not
 what the proxy can read.
 

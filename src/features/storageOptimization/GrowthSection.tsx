@@ -1,3 +1,4 @@
+import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatNumber, formatShortMonthYear, formatSignedBytes } from '@/lib/format'
 import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -34,6 +35,7 @@ export function GrowthSection({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.growth.sectionTitle')}
       subtitle={t('storageOptimisation.growth.sectionSubtitle')}
+      help={<HelpButton topic="growthForecast" />}
     >
       <SplitGrid className="lg:grid-cols-[7fr_5fr]">
         <Panel>
