@@ -13,7 +13,7 @@ of its state.
 | Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
 | Potential saving per year | follows *Inactive sites to archive* | | | — |
 | Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
-| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months, or already exceeded | Unknown |
+| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months, or already exceeded | Unknown: no entitlement, or under six months of history |
 
 ## Inactive sites to archive
 
@@ -64,7 +64,7 @@ The description gives the entitlement, the monthly growth and the headroom left.
 | A month, for example *March 2028* | The headroom runs out then at the current rate. |
 | **Beyond 10 years** | The headroom outlasts the ten-year horizon. |
 | **No growth detected** | Storage has not grown over the measured months. |
-| **Not enough history** | Fewer than six months of storage history. This is not an all-clear. |
+| **Not enough history** (grey) | Fewer than six months of storage history. This is not an all-clear. |
 | **Entitlement already exceeded** | Used storage is already at or over the entitlement. There is no future date to project. |
 | **Unknown** (grey) | The entitlement is unknown. Enter it in Report settings. |
 

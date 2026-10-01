@@ -33,7 +33,8 @@ The most generous allowance any licence in the tenant gives:
 
 - **5 TB** when the tenant holds five or more licences with a SharePoint/OneDrive Plan 2
   (E3, E5, G3, G5, OneDrive Plan 2),
-- otherwise **1 TB** with a standard plan (Business plans, OneDrive Plan 1),
+- otherwise **1 TB** with a standard plan (Business plans, OneDrive Plan 1) or with one to four
+  Plan 2 licences,
 - otherwise **2 GB** with a frontline plan.
 
 Education, Project, Visio and Dynamics plans give no allowance here.

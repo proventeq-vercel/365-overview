@@ -25,9 +25,18 @@ switched your tenant on. Contact Proventeq with your tenant's name.
 
 ## Your account cannot read usage reports
 
+::: audience delegated
 Microsoft does not give usage reports to an account without a reporting role. Ask an
 administrator to assign you **Reports Reader**, or sign in with an account that has a reporting
 role. See [Enable access](enable-access.md) for the full list of roles.
+:::
+
+::: audience application
+This site reads with the app's own permissions, so Microsoft does not check your role here. The
+request was refused before it reached Microsoft 365: either this site has been set up to admit
+only certain directory roles, or Microsoft Graph refused the app itself. Contact Proventeq with
+the account you signed in with.
+:::
 
 ## Your account is not allowed to use this app
 

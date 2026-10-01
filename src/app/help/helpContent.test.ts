@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { REPORTS } from '@/features/registry'
-import { resolveDocLink } from '@/help-center/links'
+import { isExternalHref, resolveDocLink } from '@/help-center/links'
 import { outline, prepareBody, variablesUsed } from '@/help-center/prepare'
 import { ACCESS_MODES } from '@/config/accessMode'
 import messages from '@/intl/en.json'
@@ -25,7 +25,7 @@ const FAILURE_SCREENS = [
 ]
 
 function linksOf(body: string): string[] {
-  return [...body.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1])
+  return [...body.matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)].map((match) => match[1])
 }
 
 describe('help content', () => {
@@ -44,7 +44,10 @@ describe('help content', () => {
       for (const context of CONTEXTS) {
         for (const href of linksOf(prepareBody(page.body, context))) {
           const target = resolveDocLink(page.file, href)
-          if (!target) continue
+          if (!target) {
+            if (!isExternalHref(href)) broken.push(`${page.file} (${context.audience}) → ${href} is not a page link`)
+            continue
+          }
           const linked = helpCatalogue.page(target.slug)
           const anchors = linked ? outline(prepareBody(linked.body, context)).map((heading) => heading.id) : []
           if (!linked || (target.hash && !anchors.includes(target.hash))) {
@@ -77,6 +80,15 @@ describe('help content', () => {
     const troubleshooting = helpCatalogue.page(HELP_TOPICS.troubleshooting)!
     const headings = outline(troubleshooting.body).map((heading) => heading.text)
     expect(FAILURE_SCREENS.filter((title) => !headings.includes(title))).toEqual([])
+  })
+
+  it('never tells an application-mode reader that Microsoft needs a role from them', () => {
+    const page = helpCatalogue.page(HELP_TOPICS.troubleshooting)!
+    const delegated = prepareBody(page.body, { audience: 'delegated', variables: {} })
+    const application = prepareBody(page.body, { audience: 'application', variables: {} })
+    expect(delegated).toContain('assign you **Reports Reader**')
+    expect(application).not.toContain('Reports Reader')
+    expect(application).toContain('Microsoft does not check your role here')
   })
 
   it('explains enabling access separately for each permission mode', () => {

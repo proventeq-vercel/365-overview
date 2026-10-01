@@ -1,8 +1,0 @@
-export { createHelpCatalogue, parseFrontmatter, parseHelpPage, slugOfFile, type HelpCatalogue } from './catalogue'
-export { HelpCenter, type HelpCenterProps } from './HelpCenter'
-export { DEFAULT_HELP_LABELS, type HelpCenterLabels } from './labels'
-export { helpHref, isPlainClick, resolveDocLink, slugOfPath, type HelpTarget } from './links'
-export { buildLlmsFull, buildLlmsIndex, buildLlmsPage, buildLlmsPages, markdownPath, type LlmsOptions } from './llms'
-export { outline, prepareBody, variablesUsed } from './prepare'
-export { buildHelpSearchIndex, searchHelp } from './search'
-export type { HelpAudience, HelpContext, HelpHeading, HelpPage, HelpSection, HelpVariables } from './types'
