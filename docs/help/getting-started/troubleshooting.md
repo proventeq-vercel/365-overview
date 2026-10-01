@@ -7,11 +7,17 @@ order: 40
 
 Each error screen names what is missing. Find the heading that matches what you saw.
 
+The first three screens below check again on their own, every 30 seconds and whenever you
+return to the report's tab. Once the fix is in place, leave the report open and it loads by
+itself. You do not need to reload the page or sign in again.
+
 ## Your organisation has not approved this app yet
 
 An administrator has not approved the app for your tenant yet. Send a Global Administrator the
 admin consent link. It is on the error screen, and on [Enable access](enable-access.md). Once
-they approve, sign in again.
+they approve, the report loads on its own. An administrator who approves through the link in
+this browser comes back to the report, which keeps its loading screen up for up to two minutes
+while Microsoft applies the approval.
 
 ::: audience application
 This site reads with application permissions, so a sign-in approval is not enough. Only the
