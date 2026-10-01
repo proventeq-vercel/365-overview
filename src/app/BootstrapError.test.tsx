@@ -15,7 +15,7 @@ describe('BootstrapError', () => {
 
   it('links to troubleshooting in the help', () => {
     render(<BootstrapError message="VITE_CLIENT_ID is not set" overridden={false} />)
-    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+    expect(screen.getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('offers the per-tab reset when a URL override may have caused it', () => {

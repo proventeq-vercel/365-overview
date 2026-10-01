@@ -23,12 +23,12 @@ describe('ErrorState', () => {
 
   it('links an auth failure to troubleshooting in the help', () => {
     const { getByRole } = render(<ErrorState error={new ApiError(401, 'unauthorized')} />)
-    expect(getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+    expect(getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('sends no one to the access help for a failure access cannot fix', () => {
     const { queryByRole } = render(<ErrorState error={new ApiError(500, 'Server exploded')} />)
-    expect(queryByRole('link', { name: 'Help with access' })).toBeNull()
+    expect(queryByRole('link', { name: 'Troubleshooting' })).toBeNull()
   })
 
   it('shows fallback for unknown error type', () => {

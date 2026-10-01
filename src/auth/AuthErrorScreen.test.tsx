@@ -41,7 +41,7 @@ describe('AuthErrorScreen', () => {
     )
     expect(screen.getByRole('alert')).toHaveTextContent('Your account is not allowed to use this app')
     expect(screen.queryByText('Sign-in failed')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+    expect(screen.getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it.each([
@@ -49,7 +49,7 @@ describe('AuthErrorScreen', () => {
     ['sign-in', new Error('network unreachable')],
   ])('links the %s failure to troubleshooting in the help', (_kind, error) => {
     render(<AuthErrorScreen error={error} />)
-    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+    expect(screen.getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('survives a thrown non-Error', () => {

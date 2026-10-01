@@ -93,7 +93,7 @@
   "access.tenant.body": "You signed in successfully, but your tenant has not been switched on for this report. No role or consent will change that — ask Proventeq to enable it.",
   "access.permission.title": "Your account cannot read usage reports",
   "access.permission.body": "You are signed in and your organisation has approved the app, but reading tenant usage reports needs an administrative role. Microsoft requires Global Reader, Reports Reader, or an equivalent role — ask an administrator to assign one.",
-  "help.link": "Help with access",
+  "help.link": "Troubleshooting",
   "help.header": "Help centre",
   "help.openReport": "Open the report",
   "help.audience.delegated": "Delegated permissions",

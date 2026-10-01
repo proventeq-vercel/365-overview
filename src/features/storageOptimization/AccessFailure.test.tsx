@@ -92,7 +92,7 @@ describe('AccessFailure', () => {
     ['role', new ApiError(403, 'Forbidden')],
   ])('links the %s failure to troubleshooting in the help', (_kind, error) => {
     render(<AccessFailure error={error} />)
-    expect(screen.getByRole('link', { name: 'Help with access' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+    expect(screen.getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
   })
 
   it('falls back to the generic error state for anything else', () => {
