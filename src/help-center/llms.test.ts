@@ -65,10 +65,15 @@ describe('llms.txt', () => {
 
   it('explains the site-specific blocks in a published page that carries them, and only there', () => {
     const blocks = createHelpCatalogue(
-      { 'setup.md': '---\ntitle: Setup\ndescription: Steps.\nsection: start\n---\n::: audience one\nOnly for one.\n:::' },
+      {
+        'setup.md': '---\ntitle: Setup\ndescription: Steps.\nsection: start\n---\nFirst.\n\n::: audience one\nOnly for one.\n:::',
+        'link.md': '---\ntitle: Link\ndescription: Consent.\nsection: start\n---\nOpen {{consentUrl}}.',
+      },
       [{ id: 'start', label: 'Get started' }],
     )
-    expect(buildLlmsPages(blocks, OPTIONS)['help/setup.md']).toContain('> Steps.\n\nBlocks fenced by `::: audience <id>`')
+    const published = buildLlmsPages(blocks, OPTIONS)
+    expect(published['help/setup.md']).toContain('> Steps.\n\nBlocks fenced by `::: audience <id>`')
+    expect(published['help/link.md']).toContain('> Consent.\n\nBlocks fenced by `::: audience <id>`')
     expect(buildLlmsPages(catalogue, OPTIONS)['help/index.md']).not.toContain('Blocks fenced')
   })
 

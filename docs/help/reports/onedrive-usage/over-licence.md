@@ -18,7 +18,7 @@ Microsoft's OneDrive service description sets what a user licence includes:
 | Licence | OneDrive storage per user |
 | --- | --- |
 | Microsoft 365 E3, E5, G3, G5 and OneDrive Plan 2, with five or more licences | 5 TB |
-| Business plans, OneDrive Plan 1 and other standard plans | 1 TB |
+| Business plans, OneDrive Plan 1 and other standard plans, or E3, E5, G3, G5 and OneDrive Plan 2 with one to four licences | 1 TB |
 | Frontline (F1, F3) | 2 GB |
 
 The usage report does not say which licence each user holds. So the report measures every drive

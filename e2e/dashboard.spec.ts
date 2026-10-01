@@ -335,6 +335,7 @@ test('the help is searchable and published for agents as llms.txt', async ({ pag
   await expect(page.getByRole('heading', { name: 'Tenant capacity', level: 1 })).toBeVisible()
   const llms = await request.get('/llms.txt')
   expect(llms.ok()).toBe(true)
+  expect(llms.headers()['content-type']).toContain('text/plain')
   expect(await llms.text()).toContain('- [Tenant capacity](/help/reports/storage-optimisation/tenant-capacity.md): ')
   const indexFile = await request.get('/help/reports/storage-optimisation/index.md')
   expect(indexFile.headers()['content-type']).toContain('text/markdown')

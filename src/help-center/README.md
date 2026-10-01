@@ -54,8 +54,9 @@ plugins: [helpLlms({ dir: 'docs/help', sections, basePath: '/help', title: 'My a
 ```
 
 It serves `/llms.txt` (an index of pages with descriptions), `/llms-full.txt` (every page's
-markdown) and every page's source file under `<basePath>/` at its own path (`index.md` pages
-included, so relative links between pages still resolve) from the dev server, and emits all of
+markdown) and each page's markdown (title and description on top, frontmatter removed) under
+`<basePath>/` at its source path (`index.md` pages included, so relative links between pages
+still resolve) from the dev server, and emits all of
 them into the build. The index links the `.md` files, not the rendered pages: a page address
 returns the SPA shell, which an agent cannot read. The host must serve existing files before its
 SPA fallback and serve `.md` and `.txt` as UTF-8 text.
