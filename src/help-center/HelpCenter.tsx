@@ -97,10 +97,10 @@ export function HelpCenter({
 
   useEffect(() => {
     const search = searchRef.current
-    if (!focusSearch || !search || isHidden(search)) return
+    if (!focusSearch || !search) return
     setFocusSearch(false)
     search.focus()
-  }, [focusSearch, navOpen])
+  }, [focusSearch])
 
   const section = page ? catalogue.sections.find((each) => each.id === page.section) : undefined
   const { previous, next } = page ? catalogue.neighbours(page.slug) : { previous: null, next: null }
