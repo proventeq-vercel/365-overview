@@ -32,6 +32,10 @@ const NO_VARIABLES_FOR = () => NO_VARIABLES
 const audienceQueryOf = (audience: string, defaultAudience: string) =>
   audience === defaultAudience ? '' : `?${AUDIENCE_PARAM}=${encodeURIComponent(audience)}`
 
+function isShortcut(event: KeyboardEvent): boolean {
+  return event.metaKey || event.ctrlKey !== event.altKey
+}
+
 function isHidden(element: HTMLElement): boolean {
   return getComputedStyle(element).visibility === 'hidden'
 }
@@ -53,6 +57,8 @@ export function HelpCenter({
   const [navOpen, setNavOpen] = useState(false)
   const [focusSearch, setFocusSearch] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const navOpenRef = useRef(navOpen)
   const sidebarId = useId()
 
   const audience =
@@ -85,12 +91,15 @@ export function HelpCenter({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.isComposing) return
       if (event.key === 'Escape') {
+        if (!navOpenRef.current) return
         setNavOpen(false)
+        toggleRef.current?.focus()
         return
       }
       const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')
-      if (event.key !== '/' || typing || event.ctrlKey || event.metaKey || event.altKey) return
+      if (event.key !== '/' || typing || isShortcut(event)) return
       event.preventDefault()
       if (searchRef.current && isHidden(searchRef.current)) setNavOpen(true)
       setFocusSearch(true)
@@ -98,6 +107,10 @@ export function HelpCenter({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => {
+    navOpenRef.current = navOpen
+  }, [navOpen])
 
   useEffect(() => {
     const search = searchRef.current
@@ -139,6 +152,7 @@ export function HelpCenter({
             section={section}
             navOpen={navOpen}
             sidebarId={sidebarId}
+            toggleRef={toggleRef}
             labels={labels}
             homeHref={pageHref('')}
             onToggleNav={() => setNavOpen((open) => !open)}

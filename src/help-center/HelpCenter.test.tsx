@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createHelpCatalogue } from './catalogue'
 import { HelpCenter } from './HelpCenter'
@@ -172,14 +172,42 @@ describe('HelpCenter', () => {
     const toggle = screen.getByRole('button', { name: 'Browse help' })
     await userEvent.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    screen.getByRole('searchbox', { name: 'Search help' }).focus()
     await userEvent.keyboard('{Escape}')
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveFocus()
   })
 
-  it('leaves a browser shortcut such as Ctrl+/ alone', async () => {
+  it('keeps the topic list open on an Escape that only cancels an input-method composition', async () => {
     open('/help')
-    await userEvent.keyboard('{Control>}/{/Control}')
+    const toggle = screen.getByRole('button', { name: 'Browse help' })
+    await userEvent.click(toggle)
+    fireEvent.keyDown(window, { key: 'Escape', isComposing: true })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('leaves focus where it is on Escape when the topic list is already closed', async () => {
+    open('/help')
+    const search = screen.getByRole('searchbox', { name: 'Search help' })
+    search.focus()
+    await userEvent.keyboard('{Escape}')
+    expect(search).toHaveFocus()
+  })
+
+  it.each([
+    ['Ctrl', '{Control>}/{/Control}'],
+    ['Cmd', '{Meta>}/{/Meta}'],
+    ['Alt', '{Alt>}/{/Alt}'],
+  ])('leaves a browser shortcut such as %s+/ alone', async (_name, keys) => {
+    open('/help')
+    await userEvent.keyboard(keys)
     expect(screen.getByRole('searchbox', { name: 'Search help' })).not.toHaveFocus()
+  })
+
+  it('still focuses the search when / is typed with AltGr, which Windows reports as Ctrl+Alt', async () => {
+    open('/help')
+    await userEvent.keyboard('{Control>}{Alt>}/{/Alt}{/Control}')
+    expect(screen.getByRole('searchbox', { name: 'Search help' })).toHaveFocus()
   })
 
   it('leaves the topic list closed on slash when the search is already on screen', async () => {

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { HelpAnchor } from './HelpAnchor'
 import type { HelpCenterLabels } from './labels'
 import type { HelpPage, HelpSection } from './types'
@@ -8,6 +8,7 @@ export function HelpToolbar({
   section,
   navOpen,
   sidebarId,
+  toggleRef,
   labels,
   homeHref,
   onToggleNav,
@@ -17,6 +18,7 @@ export function HelpToolbar({
   page: HelpPage | undefined
   section: HelpSection | undefined
   navOpen: boolean
+  toggleRef?: Ref<HTMLButtonElement>
   sidebarId: string
   labels: HelpCenterLabels
   homeHref: string
@@ -26,7 +28,7 @@ export function HelpToolbar({
 }) {
   return (
     <div className="hc-toolbar">
-      <button type="button" className="hc-browse" aria-expanded={navOpen} aria-controls={sidebarId} onClick={onToggleNav}>
+      <button ref={toggleRef} type="button" className="hc-browse" aria-expanded={navOpen} aria-controls={sidebarId} onClick={onToggleNav}>
         {labels.browse}
       </button>
       {page && (
