@@ -1,4 +1,4 @@
-import { type Configuration, PublicClientApplication } from '@azure/msal-browser'
+import { type Configuration, PublicClientApplication, type RedirectRequest } from '@azure/msal-browser'
 import { getConfig, graphProxyOf, type AppConfig } from '../config/appConfig'
 
 let _msalInstance: PublicClientApplication | null = null
@@ -36,4 +36,12 @@ export function tokenScopesFor(config: AppConfig): string[] {
 
 export function tokenScopes(): string[] {
   return tokenScopesFor(getConfig())
+}
+
+export function loginRequestFor(config: AppConfig): RedirectRequest {
+  return { scopes: tokenScopesFor(config) }
+}
+
+export function loginRequest(): RedirectRequest {
+  return loginRequestFor(getConfig())
 }

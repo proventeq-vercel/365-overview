@@ -7,6 +7,7 @@ import { accessModeOf } from './config/accessMode'
 import { adminConsentUrl, consentClientIdFor } from './config/adminConsent'
 import { getConfig } from './config/appConfig'
 import { isHelpPath } from './config/helpPath'
+import { takeConsentReturn } from './config/consentReturn'
 import { AccessHelpPage } from './app/help/AccessHelpPage'
 import { MsalAuthProvider } from './auth/MsalAuthProvider'
 import { AppIntlProvider } from './app/AppIntlProvider'
@@ -69,7 +70,13 @@ function renderHelp() {
   )
 }
 
+function settleConsentReturn() {
+  const cleaned = takeConsentReturn(window.location.href, Date.now())
+  if (cleaned !== null) window.history.replaceState(window.history.state, '', cleaned)
+}
+
 try {
+  settleConsentReturn()
   if (isHelpPath(window.location.pathname)) renderHelp()
   else bootstrap()
 } catch (err) {

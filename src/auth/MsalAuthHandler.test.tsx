@@ -72,6 +72,6 @@ describe('MsalAuthHandler', () => {
         <div>protected content</div>
       </MsalAuthHandler>,
     )
-    expect(instance.loginRedirect).toHaveBeenCalled()
+    expect(instance.loginRedirect).toHaveBeenCalledWith({ scopes: ['https://graph.microsoft.com/.default'] })
   })
 })
