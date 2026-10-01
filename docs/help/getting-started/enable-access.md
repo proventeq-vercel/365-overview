@@ -33,10 +33,11 @@ of those roles.
    stops at *Your organisation has not approved this app yet*.
 2. **Give readers a reporting role.** Whoever opens the report needs **Reports Reader**,
    **SharePoint Administrator**, **Exchange Administrator**, **Teams Administrator**, **Teams
-   Communications Administrator** or **Global Administrator**. **Global Reader** and **Usage
-   Summary Reports Reader** are not enough: Microsoft gives them tenant totals only, not the
-   per-site and per-drive detail this report reads. To assign the least of these, go to the Microsoft Entra admin centre → **Roles & admins** →
-   **Reports Reader** → **Add assignments**.
+   Communications Administrator**, **Skype for Business Administrator** or **Global
+   Administrator**. **Global Reader** and **Usage Summary Reports Reader** are not enough:
+   Microsoft gives them tenant totals only, not the per-site and per-drive detail this report
+   reads. To assign the least of these, go to the Microsoft Entra admin centre → **Roles &
+   admins** → **Reports Reader** → **Add assignments**.
 3. **Open the report.** They open this site and sign in with that work account.
 4. **Site names.** On this site, a site shows its name only when the signed-in user can open it.
    Other sites are listed by their id. Use the application-permissions site when every name

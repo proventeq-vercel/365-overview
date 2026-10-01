@@ -219,8 +219,9 @@ not return — a deleted site, one the signed-in user cannot open, or every site
 registration has no `Sites.Read.All` — is shown by its site id, never by its owner.
 
 > **Role requirement, and only on this path:** consent alone is not enough. *Delegated*
-> `Reports.Read.All` additionally requires the signed-in user to hold **Global Reader**,
-> **Reports Reader** or an equivalent directory role — Microsoft's rule, not ours. A consented user
+> `Reports.Read.All` additionally requires the signed-in user to hold **Reports Reader** or
+> another role Microsoft gives detailed usage reports to (Global Reader sees tenant totals only) —
+> Microsoft's rule, not ours. A consented user
 > without such a role gets a permission failure, and the app tells them which role to ask for
 > rather than asking them to consent again.
 >
@@ -312,8 +313,8 @@ done by the customer's administrator. The admin consent link is on each site's `
    signs in and selects **Accept**. This grants the delegated `Reports.Read.All`,
    `Organization.Read.All` and `User.Read`. Until then everyone stops at "Your organisation has
    not approved this app yet".
-2. Every person who opens the report holds Reports Reader (the least privilege), Global Reader,
-   SharePoint Administrator or Global Administrator: **Entra admin center → Roles & admins →
+2. Every person who opens the report holds Reports Reader (the least privilege), SharePoint
+   Administrator or Global Administrator (Global Reader sees tenant totals only, not enough): **Entra admin center → Roles & admins →
    Reports Reader → Add assignments**.
 3. They open the site and sign in. The delegated registration does not ask for `Sites.Read.All`,
    so a site is named only when the signed-in user can open it; the rest are listed by id. On
