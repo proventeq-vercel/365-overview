@@ -94,4 +94,10 @@ describe('llms.txt', () => {
     expect(full).toContain('# Settings\n\n> Every option.\n\n## Currency\nPick one.')
     expect(full).toContain('# Home\n\n> Start here.\n\nWelcome.')
   })
+
+  it('names the file each page of the full file is published at, so its relative links resolve', () => {
+    const full = buildLlmsFull(catalogue, OPTIONS)
+    expect(full).toContain('File: /help/reports/usage/index.md\n\n# Usage\n\n> The report.\n\nOpen [the cards](cards.md)')
+    expect(full).toContain('relative links resolve against that file')
+  })
 })

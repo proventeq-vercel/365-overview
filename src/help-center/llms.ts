@@ -10,6 +10,7 @@ export interface LlmsOptions {
 const AUDIENCE_LEGEND =
   'Blocks fenced by `::: audience <id>` apply to that audience only, and `::: if <name>` / `::: unless <name>` to whether the site sets that value; `{{name}}` is filled in by the site.'
 const SITE_SPECIFIC = /^:::|\{\{/m
+const FILE_LEGEND = 'Each page starts with the file it is published at; its relative links resolve against that file.'
 
 function markdownPath(basePath: string, page: HelpPage): string {
   return `${basePath.replace(/\/+$/, '')}/${page.file}`
@@ -40,10 +41,10 @@ export function buildLlmsIndex(catalogue: HelpCatalogue, { title, summary, baseP
   return `${lines.join('\n').trimEnd()}\n`
 }
 
-export function buildLlmsFull(catalogue: HelpCatalogue, { title, summary }: LlmsOptions): string {
-  const parts = [`# ${title}`, `> ${summary}`, AUDIENCE_LEGEND]
+export function buildLlmsFull(catalogue: HelpCatalogue, { title, summary, basePath }: LlmsOptions): string {
+  const parts = [`# ${title}`, `> ${summary}`, AUDIENCE_LEGEND, FILE_LEGEND]
   for (const page of catalogue.pages) {
-    parts.push(`---\n\n# ${page.title}\n\n> ${page.description}\n\n${page.body}`)
+    parts.push(`---\n\nFile: ${markdownPath(basePath, page)}\n\n# ${page.title}\n\n> ${page.description}\n\n${page.body}`)
   }
   return `${parts.join('\n\n')}\n`
 }
