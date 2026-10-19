@@ -239,7 +239,7 @@ function scenarioData(scenario: MockScenario): ScenarioData {
 
 const NEW_IN_WINDOW_EVERY = 97
 const FAST_GROWER_EVERY = 23
-const FAST_GROWER_SHARE = 0.35
+const FAST_GROWER_SHARE = 0.12
 const STEADY_GROWTH_STEP = 0.0025
 
 function fourWeeksEarlier(rows: StorageRow[]): StorageRow[] {
