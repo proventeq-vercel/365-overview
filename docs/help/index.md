@@ -26,7 +26,7 @@ include. It also shows what that growth costs and which sites and drives drive t
 | Report | What it answers |
 | --- | --- |
 | [Storage Optimisation](reports/storage-optimisation/index.md) | Where tenant storage sits, how much is inactive, when the SharePoint entitlement runs out and what growth will cost. |
-| [OneDrive Usage](reports/onedrive-usage/index.md) | How much sits in personal OneDrives, who holds the most, and which drives are near their cap or over their licence. |
+| [OneDrive Usage](reports/onedrive-usage/index.md) | How much sits in personal OneDrives, who holds the most, and which drives are near their quota or over their licence. |
 
 Every section of a report has a **?** button next to its title. It explains the section in a
 sentence and links to the matching page here.

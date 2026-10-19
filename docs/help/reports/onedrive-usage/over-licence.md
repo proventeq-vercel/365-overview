@@ -43,7 +43,7 @@ Largest first.
 | Owner | The drive's owner. |
 | Storage used | Storage consumed as of the report date. |
 | Over licence by | How much more the drive holds than the storage per user. |
-| Capacity used | How much of the drive's own allocation is used. The allocation can be higher than the licence. |
+| Quota used | How much of the drive's own storage quota is used. The quota can be higher than the licence. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
 
 Deleted drives are not listed.

@@ -27,10 +27,10 @@ test('the OneDrive report lists the accounts over their licensed storage, and th
   await expect(page.getByText('No OneDrive holds more than 6 TB')).toBeVisible()
 })
 
-test('the storage report counts the drives over their licence beside the drives near cap', async ({ page }) => {
+test('the storage report counts the drives over their licence beside the drives near their quota', async ({ page }) => {
   await page.goto('/?scenario=onedrive-over-licence')
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible({ timeout: 30_000 })
   await expect(
-    page.getByText('Drives over licence', { exact: true }).locator('xpath=following-sibling::dd'),
+    page.getByText('Drives over their licence', { exact: true }).locator('xpath=following-sibling::dd'),
   ).toHaveText('4')
 })

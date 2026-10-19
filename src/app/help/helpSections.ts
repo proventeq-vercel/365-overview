@@ -12,7 +12,7 @@ export const HELP_SECTIONS = [
   {
     id: 'onedrive-usage',
     label: 'OneDrive Usage',
-    description: 'How much sits in personal OneDrives, who holds the most, and which drives are near their cap or over their licence.',
+    description: 'How much sits in personal OneDrives, who holds the most, and which drives are near their quota or over their licence.',
   },
   {
     id: 'reference',
