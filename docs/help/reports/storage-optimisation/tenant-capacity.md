@@ -3,6 +3,7 @@ title: Tenant capacity
 nav: Capacity cards
 description: The cards at the top of the report — inactive sites to archive, what archiving would save, what growth beyond the entitlement costs, and when the entitlement runs out.
 section: storage-optimisation
+feature: optimization.storage.report.overview
 order: 20
 ---
 

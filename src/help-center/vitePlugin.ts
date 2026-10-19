@@ -3,11 +3,13 @@ import { join, relative, sep } from 'node:path'
 import type { Plugin } from 'vite'
 import { createHelpCatalogue } from './catalogue'
 import { buildLlmsFull, buildLlmsIndex, buildLlmsPages, type LlmsOptions } from './llms'
+import type { FeatureCheck } from './prepare'
 import type { HelpSection } from './types'
 
 export interface HelpLlmsOptions extends LlmsOptions {
   dir: string
   sections: readonly HelpSection[]
+  enabled?: FeatureCheck
 }
 
 const VITE_MODULE_QUERY = /(?:^|&)(?:raw|url|inline|import)(?:[=&]|$)/
@@ -28,7 +30,7 @@ function readSources(dir: string): Record<string, string> {
 
 export function helpLlms(options: HelpLlmsOptions): Plugin {
   const files = (): Record<string, string> => {
-    const catalogue = createHelpCatalogue(readSources(options.dir), options.sections)
+    const catalogue = createHelpCatalogue(readSources(options.dir), options.sections, '', options.enabled)
     return {
       'llms.txt': buildLlmsIndex(catalogue, options),
       'llms-full.txt': buildLlmsFull(catalogue, options),

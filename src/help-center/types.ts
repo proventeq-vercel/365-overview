@@ -17,6 +17,7 @@ export interface HelpPage {
   description: string
   section: string
   order: number
+  feature: string | null
   body: string
   hasAudienceContent: boolean
 }

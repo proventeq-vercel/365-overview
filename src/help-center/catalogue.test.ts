@@ -102,3 +102,44 @@ describe('createHelpCatalogue', () => {
     ).toThrow('unknown section "nowhere"')
   })
 })
+
+describe('features', () => {
+  const sources = {
+    'a.md': page(
+      'title: A\ndescription: d\nsection: start\norder: 1',
+      'Always.\n\n::: feature beta\nBeta only.\n:::\n\n::: unless-feature beta\nWithout beta.\n:::',
+    ),
+    'b.md': page('title: B\ndescription: d\nsection: reference\nfeature: beta', 'Beta page.'),
+  }
+  const withBeta = createHelpCatalogue(sources, SECTIONS, '', (feature) => feature === 'beta')
+  const withoutBeta = createHelpCatalogue(sources, SECTIONS, '', () => false)
+
+  it('keeps a feature block and drops its unless-feature twin when the feature is on', () => {
+    expect(withBeta.page('a')!.body).toBe('Always.\n\nBeta only.')
+  })
+
+  it('drops a feature block and keeps its unless-feature twin when the feature is off', () => {
+    expect(withoutBeta.page('a')!.body).toBe('Always.\n\nWithout beta.')
+  })
+
+  it('leaves out a page whose feature is off, and a section left with no pages', () => {
+    expect(withBeta.page('b')?.title).toBe('B')
+    expect(withBeta.sections.map((section) => section.id)).toEqual(['start', 'reference'])
+    expect(withoutBeta.page('b')).toBeUndefined()
+    expect(withoutBeta.pages.map((entry) => entry.slug)).toEqual(['a'])
+    expect(withoutBeta.sections.map((section) => section.id)).toEqual(['start'])
+    expect(withoutBeta.neighbours('a')).toEqual({ previous: null, next: null })
+  })
+
+  it('keeps other blocks inside a feature block, and shows everything by default', () => {
+    const nested = page('title: N\ndescription: d\nsection: start', '::: feature beta\n::: if x\nY\n:::\n:::')
+    expect(parseHelpPage('n.md', nested, () => true).body).toBe('::: if x\nY\n:::')
+    expect(parseHelpPage('n.md', nested, () => false).body).toBe('')
+    expect(parseHelpPage('n.md', nested).body).toBe('::: if x\nY\n:::')
+  })
+
+  it('ignores a feature block shown as an example inside a code fence', () => {
+    const example = page('title: E\ndescription: d\nsection: start', '```\n::: feature beta\nY\n:::\n```')
+    expect(parseHelpPage('e.md', example, () => false).body).toBe('```\n::: feature beta\nY\n:::\n```')
+  })
+})

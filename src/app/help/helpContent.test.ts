@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { REPORTS } from '@/features/registry'
+import { REPORTS, enabledReports } from '@/features/registry'
+import { FeatureFlags, type FeatureFlag } from '@/config/featureFlags'
 import { isExternalHref, resolveDocLink } from '@/help-center/links'
-import { outline, prepareBody, variablesUsed } from '@/help-center/prepare'
+import { featuresUsed, outline, prepareBody, variablesUsed } from '@/help-center/prepare'
 import { ACCESS_MODES } from '@/config/accessMode'
 import messages from '@/intl/en.json'
-import { helpCatalogue } from './helpContent'
+import { helpCatalogueFor } from './helpContent'
 import { HELP_TOPICS } from './topics'
 
 const KNOWN_VARIABLES = ['consentUrl', 'clientId']
@@ -13,6 +14,18 @@ const CONTEXTS = ACCESS_MODES.flatMap((audience) => [
   { audience, variables: FILLED },
   { audience, variables: {} },
 ])
+
+const ALL_FLAGS = Object.values(FeatureFlags)
+const FLAG_SETS: FeatureFlag[][] = ALL_FLAGS.reduce<FeatureFlag[][]>(
+  (sets, flag) => [...sets, ...sets.map((set) => [...set, flag])],
+  [[]],
+)
+const helpCatalogue = helpCatalogueFor(new Set(ALL_FLAGS))
+const SOURCES = import.meta.glob<string>('/docs/help/**/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
 
 const FAILURE_SCREENS = [
   messages['access.consent.title'],
@@ -39,8 +52,10 @@ describe('help content', () => {
     }
   })
 
-  it('links only to pages and headings that exist, for every audience', () => {
+  it('links only to pages and headings that exist, for every audience and every set of features', () => {
     const broken: string[] = []
+    for (const flags of FLAG_SETS) {
+    const helpCatalogue = helpCatalogueFor(new Set(flags))
     for (const page of helpCatalogue.pages) {
       for (const context of CONTEXTS) {
         for (const href of linksOf(prepareBody(page.body, context))) {
@@ -52,12 +67,41 @@ describe('help content', () => {
           const linked = helpCatalogue.page(target.slug)
           const anchors = linked ? outline(prepareBody(linked.body, context)).map((heading) => heading.id) : []
           if (!linked || (target.hash && !anchors.includes(target.hash))) {
-            broken.push(`${page.file} (${context.audience}) → ${href}`)
+            broken.push(`${page.file} (${context.audience}, [${flags.join(', ')}]) → ${href}`)
           }
         }
       }
     }
+    }
     expect([...new Set(broken)]).toEqual([])
+  })
+
+  it('names only feature flags the app knows, in frontmatter and in blocks', () => {
+    const unknown = Object.entries(SOURCES).flatMap(([file, raw]) => {
+      const named = [...featuresUsed(raw), ...[...raw.matchAll(/^feature:\s*(\S+)/gm)].map((match) => match[1])]
+      return named.filter((flag) => !ALL_FLAGS.includes(flag as FeatureFlag)).map((flag) => `${file}: ${flag}`)
+    })
+    expect(unknown).toEqual([])
+  })
+
+  it('shows the pages of enabled reports only', () => {
+    const storageOnly = helpCatalogueFor(new Set([FeatureFlags.OptimizationStorageReportOverview]))
+    expect(storageOnly.page('reports/storage-optimisation')).toBeDefined()
+    expect(storageOnly.page('reports/onedrive-usage')).toBeUndefined()
+    expect(storageOnly.page('reports/onedrive-usage/over-licence')).toBeUndefined()
+    expect(storageOnly.sections.map((section) => section.id)).not.toContain('onedrive-usage')
+    expect(storageOnly.page('')!.body).not.toContain('OneDrive Usage')
+  })
+
+  it('documents every enabled report and no other, for every set of features', () => {
+    const wrong = FLAG_SETS.flatMap((flags) => {
+      const catalogue = helpCatalogueFor(new Set(flags))
+      const enabled = enabledReports(new Set(flags)).map((report) => report.id)
+      return REPORTS.filter((report) => enabled.includes(report.id) !== Boolean(catalogue.page(`reports/${report.id}`))).map(
+        (report) => `${report.id} with [${flags.join(', ')}]`,
+      )
+    })
+    expect(wrong).toEqual([])
   })
 
   it('uses only the variables the site fills in', () => {

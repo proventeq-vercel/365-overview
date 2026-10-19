@@ -7,8 +7,8 @@ Guidance for working in this repo. See `README.md` for setup/permissions and
 
 A React 19 + TypeScript + Vite 8 SPA that renders **one report** —
 a sneak-peek of the Proventeq 365 storage-optimisation report — from a Microsoft
-365 tenant's own Graph usage reports. Four sections, in order: Current storage
-distribution · Tenant capacity (the KPI cards) · Future state & growth impact ·
+365 tenant's own Graph usage reports. In order: the Tenant capacity KPI cards
+(straight under the page title, no section heading) · Current storage distribution · Future state & growth impact ·
 Main offenders.
 No lead capture, no telemetry. By default nothing leaves the browser; with
 `VITE_GRAPH_PROXY_URL` set the browser's Graph calls go through `functions/`,
@@ -149,6 +149,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
   1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab),
+  `SegmentedBar` (a generic one-line stacked bar plus a list of its parts;
+  every part, on the line and in the list, opens a popover on hover or click —
+  the line is `aria-hidden` and mouse-only, the list is the keyboard and
+  screen-reader path; parts with no share are listed but not drawn).
+  `components/ui/popover.tsx` is the shadcn-style Base UI popover it uses.
   `HiddenName` (the one blurred stand-in for a masked name, owner or link: a
   neutral `Lorem ipsum` placeholder whose length varies by seed, `blur-[3px]`,
   `select-none`, a button named "Hidden name" that opens a hover/click popover
@@ -285,6 +290,27 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. There is no
   notional/billable split — one figure per card. P365 prices the whole growth
   ungated, so the two products differ here on purpose.
+- **The cards show only what applies, decided in the model.** `sharePoint.exhausted`
+  (used ≥ entitled) leaves *Forecast exhaustion* out — there is no date left
+  to forecast. `archive.savingApplies` (`entitledBytes === null || exhausted`)
+  shows *Potential saving per year* only when archiving can save money: by the
+  rule above, storage inside the entitlement is free, so the saving prices
+  `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
+  them while the entitlement is unknown). *Inactive sites to archive* always
+  shows. The grid's `xl` column count follows the number of cards.
+- **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
+  never double-counts.** Seven parts in this order: SharePoint · OneDrive ·
+  Teams · Deleted · Inactive · Versions · Free. Inactive wins over Teams (an
+  inactive Teams site counts once, as inactive); Deleted holds deleted sites
+  **and** deleted drives; the SharePoint part is the trend total less Teams,
+  Inactive and deleted sites, clamped at 0; OneDrive is the OneDrive trend less
+  deleted drives; Free is `remainingBytes` (null when unknown — no Free part).
+  **Versions is always `null`**: the usage reports count version history inside
+  each site's storage and never split it out, so it is shown *Not measured*,
+  never as a size or a guess. The headline percentage stays SharePoint-only —
+  OneDrive is on the line but never in that percentage. Workload colours are
+  the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
+  `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.
@@ -344,10 +370,10 @@ typecheck · test · build as a separate job.
   (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
 - Two gradings, kept apart on purpose: `src/lib/thresholds.ts` grades
   *utilisation* (watch ≥85% / attention ≥95%) once, in the model
-  (`sharePoint.utilization`), and both the used-KPI dot and the quota gauge
-  take that grade — the gauge never grades itself; `src/lib/forecast.ts`
+  (`sharePoint.utilization`), and the percentage over the storage usage line
+  takes that grade — the line never grades itself; `src/lib/forecast.ts`
   grades *runway* (Critical <12 months / Warning <36) and drives the forecast
-  badge. They answer different questions. The *Tenant capacity* cards (below
+  badge. They answer different questions. The *Tenant capacity* cards (above
   *Current storage distribution*) carry two more, also graded in the model:
   `archive.status` (`lib/archive.ts` — archivable share of live site storage,
   watch >5% / attention >50%; drives both the archive and the saving card) and
@@ -442,8 +468,17 @@ description).
   link, and its title becomes an `##` heading in
   `docs/help/getting-started/troubleshooting.md` (the content test checks).
   `AADSTS50105` is `isUserNotAssigned` and gets its own `AuthErrorScreen` branch.
+- **The help shows only the enabled features.** A page with `feature: <flag>`
+  in its frontmatter is left out (and a section left empty disappears) unless
+  the flag is on, and `::: feature <flag>` / `::: unless-feature <flag>` blocks
+  do the same inside a page. `app/help/helpContent.ts` builds `helpCatalogue`
+  from `env.features` (so `?features=` overrides apply), and the `llms.txt`
+  plugin from the build's `VITE_FEATURES`. A link to a gated page must sit in a
+  block gated by the same flag — `helpContent.test.ts` checks every link under
+  every combination of flags. Tests that render a gated report directly mock
+  `@/config/env` with its flag on (see `OneDriveUsage.test.tsx`).
 - `app/help/helpContent.test.ts` fails on a broken link or anchor (per
-  audience), an unknown variable, a topic or report without a page, or a failure
+  audience and per set of feature flags), an unknown variable, a topic or report without a page, or a failure
   screen missing from troubleshooting. It cannot tell a page is out of date.
 - The pages and the section labels in `app/help/helpSections.ts` are this app's
   own prose, the one exception to "every user-facing string comes from P365":

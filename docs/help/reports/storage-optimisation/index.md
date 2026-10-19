@@ -3,6 +3,7 @@ title: Storage Optimisation report
 nav: Overview
 description: A consolidated summary of tenant storage — where it sits today, where it is heading, and what drives it.
 section: storage-optimisation
+feature: optimization.storage.report.overview
 order: 0
 ---
 

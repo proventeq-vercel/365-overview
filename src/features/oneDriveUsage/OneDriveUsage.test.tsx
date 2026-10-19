@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, screen, within } from '@testing-library/react'
 import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
@@ -8,7 +8,20 @@ import { SettingsProvider } from '@/app/SettingsProvider'
 import { ApiError } from '@/clients/apiError'
 import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource, type DataSource, type MockScenario } from '@/data/fixtures'
+import type * as EnvModule from '@/config/env'
+import { FeatureFlags } from '@/config/featureFlags'
 import { OneDriveUsage } from './OneDriveUsage'
+
+vi.mock('@/config/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof EnvModule>()
+  return {
+    ...actual,
+    env: {
+      ...actual.env,
+      features: new Set([...actual.env.features, FeatureFlags.OptimizationStorageReportOneDrive]),
+    },
+  }
+})
 
 afterEach(() => {
   cleanup()

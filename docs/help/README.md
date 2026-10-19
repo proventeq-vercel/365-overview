@@ -60,6 +60,25 @@ Fallback when the site has no consent link to offer.
 Variables are filled only for the site's own mode: `{{consentUrl}}` (null in mock mode) and
 `{{clientId}}`.
 
+## Feature-specific content
+
+The help shows only what the site has switched on (its feature flags, `src/config/featureFlags.ts`).
+A whole page belongs to a feature through its frontmatter, `feature: optimization.storage.report.onedrive`;
+a page or section with nothing left is not shown. Inside a page, use blocks:
+
+```markdown
+::: feature optimization.storage.report.onedrive
+Only when the OneDrive Usage report is on.
+:::
+
+::: unless-feature optimization.storage.report.onedrive
+Only when it is off.
+:::
+```
+
+Every link to a feature's page must sit inside a block for the same feature; the content test
+checks each link under every combination of flags.
+
 ## Linking from the app
 
 A report section's **?** button opens the `description` of a page and a *See more* link to it. The

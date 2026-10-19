@@ -17,11 +17,15 @@ It does not convert the rate, so enter the rate in the currency you pick.
 ## Cost per GB per month
 
 The price of one GB of storage for one month. The default is **0.02** a GB a month, the same
-default as Proventeq 365. It prices:
+default as Proventeq 365.
+
+::: feature optimization.storage.report.overview
+It prices:
 
 - the [potential saving per year](../reports/storage-optimisation/tenant-capacity.md#potential-saving-per-year),
 - the [cost of doing nothing](../reports/storage-optimisation/tenant-capacity.md#cost-of-doing-nothing-next-12-months),
 - the [projected cost](../reports/storage-optimisation/growth-forecast.md#projected-cost-if-nothing-changes).
+:::
 
 The rate does not change a card's colour, except a rate of 0: with nothing to pay, the cost of
 doing nothing is green.
@@ -41,16 +45,22 @@ With no estimate and no figure entered, everything measured against the entitlem
 What each user's licence includes, in GB. By default it is the
 [most generous plan in the tenant](calculations.md#onedrive-storage-per-user). Enter a figure to
 replace it, for example when you have raised every drive to a set quota. Clear it to go back to
-the estimate. It decides which drives count as
-[over licensed storage](../reports/onedrive-usage/over-licence.md).
+the estimate. It decides which drives count as over licensed storage.
+
+::: feature optimization.storage.report.onedrive
+The [OneDrives over licence](../reports/onedrive-usage/over-licence.md) page lists them.
+:::
 
 ## Archive sites inactive for
 
-How long a site must go without activity to count as
-[ready to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
+How long a site must go without activity to count as ready to archive. You can pick 1 to 10
+years. The default is 3 years.
+
+::: feature optimization.storage.report.overview
+It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
 and the **Inactive** part of the
 [storage usage line](../reports/storage-optimisation/storage-distribution.md#storage-usage).
-You can pick 1 to 10 years. The default is 3 years.
+:::
 
 ## Other options in the menu
 

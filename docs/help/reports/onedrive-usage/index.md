@@ -3,6 +3,7 @@ title: OneDrive Usage report
 nav: Overview
 description: How much of the tenant sits in personal OneDrives, who holds the most, and which drives are running out of room or over their licence.
 section: onedrive-usage
+feature: optimization.storage.report.onedrive
 order: 0
 ---
 
