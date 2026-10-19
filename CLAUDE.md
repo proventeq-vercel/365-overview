@@ -206,7 +206,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `?modes=reset` clears all). `VITE_MODES_LOCKED=true` ignores the overrides —
   it is the only switch the URL cannot change, and `readEnv(source, overrides)`
   applies the lock, so a test can never sneak past it. `env` is still a module
-  constant evaluated once at load.
+  constant evaluated once at load. `?admin=true` (`env.admin`, also locked) mounts
+  `app/AdminBar` in `AppShell`: a fixed bar that stages data source, features and
+  hidden names and applies them as those same params through
+  `config/adminHref` + a reload — never a second way to change a mode. Its
+  open state lives in `app/adminBarContext` (remembered per tab), and the ⋯
+  menu shows *Show / Hide admin bar* only when admin is on. `?modes=reset`
+  clears the tab and then applies any params sent with it.
 
 ## Rules most likely to be broken by a future change
 
