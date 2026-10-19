@@ -24,8 +24,8 @@ const COST = 'Cost of doing nothing, next 12 months'
 const FORECAST = 'Forecast exhaustion'
 
 const withArchive = (status: StorageOverview['archive']['status']): StorageOverview => ({
-  ...base,
-  archive: { ...base.archive, status },
+  ...unknownEntitlement,
+  archive: { ...unknownEntitlement.archive, status },
 })
 
 const withCost = (growthAnnualStatus: StorageOverview['cost']['growthAnnualStatus']): StorageOverview => ({

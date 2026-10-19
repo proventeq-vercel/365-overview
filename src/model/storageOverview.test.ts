@@ -406,25 +406,72 @@ describe('buildStorageOverview composition', () => {
     })
   })
 
-  it('splits the workload ring by template and excludes deleted sites', () => {
-    const overview = buildStorageOverview(
+  describe('storage usage line', () => {
+    const estate = (over: Partial<OverviewInputs> = {}) =>
       inputs({
         sites: [
-          site({ id: 'a', template: 'TEAMCHANNEL#0', storageUsedBytes: 30 * GB }),
-          site({ id: 'b', template: 'STS#3', storageUsedBytes: 20 * GB }),
-          site({ id: 'c', template: 'STS#3', isDeleted: true, storageUsedBytes: 99 * GB }),
+          site({ id: 'team', template: 'TEAMCHANNEL#0', storageUsedBytes: 30 * GB }),
+          site({ id: 'quiet-team', template: 'TEAMCHANNEL#0', storageUsedBytes: 15 * GB, lastActivityDate: '2020-01-01' }),
+          site({ id: 'quiet-site', template: 'STS#3', storageUsedBytes: 25 * GB, lastActivityDate: '2021-01-01' }),
+          site({ id: 'busy-site', template: 'STS#3', storageUsedBytes: 20 * GB }),
+          site({ id: 'gone', template: 'STS#3', storageUsedBytes: 10 * GB, isDeleted: true }),
         ],
-      }),
-    )
-    expect(overview.sharePoint.byWorkload.find((s) => s.name === 'Teams')?.value).toBe(30 * GB)
-    expect(overview.sharePoint.byWorkload.find((s) => s.name === 'SharePoint')?.value).toBe(
-      20 * GB,
-    )
-  })
+        drives: [drive(), drive({ id: 'left', storageUsedBytes: 4 * GB, isDeleted: true })],
+        ...over,
+      })
+    const bytesOf = (overview: ReturnType<typeof buildStorageOverview>) =>
+      Object.fromEntries(overview.breakdown.segments.map((segment) => [segment.key, segment.bytes]))
 
-  it('never puts OneDrive into the SharePoint workload slices', () => {
-    const overview = buildStorageOverview(inputs())
-    expect(overview.sharePoint.byWorkload.map((s) => s.name)).not.toContain('OneDrive')
+    it('splits every workload into parts that never overlap, in the order the line draws them', () => {
+      const overview = buildStorageOverview(estate())
+      expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual([
+        'sharePoint',
+        'oneDrive',
+        'teams',
+        'deleted',
+        'inactive',
+        'versions',
+        'free',
+      ])
+      expect(bytesOf(overview)).toEqual({
+        sharePoint: 70 * GB,
+        oneDrive: 56 * GB,
+        teams: 30 * GB,
+        deleted: 14 * GB,
+        inactive: 40 * GB,
+        versions: null,
+        free: 1874 * GB,
+      })
+      expect(overview.breakdown.totalBytes).toBe(2084 * GB)
+      expect(overview.breakdown.deletedCount).toBe(2)
+    })
+
+    it('gives each part its share of the line, and an unmeasured part none', () => {
+      const { breakdown } = buildStorageOverview(estate())
+      const share = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.share]))
+      expect(share.teams).toBeCloseTo(30 / 2084, 10)
+      expect(share.free).toBeCloseTo(1874 / 2084, 10)
+      expect(share.versions).toBe(0)
+    })
+
+    it('has no free part, rather than a zero, when the entitlement is unknown', () => {
+      const overview = buildStorageOverview(unknownEntitlement({ sites: estate().sites, drives: estate().drives }))
+      expect(bytesOf(overview).free).toBeNull()
+      expect(overview.breakdown.totalBytes).toBe(210 * GB)
+    })
+
+    it('leaves nothing free once SharePoint storage passes the entitlement', () => {
+      const overview = buildStorageOverview(estate({ entitlementOverrideBytes: 100 * GB }))
+      expect(bytesOf(overview).free).toBe(0)
+      expect(overview.sharePoint.exhausted).toBe(true)
+    })
+
+    it('never draws a negative SharePoint part when the site rows add up to more than the trend', () => {
+      const overview = buildStorageOverview(
+        estate({ sharePointTrend: monthly([20 * GB, 30 * GB, 40 * GB, 50 * GB, 60 * GB, 70 * GB]) }),
+      )
+      expect(bytesOf(overview).sharePoint).toBe(0)
+    })
   })
 
   it('groups the template ring by template, excluding deleted sites', () => {
@@ -681,7 +728,7 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.points).toEqual([])
     expect(overview.growth.forecastEndBytes).toBe(0)
     expect(Number.isFinite(overview.cost.growthAnnual)).toBe(true)
-    expect(overview.sharePoint.byWorkload).toEqual([])
+    expect(overview.breakdown.segments.every((segment) => Number.isFinite(segment.share))).toBe(true)
     expect(overview.oneDrive.drivesNearCap).toBe(0)
   })
 })
@@ -720,8 +767,31 @@ describe('buildStorageOverview inactive sites', () => {
     expect(archive.bytes).toBe(10 * GB)
   })
 
-  it('values the saving as a year of holding the archivable storage at the configured rate', () => {
-    const { archive } = buildStorageOverview(tenant())
+  it('saves nothing, and says the saving does not apply, while storage is within the entitlement', () => {
+    const { archive, sharePoint } = buildStorageOverview(tenant())
+    expect(sharePoint.exhausted).toBe(false)
+    expect(archive.savingApplies).toBe(false)
+    expect(archive.savingBytes).toBe(0)
+    expect(archive.annualSaving).toBe(0)
+  })
+
+  it('prices only the archivable storage over the entitlement once the tenant is past it', () => {
+    const { archive } = buildStorageOverview({ ...tenant(), entitlementOverrideBytes: 120 * GB })
+    expect(archive.savingApplies).toBe(true)
+    expect(archive.savingBytes).toBe(30 * GB)
+    expect(archive.annualSaving).toBeCloseTo(30 * 0.2 * 12, 6)
+  })
+
+  it('prices all the archivable storage when it is smaller than the overage', () => {
+    const { archive } = buildStorageOverview({ ...tenant(), entitlementOverrideBytes: 100 * GB })
+    expect(archive.savingBytes).toBe(40 * GB)
+    expect(archive.annualSaving).toBeCloseTo(40 * 0.2 * 12, 6)
+  })
+
+  it('prices all the archivable storage when the entitlement is unknown', () => {
+    const { archive } = buildStorageOverview({ ...tenant(), skus: [], forceUnknownEntitlement: true })
+    expect(archive.savingApplies).toBe(true)
+    expect(archive.savingBytes).toBe(40 * GB)
     expect(archive.annualSaving).toBeCloseTo(40 * 0.2 * 12, 6)
   })
 

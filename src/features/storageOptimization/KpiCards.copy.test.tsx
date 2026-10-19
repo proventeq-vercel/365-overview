@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { KpiCards } from './KpiCards'
-import { base, shortHistory, unknownEntitlement } from './testFixtures'
+import { base, overEntitlement, shortHistory, unknownEntitlement } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
 
 afterEach(cleanup)
@@ -15,14 +15,28 @@ const COST = 'Cost of doing nothing, next 12 months'
 const FORECAST = 'Forecast exhaustion'
 
 const nothingToArchive: StorageOverview = {
-  ...base,
-  archive: { ...base.archive, siteCount: 0, bytes: 0, shareOfSharePoint: 0, status: 'healthy', annualSaving: 0 },
+  ...unknownEntitlement,
+  archive: {
+    ...unknownEntitlement.archive,
+    siteCount: 0,
+    bytes: 0,
+    shareOfSharePoint: 0,
+    status: 'healthy',
+    savingBytes: 0,
+    annualSaving: 0,
+  },
 }
 
+const labels = () =>
+  screen
+    .getAllByText(/./, { selector: '[data-slot="stat-card"] > p:nth-child(2)' })
+    .map((label) => label.textContent)
+
 describe('KpiCards', () => {
-  it('sits under its own section heading', () => {
+  it('has no heading of its own, only a name for assistive technology', () => {
     render(<KpiCards overview={base} />)
-    expect(screen.getByRole('heading', { name: 'Tenant capacity' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Tenant capacity' })).toBeInTheDocument()
   })
 
   it('shows the archivable storage as a size, with the share and the sites in the description', () => {
@@ -48,11 +62,19 @@ describe('KpiCards', () => {
     expect(card(ARCHIVE)).toHaveTextContent('No site has gone 3 years without activity (since August 2023).')
   })
 
-  it('shows the yearly saving as money, with the storage and rate behind it', () => {
-    render(<KpiCards overview={base} />)
+  it('shows the yearly saving as money, with the storage and rate behind it, when the entitlement is unknown', () => {
+    render(<KpiCards overview={unknownEntitlement} />)
     expect(card(SAVING)).toHaveTextContent('£28.80')
     expect(card(SAVING)).toHaveTextContent(
       'Storage cost avoided if the 120 GB of inactive sites is archived, valued at £0.02/GB per month.',
+    )
+  })
+
+  it('prices only the archivable storage over the entitlement, and says how much of the overage it clears', () => {
+    render(<KpiCards overview={overEntitlement} />)
+    expect(card(SAVING)).toHaveTextContent('£24.00')
+    expect(card(SAVING)).toHaveTextContent(
+      'Spend avoided by archiving inactive sites: 100 GB of the 100 GB over your entitlement, valued at £0.02/GB per month.',
     )
   })
 
@@ -124,8 +146,26 @@ describe('KpiCards', () => {
     expect(card(FORECAST)).toHaveTextContent('Enter it in Report settings')
   })
 
-  it('renders exactly four cards', () => {
-    const { container } = render(<KpiCards overview={base} />)
-    expect(container.querySelectorAll('[data-slot="stat-card"]')).toHaveLength(4)
+  it('leaves the saving out while storage is within the entitlement, where archiving saves nothing', () => {
+    render(<KpiCards overview={base} />)
+    expect(labels()).toEqual([ARCHIVE, COST, FORECAST])
+  })
+
+  it('leaves the forecast out once the entitlement is exceeded, and shows the saving', () => {
+    render(<KpiCards overview={overEntitlement} />)
+    expect(labels()).toEqual([ARCHIVE, SAVING, COST])
+  })
+
+  it('shows all four cards when the entitlement is unknown', () => {
+    render(<KpiCards overview={unknownEntitlement} />)
+    expect(labels()).toEqual([ARCHIVE, SAVING, COST, FORECAST])
+  })
+
+  it('fills the row with however many cards it shows', () => {
+    const { unmount } = render(<KpiCards overview={base} />)
+    expect(screen.getByRole('region')).toHaveClass('xl:grid-cols-3')
+    unmount()
+    render(<KpiCards overview={unknownEntitlement} />)
+    expect(screen.getByRole('region')).toHaveClass('xl:grid-cols-4')
   })
 })

@@ -15,6 +15,12 @@ export const P365 = {
   grey700: '#434343',
 } as const
 
+export const WORKLOAD_COLOR = {
+  sharePoint: '#038387',
+  oneDrive: '#0078d4',
+  teams: '#5b5fc7',
+} as const
+
 export interface LabelTone {
   text: string
   background: string

@@ -28,24 +28,27 @@ Each site also serves `/help` — the help centre for every report and for enabl
 
 | Section | What it shows |
 |---|---|
-| **Current storage distribution** | Pooled SharePoint usage against the tenant's entitlement, and usage split by workload and by site template |
-| **Tenant capacity** | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion (see below) |
+| **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
+| **Current storage distribution** | One storage usage line — SharePoint, OneDrive, Teams, deleted, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover, and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
-**Tenant capacity** sits under the distribution section, as four cards, each railed green,
-orange or red by its state:
+**Tenant capacity** sits straight under the report title with no section heading, as up to four
+cards, each railed green, orange or red by its state. Within the entitlement the saving card is
+left out (archiving storage your licences already cover saves nothing); once the entitlement is
+exceeded the forecast card is left out (there is no date left to forecast); with an unknown
+entitlement all four show:
 
 | Card | Value | Green · orange · red |
 |---|---|---|
 | **Inactive sites to archive** | Storage in live SharePoint sites with no activity for the inactivity window (Report settings, default 3 years, before the report date); the share of site storage and the site count in the description. A site with no recorded activity is not counted. | ≤ 5% · ≤ 50% · above 50% of live site storage |
-| **Potential saving per year** | That storage × the cost per GB per month × 12 | as the archive card |
+| **Potential saving per year** | The part of that storage over the entitlement (all of it when the entitlement is unknown) × the cost per GB per month × 12 | as the archive card |
 | **Cost of doing nothing, next 12 months** | The next year's growth beyond the entitlement, priced at the same rate | zero · above zero · the year's billable growth is more than a tenth of the entitlement |
-| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth, explained with the rate and the headroom left | runway ≥ 36 months · ≥ 12 months · under 12 months or already exceeded |
+| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth, explained with the rate and the headroom left | runway ≥ 36 months · ≥ 12 months · under 12 months |
 
-Storage used and remaining headroom are in the *Quota usage* ring above the cards. SharePoint and
-OneDrive are reported as two separate pools — OneDrive volume is never counted against the
-SharePoint entitlement.
+Storage used and remaining headroom are on the *Storage usage* line under the cards. SharePoint and
+OneDrive are reported as two separate pools — OneDrive sits on the same line but is never counted
+in the percentage against the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
 > The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service

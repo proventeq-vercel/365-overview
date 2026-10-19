@@ -1,19 +1,34 @@
 ---
 title: Tenant capacity
-description: The four cards for what archiving inactive sites would save, what growth beyond the entitlement costs, and when the entitlement runs out.
+nav: Capacity cards
+description: The cards at the top of the report — inactive sites to archive, what archiving would save, what growth beyond the entitlement costs, and when the entitlement runs out.
 section: storage-optimisation
 order: 20
 ---
 
-Four cards sit under the storage distribution. Each card's left rail and value take the colour
-of its state.
+The cards sit at the top of the report, straight under its title. Each card's left rail and value
+take the colour of its state.
+
+Only the cards that apply to your tenant are shown:
+
+| Your SharePoint storage is | Cards shown |
+| --- | --- |
+| Within the entitlement | Inactive sites to archive · Cost of doing nothing · Forecast exhaustion |
+| At or over the entitlement | Inactive sites to archive · Potential saving per year · Cost of doing nothing |
+| Against an unknown entitlement | All four |
+
+- **Potential saving per year** appears only once you are over the entitlement. Below it, storage
+  you archive was already paid for by your licences, so archiving saves nothing.
+- **Forecast exhaustion** is left out once the entitlement is already exceeded. There is no
+  future date to forecast.
+- **Inactive sites to archive** is always shown.
 
 | Card | Green | Orange | Red | Grey |
 | --- | --- | --- | --- | --- |
 | Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
 | Potential saving per year | follows *Inactive sites to archive* | | | — |
 | Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
-| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months, or already exceeded | Unknown: no entitlement, or under six months of history |
+| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | Unknown: no entitlement, or under six months of history |
 
 ## Inactive sites to archive
 
@@ -30,9 +45,13 @@ the share of live site storage, the number of sites and the cutoff date.
 
 ## Potential saving per year
 
-What the inactive storage costs a year at the configured rate:
-`inactive GB × cost per GB per month × 12`. It is the spend you avoid by archiving those sites
-out of SharePoint. It takes the same colour as the archive card.
+The spend you avoid in a year by archiving the inactive sites out of SharePoint, at the configured
+rate. Only storage **over the entitlement** costs anything, so only that part is priced:
+`smaller of (inactive GB, GB over the entitlement) × cost per GB per month × 12`. The description
+says how much of the overage archiving would clear. It takes the same colour as the archive card.
+
+With an unknown entitlement nothing shows that the storage is covered, so all the inactive
+storage is priced, as the cost of doing nothing does.
 
 ## Cost of doing nothing, next 12 months
 
@@ -57,6 +76,7 @@ with, so the card stays orange however large the growth.
 ## Forecast exhaustion
 
 The month SharePoint storage passes your entitlement if it keeps growing at the current rate.
+The card is not shown once the entitlement is already exceeded.
 The description gives the entitlement, the monthly growth and the headroom left.
 
 | You see | Because |
@@ -65,7 +85,6 @@ The description gives the entitlement, the monthly growth and the headroom left.
 | **Beyond 10 years** | The headroom outlasts the ten-year horizon. |
 | **No growth detected** | Storage has not grown over the measured months. |
 | **Not enough history** (grey) | Fewer than six months of storage history. This is not an all-clear. |
-| **Entitlement already exceeded** | Used storage is already at or over the entitlement. There is no future date to project. |
 | **Unknown** (grey) | The entitlement is unknown. Enter it in Report settings. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

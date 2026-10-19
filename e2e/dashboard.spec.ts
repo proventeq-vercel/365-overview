@@ -304,20 +304,64 @@ test('every report section explains itself and links to its help page', async ({
   for (const title of [
     'Storage Optimisation',
     'Current storage distribution',
-    'Tenant capacity',
     'Future state & growth impact',
     'Main offenders',
   ]) {
     await expect(main.getByRole('button', { name: `About ${title}` })).toBeVisible()
   }
-  await main.getByRole('button', { name: 'About Tenant capacity' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Tenant capacity' })
-  await expect(dialog).toContainText('what archiving inactive sites would save')
+  await main.getByRole('button', { name: 'About Current storage distribution' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Current storage distribution' })
+  await expect(dialog).toContainText('every workload on one line')
   const opened = context.waitForEvent('page')
   await dialog.getByRole('link', { name: 'See more' }).click()
   const help = await opened
-  await expect(help.getByRole('heading', { name: 'Tenant capacity', level: 1 })).toBeVisible()
-  await expect(help).toHaveURL(/\/help\/reports\/storage-optimisation\/tenant-capacity$/)
+  await expect(help.getByRole('heading', { name: 'Current storage distribution', level: 1 })).toBeVisible()
+  await expect(help).toHaveURL(/\/help\/reports\/storage-optimisation\/storage-distribution$/)
+})
+
+test('the cards sit straight under the title, above the storage usage line', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const main = page.getByRole('main')
+  const cards = main.getByRole('region', { name: 'Tenant capacity' })
+  await expect(cards.getByRole('heading')).toHaveCount(0)
+  const cardsBox = await cards.boundingBox()
+  const distributionBox = await main.getByRole('heading', { name: 'Current storage distribution' }).boundingBox()
+  expect(cardsBox!.y).toBeLessThan(distributionBox!.y)
+  await expect(cards.locator('[data-slot="stat-card"] > p:nth-child(2)')).toHaveText([
+    'Inactive sites to archive',
+    'Cost of doing nothing, next 12 months',
+    'Forecast exhaustion',
+  ])
+})
+
+test('hovering a part of the storage usage line explains it', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
+  await expect(parts).toHaveCount(7)
+  await page.locator('[data-segment="teams"]').hover()
+  const popover = page.getByRole('dialog', { name: 'Teams' })
+  await expect(popover).toBeVisible()
+  await expect(popover).toContainText('of the line')
+  await expect(popover).toContainText('Teams channel and group templates')
+  await page.mouse.move(0, 0)
+  await expect(popover).toBeHidden()
+  await parts.filter({ hasText: 'Versions' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog', { name: 'Versions' })).toContainText('Not measured')
+})
+
+test('a tenant over its entitlement sees the saving instead of the forecast', async ({ page }) => {
+  await page.goto('/?scenario=over-entitlement')
+  await reportLoaded(page)
+  const cards = page.getByRole('region', { name: 'Tenant capacity' })
+  await expect(cards.locator('[data-slot="stat-card"] > p:nth-child(2)')).toHaveText([
+    'Inactive sites to archive',
+    'Potential saving per year',
+    'Cost of doing nothing, next 12 months',
+  ])
+  await expect(page.getByText(/over the entitlement$/)).toBeVisible()
 })
 
 test('the options menu opens the help in a new tab', async ({ page, context }) => {

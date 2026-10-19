@@ -34,7 +34,7 @@ that estimate as a hint. To replace it, enter the tenant's total storage from th
 admin centre**. Clear the field to go back to the estimate.
 
 With no estimate and no figure entered, everything measured against the entitlement shows as
-**Unknown**: quota usage, the forecast and the headroom. Nothing is filled in with a guess.
+**Unknown**: the free part of the storage usage line, the forecast and the headroom. Nothing is filled in with a guess.
 
 ## OneDrive storage per user
 
@@ -47,7 +47,9 @@ the estimate. It decides which drives count as
 ## Archive sites inactive for
 
 How long a site must go without activity to count as
-[ready to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive).
+[ready to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
+and the **Inactive** part of the
+[storage usage line](../reports/storage-optimisation/storage-distribution.md#storage-usage).
 You can pick 1 to 10 years. The default is 3 years.
 
 ## Other options in the menu

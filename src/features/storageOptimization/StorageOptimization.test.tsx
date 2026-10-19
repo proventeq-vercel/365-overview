@@ -52,16 +52,19 @@ describe('Storage Optimisation app', () => {
     const cards = screen.getAllByText(/./, { selector: '[data-slot="stat-card"] > p:nth-child(2)' })
     expect(cards.map((card) => card.textContent)).toEqual([
       'Inactive sites to archive',
-      'Potential saving per year',
       'Cost of doing nothing, next 12 months',
       'Forecast exhaustion',
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
       'Current storage distribution',
-      'Tenant capacity',
       'Future state & growth impact',
       'Main offenders',
     ])
+    const firstSection = screen.getByRole('heading', { name: 'Current storage distribution' })
+    expect(
+      screen.getByRole('region', { name: 'Tenant capacity' }).compareDocumentPosition(firstSection) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Top SharePoint sites by storage' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Sites and drives' })).toBeInTheDocument()

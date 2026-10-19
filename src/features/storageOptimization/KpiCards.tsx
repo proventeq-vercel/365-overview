@@ -1,11 +1,9 @@
-import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatLongMonthYear, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import { forecastHeadline, forecastHint } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
-import { Section } from '@/design/primitives'
 import { HEALTH_COLOR, P365, RISK_COLOR } from '@/design/theme'
 
 interface Props {
@@ -13,7 +11,13 @@ interface Props {
   delay?: number
 }
 
-export function KpiCards({ overview, delay }: Props) {
+const GRID_COLUMNS: Record<number, string> = {
+  2: 'xl:grid-cols-2',
+  3: 'xl:grid-cols-3',
+  4: 'xl:grid-cols-4',
+}
+
+export function KpiCards({ overview, delay = 0 }: Props) {
   const t = useTranslation()
   const { sharePoint, growth, cost, archive } = overview
   const quotaKnown = sharePoint.entitledBytes !== null
@@ -23,52 +27,67 @@ export function KpiCards({ overview, delay }: Props) {
     date: formatLongMonthYear(archive.inactiveSince),
   }
 
-  return (
-    <Section
-      delay={delay}
-      title={t('storageOptimisation.capacity.title')}
-      subtitle={t('storageOptimisation.capacity.subtitle')}
-      help={<HelpButton topic="tenantCapacity" />}
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label={t('storageOptimisation.kpi.archivable')}
-          value={formatBytes(archive.bytes)}
-          color={HEALTH_COLOR[archive.status]}
-          information={
-            archive.siteCount === 0
-              ? t('storageOptimisation.kpi.archivableNoneHint', inactivity)
-              : t('storageOptimisation.kpi.archivableHint', {
-                  ...inactivity,
-                  percent: formatPercent(archive.shareOfSharePoint, 1),
-                  count: archive.siteCount,
-                  sites: formatNumber(archive.siteCount),
+  const cards = [
+    <StatCard
+      key="archivable"
+      label={t('storageOptimisation.kpi.archivable')}
+      value={formatBytes(archive.bytes)}
+      color={HEALTH_COLOR[archive.status]}
+      information={
+        archive.siteCount === 0
+          ? t('storageOptimisation.kpi.archivableNoneHint', inactivity)
+          : t('storageOptimisation.kpi.archivableHint', {
+              ...inactivity,
+              percent: formatPercent(archive.shareOfSharePoint, 1),
+              count: archive.siteCount,
+              sites: formatNumber(archive.siteCount),
+            })
+      }
+    />,
+    archive.savingApplies && (
+      <StatCard
+        key="saving"
+        label={t('storageOptimisation.kpi.saving')}
+        value={formatMoney(archive.annualSaving, cost.currency)}
+        color={HEALTH_COLOR[archive.status]}
+        information={
+          archive.siteCount === 0
+            ? t('storageOptimisation.kpi.savingNoneHint')
+            : sharePoint.exhausted && sharePoint.overageBytes !== null
+              ? t('storageOptimisation.kpi.savingOverHint', {
+                  saved: formatBytes(archive.savingBytes),
+                  overage: formatBytes(sharePoint.overageBytes),
+                  rate,
                 })
-          }
-        />
-        <StatCard
-          label={t('storageOptimisation.kpi.saving')}
-          value={formatMoney(archive.annualSaving, cost.currency)}
-          color={HEALTH_COLOR[archive.status]}
-          information={
-            archive.siteCount === 0
-              ? t('storageOptimisation.kpi.savingNoneHint')
               : t('storageOptimisation.kpi.savingHint', { size: formatBytes(archive.bytes), rate })
-          }
-        />
-        <StatCard
-          label={t('storageOptimisation.kpi.costOfNothing')}
-          value={formatMoney(cost.growthAnnual, cost.currency)}
-          color={HEALTH_COLOR[cost.growthAnnualStatus]}
-          information={t('storageOptimisation.kpi.costOfNothingHint', { rate })}
-        />
-        <StatCard
-          label={t('storageOptimisation.kpi.forecast')}
-          value={forecastHeadline(overview, t)}
-          color={quotaKnown ? RISK_COLOR[growth.forecastStatus] : P365.grey400}
-          information={forecastHint(overview, t)}
-        />
-      </div>
-    </Section>
+        }
+      />
+    ),
+    <StatCard
+      key="cost"
+      label={t('storageOptimisation.kpi.costOfNothing')}
+      value={formatMoney(cost.growthAnnual, cost.currency)}
+      color={HEALTH_COLOR[cost.growthAnnualStatus]}
+      information={t('storageOptimisation.kpi.costOfNothingHint', { rate })}
+    />,
+    !sharePoint.exhausted && (
+      <StatCard
+        key="forecast"
+        label={t('storageOptimisation.kpi.forecast')}
+        value={forecastHeadline(overview, t)}
+        color={quotaKnown ? RISK_COLOR[growth.forecastStatus] : P365.grey400}
+        information={forecastHint(overview, t)}
+      />
+    ),
+  ].filter(Boolean)
+
+  return (
+    <section
+      aria-label={t('storageOptimisation.capacity.title')}
+      className={`enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 ${GRID_COLUMNS[cards.length]}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {cards}
+    </section>
   )
 }

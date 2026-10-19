@@ -29,8 +29,8 @@ export function StorageOptimization() {
         {t('storageOptimisation.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
         {t('app.reportLagNote')}
       </PageHeader>
-      <DistributionSection overview={data} delay={40} />
-      <KpiCards overview={data} delay={120} />
+      <KpiCards overview={data} delay={40} />
+      <DistributionSection overview={data} delay={120} />
       <GrowthSection overview={data} delay={160} />
       <OffendersSection overview={data} delay={240} />
     </div>
