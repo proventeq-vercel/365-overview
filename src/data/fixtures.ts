@@ -13,9 +13,11 @@ export type MockScenario =
 export interface DataSource {
   readonly namesHidden: boolean
   getSites(): Promise<StorageRow[]>
+  getSitesOn(date: string): Promise<StorageRow[]>
   getSiteDetails(ids: string[]): Promise<SiteDirectory>
   getSiteDirectory(): Promise<SiteDirectory>
   getDrives(): Promise<StorageRow[]>
+  getDrivesOn(date: string): Promise<StorageRow[]>
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
   getLicenses(): Promise<LicenseSku[] | null>
@@ -235,6 +237,19 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   }
 }
 
+const NEW_IN_WINDOW_EVERY = 97
+const FAST_GROWER_EVERY = 23
+const FAST_GROWER_SHARE = 0.35
+const STEADY_GROWTH_STEP = 0.0025
+
+function fourWeeksEarlier(rows: StorageRow[]): StorageRow[] {
+  return rows.flatMap((row, index) => {
+    if (index % NEW_IN_WINDOW_EVERY === 13) return []
+    const grown = index % FAST_GROWER_EVERY === 0 ? FAST_GROWER_SHARE : (index % 10) * STEADY_GROWTH_STEP
+    return [{ ...row, storageUsedBytes: Math.round(row.storageUsedBytes * (1 - grown)) }]
+  })
+}
+
 function withHiddenNames(data: ScenarioData): ScenarioData {
   return {
     ...data,
@@ -252,6 +267,7 @@ export function createMockDataSource(
   return {
     namesHidden: hideNames,
     getSites: async () => data.sites,
+    getSitesOn: async () => fourWeeksEarlier(data.sites),
     getSiteDetails: async (ids) => {
       const found: SiteDirectory = new Map()
       for (const id of ids) {
@@ -262,6 +278,7 @@ export function createMockDataSource(
     },
     getSiteDirectory: async () => data.directory,
     getDrives: async () => data.drives,
+    getDrivesOn: async () => fourWeeksEarlier(data.drives),
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => licenses,

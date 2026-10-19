@@ -54,10 +54,12 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (seven methods); `fixtures.ts` (five mock
+- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (five mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
   `onedrive-over-licence`) +
-  `live.ts` (the five Graph calls on `/beta/reports`, period `D180`).
+  `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
+  `getSitesOn(date)` / `getDrivesOn(date)`: the two detail reports for one
+  earlier day, `(date=YYYY-MM-DD)`, which Microsoft keeps for 30 days).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
   The usage report returns a **blank `siteUrl` for every site** (Microsoft-side
@@ -102,7 +104,15 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   inside the per-keystroke path).
 - `src/hooks/useStorageOverview.ts` — fetches the inputs once under
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
-  The ONLY data entry point for the page.
+  The ONLY data entry point for the page — except growth:
+  `src/hooks/useStorageGrowth.ts` reads the detail reports for the day
+  `lib/growthWindow.growthBaselineDate` picks (28 days before the report date,
+  clamped to the 30 days Microsoft keeps) under `['storageGrowth', date]`, AFTER
+  the overview has loaded and without blocking it, names only the ten leaders
+  (`getSiteDetails`, O(10)), and returns `model/storageGrowth.buildStorageGrowth`
+  — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
+  skeleton while pending and an "unavailable" panel on error, never zero. A row
+  absent on the earlier day counts from 0; shrinking and deleted rows are out.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),

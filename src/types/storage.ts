@@ -64,6 +64,13 @@ export interface StorageBreakdown {
   deletedCount: number
 }
 
+export interface StorageGrowth {
+  baselineDate: string
+  reportRefreshDate: string
+  windowDays: number
+  topGrowers: Slice[]
+}
+
 export interface OverEntitlement {
   drives: StorageRow[]
   count: number
@@ -108,7 +115,6 @@ export interface StorageOverview {
   offenders: {
     rows: StorageRow[]
     totalUsedBytes: number
-    topConsumers: Slice[]
     topSites: Slice[]
     topDrives: Slice[]
     retained: RetainedTotal

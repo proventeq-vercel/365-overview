@@ -62,6 +62,28 @@ describe('createLiveDataSource', () => {
     for (const url of urls) expect(url).toContain("(period='D180')")
   })
 
+  it('reads the site and OneDrive reports for an earlier day by its date', async () => {
+    const { graph, urls } = recordingGraph()
+    const ds = createLiveDataSource(graph)
+    await Promise.all([ds.getSitesOn('2026-09-20'), ds.getDrivesOn('2026-09-20')])
+    expect(urls).toEqual([
+      '/beta/reports/getSharePointSiteUsageDetail(date=2026-09-20)?$format=application/json',
+      '/beta/reports/getOneDriveUsageAccountDetail(date=2026-09-20)?$format=application/json',
+    ])
+  })
+
+  it('masks the earlier day’s rows the same way when names are hidden, so they still match', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockResolvedValue([
+      { siteId: FINANCE_ID, siteUrl: 'https://contoso.sharepoint.com/sites/finance', storageUsedInBytes: 5 },
+    ])
+    const ds = createLiveDataSource(graph, { hideNames: true })
+    const [today] = await ds.getSites()
+    const [earlier] = await ds.getSitesOn('2026-09-20')
+    expect(earlier.id).toBe(today.id)
+    expect(earlier.id).not.toBe(FINANCE_ID)
+  })
+
   it('reads the licences as unavailable when the tenant granted only the report permission', async () => {
     const { graph } = recordingGraph()
     vi.mocked(graph.getAllPages).mockRejectedValueOnce(

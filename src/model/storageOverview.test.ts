@@ -696,19 +696,6 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.cost.currency).toBe('EUR')
   })
 
-  it('ranks the ten biggest sites and drives together by storage, named by URL leaf or id, never the owner', () => {
-    const sites = Array.from({ length: 12 }, (_, i) =>
-      site({ id: `s${i}`, url: `https://c.sharepoint.com/sites/site-${i}`, storageUsedBytes: (i + 1) * GB }),
-    )
-    const drives = [drive({ url: '', ownerDisplayName: 'Dana Drive', storageUsedBytes: 100 * GB })]
-    const { offenders } = buildStorageOverview(inputs({ sites, drives }))
-    expect(offenders.rows).toHaveLength(13)
-    expect(offenders.topConsumers).toHaveLength(10)
-    expect(offenders.topConsumers[0]).toEqual({ name: 'u1', value: 100 * GB })
-    expect(offenders.topConsumers[1]).toEqual({ name: 'site-11', value: 12 * GB })
-    expect(offenders.topConsumers[9]).toEqual({ name: 'site-3', value: 4 * GB })
-  })
-
   it('ranks the five biggest sites and the five biggest drives separately', () => {
     const sites = Array.from({ length: 7 }, (_, i) =>
       site({ id: `s${i}`, url: `https://c.sharepoint.com/sites/site-${i}`, storageUsedBytes: (i + 1) * GB }),

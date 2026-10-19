@@ -4,16 +4,9 @@ import { SiteTable } from '@/components/SiteTable'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
 import type { StorageOverview } from '@/types/storage'
-import { FacetBars, MonoBarChart } from '@/design/charts'
-import {
-  Legend,
-  PanelDescription,
-  PanelLabel,
-  Panel,
-  Section,
-  SplitGrid,
-} from '@/design/primitives'
-import { P365 } from '@/design/theme'
+import { FacetBars } from '@/design/charts'
+import { PanelDescription, PanelLabel, Panel, Section, SplitGrid } from '@/design/primitives'
+import { FastestGrowingPanel, type GrowthState } from './FastestGrowingPanel'
 
 const OFFENDER_COLUMNS = [
   'name',
@@ -28,13 +21,13 @@ const OFFENDER_COLUMNS = [
 
 interface Props {
   overview: StorageOverview
+  growth: GrowthState
   delay?: number
 }
 
-export function OffendersSection({ overview, delay }: Props) {
+export function OffendersSection({ overview, growth, delay }: Props) {
   const t = useTranslation()
-  const { rows, totalUsedBytes, topConsumers, topSites, topDrives, retained } =
-    overview.offenders
+  const { rows, totalUsedBytes, topSites, topDrives, retained } = overview.offenders
 
   return (
     <Section
@@ -44,18 +37,7 @@ export function OffendersSection({ overview, delay }: Props) {
       help={<HelpButton topic="mainOffenders" />}
     >
       <NameCaveats caveats={overview.caveats} />
-      <Panel>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <PanelLabel>{t('storageOptimisation.offenders.biggest')}</PanelLabel>
-          <Legend items={[{ name: t('storageOptimisation.offenders.storage'), color: P365.blue }]} />
-        </div>
-        <MonoBarChart
-          data={topConsumers.map((slice) => ({ ...slice }))}
-          formatValue={formatBytes}
-          ariaLabel={t('storageOptimisation.offenders.biggest')}
-          nameMask={overview.caveats.nameMask}
-        />
-      </Panel>
+      <FastestGrowingPanel growth={growth} nameMask={overview.caveats.nameMask} />
 
       <SplitGrid className="lg:grid-cols-2">
         <Panel>

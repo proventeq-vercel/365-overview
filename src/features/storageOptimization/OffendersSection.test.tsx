@@ -1,9 +1,25 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
-import { renderWithData as render } from '@/test/render'
-import type { StorageRow } from '@/types/storage'
+import { renderWithData } from '@/test/render'
+import type { StorageGrowth, StorageOverview, StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
+import type { GrowthState } from './FastestGrowingPanel'
 import { base } from './testFixtures'
+
+const growthData: StorageGrowth = {
+  baselineDate: '2026-08-02',
+  reportRefreshDate: '2026-08-30',
+  windowDays: 28,
+  topGrowers: [
+    { name: 'gamma', value: 900 },
+    { name: 'dana', value: 400 },
+  ],
+}
+const grown: GrowthState = { data: growthData, isError: false }
+
+function renderOffenders(overview: StorageOverview, growth: GrowthState = grown) {
+  return renderWithData(<OffendersSection overview={overview} growth={growth} />)
+}
 
 afterEach(cleanup)
 
@@ -41,11 +57,6 @@ const withSites = {
   offenders: {
     rows,
     totalUsedBytes: 1500,
-    topConsumers: [
-      { name: 'beta', value: 700 },
-      { name: 'dana', value: 500 },
-      { name: 'alpha', value: 300 },
-    ],
     topSites: [
       { name: 'beta', value: 700 },
       { name: 'alpha', value: 300 },
@@ -56,16 +67,38 @@ const withSites = {
 }
 
 describe('OffendersSection', () => {
-  it('names the section and the top-consumers chart', () => {
-    render(<OffendersSection overview={withSites} />)
+  it('names the section and charts the fastest-growing sites and OneDrives over the window', () => {
+    renderOffenders(withSites)
     expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
     expect(
-      screen.getByRole('img', { name: /biggest sites & onedrives by storage/i }),
-    ).toHaveAccessibleName()
+      screen.getByText(
+        "Storage added between 2026-08-02 and 2026-08-30 (28 days), from Microsoft's usage reports for both days",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/biggest sites & onedrives/i)).not.toBeInTheDocument()
+  })
+
+  it('shows a skeleton while the earlier report loads, not an empty chart', () => {
+    renderOffenders(withSites, { data: undefined, isError: false })
+    expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+  })
+
+  it('says growth is unavailable, rather than zero, when the earlier report fails', () => {
+    renderOffenders(withSites, { data: undefined, isError: true })
+    expect(screen.getByText(/Growth is unavailable/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Loading the fastest-growing sites and OneDrives')).not.toBeInTheDocument()
+  })
+
+  it('says nothing grew instead of drawing an empty chart', () => {
+    renderOffenders(withSites, { data: { ...growthData, topGrowers: [] }, isError: false })
+    expect(screen.getByText('No site or OneDrive grew between 2026-08-02 and 2026-08-30.')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {
-    render(<OffendersSection overview={withSites} />)
+    renderOffenders(withSites)
     expect(screen.getByText(/deleted but still billing/i)).toBeInTheDocument()
   })
 
@@ -74,7 +107,7 @@ describe('OffendersSection', () => {
       ...withSites,
       offenders: { ...withSites.offenders, retained: { bytes: 0, count: 0 } },
     }
-    render(<OffendersSection overview={none} />)
+    renderOffenders(none)
     expect(screen.queryByText(/deleted but still billing/i)).not.toBeInTheDocument()
   })
 
@@ -83,34 +116,34 @@ describe('OffendersSection', () => {
       ...withSites,
       offenders: { ...withSites.offenders, retained: { bytes: 50, count: 3 } },
     }
-    render(<OffendersSection overview={both} />)
+    renderOffenders(both)
     expect(screen.getByText(/3 sites and drives/i)).toBeInTheDocument()
     expect(screen.getByText('50 B')).toBeInTheDocument()
   })
 
   it('renders the detail table with a last-activity column', () => {
-    render(<OffendersSection overview={withSites} />)
+    renderOffenders(withSites)
     expect(screen.getByRole('columnheader', { name: /last activity/i })).toBeInTheDocument()
   })
 
   it('lists both pools in the detail table', () => {
-    render(<OffendersSection overview={withSites} />)
+    renderOffenders(withSites)
     expect(screen.getByText(/personal\/dana/)).toBeInTheDocument()
     expect(screen.getByText(/sites\/beta/)).toBeInTheDocument()
   })
 
   it('carries no sales footer under the table', () => {
-    render(<OffendersSection overview={withSites} />)
+    renderOffenders(withSites)
     expect(screen.queryByText(/full discovery/i)).not.toBeInTheDocument()
   })
 
   it('explains concealed names above the table only when the tenant conceals them', () => {
-    const { unmount } = render(<OffendersSection overview={withSites} />)
+    const { unmount } = renderOffenders(withSites)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     unmount()
 
     const concealed = { ...withSites, caveats: { ...withSites.caveats, nameMask: 'concealed' as const } }
-    render(<OffendersSection overview={concealed} />)
+    renderOffenders(concealed)
     expect(screen.getByRole('status')).toHaveTextContent(/identities below are blurred/i)
   })
 })

@@ -29,6 +29,8 @@ describe('assertAllowed', () => {
     { version: 'beta', path: "reports/getOneDriveUsageAccountDetail(period='D180')", search: '?$format=application/json' },
     { version: 'beta', path: "reports/getSharePointSiteUsageStorage(period='D30')", search: '?$format=application/json' },
     { version: 'beta', path: "reports/getOneDriveUsageStorage(period='D7')", search: '?$format=application/json' },
+    { version: 'beta', path: 'reports/getSharePointSiteUsageDetail(date=2026-09-20)', search: '?$format=application/json' },
+    { version: 'beta', path: 'reports/getOneDriveUsageAccountDetail(date=2026-09-20)', search: '?$format=application/json&$skiptoken=200' },
   ])('allows %o', (request) => {
     expect(() => assertAllowed(request)).not.toThrow()
   })
@@ -39,6 +41,8 @@ describe('assertAllowed', () => {
     ['drive items under a site', { version: 'v1.0', path: `sites/${SITE}/drive/root/children`, search: '' }],
     ['a report outside the storage set', { version: 'beta', path: "reports/getMailboxUsageDetail(period='D180')", search: '?$format=application/json' }],
     ['a report period Graph does not offer', { version: 'beta', path: "reports/getSharePointSiteUsageDetail(period='D365')", search: '?$format=application/json' }],
+    ['a dated trend report, which Graph only offers by period', { version: 'beta', path: 'reports/getSharePointSiteUsageStorage(date=2026-09-20)', search: '?$format=application/json' }],
+    ['a date that is not YYYY-MM-DD', { version: 'beta', path: "reports/getSharePointSiteUsageDetail(date='2026-09-20')", search: '?$format=application/json' }],
     ['a usage report on v1.0', { version: 'v1.0', path: "reports/getSharePointSiteUsageDetail(period='D180')", search: '?$format=application/json' }],
     ['$expand on a site', { version: 'v1.0', path: `sites/${SITE}`, search: '?$select=id&$expand=drives' }],
     ['$search on delta', { version: 'v1.0', path: 'sites/delta', search: '?$search=finance' }],

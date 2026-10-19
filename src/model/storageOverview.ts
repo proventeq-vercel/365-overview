@@ -37,7 +37,6 @@ import {
 
 const NEAR_CAP_RATIO = 0.9
 
-const TOP_CONSUMERS = 10
 const TOP_PER_POOL = 5
 
 const TOP_TEMPLATE_SLICES = 8
@@ -88,7 +87,7 @@ function totalsBy(rows: StorageRow[], key: (row: StorageRow) => string) {
   return [...totals.entries()]
 }
 
-function topConsumers(rows: StorageRow[], limit = TOP_CONSUMERS): Slice[] {
+function largest(rows: StorageRow[], limit: number): Slice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
     .slice(0, limit)
@@ -96,7 +95,7 @@ function topConsumers(rows: StorageRow[], limit = TOP_CONSUMERS): Slice[] {
 }
 
 function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
-  return topConsumers(
+  return largest(
     rows.filter((row) => row.pool === pool),
     TOP_PER_POOL,
   )
@@ -255,7 +254,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     offenders: {
       rows,
       totalUsedBytes: sharePointUsed + oneDriveUsed,
-      topConsumers: topConsumers(rows),
       topSites: topByPool(rows, 'SharePoint'),
       topDrives: topByPool(rows, 'OneDrive'),
       retained: retainedTotal(rows),

@@ -44,6 +44,9 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
+const reportUrlOn = (fn: string, date: string) =>
+  `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json`
+
 const SETTLED_STATUSES = new Set([200, 403, 404])
 
 export interface LiveSourceOptions {
@@ -108,6 +111,11 @@ export function createLiveDataSource(
       return parseSharePointSites(await rawSites())
     },
 
+    async getSitesOn(date) {
+      const rows = await graph.getAllPages<RawSiteRow>(reportUrlOn('getSharePointSiteUsageDetail', date))
+      return parseSharePointSites(concealRows(rows))
+    },
+
     async getSiteDirectory() {
       if (hideNames) return EMPTY_DIRECTORY
       directory ??= walkDirectory().catch((error: unknown) => {
@@ -136,6 +144,11 @@ export function createLiveDataSource(
       const rows = await graph.getAllPages<RawDriveRow>(
         reportUrl('getOneDriveUsageAccountDetail'),
       )
+      return parseOneDriveAccounts(concealRows(rows))
+    },
+
+    async getDrivesOn(date) {
+      const rows = await graph.getAllPages<RawDriveRow>(reportUrlOn('getOneDriveUsageAccountDetail', date))
       return parseOneDriveAccounts(concealRows(rows))
     },
 

@@ -27,6 +27,8 @@ const GUID = String.raw`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]
 const SITE_HOST = String.raw`[A-Za-z0-9][A-Za-z0-9.-]*`
 const SITE_ID = String.raw`(?:${GUID}|${SITE_HOST},${GUID},${GUID})`
 const REPORT_PERIOD = String.raw`\(period='D(?:7|30|90|180)'\)`
+const REPORT_DATE = String.raw`\(date=\d{4}-\d{2}-\d{2}\)`
+const DETAIL_REPORTS = ['getSharePointSiteUsageDetail', 'getOneDriveUsageAccountDetail'].join('|')
 const USAGE_REPORTS = [
   'getSharePointSiteUsageDetail',
   'getOneDriveUsageAccountDetail',
@@ -62,6 +64,11 @@ export const ALLOWED_ROUTES: readonly AllowedRoute[] = [
   {
     version: 'beta',
     path: new RegExp(`^reports/(?:${USAGE_REPORTS})${REPORT_PERIOD}$`),
+    query: new Set(['$format', ...PAGING]),
+  },
+  {
+    version: 'beta',
+    path: new RegExp(`^reports/(?:${DETAIL_REPORTS})${REPORT_DATE}$`),
     query: new Set(['$format', ...PAGING]),
   },
 ]
