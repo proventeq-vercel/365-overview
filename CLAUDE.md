@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (five mock
+- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (six mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`) +
+  `onedrive-over-licence`, `nothing-to-clean`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getSitesOn(date)` / `getDrivesOn(date)`: the two detail reports for one
   earlier day, `(date=YYYY-MM-DD)`, which Microsoft keeps for 30 days).
@@ -132,7 +132,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `useStorageOverview` query, so switching reports never refetches.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
-  `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
+  `DistributionSection`, `GrowthSection` (with `CleanUpForecast`, the
+  after-clean-up block of the impact panel), `OffendersSection` (includes the
   paginated `SiteTable` and the one `NameCaveats` note for a name mask), `AccessFailure` (consent
   vs role screens), `forecastCopy.ts` (P365's forecast headline/hint/callout
   logic; takes `t` because it runs outside React).
@@ -280,6 +281,17 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Growth is measured from the trend report, never reconstructed from site rows.
   Under six months of history → no forecast, and the copy says that is not an
   all-clear.
+- **Forecast after clean-up** (`growth.afterCleanUp`, `GrowthPoint.afterCleanUpBytes`)
+  is the forecast line shifted down by what the report already calls removable:
+  `archive.bytes` (inactive live sites) + `sharePoint.deletedButBilling.bytes`.
+  It starts at the last actual month, grows at the same rate, clamps at 0. Deleted
+  OneDrives are the other pool and are never subtracted. Versions are not
+  counted — the usage reports do not carry them, and measuring them needs a
+  SharePoint-audience token. `unavailableReason` is `nothingRemovable` (removable
+  0 → no line) or `historyTooShort` (no line, `endBytes` null); the removable
+  figure itself is always measured (the archive cutoff falls back to today
+  without a refresh date). `staysUnderEntitlement` is null without an
+  entitlement.
 - The entitlement estimate is P365's `TenantEntitlementCalculator`, ported to
   `lib/entitlement.ts`: a SKU contributes storage only by the **service plans**
   it carries (`SHAREPOINTSTANDARD`/`ENTERPRISE` family and Visio/Project

@@ -58,6 +58,9 @@ When the median and the start-to-end average disagree by more than half, the ser
 - No growth, or shrinking storage: no exhaustion.
 - Under six months of history: no forecast.
 - Status: **Critical** under 12 months, **At risk** under 36, otherwise **Healthy**.
+- **Forecast after clean-up** = forecast − (inactive live site storage + deleted site storage
+  still billing), never below zero. It stays under the entitlement when every month from today
+  to the end of the forecast is below it. Deleted OneDrives and versions are not counted.
 
 ## Costs
 

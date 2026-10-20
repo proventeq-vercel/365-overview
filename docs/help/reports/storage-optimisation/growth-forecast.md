@@ -14,6 +14,9 @@ A line chart of SharePoint storage, one point per month:
 - **Actual used** is the last reported value of each month in Microsoft's 180-day storage trend.
 - **Linear forecast** (dashed) runs six months ahead from the latest month, at the current growth
   rate.
+- **Forecast after clean-up** (dotted) is the same forecast if the storage the report already
+  calls removable were cleaned up today: it starts at today's storage minus that storage and
+  grows at the same rate ([what is counted](#if-inactive-and-deleted-sites-are-cleaned-up)).
 - **Entitlement** is a horizontal line at the SharePoint entitlement, when it is known.
 
 Under the chart:
@@ -54,6 +57,21 @@ The callout under the badge explains the headline. There are three special cases
 
 **Used today**, **Forecast (6 mo)** and **Over entitlement today** show where storage is now, where the
 forecast ends, and how far past the entitlement the tenant already is.
+
+### If inactive and deleted sites are cleaned up
+
+| Figure | Meaning |
+| --- | --- |
+| Removable today | Storage in live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for) (the *Inactive sites to archive* card), plus storage in deleted sites still billing (the *Deleted but still billing* figure). |
+| Forecast after clean-up (6 mo) | Where the dotted line ends. |
+| Stays under the entitlement | **Yes** when the dotted line stays below the entitlement for the whole forecast, **No** when it reaches it, **Unknown** without an entitlement. |
+
+Only SharePoint storage is counted. Deleted OneDrives are in the OneDrive pool, so they do not
+lower the SharePoint forecast. **Versions are not counted**: Microsoft's usage reports do not
+carry version storage.
+
+The dotted line is not drawn when nothing is removable, or when there is under six months of
+history to forecast from. The note under the figures says which.
 
 A note can appear when the monthly figures are **uneven**, for example when one month dominates
 rather than a steady trend. A single average is then a weak guide, so treat the projection as
