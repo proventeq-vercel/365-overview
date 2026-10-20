@@ -29,6 +29,7 @@ export interface GrowthPoint {
   month: string
   actualUsedBytes: number | null
   projectedUsedBytes: number | null
+  afterCleanUpBytes: number | null
 }
 
 export type ForecastStatus = 'Healthy' | 'Warning' | 'Critical' | 'Unknown'
@@ -36,6 +37,17 @@ export type ForecastStatus = 'Healthy' | 'Warning' | 'Critical' | 'Unknown'
 export interface RetainedTotal {
   bytes: number
   count: number
+}
+
+export type CleanUpUnavailable = 'nothingRemovable' | 'historyTooShort'
+
+export interface CleanUpForecast {
+  inactiveBytes: number
+  deletedBytes: number
+  removableBytes: number
+  endBytes: number | null
+  staysUnderEntitlement: boolean | null
+  unavailableReason: CleanUpUnavailable | null
 }
 
 export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
@@ -130,6 +142,7 @@ export interface StorageOverview {
     forecastExhaustionDate: string | null
     forecastMonthsToExhaustion: number | null
     forecastEndBytes: number
+    afterCleanUp: CleanUpForecast
   }
 
   archive: {

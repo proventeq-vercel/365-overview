@@ -8,9 +8,9 @@ afterEach(cleanup)
 
 const GB = 1_073_741_824
 const points = [
-  { month: '2026-03', actualUsedBytes: 100 * GB, projectedUsedBytes: null },
-  { month: '2026-04', actualUsedBytes: 110 * GB, projectedUsedBytes: 110 * GB },
-  { month: '2026-05', actualUsedBytes: null, projectedUsedBytes: 120 * GB },
+  { month: '2026-03', actualUsedBytes: 100 * GB, projectedUsedBytes: null, afterCleanUpBytes: null },
+  { month: '2026-04', actualUsedBytes: 110 * GB, projectedUsedBytes: 110 * GB, afterCleanUpBytes: 0 },
+  { month: '2026-05', actualUsedBytes: null, projectedUsedBytes: 120 * GB, afterCleanUpBytes: 0 },
 ]
 const withGrowth = { ...base, growth: { ...base.growth, points } }
 

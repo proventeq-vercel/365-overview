@@ -11,6 +11,7 @@ import {
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
+  staysUnder,
 } from './forecast'
 
 const daily = (entries: [string, number][]): UsagePoint[] =>
@@ -202,16 +203,16 @@ describe('buildGrowthPoints', () => {
   ]
 
   it('carries history as actuals and projects forward at the rate', () => {
-    expect(buildGrowthPoints(buckets, 100, 2)).toEqual([
-      { month: '2026-01', actualUsedBytes: 100, projectedUsedBytes: null },
-      { month: '2026-02', actualUsedBytes: 200, projectedUsedBytes: 200 },
-      { month: '2026-03', actualUsedBytes: null, projectedUsedBytes: 300 },
-      { month: '2026-04', actualUsedBytes: null, projectedUsedBytes: 400 },
+    expect(buildGrowthPoints(buckets, 100, 2, null)).toEqual([
+      { month: '2026-01', actualUsedBytes: 100, projectedUsedBytes: null, afterCleanUpBytes: null },
+      { month: '2026-02', actualUsedBytes: 200, projectedUsedBytes: 200, afterCleanUpBytes: null },
+      { month: '2026-03', actualUsedBytes: null, projectedUsedBytes: 300, afterCleanUpBytes: null },
+      { month: '2026-04', actualUsedBytes: null, projectedUsedBytes: 400, afterCleanUpBytes: null },
     ])
   })
 
   it('rolls the projected months across a year boundary', () => {
-    const points = buildGrowthPoints([{ month: '2026-11', bytes: 10 }], 1, 3)
+    const points = buildGrowthPoints([{ month: '2026-11', bytes: 10 }], 1, 3, null)
     expect(points.map((p) => p.month)).toEqual([
       '2026-11',
       '2026-12',
@@ -221,17 +222,38 @@ describe('buildGrowthPoints', () => {
   })
 
   it('joins the lines by giving the last actual a projected value too', () => {
-    const points = buildGrowthPoints(buckets, 100, 1)
+    const points = buildGrowthPoints(buckets, 100, 1, null)
     expect(points[1].actualUsedBytes).toBe(200)
     expect(points[1].projectedUsedBytes).toBe(200)
   })
 
   it('never projects below zero for a shrinking tenant', () => {
-    const points = buildGrowthPoints([{ month: '2026-01', bytes: 50 }], -100, 2)
+    const points = buildGrowthPoints([{ month: '2026-01', bytes: 50 }], -100, 2, null)
     expect(points.map((p) => p.projectedUsedBytes)).toEqual([50, 0, 0])
   })
 
   it('returns an empty array with no history', () => {
-    expect(buildGrowthPoints([], 100, 6)).toEqual([])
+    expect(buildGrowthPoints([], 100, 6, null)).toEqual([])
+  })
+
+  it('starts the after-clean-up line at the last actual less the removable bytes and runs it parallel to the forecast', () => {
+    const points = buildGrowthPoints(buckets, 100, 2, 80)
+    expect(points.map((p) => p.afterCleanUpBytes)).toEqual([null, 120, 220, 320])
+  })
+
+  it('never takes the after-clean-up line below zero', () => {
+    const points = buildGrowthPoints([{ month: '2026-01', bytes: 50 }], 10, 2, 200)
+    expect(points.map((p) => p.afterCleanUpBytes)).toEqual([0, 0, 0])
+  })
+})
+
+describe('staysUnder', () => {
+  it('is true only when every value is below the limit', () => {
+    expect(staysUnder([null, 90, 99], 100)).toBe(true)
+    expect(staysUnder([null, 90, 100], 100)).toBe(false)
+  })
+
+  it('is unknown, not true, without a limit', () => {
+    expect(staysUnder([10, 20], null)).toBeNull()
   })
 })

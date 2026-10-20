@@ -62,6 +62,14 @@ export const base: StorageOverview = {
     forecastExhaustionDate: '2030-01-01',
     forecastMonthsToExhaustion: 50,
     forecastEndBytes: 560 * GB,
+    afterCleanUp: {
+      inactiveBytes: 120 * GB,
+      deletedBytes: 0,
+      removableBytes: 120 * GB,
+      endBytes: 440 * GB,
+      staysUnderEntitlement: true,
+      unavailableReason: null,
+    },
   },
   archive: {
     inactiveYears: 3,
@@ -104,6 +112,7 @@ export const unknownEntitlement: StorageOverview = {
     forecastStatus: 'Unknown',
     forecastExhaustionDate: null,
     forecastMonthsToExhaustion: null,
+    afterCleanUp: { ...base.growth.afterCleanUp, staysUnderEntitlement: null },
   },
   breakdown: {
     ...base.breakdown,
@@ -123,6 +132,12 @@ export const shortHistory: StorageOverview = {
     forecastStatus: 'Unknown',
     forecastExhaustionDate: null,
     forecastMonthsToExhaustion: null,
+    afterCleanUp: {
+      ...base.growth.afterCleanUp,
+      endBytes: null,
+      staysUnderEntitlement: null,
+      unavailableReason: 'historyTooShort',
+    },
   },
   caveats: { ...base.caveats, historyTooShort: true },
 }
