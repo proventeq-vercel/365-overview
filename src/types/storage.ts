@@ -18,6 +18,8 @@ export interface StorageRow {
   overEntitlementBytes?: number
 }
 
+export type NameMask = 'hidden' | 'concealed'
+
 export interface Slice {
   name: string
   value: number
@@ -146,8 +148,7 @@ export interface StorageOverview {
 
   caveats: {
     entitlementIsEstimated: boolean
-    namesAreConcealed: boolean
-    namesHidden: boolean
+    nameMask: NameMask | null
     historyTooShort: boolean
   }
 }

@@ -4,12 +4,12 @@ import { CaveatBanner } from './CaveatBanner'
 
 export function NameCaveats({ caveats }: { caveats: StorageOverview['caveats'] }) {
   const t = useTranslation()
+  if (caveats.nameMask === null) return null
   return (
-    <>
-      {caveats.namesHidden && <CaveatBanner tone="info">{t('storageOptimisation.hiddenNamesNote')}</CaveatBanner>}
-      {caveats.namesAreConcealed && (
-        <CaveatBanner tone="info">{t('storageOptimisation.concealedNamesNote')}</CaveatBanner>
-      )}
-    </>
+    <CaveatBanner tone="info">
+      {caveats.nameMask === 'concealed'
+        ? t('storageOptimisation.concealedNamesNote')
+        : t('storageOptimisation.hiddenNamesNote')}
+    </CaveatBanner>
   )
 }

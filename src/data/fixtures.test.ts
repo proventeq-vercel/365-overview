@@ -75,8 +75,7 @@ describe('mock scenarios reach every caveat state', () => {
     const overview = await overviewFor('healthy')
     expect(overview.caveats).toEqual({
       entitlementIsEstimated: true,
-      namesAreConcealed: false,
-      namesHidden: false,
+      nameMask: null,
       historyTooShort: false,
     })
     expect(overview.growth.forecastStatus).not.toBe('Unknown')
@@ -94,23 +93,23 @@ describe('mock scenarios reach every caveat state', () => {
 
   it('concealed: names hashed, totals still measured', async () => {
     const overview = await overviewFor('concealed')
-    expect(overview.caveats.namesAreConcealed).toBe(true)
+    expect(overview.caveats.nameMask).toBe('concealed')
     expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
     expect(overview.oneDrive.usedBytes).toBeGreaterThan(0)
   })
 
-  it('concealed: every hashed row keeps a unique id and a 32-hex owner hash', async () => {
+  it('concealed: every masked row keeps a unique id, and no owner hash survives', async () => {
     const overview = await overviewFor('concealed')
     const rows = [...overview.sharePoint.sites, ...overview.oneDrive.drives]
     expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length)
-    expect(rows[0].ownerDisplayName).toMatch(/^[0-9A-F]{32}$/)
+    expect(rows.some((row) => /^[0-9A-F]{32}$/.test(row.ownerDisplayName))).toBe(false)
   })
 
   it('hidden names: no site name, link or owner name survives, every id stays unique, totals unchanged', async () => {
     const shown = await overviewFor('healthy')
     const hidden = await overviewFor('healthy', true)
     const rows = [...hidden.sharePoint.sites, ...hidden.oneDrive.drives]
-    expect(hidden.caveats.namesHidden).toBe(true)
+    expect(hidden.caveats.nameMask).toBe('hidden')
     expect(rows.every((row) => row.name === undefined && row.url === '')).toBe(true)
     expect(rows.some((row) => /Owner|User/.test(row.ownerDisplayName))).toBe(false)
     expect(rows.some((row) => row.id.includes('@'))).toBe(false)
@@ -129,7 +128,7 @@ describe('mock scenarios reach every caveat state', () => {
   it('only the concealed tenant conceals names', async () => {
     for (const scenario of ['healthy', 'over-entitlement', 'short-history'] as const) {
       const overview = await overviewFor(scenario)
-      expect(overview.caveats.namesAreConcealed).toBe(false)
+      expect(overview.caveats.nameMask).toBeNull()
     }
   })
 })

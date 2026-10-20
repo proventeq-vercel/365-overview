@@ -84,8 +84,7 @@ export const base: StorageOverview = {
   },
   caveats: {
     entitlementIsEstimated: true,
-    namesAreConcealed: false,
-    namesHidden: false,
+    nameMask: null,
     historyTooShort: false,
   },
 }

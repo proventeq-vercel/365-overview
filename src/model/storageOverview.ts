@@ -18,7 +18,8 @@ import {
 } from '@/lib/cost'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
 import { storageBreakdown } from '@/lib/storageBreakdown'
-import { namesAreConcealed } from '@/lib/concealment'
+import { nameMaskOf } from '@/lib/concealment'
+import { hideRowNames } from '@/lib/hiddenNames'
 import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
@@ -118,8 +119,8 @@ const positiveOrNull = (bytes: number | null): number | null =>
 
 export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const {
-    sites,
-    drives,
+    sites: reportedSites,
+    drives: reportedDrives,
     sharePointTrend,
     oneDriveTrend,
     skus,
@@ -133,6 +134,10 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     forceUnknownEntitlement = false,
     namesHidden = false,
   } = inputs
+
+  const nameMask = nameMaskOf([...reportedSites, ...reportedDrives], namesHidden)
+  const sites = nameMask === null ? reportedSites : reportedSites.map(hideRowNames)
+  const drives = nameMask === null ? reportedDrives : reportedDrives.map(hideRowNames)
 
   const override = positiveOrNull(entitlementOverrideBytes)
   const oneDriveLicencePerUserBytes = skus === null ? null : oneDriveBytesPerUser(skus)
@@ -296,8 +301,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
-      namesAreConcealed: namesAreConcealed(rows),
-      namesHidden,
+      nameMask,
       historyTooShort,
     },
   }

@@ -109,7 +109,7 @@ describe('OffendersSection', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     unmount()
 
-    const concealed = { ...withSites, caveats: { ...withSites.caveats, namesAreConcealed: true } }
+    const concealed = { ...withSites, caveats: { ...withSites.caveats, nameMask: 'concealed' as const } }
     render(<OffendersSection overview={concealed} />)
     expect(screen.getByRole('status')).toHaveTextContent(/appear as hashes/i)
   })

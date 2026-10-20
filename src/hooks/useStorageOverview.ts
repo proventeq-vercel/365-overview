@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { consentRecentlyGranted, forgetConsentGrant } from '../config/consentReturn'
 import { useDataSource } from '../data/useDataSource'
 import { nameTopSites } from '../data/namedSites'
+import { namesAreConcealed } from '../lib/concealment'
 import { withSiteDirectory } from '../reports/siteDirectory'
 import { buildStorageOverview } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
@@ -44,7 +45,9 @@ export function useStorageOverview(settings: ReportSettings) {
           ds.getLicenses(),
           ds.getReportRefreshDate(),
         ])
-      const sites = await nameTopSites(ds, withSiteDirectory(rawSites, directory))
+      const sites = namesAreConcealed([...rawSites, ...drives])
+        ? rawSites
+        : await nameTopSites(ds, withSiteDirectory(rawSites, directory))
       return { sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate }
     },
   })
