@@ -35,6 +35,7 @@
   "admin.source.concealed": "Mock: concealed names",
   "admin.source.short-history": "Mock: short history",
   "admin.source.onedrive-over-licence": "Mock: OneDrive over licence",
+  "admin.source.nothing-to-clean": "Mock: nothing to clean up",
   "app.bootstrap.title": "Couldn't start the dashboard",
   "app.bootstrap.body": "Check the app configuration or refresh to try again.",
   "app.dataAsOf": "Data as of {date}.",
