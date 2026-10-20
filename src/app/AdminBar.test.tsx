@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
 import { AdminBar, type AdminEnv } from './AdminBar'
@@ -36,6 +36,40 @@ describe('AdminBar', () => {
     expect(screen.getByRole('button', { name: 'OneDrive Usage' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Report menu' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Hide names' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('writes On or Off on every toggle, not only a colour', () => {
+    renderBar()
+    const on = screen.getByRole('button', { name: 'Storage Optimisation' })
+    const off = screen.getByRole('button', { name: 'OneDrive Usage' })
+    expect(within(on).getByText('On')).toBeInTheDocument()
+    expect(within(on).queryByText('Off')).not.toBeInTheDocument()
+    expect(on).toHaveAttribute('data-state', 'on')
+    expect(within(off).getByText('Off')).toBeInTheDocument()
+    expect(off).toHaveAttribute('data-state', 'off')
+    expect(within(screen.getByRole('button', { name: 'Hide names' })).getByText('Off')).toBeInTheDocument()
+  })
+
+  it('marks a chosen toggle as not applied until the tab reloads', async () => {
+    const user = userEvent.setup()
+    renderBar()
+    const oneDrive = screen.getByRole('button', { name: 'OneDrive Usage' })
+    expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+    expect(oneDrive).not.toHaveAttribute('data-pending')
+
+    await user.click(oneDrive)
+    expect(within(oneDrive).getByText('On')).toBeInTheDocument()
+    expect(oneDrive).toHaveAttribute('data-pending', 'true')
+    expect(screen.getByRole('button', { name: 'Storage Optimisation' })).not.toHaveAttribute('data-pending')
+    expect(screen.getByRole('status')).toHaveTextContent('1 change not applied yet')
+
+    await user.click(screen.getByRole('button', { name: 'Hide names' }))
+    expect(screen.getByRole('status')).toHaveTextContent('2 changes not applied yet')
+
+    await user.click(oneDrive)
+    await user.click(screen.getByRole('button', { name: 'Hide names' }))
+    expect(oneDrive).not.toHaveAttribute('data-pending')
+    expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
   })
 
   it('applies nothing until something changes', () => {

@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
-import { RotateCcw, Wrench, X } from 'lucide-react'
+import { Check, RotateCcw, Wrench, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { adminHref, adminResetHref, type AdminChoice, type AdminDataSource } from '@/config/adminHref'
@@ -26,17 +26,56 @@ function choiceOf(env: AdminEnv): AdminChoice {
   }
 }
 
-function Toggle({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: ReactNode }) {
+function Toggle({
+  pressed,
+  applied,
+  onClick,
+  children,
+}: {
+  pressed: boolean
+  applied: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  const t = useTranslation()
+  const pending = pressed !== applied
   return (
     <Button
       type="button"
       size="sm"
       variant="outline"
       aria-pressed={pressed}
+      data-state={pressed ? 'on' : 'off'}
+      data-pending={pending || undefined}
+      title={pending ? t('admin.toggle.pending') : undefined}
       onClick={onClick}
-      className={cn(pressed && 'border-p365-teal bg-p365-soft-green text-p365-navy')}
+      className={cn(
+        'gap-1.5 pr-1.5',
+        pressed
+          ? 'border-p365-teal bg-p365-teal text-white hover:bg-p365-teal/90 hover:text-white'
+          : 'border-p365-grey-400 bg-white text-p365-grey-600',
+        pending && 'border-dashed ring-2 ring-p365-yellow ring-offset-1',
+      )}
     >
+      <span
+        aria-hidden="true"
+        className={cn(
+          'flex size-4 items-center justify-center rounded-sm border',
+          pressed ? 'border-white bg-white text-p365-teal' : 'border-p365-grey-400 bg-white',
+        )}
+      >
+        {pressed && <Check className="size-3" strokeWidth={3} />}
+      </span>
       {children}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'rounded-sm px-1 text-[0.625rem] font-bold uppercase tracking-wide',
+          pressed ? 'bg-white/20 text-white' : 'bg-p365-grey-50 text-p365-grey-500',
+        )}
+      >
+        {pressed ? t('admin.toggle.on') : t('admin.toggle.off')}
+      </span>
     </Button>
   )
 }
@@ -61,6 +100,11 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
   if (!open) return null
 
   const changed = adminHref('/', choice) !== adminHref('/', current)
+  const pendingCount =
+    Object.values(FeatureFlags).filter((flag) => choice.features.includes(flag) !== current.features.includes(flag))
+      .length +
+    Number(choice.hideNames !== current.hideNames) +
+    Number(choice.data !== current.data)
   const toggleFeature = (flag: FeatureFlag) =>
     setChoice((previous) => ({
       ...previous,
@@ -104,7 +148,12 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
 
         <Group label={t('admin.features')}>
           {FEATURES.map(({ flag, label }) => (
-            <Toggle key={flag} pressed={choice.features.includes(flag)} onClick={() => toggleFeature(flag)}>
+            <Toggle
+              key={flag}
+              pressed={choice.features.includes(flag)}
+              applied={current.features.includes(flag)}
+              onClick={() => toggleFeature(flag)}
+            >
               {t(label)}
             </Toggle>
           ))}
@@ -113,6 +162,7 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
         <Group label={t('admin.names')}>
           <Toggle
             pressed={choice.hideNames}
+            applied={current.hideNames}
             onClick={() => setChoice((previous) => ({ ...previous, hideNames: !previous.hideNames }))}
           >
             {t('admin.hideNames')}
@@ -120,6 +170,9 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
         </Group>
 
         <div className="ml-auto flex items-center gap-1.5">
+          <span role="status" className={cn('text-xs', changed ? 'font-semibold text-p365-navy' : 'text-p365-grey-500')}>
+            {changed ? t('admin.pending', { count: pendingCount }) : t('admin.applied')}
+          </span>
           <Button type="button" size="sm" disabled={!changed} onClick={() => navigate(adminHref(window.location.pathname, choice))}>
             {t('admin.apply')}
           </Button>
