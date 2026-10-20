@@ -40,6 +40,20 @@ function hiddenValue(key: string, value: unknown): unknown {
   return value
 }
 
+const PLACEHOLDER = 'Lorem ipsum dolor sit amet'
+const PLACEHOLDER_MIN_LENGTH = 8
+const PLACEHOLDER_LENGTH_SPREAD = 14
+
+export function hiddenNameLength(seed: string): number {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (Math.imul(hash, 31) + seed.charCodeAt(i)) >>> 0
+  return PLACEHOLDER_MIN_LENGTH + (hash % PLACEHOLDER_LENGTH_SPREAD)
+}
+
+export function hiddenNamePlaceholder(seed: string): string {
+  return PLACEHOLDER.slice(0, hiddenNameLength(seed)).trimEnd()
+}
+
 export function hideReportRowNames<T extends object>(row: T): T {
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(row)) out[key] = hiddenValue(key, value)

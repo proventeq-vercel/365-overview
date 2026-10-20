@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { render } from '@/test/render'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -15,9 +15,9 @@ afterEach(() => {
   localStorage.clear()
 })
 
-function renderApp(scenario: MockScenario = 'healthy', overrides: Partial<DataSource> = {}) {
+function renderApp(scenario: MockScenario = 'healthy', overrides: Partial<DataSource> = {}, hideNames = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const source = createMockDataSource(scenario)
+  const source = createMockDataSource(scenario, { hideNames })
   const ds = { ...source, ...overrides, getSites: vi.fn(overrides.getSites ?? source.getSites) }
   function Wrapper({ children }: { children: ReactNode }) {
     return (
@@ -99,12 +99,85 @@ describe('Storage Optimisation app', () => {
   it('explains concealed names only on a tenant that conceals them', async () => {
     const { unmount } = renderApp()
     await reportLoaded()
-    expect(screen.queryByText(/appear as hashes/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/identities below are blurred/i)).not.toBeInTheDocument()
     unmount()
 
     renderApp('concealed')
-    expect(await screen.findByText(/appear as hashes/i)).toBeInTheDocument()
+    expect(await screen.findByText(/identities below are blurred/i)).toBeInTheDocument()
     expect(screen.getByText(/storage figures are unaffected/i)).toBeInTheDocument()
+  })
+
+  describe('masked names', () => {
+    const REAL_NAMES = [
+      'Marketing',
+      'Engineering',
+      'Human Resources',
+      'Alice Marketing',
+      'Bob Engineering',
+      'B.E.',
+      'sharepoint.com/',
+      '@contoso.com',
+      'Secret Finance',
+    ]
+    const REAL_NAME_PATTERNS = [/Team \d/, /Owner \d/, /User \d/, /\b(?=[0-9a-f]*[a-f])[0-9a-f]{16}\b/, /[0-9A-F]{32}/]
+    const realNameSource = {
+      getSiteDetails: vi.fn(async (ids: string[]) => {
+        const found = new Map<string, { name: string; url: string }>()
+        for (const id of ids) {
+          found.set(id.toLowerCase(), { name: 'Secret Finance', url: 'https://contoso.sharepoint.com/sites/secret-finance' })
+        }
+        return found
+      }),
+      getSiteDirectory: async () =>
+        new Map([['site-2', { name: 'Secret Finance', url: 'https://contoso.sharepoint.com/sites/secret-finance' }]]),
+    }
+    const leaks = () => {
+      const html = document.body.innerHTML
+      return [
+        ...REAL_NAMES.filter((name) => html.includes(name)),
+        ...REAL_NAME_PATTERNS.filter((pattern) => pattern.test(html)).map(String),
+      ]
+    }
+    const nameNotes = () =>
+      screen.getAllByRole('status').filter((status) => /names/i.test(status.textContent ?? ''))
+    const explain = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(screen.getAllByRole('button', { name: 'Hidden name' })[0])
+      return screen.findByRole('dialog')
+    }
+
+    it('blurs every name when hide names is on, with no real name in the page and one note', async () => {
+      const user = userEvent.setup()
+      renderApp('healthy', {}, true)
+      await reportLoaded()
+      expect(screen.getAllByRole('button', { name: 'Hidden name' }).length).toBeGreaterThan(0)
+      expect(leaks()).toEqual([])
+      expect(nameNotes()).toHaveLength(1)
+      expect(nameNotes()[0]).toHaveTextContent('Site names and owners are hidden')
+      expect(await explain(user)).toHaveTextContent('Name hidden in this report')
+    })
+
+    it('blurs every name of a concealed tenant the same way, and looks none up', async () => {
+      const user = userEvent.setup()
+      renderApp('concealed', realNameSource)
+      await reportLoaded()
+      expect(screen.getAllByRole('button', { name: 'Hidden name' }).length).toBeGreaterThan(0)
+      expect(leaks()).toEqual([])
+      expect(realNameSource.getSiteDetails).not.toHaveBeenCalled()
+      expect(nameNotes()).toHaveLength(1)
+      expect(nameNotes()[0]).toHaveTextContent('Your tenant conceals user and site names')
+      expect(await explain(user)).toHaveTextContent('Name concealed by Microsoft')
+    })
+
+    it('still finds a row by its pseudonym while names are hidden', SETTINGS_ROUND_TRIP, async () => {
+      const user = userEvent.setup()
+      renderApp('healthy', {}, true)
+      await reportLoaded()
+      await user.type(screen.getByRole('searchbox'), 'f73c10f1')
+      const table = screen.getByRole('table', { name: 'Sites and drives' })
+      expect(await screen.findByText(/^1 of /)).toBeInTheDocument()
+      expect(within(table).getAllByRole('row')).toHaveLength(2)
+      expect(within(table).getByText('150 GB')).toBeInTheDocument()
+    })
   })
 
   it('refuses a forecast on the short-history tenant', async () => {

@@ -224,10 +224,10 @@ test.describe('modes from the URL', () => {
   test('?scenario= switches the fixture tenant for the tab', async ({ page }) => {
     await page.goto('/?scenario=concealed')
     await reportLoaded(page)
-    await expect(page.getByText(/appear as hashes/i)).toBeVisible()
+    await expect(page.getByText(/identities below are blurred/i)).toBeVisible()
     await page.goto('/?scenario=')
     await reportLoaded(page)
-    await expect(page.getByText(/appear as hashes/i)).toHaveCount(0)
+    await expect(page.getByText(/identities below are blurred/i)).toHaveCount(0)
   })
 
   test('?mock=false with no auth env at all goes to Microsoft sign-in on the built-in registration', async ({ page, baseURL }) => {
@@ -247,14 +247,15 @@ test.describe('modes from the URL', () => {
     await reportLoaded(page)
   })
 
-  test('?hideNames=true masks every site and owner name and skips the links', async ({ page }) => {
+  test('?hideNames=true blurs every site and owner name and skips the links', async ({ page }) => {
     await page.goto('/?hideNames=true')
     await reportLoaded(page)
     const main = page.getByRole('main')
     await expect(main.getByText(/site names and owners are hidden/i)).toBeVisible()
     await expect(main.getByText('Engineering', { exact: true })).toHaveCount(0)
     await expect(main.getByText('Bob Engineering')).toHaveCount(0)
-    await expect(main.getByText('B.E.').first()).toBeVisible()
+    await expect(main.getByText('B.E.')).toHaveCount(0)
+    await expect(main.getByRole('button', { name: 'Hidden name' }).first()).toBeVisible()
     await expect(main.locator('a[href*="sharepoint.com"]')).toHaveCount(0)
   })
 

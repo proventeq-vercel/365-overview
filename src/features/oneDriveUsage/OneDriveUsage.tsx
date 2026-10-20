@@ -45,6 +45,7 @@ export function OneDriveUsage() {
             items={offenders.topDrives}
             formatValue={formatBytes}
             emptyText={t('oneDrive.top.empty')}
+            nameMask={caveats.nameMask}
           />
           <PanelDescription>{t('oneDrive.allocationNote')}</PanelDescription>
         </Panel>
@@ -65,6 +66,7 @@ export function OneDriveUsage() {
             label={t('oneDrive.table.label')}
             nameHeader={t('oneDrive.table.driveHeader')}
             nameHelp={t('table.column.help.drive')}
+            nameMask={caveats.nameMask}
           />
         </Panel>
       </Section>

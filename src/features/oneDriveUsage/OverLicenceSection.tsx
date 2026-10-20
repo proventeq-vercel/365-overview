@@ -48,6 +48,7 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
             label={t('oneDrive.overLicence.label')}
             nameHeader={t('oneDrive.table.driveHeader')}
             nameHelp={t('table.column.help.drive')}
+            nameMask={overview.caveats.nameMask}
           />
         ) : (
           <EmptyBlock>{t('oneDrive.overLicence.empty', { entitlement })}</EmptyBlock>
