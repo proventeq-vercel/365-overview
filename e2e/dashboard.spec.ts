@@ -352,6 +352,29 @@ test('hovering a part of the storage usage line explains it', async ({ page }) =
   await expect(page.getByRole('dialog', { name: 'Versions' })).toContainText('Not measured')
 })
 
+test('a clicked part of the usage line gives way to the next one hovered', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
+  await parts.filter({ hasText: 'Teams' }).click()
+  const teams = page.getByRole('dialog', { name: 'Teams' })
+  await expect(teams).toBeVisible()
+  await page.mouse.move(0, 0)
+  await expect(teams).toBeVisible()
+  await parts.filter({ hasText: 'Versions' }).hover()
+  await expect(page.getByRole('dialog', { name: 'Versions' })).toBeVisible()
+  await expect(teams).toBeHidden()
+  await expect(page.getByRole('dialog')).toHaveCount(1)
+
+  await parts.filter({ hasText: 'Versions' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await parts.filter({ hasText: 'Teams' }).click()
+  await expect(teams).toBeVisible()
+  await page.mouse.click(5, 5)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
 test('a tenant over its entitlement sees the saving instead of the forecast', async ({ page }) => {
   await page.goto('/?scenario=over-entitlement')
   await reportLoaded(page)

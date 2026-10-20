@@ -1,9 +1,21 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
+import { useExclusiveOpen } from "@/hooks/useExclusiveOpen"
 import { cn } from "@/lib/utils"
 
-function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+function Popover({ onOpenChange, ...props }: Omit<PopoverPrimitive.Root.Props, "open" | "defaultOpen">) {
+  const [open, setOpen] = useExclusiveOpen()
+  return (
+    <PopoverPrimitive.Root
+      data-slot="popover"
+      open={open}
+      onOpenChange={(next, eventDetails) => {
+        setOpen(next)
+        onOpenChange?.(next, eventDetails)
+      }}
+      {...props}
+    />
+  )
 }
 
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
