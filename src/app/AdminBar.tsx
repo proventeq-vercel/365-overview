@@ -1,11 +1,12 @@
 import { useId, useState, type ReactNode } from 'react'
-import { Check, RotateCcw, Wrench, X } from 'lucide-react'
+import { Check, Lock, RotateCcw, Wrench, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { adminHref, adminResetHref, type AdminChoice, type AdminDataSource } from '@/config/adminHref'
 import type { AppEnv } from '@/config/env'
 import { MOCK_SCENARIOS } from '@/config/mockScenarios'
 import { FeatureFlags, type FeatureFlag } from '@/config/featureFlags'
+import { useNamesConcealed } from '@/hooks/useStorageOverview'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import { useAdminBar } from './adminBarContext'
@@ -29,11 +30,15 @@ function choiceOf(env: AdminEnv): AdminChoice {
 function Toggle({
   pressed,
   applied,
+  locked = false,
+  describedBy,
   onClick,
   children,
 }: {
   pressed: boolean
   applied: boolean
+  locked?: boolean
+  describedBy?: string
   onClick: () => void
   children: ReactNode
 }) {
@@ -48,6 +53,8 @@ function Toggle({
       data-state={pressed ? 'on' : 'off'}
       data-pending={pending || undefined}
       title={pending ? t('admin.toggle.pending') : undefined}
+      disabled={locked}
+      aria-describedby={describedBy}
       onClick={onClick}
       className={cn(
         'gap-1.5 pr-1.5',
@@ -55,6 +62,7 @@ function Toggle({
           ? 'border-p365-teal bg-p365-teal text-white hover:bg-p365-teal/90 hover:text-white'
           : 'border-p365-grey-400 bg-white text-p365-grey-600',
         pending && 'border-dashed ring-2 ring-p365-yellow ring-offset-1',
+        locked && 'disabled:opacity-100',
       )}
     >
       <span
@@ -64,7 +72,7 @@ function Toggle({
           pressed ? 'border-white bg-white text-p365-teal' : 'border-p365-grey-400 bg-white',
         )}
       >
-        {pressed && <Check className="size-3" strokeWidth={3} />}
+        {pressed && (locked ? <Lock className="size-2.5" strokeWidth={3} /> : <Check className="size-3" strokeWidth={3} />)}
       </span>
       {children}
       <span
@@ -95,6 +103,8 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
   const t = useTranslation()
   const { open, setOpen } = useAdminBar()
   const dataId = useId()
+  const concealedNoteId = useId()
+  const namesConcealed = useNamesConcealed()
   const current = choiceOf(env)
   const [choice, setChoice] = useState(current)
   if (!open) return null
@@ -161,12 +171,19 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
 
         <Group label={t('admin.names')}>
           <Toggle
-            pressed={choice.hideNames}
-            applied={current.hideNames}
+            pressed={namesConcealed || choice.hideNames}
+            applied={namesConcealed || current.hideNames}
+            locked={namesConcealed}
+            describedBy={namesConcealed ? concealedNoteId : undefined}
             onClick={() => setChoice((previous) => ({ ...previous, hideNames: !previous.hideNames }))}
           >
             {t('admin.hideNames')}
           </Toggle>
+          {namesConcealed && (
+            <p id={concealedNoteId} className="max-w-sm text-xs text-p365-grey-600">
+              {t('admin.namesConcealed')}
+            </p>
+          )}
         </Group>
 
         <div className="ml-auto flex items-center gap-1.5">

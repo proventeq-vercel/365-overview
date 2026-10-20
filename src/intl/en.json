@@ -17,6 +17,7 @@
   "admin.feature.menu": "Report menu",
   "admin.names": "Names",
   "admin.hideNames": "Hide names",
+  "admin.namesConcealed": "Microsoft conceals names in this tenant's reports, so they stay hidden. An admin turns that off in the Microsoft 365 admin center: Settings → Org settings → Reports.",
   "admin.apply": "Apply and reload",
   "admin.applied": "Running as shown",
   "admin.pending": "{count, plural, one {# change} other {# changes}} not applied yet",

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@/test/render'
+import type { StorageRow } from '@/types/storage'
 import { AdminBar, type AdminEnv } from './AdminBar'
 import { AdminBarContext } from './adminBarContext'
 
@@ -14,13 +16,19 @@ const mockHealthy: AdminEnv = {
   hideNames: false,
 }
 
-function renderBar(env: AdminEnv = mockHealthy, open = true) {
+const ownedBy = (ownerDisplayName: string) => ({ ownerDisplayName }) as StorageRow
+
+function renderBar(env: AdminEnv = mockHealthy, open = true, sites?: StorageRow[]) {
   const navigate = vi.fn()
   const setOpen = vi.fn()
+  const queryClient = new QueryClient()
+  if (sites) queryClient.setQueryData(['storageInputs'], { sites })
   render(
-    <AdminBarContext value={{ available: true, open, setOpen }}>
-      <AdminBar env={env} navigate={navigate} />
-    </AdminBarContext>,
+    <QueryClientProvider client={queryClient}>
+      <AdminBarContext value={{ available: true, open, setOpen }}>
+        <AdminBar env={env} navigate={navigate} />
+      </AdminBarContext>
+    </QueryClientProvider>,
   )
   return { navigate, setOpen }
 }
@@ -70,6 +78,25 @@ describe('AdminBar', () => {
     await user.click(screen.getByRole('button', { name: 'Hide names' }))
     expect(oneDrive).not.toHaveAttribute('data-pending')
     expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+  })
+
+  it('locks Hide names on when Microsoft conceals the names, and says where to change it', () => {
+    renderBar(mockHealthy, true, [ownedBy('6B1F4F0C7B3A4E2D9F8E7A6B5C4D'), ownedBy('0A1B2C3D4E5F60718293A4B5C6D7')])
+    const hideNames = screen.getByRole('button', { name: 'Hide names' })
+    expect(hideNames).toHaveAttribute('aria-pressed', 'true')
+    expect(hideNames).toBeDisabled()
+    expect(hideNames).toHaveAccessibleDescription(/Microsoft conceals names in this tenant's reports/)
+    expect(hideNames).toHaveAccessibleDescription(/Settings → Org settings → Reports/)
+    expect(hideNames).not.toHaveAttribute('data-pending')
+    expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+  })
+
+  it('leaves Hide names free when the report shows real names', () => {
+    renderBar(mockHealthy, true, [ownedBy('Megan Bowen'), ownedBy('Alex Wilber')])
+    const hideNames = screen.getByRole('button', { name: 'Hide names' })
+    expect(hideNames).toHaveAttribute('aria-pressed', 'false')
+    expect(hideNames).toBeEnabled()
+    expect(screen.queryByText(/Microsoft conceals names/)).not.toBeInTheDocument()
   })
 
   it('applies nothing until something changes', () => {
