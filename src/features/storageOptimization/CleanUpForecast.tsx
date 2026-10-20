@@ -1,0 +1,62 @@
+import { formatBytes } from '@/lib/format'
+import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
+import { useTranslation } from '@/hooks/useTranslation'
+import type { StorageOverview } from '@/types/storage'
+import { KvRow, PanelDescription, PanelLabel } from '@/design/primitives'
+
+interface Props {
+  overview: StorageOverview
+}
+
+export function CleanUpForecast({ overview }: Props) {
+  const t = useTranslation()
+  const { afterCleanUp } = overview.growth
+  const { inactiveYears } = overview.archive
+  const reason = afterCleanUp.unavailableReason
+
+  const staysUnder =
+    afterCleanUp.staysUnderEntitlement === null
+      ? t('storageOptimisation.kpi.unknown')
+      : afterCleanUp.staysUnderEntitlement
+        ? t('storageOptimisation.growth.cleanUp.yes')
+        : t('storageOptimisation.growth.cleanUp.no')
+
+  const hint =
+    reason === 'nothingRemovable'
+      ? t('storageOptimisation.growth.cleanUp.nothingRemovable', { years: inactiveYears })
+      : reason === 'historyTooShort'
+        ? t('storageOptimisation.growth.cleanUp.historyTooShort', {
+            removable: formatBytes(afterCleanUp.removableBytes),
+          })
+        : t('storageOptimisation.growth.cleanUp.counted', {
+            inactive: formatBytes(afterCleanUp.inactiveBytes),
+            deleted: formatBytes(afterCleanUp.deletedBytes),
+            years: inactiveYears,
+          })
+
+  return (
+    <div className="mt-3 flex flex-col gap-1">
+      <PanelLabel>{t('storageOptimisation.growth.cleanUp.title')}</PanelLabel>
+      <dl className="divide-y divide-p365-grey-100">
+        <KvRow
+          label={t('storageOptimisation.growth.cleanUp.removable')}
+          value={formatBytes(afterCleanUp.removableBytes)}
+        />
+        {reason !== 'nothingRemovable' && (
+          <>
+            <KvRow
+              label={t('storageOptimisation.growth.cleanUp.end', { months: FORECAST_CHART_MONTHS })}
+              value={
+                afterCleanUp.endBytes === null
+                  ? t('storageOptimisation.kpi.unknown')
+                  : formatBytes(afterCleanUp.endBytes)
+              }
+            />
+            <KvRow label={t('storageOptimisation.growth.cleanUp.staysUnder')} value={staysUnder} />
+          </>
+        )}
+      </dl>
+      <PanelDescription>{hint}</PanelDescription>
+    </div>
+  )
+}
