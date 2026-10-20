@@ -123,7 +123,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection`, `OffendersSection` (includes the
-  paginated `SiteTable` and the concealed-names note), `AccessFailure` (consent
+  paginated `SiteTable` and the one `NameCaveats` note for a name mask), `AccessFailure` (consent
   vs role screens), `forecastCopy.ts` (P365's forecast headline/hint/callout
   logic; takes `t` because it runs outside React).
 - `src/intl/en.json` + `src/hooks/useTranslation.ts` + `src/app/AppIntlProvider.tsx`
@@ -148,7 +148,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
-  1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab).
+  1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab),
+  `HiddenName` (the one blurred stand-in for a masked name, owner or link: a
+  neutral `Lorem ipsum` placeholder whose length varies by seed, `blur-[3px]`,
+  `select-none`, a button named "Hidden name" that opens a hover/click popover
+  saying why — hidden by `hideNames` or concealed by Microsoft).
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
@@ -176,7 +180,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (initials + name, username as title), `queryClient`.
 - `src/components/` — `SiteTable` (generic `StorageRow` + `columns`, product
   styled; the name cell is P365's `EntityNameCell`: `PoolIcon` + bold name +
-  `ExternalUrlLink` showing the URL path, opening the site in a new tab),
+  `ExternalUrlLink` showing the URL path, opening the site in a new tab; with a
+  `nameMask` the name and owner cells render `HiddenName` and no lookup runs),
   `CaveatBanner`, `ErrorState`; `ui/` (shadcn on Base UI: button, select,
   dropdown-menu, dialog, skeleton, …).
 - `src/config/env.ts` — `VITE_USE_MOCK`, `VITE_MOCK_SCENARIO`, `VITE_FEATURES`
@@ -487,8 +492,18 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   (`getSiteDirectory`, `getSiteDetails`) are skipped, so no real name is ever
   parsed, cached or searchable. The browser still receives Graph's raw JSON on
   the delegated path; masking inside the proxy is not built yet. The mock
-  source applies the same masking (`hideRowNames`), and
-  `caveats.namesHidden` drives the banner (`components/NameCaveats`).
+  source applies the same masking (`hideRowNames`).
+- **One name mask, two causes.** `caveats.nameMask` is `'concealed'` when
+  `lib/concealment.namesAreConcealed` sees Microsoft's hashes (it wins),
+  `'hidden'` when the session hides names, else `null`. While masked the
+  model applies `hideRowNames` to every row, `useStorageOverview` skips
+  `nameTopSites` and the site directory on a concealed tenant, and
+  `SiteTable` skips `useSiteDetails` and the known-sites search, so no name
+  resolved through `/sites/{id}` can show. Every name, owner and chart label
+  renders `design/HiddenName` (SVG chart ticks a blurred bar, the bar tooltip
+  "Hidden name"), never the pseudonym; `NameCaveats` renders one banner.
+  Search still matches the pseudonym. A tenant both concealed and hidden reads
+  as hidden: the masking runs before the detection can see the hashes.
 - Component tests import `render` from `@/test/render`, not from
   `@testing-library/react`: it wraps the tree in `AppIntlProvider` (a bare
   render of anything that calls `useTranslation()` throws). The same module

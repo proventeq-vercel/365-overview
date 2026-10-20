@@ -28,18 +28,24 @@ you can open it. The application-permissions site names every site.
 
 A name you have seen anywhere in the report becomes searchable in the table.
 
+## Blurred names
+
+Concealed and hidden names look the same: every site name, drive name and owner is blurred,
+site links are removed, and the report looks up no names. One note above the tables says which
+of the two applies. Hover over or click a blurred name to see why it is blurred and how to show
+it. The blur covers a placeholder, not the name, so it cannot be copied or uncovered. Storage
+figures are unaffected.
+
 ## Concealed names
 
-Microsoft 365 can conceal user, group and site names in all usage reports. Identities then appear
-as hashes, and the report says so in a note. To show real names, go to the Microsoft 365 admin
-centre → **Settings → Org settings → Reports** and clear **Display concealed user, group, and
-site names**. Microsoft can take a while to apply it.
+Microsoft 365 can conceal user, group and site names in all usage reports. Microsoft then sends
+hashes instead of names, and the report blurs them. To show real names, go to the Microsoft 365
+admin centre → **Settings → Org settings → Reports** and clear **Display concealed user, group,
+and site names**. Microsoft can take a while to apply it.
 
 ## Hidden names
 
 Add `?hideNames=true` to the report's address to hide identities, for example before you share
-your screen. Sites then show as masked ids, owners as initials, and site links are removed. The
-report does not look up names at all while they are hidden. It stays on for the rest of the tab,
-including after signing in again. `?hideNames=` turns it off, unless the site itself is set up
-to hide names. A note on the report says when
-names are hidden.
+your screen. Names are masked before they reach the page and then blurred. It stays on for the
+rest of the tab, including after signing in again. `?hideNames=` turns it off, unless the site
+itself is set up to hide names.
