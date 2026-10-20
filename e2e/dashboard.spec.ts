@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { HELP_BOOT_SCRIPT } from '../src/app/help/helpBoot'
 
 async function reportLoaded(page: Page) {
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
@@ -187,6 +188,37 @@ test.describe('before any script runs', () => {
     const body = await served.body()
     expect([...body.subarray(0, 6)]).toEqual([0, 0, 1, 0, 5, 0])
     expect(body.length).toBe(27012)
+  })
+})
+
+test.describe('before the app bundle runs', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/src/main.tsx', (route) => route.abort())
+  })
+
+  test('a help address paints the help skeleton and preloads the help page', async ({ page }) => {
+    await page.goto('/help/getting-started/enable-access')
+    await expect(page.getByLabel('Loading help')).toHaveAttribute('aria-busy', 'true')
+    await expect(page.getByRole('status')).toHaveText('Opening the help centre')
+    await expect(page.getByLabel('Loading report')).toBeHidden()
+    await expect(page.getByText('Getting your report ready')).toBeHidden()
+    await expect(page.locator('link[rel="modulepreload"]')).toHaveAttribute('href', '/src/app/help/HelpPage.tsx')
+    const script = await page.locator('script[data-preload]').textContent()
+    expect(script).toBe(HELP_BOOT_SCRIPT)
+  })
+
+  test('the report address keeps the report skeleton and preloads no help', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByLabel('Loading report')).toBeVisible()
+    await expect(page.getByRole('status')).toContainText('Getting your report ready')
+    await expect(page.getByLabel('Loading help')).toBeHidden()
+    await expect(page.locator('link[rel="modulepreload"]')).toHaveCount(0)
+  })
+
+  test('an address that only starts with the help word is still the report', async ({ page }) => {
+    await page.goto('/helpdesk')
+    await expect(page.getByLabel('Loading report')).toBeVisible()
+    await expect(page.getByLabel('Loading help')).toBeHidden()
   })
 })
 

@@ -441,6 +441,17 @@ cannot import `index.css` or the catalogue, so a change to the overlay's look
 or the `loading.starting.*` / checklist copy has to be made in both places;
 the boot-shell e2e (`javaScriptEnabled: false`) catches a drift in the markup.
 
+On `/help/*` the same file paints a help-shaped skeleton instead (`.boot--help`:
+top bar, sidebar and article lines, "Opening the help centre"). The `helpBoot`
+Vite plugin (`src/app/help/helpBoot.ts`) prepends a tiny inline script that
+sets `html[data-boot="help"]` for `isHelpPath` addresses and modulepreloads the
+built `HelpPage` chunk (its file names travel in `data-preload`, so the script
+text never changes). The Static Web App CSP allows that script by its
+`sha256` hash: change `HELP_BOOT_SCRIPT` and the hash in
+`public/staticwebapp.config.json` together (`helpBoot.test.ts` fails on a
+mismatch). The help route has no React Suspense fallback: the static skeleton
+stays until `HelpPage` renders over it.
+
 `AuthErrorScreen` still renders `className="error-state*"` inside
 `className="auth-screen"`; keep those rules in `src/index.css`.
 
