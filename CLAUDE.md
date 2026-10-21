@@ -606,7 +606,8 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   it is committed. A test that survives the mutation is replaced, not kept.
 - Keep these ARIA hooks (tests depend on them): `role="status"` on caveat
   banners and `SoftCallout`, `role="alert"` on `AlertPanel`, `aria-busy` on
-  `ReportSkeleton`, `role="status"` on the `LoadingOverlay` card, `role="dialog"` on the reports menu and the settings dialog, `role="menu"` named "Options", real
+  `ReportSkeleton`, `role="status"` + `aria-busy` on the fastest-growing
+  skeleton (with its label as visually hidden text), `role="status"` on the `LoadingOverlay` card, `role="dialog"` on the reports menu and the settings dialog, `role="menu"` named "Options", real
   table semantics in `SiteTable`.
 
 ## Known deferred items
