@@ -90,13 +90,13 @@ to change anything:
 cp .env.example .env
 ```
 
-`.env` is git-ignored (it holds real local values). The deployed builds read these from
-repository **variables** (see *Automatic deployment*) — no env file is deployed, and the same repo
-builds cleanly for any environment. The one piece of hosting config the app needs is a rewrite of
-every path to `index.html`, so a reload on `/onedrive-usage` (or any client-side route) is served
-by the app: the Static Web App does it with `navigationFallback` in
-`public/staticwebapp.config.json`, and the storage static website names `index.html` as its 404
-document.
+`.env` is git-ignored (it holds real local values). The deployed builds read only the repository
+**variables** that `.github/workflows/deploy.yml` names (see *Automatic deployment*) — no env file
+is deployed, and every other option keeps its default there. The one piece of hosting config the
+app needs is a rewrite of every client-side route to `index.html`, so a reload on `/onedrive-usage`
+is served by the app: the Static Web App does it with `navigationFallback` in
+`public/staticwebapp.config.json` (it leaves `/assets/*`, `/favicon.ico` and `/proventeq-logo.svg`
+to the host), and the storage static website names `index.html` as its 404 document.
 
 ### Every option at a glance
 
