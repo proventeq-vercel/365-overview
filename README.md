@@ -111,7 +111,7 @@ document.
 | `VITE_USE_MOCK` | `false` | Run on fixture data with no auth at all | `?mock=` |
 | `VITE_MOCK_SCENARIO` | `healthy` | Which fixture tenant mock mode serves | `?scenario=` |
 | `VITE_FEATURES` | `optimization.storage.report.overview` | Which reports are routable, and whether the menu exists | `?features=` |
-| `VITE_MODES_LOCKED` | `false` | Ignore every URL override except `?hideNames`; the one var the URL cannot touch | — |
+| `VITE_MODES_LOCKED` | `false` | `true` ignores the mode overrides (`?features=`, `?mock=`, `?scenario=`, `?admin=`) but not `?hideNames`; the one var the URL cannot touch | — |
 | `VITE_HIDE_NAMES` | `false` | Mask site ids, owners and site links (initials / pseudonyms); see *Hiding names* | `?hideNames=true` (honoured even when locked) |
 
 Only those five have a URL override, and `?modes=reset` forgets all of them for the tab.
@@ -189,10 +189,16 @@ VITE_FEATURES=optimization.storage.report.overview,optimization.storage.report.o
 
 ### Mode lock — `VITE_MODES_LOCKED`
 
-`VITE_MODES_LOCKED=true` makes the app ignore `?features=`, `?mock=`, `?scenario=` and any
-override already remembered for the tab. It is applied inside `readEnv`, so no test or
-caller can slip past it, and a deployment that must not be reconfigured from a URL —
+`VITE_MODES_LOCKED=true` makes the app ignore the mode overrides — `?features=`, `?mock=`,
+`?scenario=` and `?admin=` — and any override already remembered for the tab. `?hideNames`
+still works, because it can only take information away. It is applied inside `readEnv`, so no
+test or caller can slip past it, and a deployment that must not be reconfigured from a URL —
 anything customer-facing — should set it.
+
+Only the exact value `true` locks. The lock covers the mode overrides and nothing else: `?audience=`
+on the help pages and `?admin_consent=` after an admin-consent redirect are read either way. The
+deploy workflow takes the value from the repository variable of the same name (see *Automatic
+deployment*), so a deployed site is locked exactly when that variable is `true` at the time it builds.
 
 ---
 
@@ -408,8 +414,8 @@ browser tab with a search param:
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
 that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
-the app ignore every param except `hideNames` — it is the one variable the URL can never touch,
-and the production deployment should set it.
+the app ignore `features`, `mock`, `scenario` and `admin` and whatever the tab remembered, and
+leaves `hideNames` working — it is the one variable the URL can never touch (see *Mode lock*).
 
 ### The admin bar — `?admin=true`
 
