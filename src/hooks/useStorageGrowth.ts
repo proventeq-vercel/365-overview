@@ -10,10 +10,10 @@ export const STORAGE_GROWTH_KEY = 'storageGrowth'
 export function useStorageGrowth(overview: StorageOverview | undefined) {
   const ds = useDataSource()
   return useQuery({
-    queryKey: [STORAGE_GROWTH_KEY, overview?.reportRefreshDate],
+    queryKey: [STORAGE_GROWTH_KEY, overview?.reportRefreshDate, overview?.caveats.nameMask],
     enabled: overview !== undefined,
     queryFn: async () => {
-      const { reportRefreshDate, sharePoint, oneDrive } = overview!
+      const { reportRefreshDate, sharePoint, oneDrive, caveats } = overview!
       const baselineDate = growthBaselineDate(reportRefreshDate, new Date())
       const [baselineSites, baselineDrives] = await Promise.all([
         ds.getSitesOn(baselineDate),
@@ -21,7 +21,10 @@ export function useStorageGrowth(overview: StorageOverview | undefined) {
       ])
       const baseline = [...baselineSites, ...baselineDrives]
       const current = [...sharePoint.sites, ...oneDrive.drives]
-      const unnamed = unresolvedSiteIds(growthLeaders(current, baseline).map((leader) => leader.row))
+      const unnamed =
+        caveats.nameMask === null
+          ? unresolvedSiteIds(growthLeaders(current, baseline).map((leader) => leader.row))
+          : []
       const names = unnamed.length === 0 ? new Map() : await ds.getSiteDetails(unnamed)
       return buildStorageGrowth({
         current: withSiteDirectory(current, names),
