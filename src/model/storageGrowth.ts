@@ -106,7 +106,7 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
     complete,
     missingNote: read > 0 && !complete,
     measuredRows,
-    leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes })),
+    leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes, pool: row.pool })),
   }
 }
 

@@ -3,6 +3,7 @@ import { NameCaveats } from '@/components/NameCaveats'
 import { UnreadReports } from '@/components/UnreadReports'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
+import { POOL_COLOR } from '@/design/theme'
 import { HelpButton } from '@/app/help/HelpButton'
 import { PageHeader, Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { ReportDate } from '@/app/ReportDate'
@@ -62,6 +63,7 @@ function DriveSections({ overview }: { overview: StorageOverview }) {
         <Panel>
           <FacetBars
             items={offenders.topDrives}
+            color={POOL_COLOR.OneDrive}
             formatValue={formatBytes}
             emptyText={t('oneDrive.top.empty')}
             nameMask={caveats.nameMask}

@@ -26,6 +26,9 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   site that received everything in one day, or was created inside the window, can show less
   growth than it had. Each one is measured from its own first active day, so two rows can cover
   different spans of the window.
+- Each row starts with the product's icon, and its bar has that product's colour: SharePoint teal
+  for a site, OneDrive blue for a OneDrive. The legend under the list names both, and the icon
+  names the product on hover and to a screen reader, so the colour is never the only cue.
 - From the growth ranking, a site or OneDrive with no activity in the window has no daily figure,
   so it is left out. So are those that shrank, stayed the same or were deleted.
 - Each day has two daily reports, one for SharePoint and one for OneDrive, and each is read on its
@@ -59,8 +62,8 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 
 Two lists sit under the growth chart:
 
-- **Top SharePoint sites by storage**: the five largest sites.
-- **Top OneDrives by storage**: the five largest personal drives.
+- **Top SharePoint sites by storage**: the five largest sites, in SharePoint teal.
+- **Top OneDrives by storage**: the five largest personal drives, in OneDrive blue.
 
 The names come from the site directory on the application-permissions site, or from a lookup as
 the signed-in user on the delegated site.
@@ -81,7 +84,7 @@ Every site and drive in the usage reports, in one table.
 
 | Column | Meaning |
 | --- | --- |
-| Site | The display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. |
+| Site | The product icon (SharePoint teal or OneDrive blue), the display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. |
 | Owner | The primary owner as Microsoft records it. For group-connected sites, these are the Microsoft 365 group's owners. |
 | Storage used | Storage consumed as of the report date. |
 | Share | This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is on the same scale. The pool's total is Microsoft's storage trend, or the total of the usage report's rows when the trend lists no day with storage. A pool that holds no storage at all gives each of its rows **0.0%**; a share that would round to 0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**. |

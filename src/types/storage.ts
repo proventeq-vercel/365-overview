@@ -31,6 +31,10 @@ export interface TemplateSlice extends Slice {
   group: TemplateGroup
 }
 
+export interface GrowthSlice extends Slice {
+  pool: StoragePool
+}
+
 export interface GrowthPoint {
   month: string
   actualUsedBytes: number | null
@@ -146,7 +150,7 @@ export interface StorageGrowth {
   complete: boolean
   missingNote: boolean
   measuredRows: number
-  leaders: Slice[]
+  leaders: GrowthSlice[]
 }
 
 export interface OverEntitlement {

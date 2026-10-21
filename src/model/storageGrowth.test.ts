@@ -163,8 +163,12 @@ const one = [row('SharePoint', 'a', 5)]
 describe('buildStorageGrowth', () => {
   it('names each grower like the table does and measures the window up to the day of the sizes', () => {
     const growth = buildStorageGrowth({
-      current: [row('SharePoint', 'id-1', 80, { name: 'Finance' }), row('SharePoint', 'id-2', 60, { url: 'https://c/sites/legal' })],
-      baseline: [row('SharePoint', 'id-1', 20), row('SharePoint', 'id-2', 50)],
+      current: [
+        row('SharePoint', 'id-1', 80, { name: 'Finance' }),
+        row('SharePoint', 'id-2', 60, { url: 'https://c/sites/legal' }),
+        row('OneDrive', 'id-3', 40, { url: 'https://c-my/personal/dana' }),
+      ],
+      baseline: [row('SharePoint', 'id-1', 20), row('SharePoint', 'id-2', 50), row('OneDrive', 'id-3', 10)],
       baselineDate: '2026-08-02',
       sizesOn: '2026-08-31',
       dates,
@@ -184,10 +188,11 @@ describe('buildStorageGrowth', () => {
       reportsMissing: 1,
       complete: false,
       missingNote: true,
-      measuredRows: 2,
+      measuredRows: 3,
       leaders: [
-        { name: 'Finance', value: 60 },
-        { name: 'legal', value: 10 },
+        { name: 'Finance', value: 60, pool: 'SharePoint' },
+        { name: 'dana', value: 30, pool: 'OneDrive' },
+        { name: 'legal', value: 10, pool: 'SharePoint' },
       ],
     })
   })
