@@ -565,11 +565,12 @@ a new proxy, and as a SPA redirect URI on the registration.
 **The proxy still needs credentials the repo does not have yet**, so its job stays inert until
 someone configures them.
 
-**Rolling back.** A deploy is the build of one commit, so a bad release is undone by deploying a
+**Rolling back.** Each site is the build of one commit, so a bad release is undone by deploying a
 good commit again: revert the change on `main` and CI deploys the revert, or open the Actions tab,
-pick the last good *Deploy* run and choose *Re-run all jobs* — a re-run builds the commit of the
-original run, and GitHub keeps a run re-runnable for 30 days. A re-run reads the repository
-variables as they are at that moment.
+pick the last good *Deploy* run and choose *Re-run all jobs*. A re-run builds the commit of the
+original run (GitHub keeps a run re-runnable for 30 days), but it leaves `main` on the bad commit,
+so the next push deploys it again — revert it on `main` too. Neither route rolls the proxy back
+while its job is inert (see above): the Function App is deployed by hand.
 
 **Two credentials expire and nothing in the repo warns before they do.** When the SAS behind
 `AZURE_STORAGE_SAS` expires (its date is in the table above), the `site-application` upload fails
