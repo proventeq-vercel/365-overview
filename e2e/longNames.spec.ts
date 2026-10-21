@@ -67,7 +67,7 @@ for (const width of [1280, 390]) {
       await name.hover()
       const tooltip = page.locator('[data-slot="tooltip-content"][data-open]')
       await expect(tooltip).toHaveText(LONGEST_DRIVE)
-      await tooltip.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)))
+      await tooltip.evaluate((element) => Promise.allSettled(element.getAnimations().map((animation) => animation.finished)))
       const fit = await tooltip.evaluate((element) => ({
         scroll: element.scrollWidth,
         client: element.clientWidth,
