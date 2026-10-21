@@ -276,6 +276,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   neutral `Lorem ipsum` placeholder whose length varies by seed, `blur-[3px]`,
   `select-none`, a button named "Hidden name" that opens a hover/click popover
   saying why — hidden by `hideNames` or concealed by Microsoft).
+  `TruncatedText` (a name, owner or id cut short with an ellipsis inside its box;
+  only when it is actually cut does it take a Tab stop and show the full text in
+  the app tooltip on hover and focus — `FacetBars` and the `SiteTable` name, id
+  and owner cells use it; masked names stay `HiddenName`).
   `ColumnHeaderTooltip` (P365's `headerWithTooltip`: a table header that
   explains its column on hover and keyboard focus; copy lives under
   `table.column.help.*`, the catalogue test reads `help: '…'` keys).
