@@ -190,7 +190,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const deletedSites = retainedTotal(sites)
   const deletedDrives = retainedTotal(drives)
 
-  const deletedSites = retainedTotal(sites)
   const removableBytes = archivableBytes + deletedSites.bytes
   const cleanUpUnavailable: CleanUpUnavailable | null =
     removableBytes <= 0 ? 'nothingRemovable' : historyTooShort ? 'historyTooShort' : null
