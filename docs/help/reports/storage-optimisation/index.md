@@ -6,14 +6,15 @@ section: storage-optimisation
 order: 0
 ---
 
-The Storage Optimisation report covers your whole tenant on one page. Its four sections run from
-today's position to the actions that would change it:
+The Storage Optimisation report covers your whole tenant on one page. From top to bottom it runs
+from today's position to the actions that would change it:
 
-1. [Current storage distribution](storage-distribution.md): how much of the SharePoint
-   entitlement is used, and how storage splits across SharePoint, Teams, OneDrive and site
-   templates.
-2. [Tenant capacity](tenant-capacity.md): four cards for what archiving inactive sites would
-   save, what growth beyond the entitlement costs, and when the entitlement runs out.
+1. [Capacity cards](tenant-capacity.md), straight under the title: inactive sites to archive,
+   what archiving would save once you are over the entitlement, what growth beyond the
+   entitlement costs, and when the entitlement runs out.
+2. [Current storage distribution](storage-distribution.md): one line for SharePoint, OneDrive,
+   Teams, deleted, inactive, versions and free storage against the SharePoint entitlement, and
+   how SharePoint splits by site template.
 3. [Future state & growth impact](growth-forecast.md): the storage trend, a six-month forecast,
    and the projected cost if nothing changes.
 4. [Main offenders](main-offenders.md): the biggest sites and OneDrives, storage that is deleted

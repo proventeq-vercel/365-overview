@@ -38,6 +38,30 @@ export interface RetainedTotal {
 
 export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
 
+export const STORAGE_SEGMENTS = [
+  'sharePoint',
+  'oneDrive',
+  'teams',
+  'deleted',
+  'inactive',
+  'versions',
+  'free',
+] as const
+
+export type StorageSegmentKey = (typeof STORAGE_SEGMENTS)[number]
+
+export interface StorageSegment {
+  key: StorageSegmentKey
+  bytes: number | null
+  share: number
+}
+
+export interface StorageBreakdown {
+  segments: StorageSegment[]
+  totalBytes: number
+  deletedCount: number
+}
+
 export interface OverEntitlement {
   drives: StorageRow[]
   count: number
@@ -54,10 +78,10 @@ export interface StorageOverview {
     usedPercentage: number | null
     headroomRatio: number | null
     overageBytes: number | null
+    exhausted: boolean
     utilization: HealthStatus | null
     entitlementIsMeasured: boolean
     licenceEstimateBytes: number | null
-    byWorkload: Slice[]
     byTemplate: Slice[]
     sites: StorageRow[]
     siteCount: number
@@ -76,6 +100,8 @@ export interface StorageOverview {
     entitlementUnknownReason: OneDriveEntitlementUnknown | null
     overEntitlement: OverEntitlement | null
   }
+
+  breakdown: StorageBreakdown
 
   offenders: {
     rows: StorageRow[]
@@ -105,6 +131,8 @@ export interface StorageOverview {
     bytes: number
     shareOfSharePoint: number
     status: HealthStatus
+    savingApplies: boolean
+    savingBytes: number
     annualSaving: number
   }
 

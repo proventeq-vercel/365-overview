@@ -41,8 +41,8 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeInTheDocument()
     expect(card('OneDrive storage')).toHaveTextContent('2.9 TB')
     expect(card('OneDrives')).toHaveTextContent('398')
-    expect(card('Drives near capacity')).toHaveTextContent('2')
-    expect(card('Drives near capacity')).toHaveTextContent(/90% or more/)
+    expect(card('Drives near their quota')).toHaveTextContent('2')
+    expect(card('Drives near their quota')).toHaveTextContent(/90% or more/)
     expect(card('Deleted but still billing')).toHaveTextContent(/deleted drives/)
     expect(card('Over licensed storage')).toHaveTextContent(
       /^0Over licensed storageEvery drive fits within 5 TB per user$/,
@@ -105,14 +105,14 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
-  it('lists the top drives and a per-drive capacity column, headed Drive not Site', async () => {
+  it('lists the top drives and a per-drive quota column, headed Drive not Site', async () => {
     renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(screen.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeInTheDocument()
     const table = screen.getByRole('table', { name: 'OneDrives' })
     expect(table).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Drive' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: /capacity used/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /quota used/i })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'Site' })).not.toBeInTheDocument()
   })
 
@@ -133,7 +133,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     })
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
     expect(
-      screen.getByText('Every personal drive in the usage report, with how much of its own allocation it uses'),
+      screen.getByText('Every personal drive in the usage report, with how much of its own storage quota it uses'),
     ).toBeInTheDocument()
   })
 

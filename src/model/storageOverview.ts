@@ -17,6 +17,7 @@ import {
   storageCostAnnual,
 } from '@/lib/cost'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
+import { storageBreakdown } from '@/lib/storageBreakdown'
 import { namesAreConcealed } from '@/lib/concealment'
 import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
@@ -177,6 +178,16 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const archivableBytes = sumBytes(archivable)
   const liveSiteBytes = sumBytes(liveSites)
   const archivableShare = liveSiteBytes > 0 ? archivableBytes / liveSiteBytes : 0
+  const savingBytes =
+    overageBytes === null ? archivableBytes : Math.min(archivableBytes, overageBytes)
+  const activeTeamsBytes = sumBytes(
+    liveSites.filter(
+      (site) =>
+        classifyWorkload(site.template) === 'Teams' && !isInactiveSince(site, archiveCutoff),
+    ),
+  )
+  const deletedSites = retainedTotal(sites)
+  const deletedDrives = retainedTotal(drives)
 
   return {
     reportRefreshDate,
@@ -188,12 +199,10 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       usedPercentage,
       headroomRatio,
       overageBytes,
+      exhausted,
       utilization,
       entitlementIsMeasured,
       licenceEstimateBytes,
-      byWorkload: totalsBy(liveSites, (site) => classifyWorkload(site.template)).map(
-        ([name, value]) => ({ name, value }),
-      ),
       byTemplate: topNWithOther(
         totalsBy(liveSites, (site) => site.template || 'Unknown'),
         TOP_TEMPLATE_SLICES,
@@ -202,7 +211,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       ),
       sites,
       siteCount: liveSites.length,
-      deletedButBilling: retainedTotal(sites),
+      deletedButBilling: deletedSites,
     },
 
     oneDrive: {
@@ -215,7 +224,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           drive.allocatedBytes > 0 &&
           drive.storageUsedBytes / drive.allocatedBytes >= NEAR_CAP_RATIO,
       ).length,
-      deletedButBilling: retainedTotal(drives),
+      deletedButBilling: deletedDrives,
       entitlementPerUserBytes: oneDrivePerUserBytes,
       licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
       entitlementPerUserIsSet: oneDriveOverrideBytes !== null,
@@ -226,6 +235,17 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           ? null
           : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
     },
+
+    breakdown: storageBreakdown({
+      sharePointUsedBytes: sharePointUsed,
+      oneDriveUsedBytes: oneDriveUsed,
+      teamsBytes: activeTeamsBytes,
+      inactiveBytes: archivableBytes,
+      deletedSiteBytes: deletedSites.bytes,
+      deletedDriveBytes: deletedDrives.bytes,
+      deletedCount: deletedSites.count + deletedDrives.count,
+      freeBytes: remainingBytes,
+    }),
 
     offenders: {
       rows,
@@ -257,7 +277,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       bytes: archivableBytes,
       shareOfSharePoint: archivableShare,
       status: archiveStatus(archivableShare),
-      annualSaving: storageCostAnnual(archivableBytes, ratePerGb),
+      savingApplies: entitledBytes === null || exhausted,
+      savingBytes,
+      annualSaving: storageCostAnnual(savingBytes, ratePerGb),
     },
 
     cost: {

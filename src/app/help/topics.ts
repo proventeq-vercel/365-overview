@@ -3,7 +3,6 @@ export const HELP_TOPICS = {
   troubleshooting: 'getting-started/troubleshooting',
   storageOptimisation: 'reports/storage-optimisation',
   storageDistribution: 'reports/storage-optimisation/storage-distribution',
-  tenantCapacity: 'reports/storage-optimisation/tenant-capacity',
   growthForecast: 'reports/storage-optimisation/growth-forecast',
   mainOffenders: 'reports/storage-optimisation/main-offenders',
   oneDriveUsage: 'reports/onedrive-usage',

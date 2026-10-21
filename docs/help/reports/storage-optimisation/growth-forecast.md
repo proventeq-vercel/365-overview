@@ -22,8 +22,8 @@ Under the chart:
 | Avg growth / mo | The typical month-to-month growth: the median of the monthly changes ([how](../../reference/calculations.md#growth-rate)). |
 | Added last N mo | Storage added between the first and last month of the trend. N counts the month-to-month steps it covers. |
 | Live sites | SharePoint sites that are not deleted. |
-| Drives near cap | OneDrives at 90% or more of their own allocation. |
-| Drives over licence | OneDrives holding more than the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). |
+| Drives near their quota | OneDrives at 90% or more of their own storage quota, the per-drive limit in the usage report. An admin can set it above or below the licence. |
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). |
 
 ## Growth impact
 

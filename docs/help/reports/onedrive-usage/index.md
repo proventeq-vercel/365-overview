@@ -9,7 +9,7 @@ order: 0
 The OneDrive Usage report looks only at personal OneDrives. It uses the same data as the Storage
 Optimisation report, so switching between the two never reloads anything.
 
-OneDrive is a separate pool from SharePoint. Each drive has its own allocation and its own
+OneDrive is a separate pool from SharePoint. Each drive has its own storage quota and its own
 licensed allowance. A percentage of a drive's allocation means something, while a percentage of
 a SharePoint site's allocation does not.
 
@@ -19,7 +19,7 @@ a SharePoint site's allocation does not.
 | --- | --- | --- |
 | OneDrive storage | Tenant-wide OneDrive storage, as Microsoft 365 reports it. | Navy |
 | OneDrives | Live drives in the usage report. | Blue |
-| Drives near capacity | Drives at 90% or more of their own allocation. | Orange when any, green when none |
+| Drives near their quota | Drives at 90% or more of their own storage quota. | Orange when any, green when none |
 | Over licensed storage | Drives holding more than the OneDrive storage per user, and by how much in total. | Orange when any, green when none, grey when unknown |
 | Deleted but still billing | Deleted drives still using quota under retention. | Yellow when any, grey when none |
 
