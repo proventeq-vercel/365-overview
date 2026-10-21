@@ -3,6 +3,7 @@ import { PageHeader } from '@/design/primitives'
 import { useSettings } from '@/app/useSettings'
 import { ReportLoading } from '@/app/ReportLoading'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
+import { useStorageGrowth } from '@/hooks/useStorageGrowth'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { AccessFailure } from './AccessFailure'
@@ -16,6 +17,7 @@ export function StorageOptimization() {
   const { settings } = useSettings()
   const { data, error, isPending } = useStorageOverview(settings)
   const { refresh } = useRefreshReport()
+  const growth = useStorageGrowth(data)
 
   if (error) return <AccessFailure error={error} onRetry={refresh} />
   if (isPending || !data) return <ReportLoading stage="loadingReport" />
@@ -32,7 +34,7 @@ export function StorageOptimization() {
       <KpiCards overview={data} delay={40} />
       <DistributionSection overview={data} delay={120} />
       <GrowthSection overview={data} delay={160} />
-      <OffendersSection overview={data} delay={240} />
+      <OffendersSection overview={data} growth={growth} delay={240} />
     </div>
   )
 }

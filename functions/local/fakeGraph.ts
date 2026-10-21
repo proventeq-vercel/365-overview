@@ -190,8 +190,9 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
       return json(response, 403, INSUFFICIENT_PRIVILEGES)
     }
     const skip = Number(requestUrl.searchParams.get('$skiptoken') ?? 0)
-    const reportLink = (report: string) => (next: number) =>
-      `${url}/beta/reports/${report}(period='D180')?$format=application/json&$skiptoken=${next}`
+    const reportLink = (report: string, range = "period='D180'") => (next: number) =>
+      `${url}/beta/reports/${report}(${range})?$format=application/json&$skiptoken=${next}`
+    const dated = /^\/beta\/reports\/(getSharePointSiteUsageDetail|getOneDriveUsageAccountDetail)\(date=(\d{4}-\d{2}-\d{2})\)$/.exec(path)
 
     if (request.method === 'GET') {
       if (path === "/beta/reports/getSharePointSiteUsageDetail(period='D180')") {
@@ -210,6 +211,19 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
       if (path === "/beta/reports/getOneDriveUsageAccountDetail(period='D180')") {
         const rows = Array.from({ length: driveCount }, (_, index) => driveRow(index))
         return json(response, 200, pageOf(rows, skip, reportLink('getOneDriveUsageAccountDetail')))
+      }
+      if (dated) {
+        const [, report, date] = dated
+        const current =
+          report === 'getSharePointSiteUsageDetail'
+            ? Array.from({ length: siteCount }, (_, index) => siteRow(index))
+            : Array.from({ length: driveCount }, (_, index) => driveRow(index))
+        const rows = current.map((row, index) => ({
+          ...row,
+          reportRefreshDate: date,
+          storageUsedInBytes: String(Math.round(Number(row.storageUsedInBytes) * (index % 9 === 0 ? 0.7 : 0.98))),
+        }))
+        return json(response, 200, pageOf(rows, skip, reportLink(report, `date=${date}`)))
       }
       if (path === "/beta/reports/getSharePointSiteUsageStorage(period='D180')") {
         return json(response, 200, { value: trendRows('All', 6_100 * GB, 4 * GB) })

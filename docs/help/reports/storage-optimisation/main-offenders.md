@@ -1,15 +1,31 @@
 ---
 title: Main offenders
-description: The sites and OneDrives driving the most storage, storage that is deleted but still billing, and a searchable table of everything.
+description: The sites and OneDrives growing fastest and holding the most, storage that is deleted but still billing, and a searchable table of everything.
 section: storage-optimisation
 feature: optimization.storage.report.overview
 order: 40
 ---
 
-## Biggest sites & OneDrives by storage
+## Fastest-growing sites & OneDrives
 
-The ten largest sites and OneDrives together, ranked by storage used. Two smaller lists sit
-beside it:
+The ten sites and OneDrives together that added the most storage over about the last four weeks,
+ranked by storage added. It shows who is driving growth, which the size alone does not.
+
+- The report reads Microsoft's site and OneDrive usage reports twice: for the report date, and
+  for the day four weeks earlier. Microsoft keeps those daily reports for 30 days only, so when
+  four weeks back is older than that, the earlier day is the oldest one Microsoft still has. The
+  description under the title gives both dates and the number of days.
+- **Storage added** is the size on the report date less the size on the earlier day. A site or
+  OneDrive that did not exist on the earlier day counts from nothing.
+- Sites and OneDrives that shrank, stayed the same or were deleted are left out. If nothing grew,
+  the panel says so instead of drawing an empty chart.
+- The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
+  does not return the earlier day's report, the panel says growth is unavailable. It never shows
+  zero growth in its place.
+
+## Largest sites and OneDrives
+
+Two lists sit under the growth chart:
 
 - **Top SharePoint sites by storage**: the five largest sites.
 - **Top OneDrives by storage**: the five largest personal drives.
