@@ -45,7 +45,14 @@ describe('mock data source', () => {
     expect(drives.every((d) => d.template === undefined)).toBe(true)
   })
 
-  it.each(['healthy', 'over-entitlement', 'concealed', 'short-history', 'onedrive-over-licence'] as const)(
+  it.each([
+    'healthy',
+    'over-entitlement',
+    'concealed',
+    'short-history',
+    'onedrive-over-licence',
+    'nothing-to-clean',
+  ] as const)(
     '%s: each pool trend ends at the sum of its own rows',
     async (scenario) => {
       const ds = createMockDataSource(scenario)
@@ -123,6 +130,26 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.growth.windowMonths).toBeLessThan(6)
     expect(overview.growth.forecastStatus).toBe('Unknown')
     expect(overview.growth.forecastExhaustionDate).toBeNull()
+  })
+
+  it('healthy: inactive and deleted sites to clean up, so an after-clean-up forecast', async () => {
+    const { afterCleanUp } = (await overviewFor('healthy')).growth
+    expect(afterCleanUp.inactiveBytes).toBeGreaterThan(0)
+    expect(afterCleanUp.deletedBytes).toBeGreaterThan(0)
+    expect(afterCleanUp.unavailableReason).toBeNull()
+  })
+
+  it('short-history: something to clean up, but no after-clean-up forecast', async () => {
+    const { afterCleanUp } = (await overviewFor('short-history')).growth
+    expect(afterCleanUp.removableBytes).toBeGreaterThan(0)
+    expect(afterCleanUp.unavailableReason).toBe('historyTooShort')
+  })
+
+  it('nothing-to-clean: no inactive or deleted site, so no after-clean-up line', async () => {
+    const overview = await overviewFor('nothing-to-clean')
+    expect(overview.growth.afterCleanUp.removableBytes).toBe(0)
+    expect(overview.growth.afterCleanUp.unavailableReason).toBe('nothingRemovable')
+    expect(overview.growth.forecastStatus).not.toBe('Unknown')
   })
 
   it('only the concealed tenant conceals names', async () => {

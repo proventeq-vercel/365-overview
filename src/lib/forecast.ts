@@ -91,21 +91,34 @@ export function buildGrowthPoints(
   buckets: MonthBucket[],
   ratePerMonth: number,
   aheadMonths: number,
+  removableBytes: number | null,
 ): GrowthPoint[] {
   if (buckets.length === 0) return []
   const last = buckets[buckets.length - 1]
+  const afterCleanUp = (bytes: number): number | null =>
+    removableBytes === null ? null : Math.max(0, bytes - removableBytes)
 
-  const history: GrowthPoint[] = buckets.map((bucket, i) => ({
-    month: bucket.month,
-    actualUsedBytes: bucket.bytes,
-    projectedUsedBytes: i === buckets.length - 1 ? bucket.bytes : null,
-  }))
+  const history: GrowthPoint[] = buckets.map((bucket, i) => {
+    const isLast = i === buckets.length - 1
+    return {
+      month: bucket.month,
+      actualUsedBytes: bucket.bytes,
+      projectedUsedBytes: isLast ? bucket.bytes : null,
+      afterCleanUpBytes: isLast ? afterCleanUp(bucket.bytes) : null,
+    }
+  })
 
   const future: GrowthPoint[] = Array.from({ length: aheadMonths }, (_, i) => ({
     month: addMonths(last.month, i + 1),
     actualUsedBytes: null,
     projectedUsedBytes: Math.max(0, last.bytes + ratePerMonth * (i + 1)),
+    afterCleanUpBytes: afterCleanUp(last.bytes + ratePerMonth * (i + 1)),
   }))
 
   return [...history, ...future]
+}
+
+export function staysUnder(values: (number | null)[], limitBytes: number | null): boolean | null {
+  if (limitBytes === null) return null
+  return values.every((value) => value === null || value < limitBytes)
 }

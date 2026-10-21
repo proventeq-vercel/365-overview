@@ -8,9 +8,9 @@ afterEach(cleanup)
 
 const GB = 1_073_741_824
 const points = [
-  { month: '2026-03', actualUsedBytes: 100 * GB, projectedUsedBytes: null },
-  { month: '2026-04', actualUsedBytes: 110 * GB, projectedUsedBytes: 110 * GB },
-  { month: '2026-05', actualUsedBytes: null, projectedUsedBytes: 120 * GB },
+  { month: '2026-03', actualUsedBytes: 100 * GB, projectedUsedBytes: null, afterCleanUpBytes: null },
+  { month: '2026-04', actualUsedBytes: 110 * GB, projectedUsedBytes: 110 * GB, afterCleanUpBytes: 0 },
+  { month: '2026-05', actualUsedBytes: null, projectedUsedBytes: 120 * GB, afterCleanUpBytes: 0 },
 ]
 const withGrowth = { ...base, growth: { ...base.growth, points } }
 
@@ -118,6 +118,58 @@ describe('GrowthSection', () => {
     expect(screen.getByText('Used today').nextElementSibling).toHaveTextContent('500 GB')
     expect(screen.getByText('Forecast (6 mo)').nextElementSibling).toHaveTextContent('560 GB')
     expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('0 B')
+  })
+
+  describe('after clean-up', () => {
+    const withCleanUp = (afterCleanUp: Partial<typeof base.growth.afterCleanUp>) => ({
+      ...withGrowth,
+      growth: { ...withGrowth.growth, afterCleanUp: { ...withGrowth.growth.afterCleanUp, ...afterCleanUp } },
+    })
+    const row = (label: string) => screen.getByText(label).nextElementSibling
+
+    it('shows what clean-up removes, where the forecast ends and that it stays under the entitlement', () => {
+      render(<GrowthSection overview={withGrowth} />)
+      expect(row('Removable today')).toHaveTextContent(/^120 GB$/)
+      expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
+      expect(row('Stays under the entitlement')).toHaveTextContent(/^Yes$/)
+      expect(screen.getByText(/in live sites with no activity for 3 years/)).toHaveTextContent(
+        /Versions are not counted: Microsoft's usage reports do not carry version storage/,
+      )
+    })
+
+    it('says when the cleaned-up forecast still passes the entitlement', () => {
+      render(<GrowthSection overview={withCleanUp({ staysUnderEntitlement: false })} />)
+      expect(row('Stays under the entitlement')).toHaveTextContent(/^No$/)
+    })
+
+    it('cannot say whether it stays under an unknown entitlement', () => {
+      render(<GrowthSection overview={withCleanUp({ staysUnderEntitlement: null })} />)
+      expect(row('Stays under the entitlement')).toHaveTextContent(/^Unknown$/)
+    })
+
+    it('says there is nothing to clean up instead of repeating the forecast', () => {
+      render(
+        <GrowthSection
+          overview={withCleanUp({
+            inactiveBytes: 0,
+            removableBytes: 0,
+            endBytes: null,
+            staysUnderEntitlement: null,
+            unavailableReason: 'nothingRemovable',
+          })}
+        />,
+      )
+      expect(row('Removable today')).toHaveTextContent(/^0 B$/)
+      expect(screen.queryByText('Forecast after clean-up (6 mo)')).not.toBeInTheDocument()
+      expect(screen.getByText(/so a clean-up would not change the forecast/)).toBeInTheDocument()
+    })
+
+    it('shows the removable storage but no cleaned-up forecast on short history, and says why', () => {
+      render(<GrowthSection overview={{ ...shortHistory, growth: { ...shortHistory.growth, points } }} />)
+      expect(row('Removable today')).toHaveTextContent(/^120 GB$/)
+      expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^Unknown$/)
+      expect(screen.getByText(/too few months of history to forecast where storage goes after clean-up/)).toBeInTheDocument()
+    })
   })
 
   it('shows drives over licence as unknown when the licences cannot be read', () => {

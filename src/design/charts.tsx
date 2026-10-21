@@ -83,7 +83,10 @@ export interface LineSeries {
   key: string
   name: string
   dashed?: boolean
+  dotted?: boolean
 }
+
+const LINE_DASH = { dashed: '8 4', dotted: '1 4' } as const
 
 export function MonoLineChart({
   data,
@@ -159,7 +162,8 @@ export function MonoLineChart({
               name={s.name}
               stroke={P365.blue}
               strokeWidth={2}
-              strokeDasharray={s.dashed ? '8 4' : undefined}
+              strokeDasharray={s.dashed ? LINE_DASH.dashed : s.dotted ? LINE_DASH.dotted : undefined}
+              strokeLinecap={s.dotted ? 'round' : undefined}
               dot={false}
               connectNulls={false}
               isAnimationActive={false}

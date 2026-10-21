@@ -147,7 +147,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of five fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of six fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -158,6 +158,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
 | `short-history` | Fewer than six months of trend data — no forecast, explicitly not an all-clear |
 | `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
+| `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so no *Forecast after clean-up* line |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -398,7 +399,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
 | `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |

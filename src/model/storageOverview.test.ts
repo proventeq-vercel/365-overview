@@ -824,3 +824,95 @@ describe('buildStorageOverview inactive sites', () => {
     expect(archive.status).toBe('attention')
   })
 })
+
+describe('buildStorageOverview forecast after clean-up', () => {
+  const tenant = (over: Partial<OverviewInputs> = {}) =>
+    inputs({
+      sites: [
+        site({ id: 'busy', storageUsedBytes: 700 * GB, lastActivityDate: '2026-08-20' }),
+        site({ id: 'dormant', storageUsedBytes: 50 * GB, lastActivityDate: '2021-03-01' }),
+        site({ id: 'gone', storageUsedBytes: 30 * GB, isDeleted: true }),
+      ],
+      drives: [drive({ id: 'left', storageUsedBytes: 200 * GB, isDeleted: true })],
+      sharePointTrend: monthly([750 * GB, 760 * GB, 770 * GB, 780 * GB, 790 * GB, 800 * GB]),
+      entitlementOverrideBytes: 900 * GB,
+      ...over,
+    })
+
+  it('counts inactive and deleted sites as removable, never the deleted OneDrives', () => {
+    const { afterCleanUp } = buildStorageOverview(tenant()).growth
+    expect(afterCleanUp.inactiveBytes).toBe(50 * GB)
+    expect(afterCleanUp.deletedBytes).toBe(30 * GB)
+    expect(afterCleanUp.removableBytes).toBe(80 * GB)
+    expect(afterCleanUp.unavailableReason).toBeNull()
+  })
+
+  it('starts at used less removable today and grows at the forecast rate', () => {
+    const { points, afterCleanUp } = buildStorageOverview(tenant()).growth
+    expect(points.map((point) => point.afterCleanUpBytes)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      720 * GB,
+      730 * GB,
+      740 * GB,
+      750 * GB,
+      760 * GB,
+      770 * GB,
+      780 * GB,
+    ])
+    expect(afterCleanUp.endBytes).toBe(780 * GB)
+  })
+
+  it('follows the inactivity window from the settings', () => {
+    const { afterCleanUp } = buildStorageOverview(tenant({ inactiveYears: 6 })).growth
+    expect(afterCleanUp.inactiveBytes).toBe(0)
+    expect(afterCleanUp.removableBytes).toBe(30 * GB)
+    expect(afterCleanUp.endBytes).toBe(830 * GB)
+  })
+
+  it('stays under an entitlement the cleaned-up line never reaches', () => {
+    expect(buildStorageOverview(tenant()).growth.afterCleanUp.staysUnderEntitlement).toBe(true)
+  })
+
+  it('does not stay under an entitlement the cleaned-up line crosses within the forecast', () => {
+    const overview = buildStorageOverview(tenant({ entitlementOverrideBytes: 775 * GB }))
+    expect(overview.growth.afterCleanUp.staysUnderEntitlement).toBe(false)
+  })
+
+  it('cannot say whether it stays under an unknown entitlement', () => {
+    const overview = buildStorageOverview(
+      tenant({ skus: [], forceUnknownEntitlement: true, entitlementOverrideBytes: null }),
+    )
+    expect(overview.growth.afterCleanUp.staysUnderEntitlement).toBeNull()
+    expect(overview.growth.afterCleanUp.endBytes).toBe(780 * GB)
+  })
+
+  it('draws no line when nothing is removable', () => {
+    const overview = buildStorageOverview(
+      tenant({
+        sites: [site({ id: 'busy', storageUsedBytes: 800 * GB, lastActivityDate: '2026-08-20' })],
+      }),
+    )
+    const { afterCleanUp, points } = overview.growth
+    expect(afterCleanUp.removableBytes).toBe(0)
+    expect(afterCleanUp.unavailableReason).toBe('nothingRemovable')
+    expect(afterCleanUp.endBytes).toBeNull()
+    expect(afterCleanUp.staysUnderEntitlement).toBeNull()
+    expect(points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
+  })
+
+  it('draws no line and says why when the history is too short to forecast', () => {
+    const overview = buildStorageOverview(
+      tenant({ sharePointTrend: monthly([790 * GB, 800 * GB]) }),
+    )
+    const { afterCleanUp, points } = overview.growth
+    expect(afterCleanUp.removableBytes).toBe(80 * GB)
+    expect(afterCleanUp.unavailableReason).toBe('historyTooShort')
+    expect(afterCleanUp.endBytes).toBeNull()
+    expect(afterCleanUp.staysUnderEntitlement).toBeNull()
+    expect(points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
+  })
+})

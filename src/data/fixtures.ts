@@ -9,6 +9,7 @@ export type MockScenario =
   | 'concealed'
   | 'short-history'
   | 'onedrive-over-licence'
+  | 'nothing-to-clean'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -68,7 +69,7 @@ function hashName(seed: number): string {
  * and scale behaviour are exercised in mock mode and e2e. No Math.random / Date
  * so tests stay stable. Every 250th site is a big consumer (a realistic tail).
  */
-function generateSites(count: number, concealed = false): StorageRow[] {
+function generateSites(count: number, concealed = false, tidy = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
     const fileCount = (i % 900) * 10 + 50
@@ -84,8 +85,10 @@ function generateSites(count: number, concealed = false): StorageRow[] {
       fileCount,
       activeFileCount: Math.round(fileCount * 0.1),
       lastActivityDate:
-        i % 17 === 0 ? null : `${i % 6 === 1 ? DORMANT_YEAR : 2026}-0${(i % 8) + 1}-1${i % 10}`,
-      isDeleted: i % 500 === 3,
+        i % 17 === 0
+          ? null
+          : `${!tidy && i % 6 === 1 ? DORMANT_YEAR : 2026}-0${(i % 8) + 1}-1${i % 10}`,
+      isDeleted: !tidy && i % 500 === 3,
       template: TEMPLATES[i % TEMPLATES.length],
     })
   }
@@ -219,7 +222,8 @@ function splitDirectory(rows: StorageRow[]): Pick<ScenarioData, 'sites' | 'direc
 
 function scenarioData(scenario: MockScenario): ScenarioData {
   const concealed = scenario === 'concealed'
-  const baseSites = [...namedSites(concealed), ...generateSites(2500, concealed)]
+  const tidy = scenario === 'nothing-to-clean'
+  const baseSites = [...namedSites(concealed), ...generateSites(2500, concealed, tidy)]
   const { sites, directory } = splitDirectory(
     scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites,
   )

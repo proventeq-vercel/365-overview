@@ -1,5 +1,6 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type {
+  CleanUpUnavailable,
   OverEntitlement,
   Slice,
   StoragePool,
@@ -33,6 +34,7 @@ import {
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
+  staysUnder,
 } from '@/lib/forecast'
 
 const NEAR_CAP_RATIO = 0.9
@@ -171,11 +173,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     : historyTooShort
       ? null
       : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
-  const points = buildGrowthPoints(buckets, rate, FORECAST_CHART_MONTHS)
-
-  const growthGb = annualGrowthGb(rate)
-  const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
-  const growthAnnual = growthCostAnnual(growthGb, ratePerGb, excessGb)
 
   const archiveCutoff = inactiveSince(reportRefreshDate, inactiveYears, now)
   const archivable = liveSites.filter((site) => isInactiveSince(site, archiveCutoff))
@@ -192,6 +189,20 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   )
   const deletedSites = retainedTotal(sites)
   const deletedDrives = retainedTotal(drives)
+
+  const removableBytes = archivableBytes + deletedSites.bytes
+  const cleanUpUnavailable: CleanUpUnavailable | null =
+    removableBytes <= 0 ? 'nothingRemovable' : historyTooShort ? 'historyTooShort' : null
+  const points = buildGrowthPoints(
+    buckets,
+    rate,
+    FORECAST_CHART_MONTHS,
+    cleanUpUnavailable === null ? removableBytes : null,
+  )
+
+  const growthGb = annualGrowthGb(rate)
+  const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
+  const growthAnnual = growthCostAnnual(growthGb, ratePerGb, excessGb)
 
   return {
     reportRefreshDate,
@@ -271,6 +282,20 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastExhaustionDate: exhausted ? null : exhaustionDateFor(runway, now),
       forecastMonthsToExhaustion: runway,
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
+      afterCleanUp: {
+        inactiveBytes: archivableBytes,
+        deletedBytes: deletedSites.bytes,
+        removableBytes,
+        endBytes: points.at(-1)?.afterCleanUpBytes ?? null,
+        staysUnderEntitlement:
+          cleanUpUnavailable === null
+            ? staysUnder(
+                points.map((point) => point.afterCleanUpBytes),
+                entitledBytes,
+              )
+            : null,
+        unavailableReason: cleanUpUnavailable,
+      },
     },
 
     archive: {

@@ -2,10 +2,11 @@ import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatNumber, formatShortMonthYear, formatSignedBytes } from '@/lib/format'
 import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import { useTranslation } from '@/hooks/useTranslation'
+import { CleanUpForecast } from './CleanUpForecast'
 import { buildCallout } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
-import { MonoLineChart } from '@/design/charts'
+import { MonoLineChart, type LineSeries } from '@/design/charts'
 import {
   KvRow,
   MiniStat,
@@ -29,6 +30,13 @@ export function GrowthSection({ overview, delay }: Props) {
   const { growth, sharePoint, oneDrive, cost } = overview
   const callout = buildCallout(overview, t)
   const quotaKnown = sharePoint.entitledBytes !== null
+  const series: LineSeries[] = [
+    { key: 'actualUsedBytes', name: t('storageOptimisation.growth.actual') },
+    { key: 'projectedUsedBytes', name: t('storageOptimisation.growth.forecast'), dashed: true },
+    ...(growth.afterCleanUp.unavailableReason === null
+      ? [{ key: 'afterCleanUpBytes', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true }]
+      : []),
+  ]
 
   return (
     <Section
@@ -43,10 +51,7 @@ export function GrowthSection({ overview, delay }: Props) {
           <MonoLineChart
             data={growth.points.map((point) => ({ ...point }))}
             xKey="month"
-            series={[
-              { key: 'actualUsedBytes', name: t('storageOptimisation.growth.actual') },
-              { key: 'projectedUsedBytes', name: t('storageOptimisation.growth.forecast'), dashed: true },
-            ]}
+            series={series}
             formatValue={formatBytes}
             formatX={formatShortMonthYear}
             ariaLabel={t('storageOptimisation.growth.trendTitle')}
@@ -114,6 +119,7 @@ export function GrowthSection({ overview, delay }: Props) {
               }
             />
           </MiniStatRow>
+          <CleanUpForecast overview={overview} />
           <div className="mt-3 flex flex-col gap-1">
             <PanelLabel>{t('storageOptimisation.growth.costTitle')}</PanelLabel>
             <dl className="divide-y divide-p365-grey-100">

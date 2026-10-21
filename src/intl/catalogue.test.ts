@@ -15,7 +15,7 @@ const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
   'help.audience.': 2,
   'storageOptimisation.usage.segment.': 7,
   'storageOptimisation.usage.describe.': 9,
-  'admin.source.': 6,
+  'admin.source.': 7,
 }
 const DYNAMIC_PREFIXES = Object.keys(DYNAMIC_PREFIX_SIZES)
 
