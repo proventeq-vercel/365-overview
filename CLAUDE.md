@@ -545,16 +545,19 @@ typecheck · test · build as a separate job.
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a
   LIVE build (would gate on MSAL) — screenshot/preview from the mock dev server,
-  not `dist`.
-- CI's `lighthouse` job builds in mock mode with both reports, serves it with
-  `npm run preview` (which sends the SWA `globalHeaders`, so the CSP is real)
-  and runs `npx @lhci/cli@<pinned> autorun` on `lighthouserc.json`. The
-  thresholds are the measured baseline: a change that adds a contrast failure,
-  drops a label or costs a category point fails CI. The report pages are held
-  at accessibility 0.97 / 0.96 and their current color-contrast count only
-  because of the P365 palette's low-contrast text; raise them to 1 when that
-  is fixed, never lower them to get a PR green. Reports go to the `lighthouse-reports` artifact,
-  never to `temporary-public-storage`.
+  not `dist` (unless it was built with `VITE_USE_MOCK=true`, as the Lighthouse job does).
+- CI's `lighthouse` job builds a mock `dist` with both reports, serves it with
+  `npm run preview` (which sends the SWA `globalHeaders`, so the CSP is real;
+  `src/app/siteShell.test.ts` pins that wiring) and runs
+  `npx @lhci/cli@<pinned> autorun` on `lighthouserc.json`. The thresholds are
+  the measured baseline, and every scored accessibility audit is asserted on its
+  own at 1: a change that adds a contrast failure, drops a label, breaks an ARIA
+  role or costs a category point fails CI, and a red CI holds the deploy. Colour
+  contrast on the report pages is held at its current count (accessibility
+  0.96 as a backstop) only because of the P365 palette's low-contrast text;
+  raise them to 1 when that is fixed, never lower them to get a PR green. A
+  page added to the app gets a URL in `lighthouserc.json`. Reports go to the
+  `lighthouse-reports` artifact, never to `temporary-public-storage`.
 
 ## Design system / brand
 
