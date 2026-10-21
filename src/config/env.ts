@@ -1,5 +1,6 @@
 import type { MockScenario } from '../data/fixtures'
 import { readFeatures, type FeatureFlag } from './featureFlags'
+import { MOCK_SCENARIOS } from './mockScenarios'
 import { isModesLocked, readModeOverrides, tabStorage, type ModeOverrides } from './modes'
 
 export interface AppEnv {
@@ -11,20 +12,12 @@ export interface AppEnv {
   localAuthUrl: string | null
   usesMsal: boolean
   hideNames: boolean
+  admin: boolean
 }
 
-const SCENARIO_SET: Record<MockScenario, true> = {
-  healthy: true,
-  'over-entitlement': true,
-  concealed: true,
-  'short-history': true,
-  'onedrive-over-licence': true,
-}
-
-const SCENARIOS = Object.keys(SCENARIO_SET) as MockScenario[]
 
 function readScenario(value: string | undefined): MockScenario {
-  return SCENARIOS.find((scenario) => scenario === value) ?? 'healthy'
+  return MOCK_SCENARIOS.find((scenario) => scenario === value) ?? 'healthy'
 }
 
 function readLocalAuthUrl(value: string | undefined, devServer: boolean): string | null {
@@ -50,6 +43,7 @@ export function readEnv(
     localAuthUrl,
     usesMsal: !useMock && !localAuthUrl,
     hideNames: source.VITE_HIDE_NAMES === 'true' || overrides.hideNames === 'true',
+    admin: active.admin === 'true',
   }
 }
 

@@ -23,6 +23,14 @@ describe('readEnv', () => {
   })
 })
 
+describe('readEnv admin', () => {
+  it('turns admin on from an override, and never on a locked build', () => {
+    expect(readEnv({}, { admin: 'true' }).admin).toBe(true)
+    expect(readEnv({}, {}).admin).toBe(false)
+    expect(readEnv({ VITE_MODES_LOCKED: 'true' }, { admin: 'true' }).admin).toBe(false)
+  })
+})
+
 describe('readEnv hideNames', () => {
   it('shows names unless the env or the URL asks to hide them', () => {
     expect(readEnv({}).hideNames).toBe(false)
@@ -147,6 +155,21 @@ describe('env at module load', () => {
     const { env } = await import('./env')
     window.history.replaceState(null, '', '/')
     expect(env.mockScenario).toBe('concealed')
+  })
+
+  it('turns the admin bar on from the URL, and never on a locked build', async () => {
+    window.history.replaceState(null, '', '/?admin=true')
+    vi.resetModules()
+    const open = (await import('./env')).env
+    sessionStorage.clear()
+    vi.stubEnv('VITE_MODES_LOCKED', 'true')
+    vi.resetModules()
+    const locked = (await import('./env')).env
+    window.history.replaceState(null, '', '/')
+    vi.unstubAllEnvs()
+    sessionStorage.clear()
+    expect(open.admin).toBe(true)
+    expect(locked.admin).toBe(false)
   })
 
   it('lets ?hideNames through a locked build while every other override stays locked', async () => {

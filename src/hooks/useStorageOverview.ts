@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { skipToken, useQuery, useQueryClient } from '@tanstack/react-query'
 import { consentRecentlyGranted, forgetConsentGrant } from '../config/consentReturn'
 import { useDataSource } from '../data/useDataSource'
 import { nameTopSites } from '../data/namedSites'
@@ -7,7 +7,7 @@ import { namesAreConcealed } from '../lib/concealment'
 import { withSiteDirectory } from '../reports/siteDirectory'
 import { buildStorageOverview } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
-import type { StorageOverview } from '../types/storage'
+import type { StorageOverview, StorageRow } from '../types/storage'
 import { accessRecheckInterval, isAccessFailure } from './accessRevalidation'
 
 export const STORAGE_INPUTS_KEY = 'storageInputs'
@@ -87,4 +87,13 @@ export function useOrg() {
     queryKey: ['org'],
     queryFn: () => ds.getOrg(),
   })
+}
+
+export function useNamesConcealed(): boolean {
+  const { data } = useQuery<{ sites: StorageRow[] }, Error, boolean>({
+    queryKey: [STORAGE_INPUTS_KEY],
+    queryFn: skipToken,
+    select: (inputs) => namesAreConcealed(inputs.sites),
+  })
+  return data === true
 }

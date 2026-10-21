@@ -3,6 +3,7 @@ const MODE_PARAMS = {
   useMock: 'mock',
   mockScenario: 'scenario',
   hideNames: 'hideNames',
+  admin: 'admin',
 } as const
 
 export const MODES_RESET_PARAM = 'modes'
@@ -55,12 +56,9 @@ export function isModesLocked(source: Record<string, string | undefined>): boole
 
 export function readModeOverrides(search: string, storage: OverrideStore | null): ModeOverrides {
   const params = new URLSearchParams(search)
-  if (params.get(MODES_RESET_PARAM) === MODES_RESET_VALUE) {
-    persist(storage, {})
-    return {}
-  }
-  const overrides = stored(storage)
-  let changed = false
+  const reset = params.get(MODES_RESET_PARAM) === MODES_RESET_VALUE
+  const overrides = reset ? {} : stored(storage)
+  let changed = reset
   for (const [key, param] of Object.entries(MODE_PARAMS) as [ModeKey, string][]) {
     const value = params.get(param)
     if (value === null) continue

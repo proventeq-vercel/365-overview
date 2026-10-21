@@ -400,13 +400,29 @@ browser tab with a search param:
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
-| `modes` | `reset` | `/?modes=reset` (forget every override) |
+| `admin` | `true` | `/?admin=true` (the admin bar, below) |
+| `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |
 
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
 that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
 the app ignore the URL entirely — it is the one variable the URL can never touch, and
 the production deployment should set it.
+
+### The admin bar — `?admin=true`
+
+So nobody has to remember the params above, `?admin=true` turns on a floating bar at the
+foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggles it. It sets:
+
+- **Data**: *Live tenant data* or one of the mock scenarios. Live keeps signing in and
+  reading the real tenant, on any build, including a mock preview.
+- **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
+- **Names**: hide names (see *Hiding names*).
+
+**Apply and reload** writes the choices as the params above and reloads, because every mode
+is read once at load. **Reset** forgets the tab's overrides and keeps the bar. The bar is only
+a front end for those params: it can do nothing a URL cannot, so a build with
+`VITE_MODES_LOCKED=true` ignores `?admin=true` too.
 
 ## Localisation
 

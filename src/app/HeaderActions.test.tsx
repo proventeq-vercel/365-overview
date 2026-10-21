@@ -8,6 +8,7 @@ import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource } from '@/data/fixtures'
 import { HeaderActions } from './HeaderActions'
 import { SettingsProvider } from './SettingsProvider'
+import { AdminBarContext, type AdminBarState } from './adminBarContext'
 
 const msal = vi.hoisted(() => ({
   accounts: [] as { name?: string; username: string }[],
@@ -40,13 +41,17 @@ vi.mock('@/config/env', () => ({
   },
 }))
 
-function renderActions() {
+const NO_ADMIN: AdminBarState = { available: false, open: false, setOpen: () => {} }
+
+function renderActions(adminBar: AdminBarState = NO_ADMIN) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         <DataSourceContext value={createMockDataSource('healthy')}>
-          <SettingsProvider>{children}</SettingsProvider>
+          <AdminBarContext value={adminBar}>
+            <SettingsProvider>{children}</SettingsProvider>
+          </AdminBarContext>
         </DataSourceContext>
       </QueryClientProvider>
     )
@@ -71,6 +76,28 @@ afterEach(() => {
 })
 
 describe('HeaderActions', () => {
+  it('offers the admin bar only on a tab with ?admin=true', async () => {
+    const user = userEvent.setup()
+    renderActions()
+    const menu = await openOptions(user)
+    expect(menu).not.toHaveTextContent('admin bar')
+  })
+
+  it('shows a hidden admin bar, and hides a shown one', async () => {
+    const user = userEvent.setup()
+    const setOpen = vi.fn()
+    const { unmount } = renderActions({ available: true, open: false, setOpen })
+    await openOptions(user)
+    await user.click(await screen.findByRole('menuitem', { name: /Show admin bar/ }))
+    expect(setOpen).toHaveBeenLastCalledWith(true)
+    unmount()
+
+    renderActions({ available: true, open: true, setOpen })
+    await openOptions(user)
+    await user.click(await screen.findByRole('menuitem', { name: /Hide admin bar/ }))
+    expect(setOpen).toHaveBeenLastCalledWith(false)
+  })
+
   it('is a single icon button until opened', () => {
     renderActions()
     const button = screen.getByRole('button', { name: 'Options' })

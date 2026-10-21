@@ -31,6 +31,17 @@ describe('readModeOverrides', () => {
     })
   })
 
+  it('remembers ?admin=true for the tab like the other modes', () => {
+    readModeOverrides('?admin=true', sessionStorage)
+    expect(readModeOverrides('', sessionStorage)).toEqual({ admin: 'true' })
+  })
+
+  it('applies the params that come with modes=reset on top of the cleared tab', () => {
+    readModeOverrides(`?features=${BOTH}&mock=true`, sessionStorage)
+    expect(readModeOverrides('?modes=reset&admin=true', sessionStorage)).toEqual({ admin: 'true' })
+    expect(readModeOverrides('', sessionStorage)).toEqual({ admin: 'true' })
+  })
+
   it('clears a single override with an empty value', () => {
     readModeOverrides(`?features=${BOTH}&mock=true`, sessionStorage)
     expect(readModeOverrides('?features=', sessionStorage)).toEqual({ useMock: 'true' })

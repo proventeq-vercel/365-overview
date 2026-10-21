@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMsal } from '@azure/msal-react'
-import { CircleHelp, EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog } from 'lucide-react'
+import { CircleHelp, EllipsisVertical, LogOut, RefreshCw, Settings, UserRoundCog, Wrench } from 'lucide-react'
 import { loginRequest } from '@/auth/msalConfig'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +16,7 @@ import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import { SettingsDialog } from './SettingsDialog'
+import { useAdminBar } from './adminBarContext'
 
 function RefreshItem() {
   const t = useTranslation()
@@ -31,6 +32,23 @@ function RefreshItem() {
         void refresh()
       }}
     />
+  )
+}
+
+function AdminBarItem() {
+  const t = useTranslation()
+  const { available, open, setOpen } = useAdminBar()
+  if (!available) return null
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <DescribedMenuItem
+        icon={Wrench}
+        label={open ? t('admin.menuHide') : t('admin.menuShow')}
+        description={t('admin.menuHint')}
+        onClick={() => setOpen(!open)}
+      />
+    </>
   )
 }
 
@@ -92,6 +110,7 @@ export function HeaderActions() {
               window.open(HELP_PATH, '_blank', 'noopener')
             }}
           />
+          <AdminBarItem />
           {env.usesMsal && <AccountItems />}
         </DropdownMenuContent>
       </DropdownMenu>
