@@ -90,12 +90,14 @@ to change anything:
 cp .env.example .env
 ```
 
-`.env` is git-ignored (it holds real local values). On **Vercel**, set these in
-**Project Settings > Environment Variables** — no env file is deployed, and
-the same repo builds cleanly for any environment. `vercel.json` carries the one
-piece of hosting config the app needs: a rewrite of every path to `index.html`,
-so a reload on `/onedrive-usage` (or any client-side route) is served by the
-app instead of Vercel's 404.
+`.env` is git-ignored (it holds real local values). The production builds read only the repository
+**variables** that `.github/workflows/deploy.yml` names (see *Automatic deployment*), and the
+preview builds only `VITE_FEATURES` and `VITE_USE_MOCK=true` (see *Pull request previews*) — no env
+file is deployed, and every other option keeps its default there. The one piece of hosting config the
+app needs is a rewrite of every client-side route to `index.html`, so a reload on `/onedrive-usage`
+is served by the app: the Static Web App does it with `navigationFallback` in
+`public/staticwebapp.config.json` (it leaves `/assets/*`, `/favicon.ico` and `/proventeq-logo.svg`
+to the host), and the storage static website names `index.html` as its 404 document.
 
 ### Every option at a glance
 
@@ -110,12 +112,12 @@ app instead of Vercel's 404.
 | `VITE_USE_MOCK` | `false` | Run on fixture data with no auth at all | `?mock=` |
 | `VITE_MOCK_SCENARIO` | `healthy` | Which fixture tenant mock mode serves | `?scenario=` |
 | `VITE_FEATURES` | `optimization.storage.report.overview` | Which reports are routable, and whether the menu exists | `?features=` |
-| `VITE_MODES_LOCKED` | `false` | Ignore every URL override except `?hideNames`; the one var the URL cannot touch | — |
+| `VITE_MODES_LOCKED` | `false` | `true` ignores the mode overrides (`?features=`, `?mock=`, `?scenario=`, `?admin=`) but not `?hideNames`; the one var the URL cannot touch | — |
 | `VITE_HIDE_NAMES` | `false` | Mask site ids, owners and site links (initials / pseudonyms); see *Hiding names* | `?hideNames=true` (honoured even when locked) |
 
-Only those five have a URL override, and `?modes=reset` forgets all of them for the tab.
-Every var is read once at load: `src/config/env.ts` is a module constant, so nothing re-reads
-the env or the URL mid-session.
+Only those four rows and `?admin=` (see *The admin bar*) have a URL override, and `?modes=reset`
+forgets all of them for the tab. Every var is read once at load: `src/config/env.ts` is a module
+constant, so nothing re-reads the env or the URL mid-session.
 
 ### Auth config (live mode only)
 
@@ -172,7 +174,7 @@ that set rather than adding to it, so a list must name every flag it wants.
 | `optimization.storage.report.onedrive` | no | The OneDrive Usage report, on `/onedrive-usage` |
 | `app.menu` | no | The hamburger and the side menu of reports |
 
-`app.menu` is off by default, so the deployed app is a single report with no navigation.
+`app.menu` is off by default, so a deployment shows no navigation until the flag is set.
 Turning it on takes effect only where there is something to navigate to — with fewer than
 two reports enabled the menu stays hidden, because a menu of one is not navigation.
 A report whose flag is off is not routable at all; a report that is on is always reachable
@@ -188,10 +190,22 @@ VITE_FEATURES=optimization.storage.report.overview,optimization.storage.report.o
 
 ### Mode lock — `VITE_MODES_LOCKED`
 
-`VITE_MODES_LOCKED=true` makes the app ignore `?features=`, `?mock=`, `?scenario=` and any
-override already remembered for the tab. It is applied inside `readEnv`, so no test or
-caller can slip past it, and a deployment that must not be reconfigured from a URL —
+`VITE_MODES_LOCKED=true` makes the app ignore the mode overrides — `?features=`, `?mock=`,
+`?scenario=` and `?admin=` — and any override already remembered for the tab. `?hideNames`
+still works, because it can only take information away. It is applied inside `readEnv`, so no
+test or caller can slip past it, and a deployment that must not be reconfigured from a URL —
 anything customer-facing — should set it.
+
+Only the exact value `true` locks. The lock covers the mode overrides and nothing else: `?audience=`
+on the help pages and `?admin_consent=` after an admin-consent redirect are read either way. The
+deploy workflow takes the value from the repository variable of the same name (see *Automatic
+deployment*), and the lock is baked into the bundle, so each production site is locked exactly when
+that variable was `true` at the time `deploy.yml` last built that site; a change to the variable
+reaches a site only with its next build. The variable was `false` on 2026-10-21 (`gh variable list`
+shows the current value). A site built with the variable not `true` lets a visitor switch it into
+mock mode from the URL — fixture data, no sign-in — pick a mock scenario, show the report menu or
+the admin bar, or drop a report. Pull request previews never read the variable and are never
+locked.
 
 ---
 
@@ -391,8 +405,10 @@ A site is never named after its owner: with no name and no URL, a row shows its 
 
 The app has three runtime switches — which reports and shell features are enabled, whether
 it runs on fixture data, and which fixture tenant. The env (`VITE_FEATURES`, `VITE_USE_MOCK`,
-`VITE_MOCK_SCENARIO`) is the default, and the deployed default is the Storage
-Optimisation report alone, live data, no menu. Each switch can also be set for one
+`VITE_MOCK_SCENARIO`) is the default: with nothing set the app is the Storage Optimisation
+report alone, live data, no menu. The production builds take `VITE_FEATURES` from the repository
+variable of that name, which listed both reports and not `app.menu` on 2026-10-21, so they carry
+both reports and still show no menu. Each switch can also be set for one
 browser tab with a search param:
 
 | Param | Values | Example |
@@ -407,8 +423,8 @@ browser tab with a search param:
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
 that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
-the app ignore the URL entirely — it is the one variable the URL can never touch, and
-the production deployment should set it.
+the app ignore `features`, `mock`, `scenario` and `admin` and whatever the tab remembered, and
+leaves `hideNames` working — it is the one variable the URL can never touch (see *Mode lock*).
 
 ### The admin bar — `?admin=true`
 
@@ -439,7 +455,9 @@ The app renders the Storage Optimisation report in the Proventeq 365 look: a sti
 header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
 one **⋯ Options** menu whose items each carry an icon and a one-line description:
 **Refresh data**, **Report settings**, and in live mode **Switch account** and
-**Sign out**), KPI rails, panels, monochrome charts and the full site table. There is no navigation by default — it runs as a single report.
+**Sign out**), KPI rails, panels, monochrome charts and the full site table. With the default
+flags there is no navigation and it runs as a single report; the flags below change that, and
+*Modes* says what the production builds set.
 
 Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
 way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,
@@ -522,7 +540,7 @@ az storage blob upload-batch --account-name <storage> --destination '$web' --sou
 
 The site is then `https://<storage>.z33.web.core.windows.net/`. `index.html` is the 404 document so
 client-side routes resolve; Azure serves them with a `404` status, which the browser ignores but a
-crawler would not — the Vercel rewrite in `vercel.json` is the one that answers `200`.
+crawler would not — the Static Web App's `navigationFallback` is the one that answers `200`.
 
 Three things have to name the new origin before it works:
 
@@ -537,26 +555,63 @@ Three things have to name the new origin before it works:
 ### Automatic deployment
 
 `.github/workflows/deploy.yml` deploys on every push to `main`, but only **after CI has gone
-green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Three
-jobs, all from the exact commit CI tested:
+green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Four
+jobs; the three that deploy build the commit CI tested (a run started by hand builds the tip of
+the branch it was started on, tested or not, and the workflow does not check which branch that is,
+so start it on `main`):
 
 | Job | What it deploys | Where |
 |---|---|---|
+| `credentials` | nothing: it checks which deploy secrets are set (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` together, `AZURE_STATIC_WEB_APPS_API_TOKEN`, `AZURE_STORAGE_SAS`) | the run summary |
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
-| `site` | `npm run build` output with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, defaulting to `0cedd025-e545-44f2-b3f8-82969e56547a`, plus the repo variables `VITE_FEATURES`, `VITE_MODES_LOCKED` — **delegated permissions, the main site** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
-| `site-application` | the same build with the repo variables `VITE_GRAPH_PROXY_URL` and `VITE_GRAPH_PROXY_SCOPE` — **application permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS` — a SAS on the `$web` container only, expiring 2027-09-29, so no Entra role is involved |
+| `site` | `npm run build` output with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, falling back to the workflow's own `DELEGATED_CLIENT_ID` (`0cedd025-e545-44f2-b3f8-82969e56547a`), plus the repo variables `VITE_FEATURES`, `VITE_MODES_LOCKED` — **delegated permissions, the main site** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
+| `site-application` | the same build with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED` — **application permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS` — a SAS on the `$web` container only, expiring 2027-09-29 (the date the secret's owner stated; GitHub secrets cannot be read back, so only the SAS's owner can confirm it from `se=`), so no Entra role is involved |
 
-The first job checks what each deploy needs and skips a job whose secret is absent, with a note
-in the run summary rather than a failure. The **site** needs only the repo secret
+`credentials` skips a deploy job whose secret is absent, with a note in the run summary rather
+than a failure. The **site** needs only the repo secret
 `AZURE_STATIC_WEB_APPS_API_TOKEN` (the Static Web App's deployment token — no Entra role), so it
 deploys on every green `main`. `public/staticwebapp.config.json` gives it deep-link fallback, a
 Content-Security-Policy limited to Entra, Graph and the proxy, HSTS and `frame-ancestors 'none'`
-— headers the old storage-account host could not send. A new site origin must be added to the
+— headers the storage static website cannot send (the application-permissions site has none of
+them). A new site origin must be added to the
 proxy's `PROXY_ALLOWED_ORIGINS` **and** its platform CORS list, to the CSP's `connect-src` if it is
 a new proxy, and as a SPA redirect URI on the registration.
 
-**The proxy still needs credentials the repo does not have yet**, so its job stays inert until
-someone configures them.
+**The proxy still needs credentials the repo does not have yet** (the three OIDC secrets
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID`, set up in *Deploy credentials and
+variables*), so its job stays inert until someone configures them, and until then a change under
+`functions/` reaches the Function App only by a hand deploy.
+
+**Rolling back.** Each site is the build of one commit, so a bad release is undone by deploying a
+good commit again: revert the change on `main` and CI deploys the revert, or open the Actions tab,
+pick the last good *Deploy* run and choose *Re-run all jobs*. A re-run builds the commit of the
+original run (GitHub keeps a run re-runnable for 30 days), but it leaves `main` on the bad commit,
+so the next push deploys it again — revert it on `main` too. GitHub does not document whether a
+re-run reads the repository variables as they are now or as they were, so a variable changed since
+that run (`VITE_MODES_LOCKED`, say) may or may not apply: check the rebuilt site rather than
+assuming. Deploys queue under one `concurrency` group: one run executes, at most one waits, and a
+newer waiting run replaces an older one. A CI run on `main` that does not succeed, red or cancelled
+by a newer push, still starts a *Deploy* run that skips every job. Going by the trigger and the
+`concurrency` setting (no run has shown it yet), that skipped run also queues in the same group and
+can replace a real deploy that was waiting. So confirm that the rollback run itself finished.
+Neither route rolls the proxy back while its job is inert (see above): the Function App is deployed
+by hand.
+
+**Two credentials expire and nothing in the repo warns before they do.** When the SAS behind
+`AZURE_STORAGE_SAS` expires (its date is in the table above), the `site-application` upload fails
+and turns the run red while the `site` job is unaffected. Before then, issue a new SAS for the
+`$web` container with the same permissions as the current one (its owner reads them from `sp=`;
+the secret cannot be read back from GitHub), and set the secret again; issuing the new one does not
+cancel the old one, so there is no gap. The proxy's client certificate expires too: a proxy whose
+`GRAPH_CERT_PEM` carries its `CERTIFICATE` block and that starts after the certificate has expired
+refuses every request, and one whose PEM holds only the private key finds out at its first token
+request instead, which for a proxy that is already running is the next request that needs a new
+token (a tenant it holds none for, or one whose cached token is due). *Deploying* in
+`functions/README.md` says what each looks like and how to roll the certificate.
+`npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a PEM
+that carries its certificate; a key-only PEM needs `--thumbprint` and prints no expiry, so read its
+date from the certificate's row under *Certificates & secrets* on the registration. Put both dates
+in a calendar.
 
 ### Pull request previews
 
@@ -567,6 +622,8 @@ environment when the PR closes. Previews never sign in: Entra does not accept wi
 redirect URIs, and every PR gets its own host. `?scenario=` still switches the mock tenant (see
 *Modes*). The Free plan holds three staging environments at a time, so a fourth open PR's preview
 fails until one closes — it is not a required check.
+
+### Deploy credentials and variables
 
 The Function App is on a **Flex Consumption** plan, which deploys through Entra RBAC only:
 publish-profile (basic auth) deployment is not supported there, and SCM basic auth is disabled on
@@ -587,18 +644,29 @@ az ad app federated-credential create --id <appId> --parameters '{
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
-# 3. let it deploy, and write to the static website
+# 3. let it deploy the Function App
 az role assignment create --assignee <appId> --role Contributor \
   --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev
-az role assignment create --assignee <appId> --role "Storage Blob Data Contributor" \
-  --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev/providers/Microsoft.Storage/storageAccounts/p365lite
 ```
 
+That is `Contributor` on the whole resource group, wider than the Function App itself: the
+credential can manage every other resource in `rg-lh-sa-dev` too, and `Contributor` can list
+storage account keys and read app settings. Those include `GRAPH_CERT_PEM`, the proxy's private key,
+whenever it is a plain app setting; as a Key Vault reference the listing holds only the reference,
+but the credential deploys code to the Function App, and that code reads the resolved value from its
+environment (*Deploying* in `functions/README.md`). Whether a narrower role or scope still deploys
+has not been tested here, so narrowing it is the administrator's call.
+
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
-`AZURE_SUBSCRIPTION_ID` — and, if the names ever differ from the defaults in the workflow, the
-repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job also
-reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
-from repository variables, so the Azure-hosted copy is configured without touching the code.
+`AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the
+workflow, the repository **variable** `AZURE_FUNCTIONAPP_NAME`. The `site` job reads
+`VITE_DELEGATED_CLIENT_ID`, `VITE_FEATURES` and `VITE_MODES_LOCKED`, and `site-application` reads
+`VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES`, `VITE_MODES_LOCKED` and, when
+the storage account's name differs from the default, `AZURE_STORAGE_ACCOUNT`, all from repository
+variables, so each copy is configured without touching the code. The other two secrets,
+`AZURE_STATIC_WEB_APPS_API_TOKEN` and `AZURE_STORAGE_SAS`, are in the table under *Automatic
+deployment*. A deploy job whose secret is missing is skipped with a note in the run summary only,
+so read the summary after a first run.
 
 ### Preview production build locally
 

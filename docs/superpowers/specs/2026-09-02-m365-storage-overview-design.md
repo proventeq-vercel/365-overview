@@ -31,7 +31,7 @@ may be faked to fill a layout.
 | **Repo** | Repurpose `365-overview` in place. Its `auth/` / `clients/` / `config/` / `data/` layers are stable and stay. |
 | **Backend** | **None by default.** Browser-only SPA; with no `VITE_GRAPH_PROXY_URL` the prospect's tenant data never leaves the admin's browser. **Superseded in part:** a build that sets it routes every Graph call through `functions/`, a read-only Azure Functions proxy that signs them app-only and stores nothing — the only way to reach the application-permission endpoints. See `functions/README.md`. |
 | **Tenancy** | Multi-tenant Entra app registration, Proventeq-hosted, admin consent to Graph — delegated in the default build, application roles through the proxy. |
-| **Deployment** | Static bundle on Vercel, as today; the proxy, where one is used, on Azure Functions. |
+| **Deployment** | A static bundle, built by `.github/workflows/deploy.yml` and served from an Azure Static Web App and an Azure storage static website (see *Automatic deployment* in the README); the proxy, where one is used, on Azure Functions. **Superseded in part:** this spec first named Vercel for the bundle. |
 | **Look & feel** | Mirror P365's report layout, section structure and chart choices — on this repo's existing Tailwind v4 + shadcn + Recharts stack. Do **not** pull P365's private `@proventeq/pcl-material-ui-lib`. |
 | **Workloads** | SharePoint + OneDrive, pools kept strictly separate. |
 | **Sections** | Three: Distribution, Growth, Offenders. **No ROT section** — see [What is deliberately absent](#what-is-deliberately-absent). |
@@ -624,7 +624,10 @@ demoable to sales without a live tenant.
 
 ## Deployment
 
-Vercel static, unchanged. Build-time `VITE_*` vars as today, with one change
+Was Vercel static. The bundle is no longer on Vercel:
+`.github/workflows/deploy.yml` builds it and serves it from an Azure Static Web App (delegated
+permissions) and an Azure storage static website (application permissions); see *Automatic
+deployment* in the README. Build-time `VITE_*` vars as today, with one change
 that matters:
 
 `VITE_AUTHORITY_URI` becomes **`https://login.microsoftonline.com/organizations`**

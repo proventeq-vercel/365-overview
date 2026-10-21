@@ -18,7 +18,7 @@ It forwards **reads only, from a fixed allowlist, for the tenant the caller sign
 | Who inside the tenant | Any signed-in user of an allowed tenant, which is what P365 does — its `StorageOverviewController` gates on an active licence and workspace permission, never on a directory role, because its Graph reads are app-only too. `PROXY_ALLOWED_TENANT_IDS` is this proxy's equivalent of the licence. Set `PROXY_REQUIRED_DIRECTORY_ROLES` to also demand a directory role (`wids`) — off by default, because requiring one refused accounts that use P365 itself. |
 | What is forwarded | `GET` on `v1.0/sites/delta`, `v1.0/sites/{id}`, `v1.0/subscribedSkus`, `v1.0/organization`, the four `beta/reports/…UsageDetail` / `…UsageStorage` storage reports, and `POST v1.0/$batch` whose sub-requests are `GET v1.0/sites/{id}`. Query options are allowlisted per route (`$select`, `$format`, paging tokens). Anything else is `404 RouteNotAllowed` and never reaches Graph. |
 | What comes back | Status, body, `content-type` and `retry-after` only. `@odata.nextLink` / `@odata.deltaLink` are rewritten to the proxy so paging keeps going through it. |
-| The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`, a Key Vault reference in Azure) — the key never leaves the Function, and only the public certificate is uploaded to Entra. A client secret is accepted for local scripted checks only. |
+| The credential | A certificate and its private key in an app setting (`GRAPH_CERT_PEM`) — the proxy never sends the key to a caller and only the public certificate is uploaded to Entra, but anyone who can read the app's settings can read a plain-text key, so a long-lived deployment should make the setting a Key Vault reference (see *Deploying*). A client secret is accepted for local scripted checks only. |
 | Browser callers | `PROXY_ALLOWED_ORIGINS` is the CORS allowlist; a request carrying any other `Origin` is refused with 403 before the caller's token is read. |
 | Application permissions | **`Reports.Read.All` is the only required permission** — kept to one so a prospect's administrator is asked for as little as possible. Approving sign-in does not grant it, so a tenant whose administrator only approved sign-in gets `403 AdminConsentRequired`, and the SPA shows its admin-consent screen instead of a role screen; such a token is never cached, so a grant takes effect on the next call. `Sites.Read.All` (site names) and `Organization.Read.All` (tenant name, licence-based entitlement, OneDrive storage per user) are **optional**: when a tenant has not granted them Graph answers those calls `403`, the proxy relays it, and the report degrades — sites named by id, "Your tenant", an unknown entitlement the user can enter in Report settings. |
 | Optional tenant lock | `PROXY_ALLOWED_TENANT_IDS` restricts a deployment to named tenants. Unset (the default), the gate is admin consent alone: any tenant that has consented may read **its own** data, which is the multi-tenant behaviour this app is built for. |
@@ -233,9 +233,9 @@ fails at the preflight even though a direct `GET` carries the proxy's own CORS h
 platform keeps one `Access-Control-Allow-Origin` per response, it does not duplicate the proxy's;
 the proxy's list still decides which origins are served.
 
-`PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it —
-including each Vercel preview host if previews are meant to work, since those get a new hostname per
-branch. A request carrying an origin outside the list is refused before its token is read.
+`PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it.
+Pull request previews are mock-mode builds that never call the proxy, so their per-branch hosts do
+not belong in it. A request carrying an origin outside the list is refused before its token is read.
 
 `PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
 the Function sees differs from the one the browser used (a custom domain, a front door); leave it
@@ -271,17 +271,39 @@ whole path: point it at the deployment instead of `localhost:7071`.
 **For a long-lived deployment move the PEM to Key Vault**: store the bundle as a secret, grant the
 Function's identity *Key Vault Secrets User*, and set `GRAPH_CERT_PEM` to
 `@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/<name>/)`. A plain app
-setting is fine for a test deployment; the Key Vault reference needs a role assignment, which is
-an owner-level step.
+setting is fine for a test deployment, but it holds the key in clear text, so anyone who can read
+the app's settings (`Contributor` on the resource group is enough) can read it. A reference keeps
+the key out of that listing, not out of the app: whoever can deploy code to the Function App can run
+code that reads the resolved value from its environment. The reference needs a role assignment,
+which is an owner-level step.
 
-**The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: every
-request answers 500 `InvalidConfiguration` from the moment it expires. `npm run cert:new` dates one
-two years out — put its expiry in the calendar, and roll it with
+**The certificate is an expiry-dated credential**, and a bundle that carries its `CERTIFICATE`
+block (what `cert:new` writes) fails closed when it lapses: a proxy that starts after the expiry
+(cold start, restart, deploy) answers every request `500 InvalidConfiguration`. That response
+carries none of the proxy's own CORS headers, because the configuration failure is raised before
+they are added, so depending on the Function App's platform CORS setting a browser may report a
+CORS or network error instead of the 500. A PEM that holds only the private key, with
+`GRAPH_CERT_THUMBPRINT` set, is not checked for expiry when it loads, so that proxy starts and the
+lapse shows only as the `502` below. A proxy that starts after the lapse has no cached tokens, so
+its first request for every tenant gets that `502`. A proxy that was already running keeps serving
+each tenant whose application token is cached until that token needs refreshing (a minute before it
+expires; an Entra token typically lives about an hour); the first request that needs a new token
+(a tenant it holds no token for, or one whose cached token is due) signs a new assertion with the
+lapsed certificate and gets `502 TokenAcquisitionFailed` if Entra refuses it. `npm run cert:new`
+dates a certificate two years out. `npm run cert:check -- --pem <file>`, run in this folder after
+`npm ci`, prints the expiry of a bundle that carries its certificate and fails with an "expired on"
+message for an expired one. For a PEM that holds only the private key it needs `--thumbprint` and
+prints no expiry: read the date from the row with the matching thumbprint under *Certificates &
+secrets* on the registration, and add `--client-id` and `--tenant` (see *Validating against a real
+tenant before deploying*) to ask Entra whether it accepts the PEM now. Put the date in the
+calendar, and roll the certificate with
 `az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old one
 keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
-`VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) on the Vercel project.
+`VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) as repository variables: the
+`site-application` job of `.github/workflows/deploy.yml` builds the application-permissions site
+with them.
 
 ## Layout
 
