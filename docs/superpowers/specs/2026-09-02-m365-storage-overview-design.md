@@ -624,7 +624,7 @@ demoable to sales without a live tenant.
 
 ## Deployment
 
-Vercel static, unchanged. **Superseded in part:** the bundle is no longer on Vercel —
+Was Vercel static. The bundle is no longer on Vercel:
 `.github/workflows/deploy.yml` builds it and serves it from an Azure Static Web App (delegated
 permissions) and an Azure storage static website (application permissions); see *Automatic
 deployment* in the README. Build-time `VITE_*` vars as today, with one change
