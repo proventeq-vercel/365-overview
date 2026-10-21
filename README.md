@@ -609,8 +609,9 @@ from repository variables, so the Azure-hosted copy is configured without touchi
 ### Lighthouse
 
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
-builds in **mock mode** with both reports on (so every report the app can build is audited,
-whichever ones production enables), serves the build with `npm run preview`, and runs Lighthouse
+builds in **mock mode** with `VITE_FEATURES` naming both reports (whichever ones production
+enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
+entry), serves the build with `npm run preview`, and runs Lighthouse
 CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
 `lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
@@ -618,13 +619,18 @@ best practices and SEO at 1, every scored accessibility audit at 1 on its own (t
 labels, ARIA roles and attributes, names, lists, …), console errors and text compression at 1,
 and at most the one known CSP finding. Colour contrast is the one exception: the help pages hold
 it at 1, the report pages at no more failing elements than today, because the P365 palette's
-teal links, grey secondary text and state-coloured card values sit under 4.5:1; their
-accessibility score is held at 0.96 as a backstop. A regression fails the job. The reports are
+teal links, grey secondary text and state-coloured card values sit under 4.5:1. Their
+accessibility score is held at 0.96: with every other audit held on its own it moves only when a
+page stops carrying audits that apply to it, which is a reason to re-measure, not a defect. The
+help articles share one template, so `/help` and one article stand for all of them. A regression
+fails the job. The reports are
 kept as the `lighthouse-reports` artifact for 14 days and are never uploaded to a public server.
 
 The job is part of CI, so a red Lighthouse run on `main` also holds the deploy back (*Automatic
 deployment* waits for the whole CI workflow). A performance median under 0.9 from a slow runner,
-with nothing else red, is re-run with *Re-run failed jobs* rather than lowered.
+with nothing else red, is re-run with *Re-run failed jobs* rather than lowered, but only while
+that commit is still the tip of `main`: a green re-run deploys its own commit, so re-running an
+older run would put it out over a newer one. Once a later commit has landed, its own run deploys.
 
 ### Preview production build locally
 
