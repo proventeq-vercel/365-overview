@@ -7,7 +7,7 @@ feature: optimization.storage.report.onedrive
 order: 5
 ---
 
-The five largest personal drives, ranked by storage used. Each OneDrive has its own storage quota,
+The five largest personal drives, ranked by storage used, with bars in OneDrive blue. Each OneDrive has its own storage quota,
 so capacity means something per drive. It is not pooled with SharePoint.
 
 Every drive is listed, with its files and activity, in [All OneDrives](drives.md).

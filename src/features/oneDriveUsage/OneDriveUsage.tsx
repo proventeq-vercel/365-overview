@@ -2,6 +2,7 @@ import { useSettings } from '@/app/useSettings'
 import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
+import { POOL_COLOR } from '@/design/theme'
 import { HelpButton } from '@/app/help/HelpButton'
 import { PageHeader, Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { ReportLoading } from '@/app/ReportLoading'
@@ -43,6 +44,8 @@ export function OneDriveUsage() {
         <Panel>
           <FacetBars
             items={offenders.topDrives}
+            ariaLabel={t('oneDrive.top.title')}
+            color={POOL_COLOR.OneDrive}
             formatValue={formatBytes}
             emptyText={t('oneDrive.top.empty')}
             nameMask={caveats.nameMask}

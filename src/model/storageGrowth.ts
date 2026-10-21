@@ -41,6 +41,7 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
     topGrowers: growthLeaders(current, baseline).map(({ row, growthBytes }) => ({
       name: rowName(row),
       value: growthBytes,
+      pool: row.pool,
     })),
   }
 }
