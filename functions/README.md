@@ -233,9 +233,9 @@ fails at the preflight even though a direct `GET` carries the proxy's own CORS h
 platform keeps one `Access-Control-Allow-Origin` per response, it does not duplicate the proxy's;
 the proxy's list still decides which origins are served.
 
-`PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it —
-including each Vercel preview host if previews are meant to work, since those get a new hostname per
-branch. A request carrying an origin outside the list is refused before its token is read.
+`PROXY_ALLOWED_ORIGINS` is an exact list, so every origin that must reach the proxy belongs in it.
+Pull request previews are mock-mode builds that never call the proxy, so their per-branch hosts do
+not belong in it. A request carrying an origin outside the list is refused before its token is read.
 
 `PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
 the Function sees differs from the one the browser used (a custom domain, a front door); leave it
@@ -281,7 +281,9 @@ two years out — put its expiry in the calendar, and roll it with
 keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
-`VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) on the Vercel project.
+`VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) as repository variables: the
+`site-application` job of `.github/workflows/deploy.yml` builds the application-permissions site
+with them.
 
 ## Layout
 

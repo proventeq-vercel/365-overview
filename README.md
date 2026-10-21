@@ -90,12 +90,13 @@ to change anything:
 cp .env.example .env
 ```
 
-`.env` is git-ignored (it holds real local values). On **Vercel**, set these in
-**Project Settings > Environment Variables** — no env file is deployed, and
-the same repo builds cleanly for any environment. `vercel.json` carries the one
-piece of hosting config the app needs: a rewrite of every path to `index.html`,
-so a reload on `/onedrive-usage` (or any client-side route) is served by the
-app instead of Vercel's 404.
+`.env` is git-ignored (it holds real local values). The deployed builds read these from
+repository **variables** (see *Automatic deployment*) — no env file is deployed, and the same repo
+builds cleanly for any environment. The one piece of hosting config the app needs is a rewrite of
+every path to `index.html`, so a reload on `/onedrive-usage` (or any client-side route) is served
+by the app: the Static Web App does it with `navigationFallback` in
+`public/staticwebapp.config.json`, and the storage static website names `index.html` as its 404
+document.
 
 ### Every option at a glance
 
@@ -407,8 +408,8 @@ browser tab with a search param:
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
 that one override; a new tab starts from the env again. `VITE_MODES_LOCKED=true` makes
-the app ignore the URL entirely — it is the one variable the URL can never touch, and
-the production deployment should set it.
+the app ignore every param except `hideNames` — it is the one variable the URL can never touch,
+and the production deployment should set it.
 
 ### The admin bar — `?admin=true`
 
@@ -522,7 +523,7 @@ az storage blob upload-batch --account-name <storage> --destination '$web' --sou
 
 The site is then `https://<storage>.z33.web.core.windows.net/`. `index.html` is the 404 document so
 client-side routes resolve; Azure serves them with a `404` status, which the browser ignores but a
-crawler would not — the Vercel rewrite in `vercel.json` is the one that answers `200`.
+crawler would not — the Static Web App's `navigationFallback` is the one that answers `200`.
 
 Three things have to name the new origin before it works:
 
@@ -587,18 +588,17 @@ az ad app federated-credential create --id <appId> --parameters '{
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
-# 3. let it deploy, and write to the static website
+# 3. let it deploy the Function App
 az role assignment create --assignee <appId> --role Contributor \
   --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev
-az role assignment create --assignee <appId> --role "Storage Blob Data Contributor" \
-  --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev/providers/Microsoft.Storage/storageAccounts/p365lite
 ```
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the names ever differ from the defaults in the workflow, the
-repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job also
-reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
-from repository variables, so the Azure-hosted copy is configured without touching the code.
+repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job
+reads `VITE_DELEGATED_CLIENT_ID`, `VITE_FEATURES` and `VITE_MODES_LOCKED`, and `site-application`
+reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`,
+all from repository variables, so each copy is configured without touching the code.
 
 ### Preview production build locally
 
