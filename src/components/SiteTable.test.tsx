@@ -51,7 +51,10 @@ const drive: StorageRow = {
   allocatedBytes: 1000,
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 describe('SiteTable', () => {
   it('renders only the requested columns', () => {
@@ -189,11 +192,20 @@ describe('SiteTable', () => {
   it('shows the resolved display name over a link to the site that opens in a new tab', () => {
     const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
     render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name']} />)
-    expect(screen.getByTitle('Alpha Finance')).toHaveTextContent('Alpha Finance')
+    expect(screen.getByText('Alpha Finance', { exact: true })).toBeInTheDocument()
     const link = screen.getByRole('link', { name: '/sites/alpha' })
     expect(link).toHaveAttribute('href', 'https://c.sharepoint.com/sites/alpha')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('lets the keyboard reach a cut-short name and owner', () => {
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(640)
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
+    const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
+    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name', 'owner']} />)
+    expect(screen.getByText('Alpha Finance', { exact: true })).toHaveAttribute('tabindex', '0')
+    expect(screen.getByText('Ada', { exact: true })).toHaveAttribute('tabindex', '0')
   })
 
   it('marks each row with its pool icon', () => {
@@ -208,7 +220,7 @@ describe('SiteTable', () => {
     render(<SiteTable rows={named} totalUsedBytes={1000} columns={['name']} />)
     await user.type(screen.getByRole('searchbox'), 'finan')
     expect(screen.getByText('1 of 2')).toBeInTheDocument()
-    expect(screen.getByTitle('Finance')).toBeInTheDocument()
+    expect(screen.getByText('Finance')).toBeInTheDocument()
   })
 
   it('looks up the names of the sites on the visible page, showing a skeleton meanwhile', async () => {
@@ -224,7 +236,7 @@ describe('SiteTable', () => {
     render(<SiteTable rows={[blank, drive]} totalUsedBytes={800} columns={['name']} />, getSiteDetails)
 
     expect(screen.getByLabelText('Looking up the site name')).toBeInTheDocument()
-    expect(await screen.findByTitle('Finance')).toBeInTheDocument()
+    expect(await screen.findByText('Finance')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '/sites/finance' })).toBeInTheDocument()
     expect(getSiteDetails).toHaveBeenCalledTimes(1)
     expect(getSiteDetails).toHaveBeenCalledWith([blank.id])
@@ -250,11 +262,11 @@ describe('SiteTable', () => {
     render(<SiteTable rows={blank} totalUsedBytes={1e6} columns={['name']} />, getSiteDetails)
 
     await user.click(screen.getByRole('button', { name: 'Next page' }))
-    expect(await screen.findByTitle('Payroll')).toBeInTheDocument()
+    expect(await screen.findByText('Payroll')).toBeInTheDocument()
 
     await user.type(screen.getByRole('searchbox'), 'payroll')
     expect(await screen.findByText('1 of 60')).toBeInTheDocument()
-    expect(screen.getByTitle('Payroll')).toBeInTheDocument()
+    expect(screen.getByText('Payroll')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '/sites/payroll' })).toBeInTheDocument()
   })
 
@@ -268,7 +280,7 @@ describe('SiteTable', () => {
     const blank: StorageRow = { ...rows[0], id: '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718', url: '' }
     render(<SiteTable rows={[blank]} totalUsedBytes={300} columns={['name']} />)
     expect(await screen.findAllByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toHaveLength(1)
-    expect(screen.queryByTitle(blank.ownerDisplayName)).not.toBeInTheDocument()
+    expect(screen.queryByText(blank.ownerDisplayName)).not.toBeInTheDocument()
   })
 
   it('finds a URL-less site by its id', async () => {
