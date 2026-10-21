@@ -15,10 +15,21 @@ export function TruncatedText({ text, className }: { text: string; className?: s
     if (!element) return
     const measure = () => setTruncated(isCut(element))
     measure()
-    if (typeof ResizeObserver === 'undefined') return
+    let active = true
+    document.fonts?.ready.then(() => {
+      if (active) measure()
+    })
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        active = false
+      }
+    }
     const observer = new ResizeObserver(measure)
     observer.observe(element)
-    return () => observer.disconnect()
+    return () => {
+      active = false
+      observer.disconnect()
+    }
   }, [text])
 
   return (
@@ -37,7 +48,7 @@ export function TruncatedText({ text, className }: { text: string; className?: s
       >
         {text}
       </TooltipTrigger>
-      <TooltipContent className="max-w-80 text-left leading-snug font-normal break-words">{text}</TooltipContent>
+      <TooltipContent className="text-left leading-snug font-normal wrap-anywhere">{text}</TooltipContent>
     </Tooltip>
   )
 }

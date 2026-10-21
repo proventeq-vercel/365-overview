@@ -2,14 +2,14 @@ import { expect, test, type Locator } from '@playwright/test'
 
 const LONGEST_SITE = 'Global Procurement and Vendor Management Programme Office – EMEA Regional Collaboration Workspace'
 const LONGEST_OWNER = 'Maximiliana Featherstonehaugh-Montgomery-Abernathy'
-const LONGEST_DRIVE = 'maximiliana_featherstonehaugh-montgomery-abernathy_contoso_onmicrosoft_com'
+const LONGEST_DRIVE = 'maximiliana_featherstonehaughmontgomeryabernathy_contoso_com'
 
 async function rightEdges(name: Locator) {
   return name.evaluate((element) => {
     const box = element.closest('li, [role="cell"]')!
     const style = getComputedStyle(element)
     return {
-      ellipsis: style.textOverflow === 'ellipsis' && style.whiteSpace === 'nowrap',
+      ellipsis: style.textOverflow === 'ellipsis' && style.whiteSpace === 'nowrap' && style.overflow === 'hidden',
       name: element.getBoundingClientRect().right,
       box: box.getBoundingClientRect().right,
       viewport: document.documentElement.clientWidth,
@@ -43,9 +43,10 @@ for (const width of [1280, 390]) {
 
     test('a name cut short shows in full on hover and on keyboard focus', async ({ page }) => {
       await page.goto('/')
-      const topSites = page.locator('li', { hasText: LONGEST_SITE })
-      const name = topSites.getByText(LONGEST_SITE, { exact: true })
+      const topSites = page.getByRole('heading', { name: 'Top SharePoint sites by storage' }).locator('xpath=ancestor::*[.//ul][1]')
+      const name = topSites.locator('li').getByText(LONGEST_SITE, { exact: true })
       await expect(name).toBeVisible({ timeout: 30_000 })
+      expect(await name.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true)
       const tooltip = page.locator('[data-slot="tooltip-content"]')
 
       await name.hover()
@@ -55,6 +56,24 @@ for (const width of [1280, 390]) {
 
       await name.focus()
       await expect(tooltip).toHaveText(LONGEST_SITE)
+    })
+
+    test('the full name of an unbreakable OneDrive wraps inside its tooltip', async ({ page }) => {
+      await page.goto('/')
+      const offenders = page.locator('section', { hasText: 'Main offenders' })
+      const name = offenders.getByRole('cell').getByText(LONGEST_DRIVE, { exact: true })
+      await expect(name).toBeVisible({ timeout: 30_000 })
+      await name.hover()
+      const tooltip = page.locator('[data-slot="tooltip-content"][data-open]')
+      await expect(tooltip).toHaveText(LONGEST_DRIVE)
+      const fit = await tooltip.evaluate((element) => ({
+        scroll: element.scrollWidth,
+        client: element.clientWidth,
+        right: element.getBoundingClientRect().right,
+        viewport: document.documentElement.clientWidth,
+      }))
+      expect(fit.scroll).toBeLessThanOrEqual(fit.client)
+      expect(fit.right).toBeLessThanOrEqual(fit.viewport)
     })
   })
 }
