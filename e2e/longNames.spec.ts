@@ -63,16 +63,20 @@ for (const width of [1280, 390]) {
       const offenders = page.locator('section', { hasText: 'Main offenders' })
       const name = offenders.getByRole('cell').getByText(LONGEST_DRIVE, { exact: true })
       await expect(name).toBeVisible({ timeout: 30_000 })
+      expect(await name.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true)
       await name.hover()
       const tooltip = page.locator('[data-slot="tooltip-content"][data-open]')
       await expect(tooltip).toHaveText(LONGEST_DRIVE)
+      await tooltip.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)))
       const fit = await tooltip.evaluate((element) => ({
         scroll: element.scrollWidth,
         client: element.clientWidth,
+        left: element.getBoundingClientRect().left,
         right: element.getBoundingClientRect().right,
         viewport: document.documentElement.clientWidth,
       }))
       expect(fit.scroll).toBeLessThanOrEqual(fit.client)
+      expect(fit.left).toBeGreaterThanOrEqual(0)
       expect(fit.right).toBeLessThanOrEqual(fit.viewport)
     })
   })

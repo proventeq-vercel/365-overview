@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { act, cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
@@ -20,7 +20,7 @@ afterEach(() => {
 })
 
 function stubResizeObserver() {
-  const observed: (() => void)[] = []
+  const observed: { target: Element; callback: () => void }[] = []
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -28,13 +28,15 @@ function stubResizeObserver() {
       constructor(callback: () => void) {
         this.callback = callback
       }
-      observe() {
-        observed.push(this.callback)
+      observe(target: Element) {
+        observed.push({ target, callback: this.callback })
       }
+      unobserve() {}
       disconnect() {}
     },
   )
-  return () => act(() => observed.forEach((callback) => callback()))
+  return (element: Element) =>
+    act(() => observed.filter((entry) => entry.target === element).forEach((entry) => entry.callback()))
 }
 
 describe('TruncatedText', () => {
@@ -81,7 +83,7 @@ describe('TruncatedText', () => {
     const name = screen.getByText(LONG_NAME)
     expect(name).not.toHaveAttribute('tabindex')
     layout(640, 120)
-    resize()
+    resize(name)
     expect(name).toHaveAttribute('tabindex', '0')
   })
 
@@ -91,5 +93,23 @@ describe('TruncatedText', () => {
     layout(640, 120)
     rerender(<TruncatedText text={LONG_NAME} />)
     expect(screen.getByText(LONG_NAME)).toHaveAttribute('tabindex', '0')
+  })
+
+  it('measures again once the web fonts have loaded', async () => {
+    let fontsLoaded = () => {}
+    const ready = new Promise<void>((resolve) => {
+      fontsLoaded = resolve
+    })
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } })
+    onTestFinished(() => {
+      Reflect.deleteProperty(document, 'fonts')
+    })
+    layout(120, 120)
+    render(<TruncatedText text={LONG_NAME} />)
+    const name = screen.getByText(LONG_NAME)
+    expect(name).not.toHaveAttribute('tabindex')
+    layout(640, 120)
+    await act(async () => fontsLoaded())
+    expect(name).toHaveAttribute('tabindex', '0')
   })
 })
