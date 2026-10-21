@@ -615,11 +615,12 @@ az role assignment create --assignee <appId> --role Contributor \
 ```
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
-`AZURE_SUBSCRIPTION_ID` — and, if the names ever differ from the defaults in the workflow, the
-repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. The `site` job
-reads `VITE_DELEGATED_CLIENT_ID`, `VITE_FEATURES` and `VITE_MODES_LOCKED`, and `site-application`
-reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`,
-all from repository variables, so each copy is configured without touching the code.
+`AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the
+workflow, the repository **variable** `AZURE_FUNCTIONAPP_NAME`. The `site` job reads
+`VITE_DELEGATED_CLIENT_ID`, `VITE_FEATURES` and `VITE_MODES_LOCKED`, and `site-application` reads
+`VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES`, `VITE_MODES_LOCKED` and, when
+the storage account's name differs from the default, `AZURE_STORAGE_ACCOUNT`, all from repository
+variables, so each copy is configured without touching the code.
 
 ### Preview production build locally
 
