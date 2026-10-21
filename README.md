@@ -603,16 +603,22 @@ from repository variables, so the Azure-hosted copy is configured without touchi
 ### Lighthouse
 
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
-builds in **mock mode** with both reports on, serves the build with `npm run preview`, and runs
-Lighthouse CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
+builds in **mock mode** with both reports on (so every report the app can build is audited,
+whichever ones production enables), serves the build with `npm run preview`, and runs Lighthouse
+CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
 `lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
-best practices, SEO, accessibility on the help pages and the key audits (title, `lang`, image
-alt, labels, console errors, text compression) at 1, and at most the one known CSP finding. The
-report pages hold accessibility at today's 0.97 and 0.96 and color-contrast at no more failing elements than today,
-because the P365 palette's teal links, grey secondary text and state-coloured card values sit
-under 4.5:1. A regression fails the job. The reports are kept as the `lighthouse-reports` artifact
-for 14 days and are never uploaded to a public server.
+best practices and SEO at 1, every scored accessibility audit at 1 on its own (title, `lang`,
+labels, ARIA roles and attributes, names, lists, …), console errors and text compression at 1,
+and at most the one known CSP finding. Colour contrast is the one exception: the help pages hold
+it at 1, the report pages at no more failing elements than today, because the P365 palette's
+teal links, grey secondary text and state-coloured card values sit under 4.5:1; their
+accessibility score is held at 0.96 as a backstop. A regression fails the job. The reports are
+kept as the `lighthouse-reports` artifact for 14 days and are never uploaded to a public server.
+
+The job is part of CI, so a red Lighthouse run on `main` also holds the deploy back (*Automatic
+deployment* waits for the whole CI workflow). A performance median under 0.9 from a slow runner,
+with nothing else red, is re-run with *Re-run failed jobs* rather than lowered.
 
 ### Preview production build locally
 
@@ -621,7 +627,10 @@ npm run preview
 ```
 
 The preview server sends the `globalHeaders` of `public/staticwebapp.config.json` (CSP, HSTS and
-the rest), so a local check, and the Lighthouse job, see the headers production serves.
+the rest), so a local check, and the Lighthouse job, see the headers the Static Web App serves.
+The application-permissions copy on Azure Storage sends none of them. The CSP's `connect-src`
+allows only the Microsoft and deployed proxy hosts, so a build pointed at the local proxy stack
+is checked with `npm run dev`, not `npm run preview`.
 
 ---
 
