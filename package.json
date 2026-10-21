@@ -28,7 +28,7 @@
     "react-dom": "^19.2.7",
     "react-intl": "^10.2.2",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.18.0",
+    "react-router-dom": "^7.18.4",
     "recharts": "^3.9.0",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
