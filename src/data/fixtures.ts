@@ -34,6 +34,18 @@ const BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 const MOCK_REFRESH_DATE = '2026-08-30'
 const DORMANT_YEAR = 2022
 
+const LONGEST_SITE = {
+  index: 2000,
+  name: 'Global Procurement and Vendor Management Programme Office – EMEA Regional Collaboration Workspace',
+  slug: 'global-procurement-and-vendor-management-programme-office-emea-regional-collaboration',
+  owner: 'Maximiliana Featherstonehaugh-Montgomery-Abernathy',
+}
+const LONGEST_DRIVE = {
+  upn: 'maximiliana.featherstonehaugh-montgomery-abernathy@contoso.onmicrosoft.com',
+  leaf: 'maximiliana_featherstonehaugh-montgomery-abernathy_contoso_onmicrosoft_com',
+  owner: 'Maximiliana Featherstonehaugh-Montgomery-Abernathy',
+}
+
 const TEMPLATES = ['Team Site', 'Group', 'Team Channel', 'Site Page Publishing', 'Publishing Site']
 
 function monthEnds(count: number): string[] {
@@ -78,9 +90,9 @@ function generateSites(count: number, concealed = false, tidy = false): StorageR
     out.push({
       pool: 'SharePoint',
       id: `gen-${i}`,
-      name: concealed ? undefined : `Team ${i}`,
-      url: concealed ? '' : `https://contoso.sharepoint.com/sites/team-${i}`,
-      ownerDisplayName: concealed ? hashName(i) : `Owner ${i}`,
+      name: concealed ? undefined : i === LONGEST_SITE.index ? LONGEST_SITE.name : `Team ${i}`,
+      url: concealed ? '' : `https://contoso.sharepoint.com/sites/${i === LONGEST_SITE.index ? LONGEST_SITE.slug : `team-${i}`}`,
+      ownerDisplayName: concealed ? hashName(i) : i === LONGEST_SITE.index ? LONGEST_SITE.owner : `Owner ${i}`,
       storageUsedBytes: mb * MB,
       fileCount,
       activeFileCount: Math.round(fileCount * 0.1),
@@ -129,9 +141,9 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
         : 200 + ((i * 13) % 8000)
     out.push({
       pool: 'OneDrive',
-      id: concealed ? hashName(2000 + i) : `user${i}@contoso.com`,
-      url: concealed ? '' : `https://contoso-my.sharepoint.com/personal/user${i}`,
-      ownerDisplayName: concealed ? hashName(3000 + i) : `User ${i}`,
+      id: concealed ? hashName(2000 + i) : i === 0 ? LONGEST_DRIVE.upn : `user${i}@contoso.com`,
+      url: concealed ? '' : `https://contoso-my.sharepoint.com/personal/${i === 0 ? LONGEST_DRIVE.leaf : `user${i}`}`,
+      ownerDisplayName: concealed ? hashName(3000 + i) : i === 0 ? LONGEST_DRIVE.owner : `User ${i}`,
       storageUsedBytes: mb * MB,
       fileCount: (i % 300) * 5 + 20,
       activeFileCount: (i % 30) * 2,
