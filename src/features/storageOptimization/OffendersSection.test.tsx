@@ -170,6 +170,7 @@ describe('OffendersSection', () => {
     renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
     const placeholder = screen.getByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' })
     expect(placeholder).toHaveTextContent('Loading the fastest-growing sites and OneDrives')
+    expect(placeholder).not.toHaveAttribute('aria-busy')
     expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
     expect(growthLegend()).toBeNull()
   })
