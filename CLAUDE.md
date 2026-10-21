@@ -394,10 +394,15 @@ typecheck · test · build as a separate job.
   the measured baseline, and every scored accessibility audit is asserted on its
   own at 1: a change that adds a contrast failure, drops a label, breaks an ARIA
   role or costs a category point fails CI, and a red CI holds the deploy. Colour
-  contrast on the report pages is held at its current count (accessibility
-  0.96 as a backstop) only because of the P365 palette's low-contrast text;
-  raise them to 1 when that is fixed, never lower them to get a PR green. A
-  page added to the app gets a URL in `lighthouserc.json`. Reports go to the
+  contrast on the report pages is held at its current count only because of
+  the P365 palette's low-contrast text; raise it to 1 when that is fixed, never
+  raise the count to get a PR green. Their accessibility 0.96 moves only when a
+  page stops carrying audits, so re-measure it then. A report added to the app
+  goes into the job's `VITE_FEATURES` and gets a URL in `collect.url` **and its
+  own `assertMatrix` entry** — the `.*` entry holds neither colour contrast nor
+  the accessibility score. Help articles share one template; `/help` and one
+  article stand for them. Re-run a flaky performance median only while its
+  commit is the tip of `main` (a green re-run deploys that commit). Reports go to the
   `lighthouse-reports` artifact, never to `temporary-public-storage`.
 
 ## Design system / brand
