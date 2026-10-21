@@ -10,9 +10,9 @@ const NO_SITES: SiteDirectory = new Map()
 
 const SITE_DETAILS_KEY = 'siteDetails'
 
-export function useSiteDetails(rows: StorageRow[]) {
+export function useSiteDetails(rows: StorageRow[], enabled = true) {
   const ds = useDataSource()
-  const ids = useMemo(() => unresolvedSiteIds(rows), [rows])
+  const ids = useMemo(() => (enabled ? unresolvedSiteIds(rows) : []), [rows, enabled])
   const query = useQuery({
     queryKey: [SITE_DETAILS_KEY, ids],
     queryFn: () => ds.getSiteDetails(ids),

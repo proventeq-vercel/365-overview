@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { StorageRow } from '@/types/storage'
-import { hideReportRowNames, hideRowNames, initialsOf, pseudonymOf } from './hiddenNames'
+import {
+  hiddenNameLength,
+  hiddenNamePlaceholder,
+  hideReportRowNames,
+  hideRowNames,
+  initialsOf,
+  pseudonymOf,
+} from './hiddenNames'
 
 const SITE_ID = '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718'
 
@@ -81,5 +88,23 @@ describe('hideRowNames', () => {
       url: '',
       ownerDisplayName: 'A.L.',
     })
+  })
+})
+
+describe('hiddenNamePlaceholder', () => {
+  const seeds = ['3f9a1c0b7e2d4a65', 'a1b2c3d4e5f60718', '0000000000000000', 'A.L.', 'B.E.', 'x']
+
+  it('is the same neutral placeholder for the same seed and never the seed itself', () => {
+    for (const seed of seeds) {
+      expect(hiddenNamePlaceholder(seed)).toBe(hiddenNamePlaceholder(seed))
+      expect('Lorem ipsum dolor sit amet'.startsWith(hiddenNamePlaceholder(seed))).toBe(true)
+      expect(hiddenNamePlaceholder(seed)).not.toContain(seed)
+    }
+  })
+
+  it('varies its length by seed, between 8 and 21 characters', () => {
+    const lengths = seeds.map(hiddenNameLength)
+    expect(new Set(lengths).size).toBeGreaterThan(1)
+    expect(lengths.every((length) => length >= 8 && length <= 21)).toBe(true)
   })
 })

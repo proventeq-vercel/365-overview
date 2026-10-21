@@ -71,15 +71,18 @@ send Proventeq the message shown under the heading.
 
 ## Sites are listed by an id instead of a name
 
-The figures are still correct. The name is missing for one of these reasons:
+The figures are still correct. The app has no `Sites.Read.All`, or, with delegated permissions,
+the signed-in user cannot open that site. [Site names](../reference/site-names.md) explains it.
 
-- The app has no `Sites.Read.All`. With delegated permissions, the signed-in user cannot open
-  that site.
+## Names are blurred
+
+The figures are still correct. Hover over or click a blurred name to see why:
+
 - Your tenant conceals names in usage reports. In the Microsoft 365 admin centre, go to
   **Settings → Org settings → Reports**.
 - The link turned on hidden names (`?hideNames=true`).
 
-[Site names](../reference/site-names.md) explains each one.
+[Site names](../reference/site-names.md#blurred-names) explains both.
 
 ## Figures show as Unknown
 

@@ -53,6 +53,7 @@ export function OffendersSection({ overview, delay }: Props) {
           data={topConsumers.map((slice) => ({ ...slice }))}
           formatValue={formatBytes}
           ariaLabel={t('storageOptimisation.offenders.biggest')}
+          nameMask={overview.caveats.nameMask}
         />
       </Panel>
 
@@ -63,6 +64,7 @@ export function OffendersSection({ overview, delay }: Props) {
             items={topSites}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}
+            nameMask={overview.caveats.nameMask}
           />
         </Panel>
         <Panel>
@@ -71,6 +73,7 @@ export function OffendersSection({ overview, delay }: Props) {
             items={topDrives}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}
+            nameMask={overview.caveats.nameMask}
           />
         </Panel>
       </SplitGrid>
@@ -93,6 +96,7 @@ export function OffendersSection({ overview, delay }: Props) {
           totalUsedBytes={totalUsedBytes}
           columns={[...OFFENDER_COLUMNS]}
           label={t('storageOptimisation.offenders.tableLabel')}
+          nameMask={overview.caveats.nameMask}
         />
       </Panel>
     </Section>

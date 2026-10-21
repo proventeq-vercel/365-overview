@@ -68,4 +68,4 @@ These query options are added to the report's address:
 
 | Option | Effect |
 | --- | --- |
-| `?hideNames=true` | Masks site names and owners for the rest of the tab ([Site names](site-names.md#hidden-names)). `?hideNames=` shows them again, unless the site itself is set up to hide names. |
+| `?hideNames=true` | Blurs site names and owners for the rest of the tab ([Site names](site-names.md#hidden-names)). `?hideNames=` shows them again, unless the site itself is set up to hide names. |

@@ -4,13 +4,15 @@ import { cn } from '@/lib/utils'
 import { rowName } from '@/lib/rowName'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
-import type { StorageRow } from '@/types/storage'
+import type { SiteDirectory } from '@/reports/siteDirectory'
+import type { NameMask, StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
 import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ExternalUrlLink } from '@/design/ExternalUrlLink'
+import { HiddenName } from '@/design/HiddenName'
 import { Pagination } from '@/design/Pagination'
 import { PoolIcon } from '@/design/PoolIcon'
 import { ColumnHeaderTooltip } from '@/design/ColumnHeaderTooltip'
@@ -34,6 +36,7 @@ interface SiteTableProps {
   label?: string
   nameHeader?: string
   nameHelp?: string
+  nameMask?: NameMask | null
 }
 
 interface ColumnSpec {
@@ -121,6 +124,8 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
 
 const DEFAULT_SORT: ColumnKey = 'used'
 
+const NO_KNOWN_SITES: SiteDirectory = new Map()
+
 export function SiteTable({
   rows,
   totalUsedBytes,
@@ -128,6 +133,7 @@ export function SiteTable({
   label,
   nameHeader,
   nameHelp,
+  nameMask = null,
 }: SiteTableProps) {
   const t = useTranslation()
   const tableLabel = label ?? t('table.sites')
@@ -136,7 +142,8 @@ export function SiteTable({
   const [sortKey, setSortKey] = useState<ColumnKey>(DEFAULT_SORT)
   const [sortDir, setSortDir] = useState<SortDirection>('desc')
 
-  const known = useKnownSites()
+  const knownSites = useKnownSites()
+  const known = nameMask === null ? knownSites : NO_KNOWN_SITES
   const query = useDeferredValue(normaliseQuery(search))
   const searching = query !== normaliseQuery(search)
 
@@ -156,7 +163,7 @@ export function SiteTable({
     () => visible.slice(start, end).map((i) => rows[i]),
     [visible, rows, start, end],
   )
-  const { rows: pageRows, isPending: namesPending } = useSiteDetails(pageSlice)
+  const { rows: pageRows, isPending: namesPending } = useSiteDetails(pageSlice, nameMask === null)
 
   function changeSearch(value: string) {
     setSearch(value)
@@ -186,6 +193,14 @@ export function SiteTable({
   function renderCell(key: ColumnKey, row: StorageRow) {
     switch (key) {
       case 'name': {
+        if (nameMask !== null) {
+          return (
+            <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
+              <PoolIcon pool={row.pool} />
+              <HiddenName mask={nameMask} seed={row.id} className="font-semibold text-p365-navy" />
+            </span>
+          )
+        }
         const name = rowName(row)
         const resolving = namesPending && row.pool === 'SharePoint' && !row.name && !row.url
         return (
@@ -217,7 +232,11 @@ export function SiteTable({
       case 'owner':
         return (
           <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.ownerDisplayName}
+            {nameMask === null ? (
+              row.ownerDisplayName
+            ) : (
+              <HiddenName mask={nameMask} seed={row.ownerDisplayName} />
+            )}
           </span>
         )
       case 'files':

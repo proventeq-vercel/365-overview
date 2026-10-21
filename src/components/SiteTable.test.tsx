@@ -283,6 +283,42 @@ describe('SiteTable', () => {
     expect(screen.getByText('8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718')).toBeInTheDocument()
   })
 
+  describe('masked names', () => {
+    const masked: StorageRow[] = [
+      { ...rows[0], id: '3f9a1c0b7e2d4a65', url: '', ownerDisplayName: 'A.L.' },
+      { ...rows[1], id: 'a1b2c3d4e5f60718', url: '', ownerDisplayName: 'G.H.' },
+    ]
+
+    it('renders a blurred stand-in for every name and owner, and never the masked values', () => {
+      const { container } = render(
+        <SiteTable rows={masked} totalUsedBytes={1000} columns={['name', 'owner', 'used']} nameMask="hidden" />,
+      )
+      expect(screen.getAllByRole('button', { name: 'Hidden name' })).toHaveLength(4)
+      for (const value of ['3f9a1c0b7e2d4a65', 'a1b2c3d4e5f60718', 'A.L.', 'G.H.']) {
+        expect(container.innerHTML).not.toContain(value)
+      }
+      expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    })
+
+    it('still finds a row by its pseudonym', async () => {
+      const user = userEvent.setup()
+      render(<SiteTable rows={masked} totalUsedBytes={1000} columns={['name', 'used']} nameMask="hidden" />)
+      await user.type(screen.getByRole('searchbox'), '3f9a1c0b')
+      expect(screen.getByText('1 of 2')).toBeInTheDocument()
+      expect(screen.getByText('300 B')).toBeInTheDocument()
+    })
+
+    it('looks up no site names while names are masked', () => {
+      const getSiteDetails = vi.fn(async () => new Map())
+      render(
+        <SiteTable rows={masked} totalUsedBytes={1000} columns={['name']} nameMask="concealed" />,
+        getSiteDetails,
+      )
+      expect(getSiteDetails).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText('Looking up the site name')).not.toBeInTheDocument()
+    })
+  })
+
   describe('pagination', () => {
     const many: StorageRow[] = Array.from({ length: 120 }, (_, i) => ({
       ...rows[0],

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, screen, within } from '@testing-library/react'
 import { render } from '@/test/render'
+import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { SettingsProvider } from '@/app/SettingsProvider'
@@ -14,9 +15,9 @@ afterEach(() => {
   localStorage.clear()
 })
 
-function renderReport(scenario: MockScenario = 'healthy', overrides: Partial<DataSource> = {}) {
+function renderReport(scenario: MockScenario = 'healthy', overrides: Partial<DataSource> = {}, hideNames = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const ds = { ...createMockDataSource(scenario), ...overrides }
+  const ds = { ...createMockDataSource(scenario, { hideNames }), ...overrides }
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -147,11 +148,11 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
   it('explains concealed names only on a tenant that conceals them', async () => {
     const { unmount } = renderReport()
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(screen.queryByText(/appear as hashes/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/identities below are blurred/i)).not.toBeInTheDocument()
     unmount()
 
     renderReport('concealed')
-    expect(await screen.findByText(/appear as hashes/i)).toBeInTheDocument()
+    expect(await screen.findByText(/identities below are blurred/i)).toBeInTheDocument()
   })
 
   it('says the over-licence figure is unknown, not zero, when the licences cannot be read', async () => {
@@ -198,9 +199,24 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
 
   it('explains hidden names before the first table that shows them', async () => {
     renderReport('concealed')
-    const banner = await screen.findByText(/appear as hashes/i)
+    const banner = await screen.findByText(/identities below are blurred/i)
     const firstNames = screen.getByRole('heading', { name: 'Top OneDrives by storage' })
     expect(banner.compareDocumentPosition(firstNames) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it.each([
+    ['hidden', 'healthy', true, 'Name hidden in this report'],
+    ['concealed', 'concealed', false, 'Name concealed by Microsoft'],
+  ] as const)('blurs every drive and owner name when names are %s, with one note', async (_, scenario, hideNames, title) => {
+    const user = userEvent.setup()
+    renderReport(scenario, {}, hideNames)
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(screen.getAllByRole('button', { name: 'Hidden name' }).length).toBeGreaterThan(0)
+    const html = document.body.innerHTML
+    expect([/User \d/, /@contoso\.com/, /sharepoint\.com\//, /\b(?=[0-9a-f]*[a-f])[0-9a-f]{16}\b/, /[0-9A-F]{32}/].filter((p) => p.test(html))).toEqual([])
+    expect(screen.getAllByRole('status').filter((status) => /names/i.test(status.textContent ?? ''))).toHaveLength(1)
+    await user.click(screen.getAllByRole('button', { name: 'Hidden name' })[0])
+    expect(await screen.findByRole('dialog')).toHaveTextContent(title)
   })
 
   it('shows the same access failure screens as the storage report', async () => {

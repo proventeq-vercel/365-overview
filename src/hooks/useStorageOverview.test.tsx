@@ -80,6 +80,22 @@ describe('useStorageOverview', () => {
     expect(getSiteDetails).toHaveBeenCalledWith([LEGAL_ID])
   })
 
+  it('looks up no site name and applies no directory name when the tenant conceals names', async () => {
+    const getSiteDetails = vi.fn(async () => directory)
+    const concealed = (id: string, bytes: number) => ({
+      ...site(id, bytes),
+      ownerDisplayName: '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F',
+    })
+    renderWithData(
+      <Probe />,
+      sourceWith({ getSites: async () => [concealed(FINANCE_ID, 900), concealed(LEGAL_ID, 100)], getSiteDetails }),
+    )
+
+    expect(await screen.findAllByText(/=\(unnamed\)$/)).toHaveLength(2)
+    expect(screen.queryByText(/Finance/)).not.toBeInTheDocument()
+    expect(getSiteDetails).not.toHaveBeenCalled()
+  })
+
   it('renders the report when the tenant directory is unavailable', async () => {
     renderWithData(<Probe />, sourceWith({ getSiteDirectory: async () => new Map() }))
 

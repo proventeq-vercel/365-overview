@@ -502,19 +502,38 @@ describe('buildStorageOverview composition', () => {
     expect(buildStorageOverview(inputs()).reportRefreshDate).toBe('2026-08-30')
   })
 
-  it('flags concealed names from the combined site and drive rows', () => {
-    const concealed = Array.from({ length: 6 }, (_, i) =>
-      site({ id: `c${i}`, url: '', ownerDisplayName: '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F' }),
-    )
-    expect(buildStorageOverview(inputs({ sites: concealed })).caveats.namesAreConcealed).toBe(
-      true,
-    )
-    expect(buildStorageOverview(inputs()).caveats.namesAreConcealed).toBe(false)
+  const concealedSites = Array.from({ length: 6 }, (_, i) =>
+    site({
+      id: `c${i}`,
+      name: `Concealed ${i}`,
+      url: `https://contoso.sharepoint.com/sites/concealed-${i}`,
+      ownerDisplayName: '2C4A3F1E9B7D5A6C8E0F1A2B3C4D5E6F',
+    }),
+  )
+
+  it('masks names as concealed from the combined site and drive rows', () => {
+    expect(buildStorageOverview(inputs({ sites: concealedSites })).caveats.nameMask).toBe('concealed')
+    expect(buildStorageOverview(inputs()).caveats.nameMask).toBeNull()
   })
 
-  it('carries the hidden-names choice into the caveats', () => {
-    expect(buildStorageOverview(inputs({ namesHidden: true })).caveats.namesHidden).toBe(true)
-    expect(buildStorageOverview(inputs()).caveats.namesHidden).toBe(false)
+  it('masks names as hidden when the session hides them', () => {
+    expect(buildStorageOverview(inputs({ namesHidden: true })).caveats.nameMask).toBe('hidden')
+  })
+
+  it('calls a concealed tenant concealed even when the session also hides names', () => {
+    expect(
+      buildStorageOverview(inputs({ sites: concealedSites, namesHidden: true })).caveats.nameMask,
+    ).toBe('concealed')
+  })
+
+  it('strips names, links and owners from the rows of a concealed tenant', () => {
+    const overview = buildStorageOverview(inputs({ sites: concealedSites }))
+    const [first] = overview.offenders.rows
+    expect(first.name).toBeUndefined()
+    expect(first.url).toBe('')
+    expect(first.ownerDisplayName).toBe('2.')
+    expect(first.id).toMatch(/^[0-9a-f]{16}$/)
+    expect(overview.offenders.topSites.map((slice) => slice.name)).not.toContain('Concealed 0')
   })
 })
 

@@ -17,6 +17,10 @@ import {
 } from 'recharts'
 import { CHART_GRID, CHART_TICK, P365, facetFill } from '@/design/theme'
 import { EmptyBlock } from '@/design/primitives'
+import { HiddenName } from '@/design/HiddenName'
+import { useTranslation } from '@/hooks/useTranslation'
+import { hiddenNameLength } from '@/lib/hiddenNames'
+import type { NameMask } from '@/types/storage'
 
 const TOOLTIP_STYLE = {
   borderRadius: 6,
@@ -167,25 +171,61 @@ export function MonoLineChart({
   )
 }
 
+const HIDDEN_TICK_CHAR_WIDTH = 6
+const HIDDEN_TICK_HEIGHT = 8
+
+function HiddenNameTick({
+  x,
+  y,
+  payload,
+  lengths,
+}: {
+  x?: number
+  y?: number
+  payload?: { index: number }
+  lengths: number[]
+}) {
+  const width = (lengths[payload?.index ?? 0] ?? 0) * HIDDEN_TICK_CHAR_WIDTH
+  return (
+    <g transform={`translate(${x ?? 0},${y ?? 0}) rotate(-20)`}>
+      <rect
+        x={-width}
+        y={4}
+        width={width}
+        height={HIDDEN_TICK_HEIGHT}
+        rx={HIDDEN_TICK_HEIGHT / 2}
+        fill={P365.grey400}
+        style={{ filter: 'blur(2px)' }}
+      />
+    </g>
+  )
+}
+
 export function MonoBarChart({
   data,
   formatValue,
   height = 288,
   ariaLabel,
+  nameMask = null,
 }: {
   data: { name: string; value: number }[]
   formatValue: (value: number) => string
   height?: number
   ariaLabel: string
+  nameMask?: NameMask | null
 }) {
+  const t = useTranslation()
+  const masked = nameMask !== null
+  const bars = masked ? data.map((item, index) => ({ ...item, name: String(index) })) : data
+  const lengths = masked ? data.map((item) => hiddenNameLength(item.name)) : []
   return (
     <div role="img" aria-label={ariaLabel} className="w-full">
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+        <BarChart data={bars} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={CHART_GRID} vertical={false} />
           <XAxis
             dataKey="name"
-            tick={CHART_TICK}
+            tick={masked ? <HiddenNameTick lengths={lengths} /> : CHART_TICK}
             stroke={P365.grey100}
             tickLine={false}
             interval={0}
@@ -205,6 +245,7 @@ export function MonoBarChart({
             cursor={{ fill: CHART_GRID }}
             contentStyle={TOOLTIP_STYLE}
             formatter={(v) => formatValue(Number(v))}
+            labelFormatter={masked ? () => t('hiddenName.label') : undefined}
           />
           <Bar dataKey="value" fill={P365.blue} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false} />
         </BarChart>
@@ -217,10 +258,12 @@ export function FacetBars({
   items,
   formatValue,
   emptyText,
+  nameMask = null,
 }: {
   items: { name: string; value: number }[]
   formatValue: (value: number) => string
   emptyText: string
+  nameMask?: NameMask | null
 }) {
   if (items.length === 0) return <EmptyBlock>{emptyText}</EmptyBlock>
   const max = items.reduce((top, item) => Math.max(top, item.value), 1)
@@ -235,9 +278,17 @@ export function FacetBars({
               style={{ width: `${(item.value / max) * 100}%`, background: facetFill(index) }}
               aria-hidden="true"
             />
-            <span className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
-              {item.name}
-            </span>
+            {nameMask === null ? (
+              <span className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
+                {item.name}
+              </span>
+            ) : (
+              <HiddenName
+                mask={nameMask}
+                seed={item.name}
+                className="relative px-2 text-xs font-semibold text-p365-navy"
+              />
+            )}
           </div>
           <span className="tabular shrink-0 text-xs text-p365-grey-700">{formatValue(item.value)}</span>
         </li>

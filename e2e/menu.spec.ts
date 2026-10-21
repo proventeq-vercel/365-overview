@@ -85,7 +85,7 @@ test('VITE_MODES_LOCKED keeps the URL from changing the modes', async ({ page })
   await page.goto('/?features=optimization.storage.report.overview&scenario=concealed')
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open menu' })).toBeVisible()
-  await expect(page.getByText(/appear as hashes/i)).toHaveCount(0)
+  await expect(page.getByText(/identities below are blurred/i)).toHaveCount(0)
 })
 
 test('the options menu opens the settings dialog by keyboard and hands focus back on Escape', async ({ page }) => {
