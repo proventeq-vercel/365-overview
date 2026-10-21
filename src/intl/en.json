@@ -297,8 +297,6 @@
   "storageOptimisation.offenders.fastestNone": "No site or OneDrive grew between {from} and {to}.",
   "storageOptimisation.offenders.fastestUnavailable": "Growth is unavailable: Microsoft did not return the usage report for four weeks ago, so only today's sizes are known.",
   "storageOptimisation.offenders.fastestLoading": "Loading the fastest-growing sites and OneDrives",
-  "storageOptimisation.offenders.growerSharePoint": "SharePoint site",
-  "storageOptimisation.offenders.growerOneDrive": "OneDrive",
   "storageOptimisation.offenders.topSites": "Top SharePoint sites by storage",
   "storageOptimisation.offenders.topDrives": "Top OneDrives by storage",
   "storageOptimisation.offenders.empty": "No results",

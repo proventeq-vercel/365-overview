@@ -45,6 +45,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.offenders.topSites')}</PanelLabel>
           <FacetBars
             items={topSites}
+            ariaLabel={t('storageOptimisation.offenders.topSites')}
             color={POOL_COLOR.SharePoint}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}
@@ -55,6 +56,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.offenders.topDrives')}</PanelLabel>
           <FacetBars
             items={topDrives}
+            ariaLabel={t('storageOptimisation.offenders.topDrives')}
             color={POOL_COLOR.OneDrive}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}

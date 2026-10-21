@@ -5,6 +5,7 @@ import type { NameMask, StorageGrowth } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
 import { EmptyBlock, Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
 import { POOL_COLOR } from '@/design/theme'
+import { TOP_GROWERS } from '@/model/storageGrowth'
 
 export interface GrowthState {
   data: StorageGrowth | undefined
@@ -36,20 +37,26 @@ export function FastestGrowingPanel({ growth, nameMask }: { growth: GrowthState;
     <Panel>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PanelLabel>{t('storageOptimisation.offenders.fastest')}</PanelLabel>
-        <Legend
-          columns={2}
-          items={[
-            { name: t('storageOptimisation.offenders.growerSharePoint'), color: POOL_COLOR.SharePoint },
-            { name: t('storageOptimisation.offenders.growerOneDrive'), color: POOL_COLOR.OneDrive },
-          ]}
-        />
+        {growth.data && growth.data.topGrowers.length > 0 && (
+          <Legend
+            columns={2}
+            items={[
+              { name: t('table.pool.SharePoint'), color: POOL_COLOR.SharePoint },
+              { name: t('table.pool.OneDrive'), color: POOL_COLOR.OneDrive },
+            ]}
+          />
+        )}
       </div>
       {growth.data ? (
         <GrowthChart growth={growth.data} nameMask={nameMask} />
       ) : growth.isError ? (
         <EmptyBlock>{t('storageOptimisation.offenders.fastestUnavailable')}</EmptyBlock>
       ) : (
-        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-72 w-full" />
+        <div aria-label={t('storageOptimisation.offenders.fastestLoading')} className="flex flex-col gap-2.5">
+          {Array.from({ length: TOP_GROWERS }, (_, index) => (
+            <Skeleton key={index} className="h-7 w-full" />
+          ))}
+        </div>
       )}
     </Panel>
   )

@@ -18,17 +18,20 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - **Storage added** is the size on the report date less the size on the earlier day. A site or
   OneDrive that did not exist on the earlier day counts from nothing.
 - Each row starts with the product's icon, and its bar has that product's colour: SharePoint teal
-  for a site, OneDrive blue for a OneDrive. The legend under the list names both, and the icon
-  names the product on hover and to a screen reader, so the colour is never the only cue.
+  for a site, OneDrive blue for a OneDrive. The legend beside the panel title names both, and the
+  icon names the product on hover and to a screen reader, so the colour is never the only cue.
+- A site created from a Teams template counts as a SharePoint site here. Microsoft Graph does not
+  say which sites belong to Teams, so only the storage line groups them by template.
+- Hover over a name cut short to read it in full.
 - Sites and OneDrives that shrank, stayed the same or were deleted are left out. If nothing grew,
-  the panel says so instead of drawing an empty chart.
-- The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
+  the panel says so instead of showing an empty list.
+- The list loads after the rest of the report, with a placeholder while it does. If Microsoft
   does not return the earlier day's report, the panel says growth is unavailable. It never shows
   zero growth in its place.
 
 ## Largest sites and OneDrives
 
-Two lists sit under the growth chart:
+Two lists sit under the growth list:
 
 - **Top SharePoint sites by storage**: the five largest sites, in SharePoint teal.
 - **Top OneDrives by storage**: the five largest personal drives, in OneDrive blue.

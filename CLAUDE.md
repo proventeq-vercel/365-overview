@@ -150,16 +150,20 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `titleKey`s and the menu resolves them.
 - `src/design/` — the P365 design system: `theme.ts` (tokens mirrored as
   `--color-p365-*` in `index.css`, `monoColor` = P365's `monoColorByIndex`,
-  `facetFill` = its teal tint cycle), `StatCard` (coloured left rail, value in
+  `facetFill(index, base)` = its tint cycle from a base colour, teal by default;
+  `POOL_COLOR` / `poolFill` map a `StoragePool` to its product colour and bar tint), `StatCard` (coloured left rail, value in
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
-  (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
+  (monochrome Recharts doughnut / line + `FacetBars`: a ranked list of bars,
+  required `ariaLabel`, tinted from `color`, and a row's `pool` wins over it —
+  its bar takes `poolFill` and the row a coloured `PoolIcon`; bars carry
+  `data-slot="facet-bar"`, a cut-short name its full text as `title`), `AlertPanel`,
   `AdornedInput` (prefix/suffix input), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
-  `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
-  1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab),
+  `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, coloured
+  by `POOL_COLOR`, 1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab),
   `SegmentedBar` (a generic one-line stacked bar plus a list of its parts;
   every part, on the line and in the list, opens a popover on hover or click —
   the line is `aria-hidden` and mouse-only, the list is the keyboard and
@@ -338,7 +342,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   never as a size or a guess. The headline percentage stays SharePoint-only —
   OneDrive is on the line but never in that percentage. Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
-  `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
+  `#0364b8`, Teams `#5b5fc7` — P365's `teamsBlue`). `POOL_COLOR` reuses them for
+  every row, bar, icon and legend that stands for one product; the fastest
+  growers are coloured by product and the top lists tinted from it, a
+  deliberate departure from P365's teal (user decision N54, 2026-10-21).
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.
@@ -548,8 +555,8 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
 
 - shadcn `Card` renders `data-slot="card"`. `StatCard` nests label and value as
   **siblings** — scope assertions with `getByText(label).closest('[data-slot="stat-card"]')`.
-- Every chart wrapper takes an `ariaLabel` and renders `role="img"` — always pass
-  it from call sites; the e2e suite asserts every `role="img"` has a name.
+- Every chart wrapper takes an `ariaLabel` and renders `role="img"` (`FacetBars`
+  names its list with it instead) — always pass it from call sites; the e2e suite asserts every `role="img"` has a name.
 - `SiteTable` is paginated (`hooks/usePagination.ts` owns the page window maths,
   `design/Pagination.tsx` is the generic footer; 50/100/250/500 rows like P365).
   Search and sort changes go back to page one. Rows render plainly, so no jsdom

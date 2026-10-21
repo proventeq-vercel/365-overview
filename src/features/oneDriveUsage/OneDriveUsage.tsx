@@ -44,6 +44,7 @@ export function OneDriveUsage() {
         <Panel>
           <FacetBars
             items={offenders.topDrives}
+            ariaLabel={t('oneDrive.top.title')}
             color={POOL_COLOR.OneDrive}
             formatValue={formatBytes}
             emptyText={t('oneDrive.top.empty')}
