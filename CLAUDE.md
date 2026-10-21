@@ -107,9 +107,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   The ONLY data entry point for the page — except growth:
   `src/hooks/useStorageGrowth.ts` reads the detail reports for the day
   `lib/growthWindow.growthBaselineDate` picks (28 days before the report date,
-  clamped to the 30 days Microsoft keeps) under `['storageGrowth', date]`, AFTER
-  the overview has loaded and without blocking it, names only the ten leaders
-  (`getSiteDetails`, O(10)), and returns `model/storageGrowth.buildStorageGrowth`
+  clamped to the 30 days Microsoft keeps) under `['storageGrowth', date, nameMask]`,
+  AFTER the overview has loaded and without blocking it, names only the ten
+  leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
   skeleton while pending and an "unavailable" panel on error, never zero. A row
   absent on the earlier day counts from 0; shrinking and deleted rows are out.
