@@ -276,13 +276,17 @@ an owner-level step.
 
 **The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: a
 proxy that starts after the expiry (cold start, restart, deploy) answers every request
-`500 InvalidConfiguration`, and the browser reports that as a CORS or network error because a
-configuration failure is raised before the CORS headers are added. A proxy that was already running
-keeps serving until its cached tokens run out, then answers `502 TokenAcquisitionFailed` because
-Entra refuses the assertion. `npm run cert:new` dates one two years out and
-`npm run cert:check -- --pem <file>` prints a bundle's expiry — put it in the calendar, and roll it
-with `az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old
-one keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
+`500 InvalidConfiguration`. That response carries none of the proxy's own CORS headers, because
+the configuration failure is raised before they are added, so depending on the Function App's
+platform CORS setting a browser may report a CORS or network error instead of the 500. A proxy
+that was already running keeps serving every tenant whose application token is cached; the first
+request that needs a new token (another tenant, or one whose token has expired) signs a new
+assertion with the lapsed certificate and gets `502 TokenAcquisitionFailed` if Entra refuses it.
+`npm run cert:new` dates a certificate two years out. `npm run cert:check -- --pem <file>`, run in
+this folder, prints a bundle's expiry and fails with an "expired on" message for an expired one —
+put the date in the calendar, and roll the certificate with
+`az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old one
+keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
 `VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) as repository variables: the
