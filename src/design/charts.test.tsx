@@ -18,6 +18,7 @@ describe('FacetBars', () => {
         ]}
         formatValue={(v) => `${v / GB} GB`}
         emptyText="No results"
+        ariaLabel="Ranked"
       />,
     )
     const rows = screen.getAllByRole('listitem')
@@ -38,6 +39,7 @@ describe('FacetBars', () => {
         ]}
         formatValue={String}
         emptyText="No results"
+        ariaLabel="Ranked"
       />,
     )
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
@@ -46,7 +48,7 @@ describe('FacetBars', () => {
   })
 
   it('shows the empty text instead of an empty list', () => {
-    render(<FacetBars items={[]} formatValue={String} emptyText="No results" />)
+    render(<FacetBars items={[]} formatValue={String} emptyText="No results" ariaLabel="Ranked" />)
     expect(screen.getByText('No results')).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })

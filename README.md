@@ -445,7 +445,7 @@ The app renders the Storage Optimisation report in the Proventeq 365 look: a sti
 header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
 one **⋯ Options** menu whose items each carry an icon and a one-line description:
 **Refresh data**, **Report settings**, and in live mode **Switch account** and
-**Sign out**), KPI rails, panels, monochrome charts and the full site table. There is no navigation by default — it runs as a single report.
+**Sign out**), KPI rails, panels, monochrome charts, lists coloured by product (SharePoint, OneDrive, Teams) and the full site table. There is no navigation by default — it runs as a single report.
 
 Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
 way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,

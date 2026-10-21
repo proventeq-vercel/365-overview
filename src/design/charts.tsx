@@ -204,7 +204,7 @@ export function FacetBars({
   emptyText: string
   nameMask?: NameMask | null
   color?: string
-  ariaLabel?: string
+  ariaLabel: string
 }) {
   if (items.length === 0) return <EmptyBlock>{emptyText}</EmptyBlock>
   const max = items.reduce((top, item) => Math.max(top, item.value), 1)
@@ -222,7 +222,7 @@ export function FacetBars({
               aria-hidden="true"
             />
             {nameMask === null ? (
-              <span className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
+              <span title={item.name} className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
                 {item.name}
               </span>
             ) : (

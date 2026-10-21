@@ -104,22 +104,57 @@ describe('OffendersSection', () => {
   it('marks every fastest grower as a SharePoint site or a OneDrive, by icon and product colour', () => {
     renderOffenders(withSites)
     const rows = within(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).getAllByRole('listitem')
-    const describe = (row: HTMLElement) => {
+    const summarise = (row: HTMLElement) => {
       const bar = row.querySelector<HTMLElement>('[data-slot="facet-bar"]')!
       const icon = within(row).getByRole('img')
       return [row.textContent, icon.getAttribute('aria-label'), icon.style.color, bar.style.borderLeft]
     }
-    expect(rows.map(describe)).toEqual([
+    expect(rows.map(summarise)).toEqual([
       ['SharePointgamma900 B', 'SharePoint', rgb('#038387'), `3px solid ${rgb('#038387')}`],
       ['OneDrivedana400 B', 'OneDrive', rgb('#0364b8'), `3px solid ${rgb('#0364b8')}`],
     ])
-    expect(screen.getByText('SharePoint site')).toBeInTheDocument()
+    const fills = rows.map((row) => row.querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background)
+    expect(fills[0]).toContain(rgb('#038387'))
+    expect(fills[1]).toContain(rgb('#0364b8'))
+  })
+
+  it('names both products in the growth legend, each in its own colour', () => {
+    renderOffenders(withSites)
+    const swatch = (name: string) =>
+      screen.getAllByText(name).find((el) => el.closest('ul:not([aria-label])'))!.previousElementSibling as HTMLElement
+    expect(swatch('SharePoint').style.background).toBe(rgb('#038387'))
+    expect(swatch('OneDrive').style.background).toBe(rgb('#0364b8'))
+  })
+
+  it('keeps grower names hidden behind the hidden-name control and still marks each product', () => {
+    renderOffenders({ ...withSites, caveats: { ...withSites.caveats, nameMask: 'hidden' as const } })
+    const list = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect(within(list).getAllByRole('button', { name: 'Hidden name' })).toHaveLength(2)
+    expect(within(list).queryByText('gamma')).not.toBeInTheDocument()
+    expect(within(list).queryByTitle('gamma')).not.toBeInTheDocument()
+    expect(within(list).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'SharePoint',
+      'OneDrive',
+    ])
+  })
+
+  it('shows a long grower name in full on hover', () => {
+    renderOffenders(withSites)
+    const list = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect(within(list).getByText('gamma')).toHaveAttribute('title', 'gamma')
+  })
+
+  it('shows no product legend until there are growers to label', () => {
+    renderOffenders(withSites, { ...bySize, leaders: [] })
+    const panel = screen.getByRole('heading', { name: 'Sites & OneDrives by storage used' }).parentElement!.parentElement!
+    expect(within(panel).queryByText('SharePoint')).not.toBeInTheDocument()
+    expect(within(panel).getByText('No results')).toBeInTheDocument()
   })
 
   it('tints the largest sites in SharePoint teal and the largest OneDrives in OneDrive blue', () => {
     renderOffenders(withSites)
     const firstBar = (label: string) =>
-      screen.getByText(label).parentElement!.querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background
+      screen.getByRole('list', { name: label }).querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background
     expect(firstBar('Top SharePoint sites by storage')).toContain(rgb('#038387'))
     expect(firstBar('Top OneDrives by storage')).toContain(rgb('#0364b8'))
   })
