@@ -174,7 +174,7 @@ that set rather than adding to it, so a list must name every flag it wants.
 | `optimization.storage.report.onedrive` | no | The OneDrive Usage report, on `/onedrive-usage` |
 | `app.menu` | no | The hamburger and the side menu of reports |
 
-`app.menu` is off by default, so the deployed app is a single report with no navigation.
+`app.menu` is off by default, so a deployment shows no navigation until the flag is set.
 Turning it on takes effect only where there is something to navigate to — with fewer than
 two reports enabled the menu stays hidden, because a menu of one is not navigation.
 A report whose flag is off is not routable at all; a report that is on is always reachable
@@ -200,10 +200,10 @@ Only the exact value `true` locks. The lock covers the mode overrides and nothin
 on the help pages and `?admin_consent=` after an admin-consent redirect are read either way. The
 deploy workflow takes the value from the repository variable of the same name (see *Automatic
 deployment*), so each production site is locked exactly when that variable is `true` at the time
-`deploy.yml` builds it. **Production runs `false` today** (`gh variable list` shows it), so a visitor
-can switch either production site into mock mode from the URL — fixture data, no sign-in — pick a mock
-scenario, or turn on the other report and the admin bar. Pull request previews never read the
-variable and are never locked.
+`deploy.yml` builds it. The variable was `false` on 2026-10-21 (`gh variable list` shows the current
+value); while it is not `true`, a visitor can switch either production site into mock mode from the
+URL — fixture data, no sign-in — pick a mock scenario, show the report menu or the admin bar, or drop
+a report. Pull request previews never read the variable and are never locked.
 
 ---
 
@@ -403,8 +403,10 @@ A site is never named after its owner: with no name and no URL, a row shows its 
 
 The app has three runtime switches — which reports and shell features are enabled, whether
 it runs on fixture data, and which fixture tenant. The env (`VITE_FEATURES`, `VITE_USE_MOCK`,
-`VITE_MOCK_SCENARIO`) is the default, and the deployed default is the Storage
-Optimisation report alone, live data, no menu. Each switch can also be set for one
+`VITE_MOCK_SCENARIO`) is the default: with nothing set the app is the Storage Optimisation
+report alone, live data, no menu. The production builds take `VITE_FEATURES` from the repository
+variable of that name, which listed both reports and not `app.menu` on 2026-10-21, so they carry
+both reports and still show no menu. Each switch can also be set for one
 browser tab with a search param:
 
 | Param | Values | Example |
@@ -550,14 +552,16 @@ Three things have to name the new origin before it works:
 
 `.github/workflows/deploy.yml` deploys on every push to `main`, but only **after CI has gone
 green** on that commit (`workflow_run`), and it can be run by hand from the Actions tab. Four
-jobs; the three that deploy build the exact commit CI tested:
+jobs; the three that deploy build the commit CI tested (a run started by hand builds the tip of
+the branch it was started on, tested or not, and the workflow does not check which branch that is,
+so start it on `main`):
 
 | Job | What it deploys | Where |
 |---|---|---|
 | `credentials` | nothing: it checks which deploy secrets are set (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` together, `AZURE_STATIC_WEB_APPS_API_TOKEN`, `AZURE_STORAGE_SAS`) | the run summary |
 | `proxy` | `functions/`, built and pruned to production dependencies | the Function App, `Azure/functions-action` with `sku: flexconsumption` |
 | `site` | `npm run build` output with **no proxy** and `VITE_CLIENT_ID` = `vars.VITE_DELEGATED_CLIENT_ID`, falling back to the workflow's own `DELEGATED_CLIENT_ID` (`0cedd025-e545-44f2-b3f8-82969e56547a`), plus the repo variables `VITE_FEATURES`, `VITE_MODES_LOCKED` — **delegated permissions, the main site** | the Azure Static Web App `p365-lite` (<https://gray-water-0a8893303.1.azurestaticapps.net>), `Azure/static-web-apps-deploy` |
-| `site-application` | the same build with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED` — **application permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS` — a SAS on the `$web` container only, expiring 2027-09-29 (the date the secret's owner stated; check the SAS's `se=`), so no Entra role is involved |
+| `site-application` | the same build with the repo variables `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED` — **application permissions** | the storage static website `p365lite` (<https://p365lite.z33.web.core.windows.net/>, account overridable with `vars.AZURE_STORAGE_ACCOUNT`), uploaded with the repo secret `AZURE_STORAGE_SAS` — a SAS on the `$web` container only, expiring 2027-09-29 (the date the secret's owner stated; GitHub secrets cannot be read back, so only the SAS's owner can confirm it from `se=`), so no Entra role is involved |
 
 `credentials` skips a deploy job whose secret is absent, with a note in the run summary rather
 than a failure. The **site** needs only the repo secret
@@ -569,8 +573,9 @@ them). A new site origin must be added to the
 proxy's `PROXY_ALLOWED_ORIGINS` **and** its platform CORS list, to the CSP's `connect-src` if it is
 a new proxy, and as a SPA redirect URI on the registration.
 
-**The proxy still needs credentials the repo does not have yet**, so its job stays inert until
-someone configures them.
+**The proxy still needs credentials the repo does not have yet** (the three `AZURE_*` secrets in
+*Deploy credentials and variables*), so its job stays inert until someone configures them, and
+until then a change under `functions/` reaches the Function App only by a hand deploy.
 
 **Rolling back.** Each site is the build of one commit, so a bad release is undone by deploying a
 good commit again: revert the change on `main` and CI deploys the revert, or open the Actions tab,
@@ -579,18 +584,21 @@ original run (GitHub keeps a run re-runnable for 30 days), but it leaves `main` 
 so the next push deploys it again — revert it on `main` too. GitHub does not document whether a
 re-run reads the repository variables as they are now or as they were, so a variable changed since
 that run (`VITE_MODES_LOCKED`, say) may or may not apply: check the rebuilt site rather than
-assuming. Neither route rolls the proxy back while its job is inert (see above): the Function App
-is deployed by hand.
+assuming. Deploys queue under one `concurrency` group: one run executes, at most one waits, and a
+newer waiting run replaces an older one, so confirm that the rollback run itself finished. Neither
+route rolls the proxy back while its job is inert (see above): the Function App is deployed by
+hand.
 
 **Two credentials expire and nothing in the repo warns before they do.** When the SAS behind
 `AZURE_STORAGE_SAS` expires (its date is in the table above), the `site-application` upload fails
 and turns the run red while the `site` job is unaffected. Before then, issue a new SAS for the
-`$web` container with the permissions the current one shows in `sp=`, and set the secret again;
-issuing the new one does not cancel the old one, so there is no gap. The proxy's client certificate
-expires too, and a proxy that starts after the expiry refuses every request: *Deploying* in
+`$web` container with the same permissions as the current one (its owner reads them from `sp=`;
+the secret cannot be read back from GitHub), and set the secret again; issuing the new one does not
+cancel the old one, so there is no gap. The proxy's client certificate expires too, and a proxy
+that starts once its certificate bundle has expired refuses every request: *Deploying* in
 `functions/README.md` says what that looks like and how to roll the certificate, and
-`npm run cert:check -- --pem <file>`, run in `functions/`, prints a bundle's expiry. Put both dates
-in a calendar.
+`npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a
+PEM that carries its certificate. Put both dates in a calendar.
 
 ### Pull request previews
 
@@ -628,9 +636,10 @@ az role assignment create --assignee <appId> --role Contributor \
   --scope /subscriptions/<subscription>/resourceGroups/rg-lh-sa-dev
 ```
 
-That is `Contributor` on the whole resource group, wider than the Function App itself. Whether a
-narrower role or scope still deploys has not been tested here, so narrowing it is the
-administrator's call.
+That is `Contributor` on the whole resource group, wider than the Function App itself: the
+credential can also read and change every other resource in `rg-lh-sa-dev`, keys and app settings
+included. Whether a narrower role or scope still deploys has not been tested here, so narrowing it
+is the administrator's call.
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the
@@ -638,7 +647,10 @@ workflow, the repository **variable** `AZURE_FUNCTIONAPP_NAME`. The `site` job r
 `VITE_DELEGATED_CLIENT_ID`, `VITE_FEATURES` and `VITE_MODES_LOCKED`, and `site-application` reads
 `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES`, `VITE_MODES_LOCKED` and, when
 the storage account's name differs from the default, `AZURE_STORAGE_ACCOUNT`, all from repository
-variables, so each copy is configured without touching the code.
+variables, so each copy is configured without touching the code. The other two secrets,
+`AZURE_STATIC_WEB_APPS_API_TOKEN` and `AZURE_STORAGE_SAS`, are in the table under *Automatic
+deployment*. A deploy job whose secret is missing is skipped with a note in the run summary only,
+so read the summary after a first run.
 
 ### Preview production build locally
 
