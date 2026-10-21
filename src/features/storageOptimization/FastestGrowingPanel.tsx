@@ -54,7 +54,6 @@ export function FastestGrowingPanel({ growth, nameMask }: { growth: GrowthState;
       ) : (
         <div
           role="status"
-          aria-busy="true"
           aria-label={t('storageOptimisation.offenders.fastestLoading')}
           className="flex flex-col gap-2.5"
         >
