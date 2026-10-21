@@ -44,6 +44,14 @@ function renderOffenders(overview: StorageOverview, growth: StorageGrowth | unde
 
 afterEach(cleanup)
 
+const growthPanel = (title = 'Fastest-growing sites & OneDrives') =>
+  screen.getByRole('heading', { name: title }).parentElement!.parentElement!
+
+const growthLegend = (title?: string) =>
+  within(growthPanel(title))
+    .queryAllByRole('list')
+    .find((list) => !list.hasAttribute('aria-label')) ?? null
+
 const site = (id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool: 'SharePoint',
   id,
@@ -121,7 +129,7 @@ describe('OffendersSection', () => {
   it('names both products in the growth legend, each in its own colour', () => {
     renderOffenders(withSites)
     const swatch = (name: string) =>
-      screen.getAllByText(name).find((el) => el.closest('ul:not([aria-label])'))!.previousElementSibling as HTMLElement
+      within(growthLegend()!).getByText(name).closest('li')!.querySelector<HTMLElement>('i')!
     expect(swatch('SharePoint').style.background).toBe(rgb('#038387'))
     expect(swatch('OneDrive').style.background).toBe(rgb('#0364b8'))
   })
@@ -146,9 +154,8 @@ describe('OffendersSection', () => {
 
   it('shows no product legend until there are growers to label', () => {
     renderOffenders(withSites, { ...bySize, leaders: [] })
-    const panel = screen.getByRole('heading', { name: 'Sites & OneDrives by storage used' }).parentElement!.parentElement!
-    expect(within(panel).queryByText('SharePoint')).not.toBeInTheDocument()
-    expect(within(panel).getByText('No results')).toBeInTheDocument()
+    expect(growthLegend('Sites & OneDrives by storage used')).toBeNull()
+    expect(within(growthPanel('Sites & OneDrives by storage used')).getByText('No results')).toBeInTheDocument()
   })
 
   it('tints the largest sites in SharePoint teal and the largest OneDrives in OneDrive blue', () => {
@@ -161,8 +168,12 @@ describe('OffendersSection', () => {
 
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
-    expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
     expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(growthLegend()).toBeNull()
   })
 
   it('says how many reports of each pool came back, and over which window, when some are missing', () => {

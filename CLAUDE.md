@@ -264,7 +264,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (monochrome Recharts doughnut / line + `FacetBars`: a ranked list of bars,
   required `ariaLabel`, tinted from `color`, and a row's `pool` wins over it —
   its bar takes `poolFill` and the row a coloured `PoolIcon`; bars carry
-  `data-slot="facet-bar"`, a cut-short name its full text as `title`), `AlertPanel`,
+  `data-slot="facet-bar"`, every unmasked name its full text as `title`, a hidden one never), `AlertPanel`,
   `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading both the SharePoint usage line and the OneDrive pool), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
