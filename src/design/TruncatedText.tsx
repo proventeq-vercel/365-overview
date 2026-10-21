@@ -15,21 +15,11 @@ export function TruncatedText({ text, className }: { text: string; className?: s
     if (!element) return
     const measure = () => setTruncated(isCut(element))
     measure()
-    let active = true
-    document.fonts?.ready.then(() => {
-      if (active) measure()
-    })
-    if (typeof ResizeObserver === 'undefined') {
-      return () => {
-        active = false
-      }
-    }
+    document.fonts?.ready.then(measure)
+    if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(measure)
     observer.observe(element)
-    return () => {
-      active = false
-      observer.disconnect()
-    }
+    return () => observer.disconnect()
   }, [text])
 
   return (
