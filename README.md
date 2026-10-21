@@ -199,11 +199,12 @@ anything customer-facing — should set it.
 Only the exact value `true` locks. The lock covers the mode overrides and nothing else: `?audience=`
 on the help pages and `?admin_consent=` after an admin-consent redirect are read either way. The
 deploy workflow takes the value from the repository variable of the same name (see *Automatic
-deployment*), so each production site is locked exactly when that variable is `true` at the time
-`deploy.yml` builds it. The variable was `false` on 2026-10-21 (`gh variable list` shows the current
-value); while it is not `true`, a visitor can switch either production site into mock mode from the
-URL — fixture data, no sign-in — pick a mock scenario, show the report menu or the admin bar, or drop
-a report. Pull request previews never read the variable and are never locked.
+deployment*), and the lock is baked into the bundle, so each production site is locked exactly when
+that variable was `true` at the time `deploy.yml` last built it; a change to the variable reaches a
+site only with its next build. The variable was `false` on 2026-10-21 (`gh variable list` shows the
+current value). A site built that way lets a visitor switch it into mock mode from the URL — fixture
+data, no sign-in — pick a mock scenario, show the report menu or the admin bar, or drop a report.
+Pull request previews never read the variable and are never locked.
 
 ---
 
@@ -453,7 +454,9 @@ The app renders the Storage Optimisation report in the Proventeq 365 look: a sti
 header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
 one **⋯ Options** menu whose items each carry an icon and a one-line description:
 **Refresh data**, **Report settings**, and in live mode **Switch account** and
-**Sign out**), KPI rails, panels, monochrome charts and the full site table. There is no navigation by default — it runs as a single report.
+**Sign out**), KPI rails, panels, monochrome charts and the full site table. With the default
+flags there is no navigation and it runs as a single report; the flags below change that, and
+*Modes* says what the production builds set.
 
 Reports are declared in `src/features/registry.ts`, each behind a feature flag named the
 way the Proventeq 365 licence flags are (`optimization.storage.report.overview`,
@@ -573,9 +576,10 @@ them). A new site origin must be added to the
 proxy's `PROXY_ALLOWED_ORIGINS` **and** its platform CORS list, to the CSP's `connect-src` if it is
 a new proxy, and as a SPA redirect URI on the registration.
 
-**The proxy still needs credentials the repo does not have yet** (the three `AZURE_*` secrets in
-*Deploy credentials and variables*), so its job stays inert until someone configures them, and
-until then a change under `functions/` reaches the Function App only by a hand deploy.
+**The proxy still needs credentials the repo does not have yet** (the three OIDC secrets
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID`, set up in *Deploy credentials and
+variables*), so its job stays inert until someone configures them, and until then a change under
+`functions/` reaches the Function App only by a hand deploy.
 
 **Rolling back.** Each site is the build of one commit, so a bad release is undone by deploying a
 good commit again: revert the change on `main` and CI deploys the revert, or open the Actions tab,
@@ -594,9 +598,10 @@ hand.
 and turns the run red while the `site` job is unaffected. Before then, issue a new SAS for the
 `$web` container with the same permissions as the current one (its owner reads them from `sp=`;
 the secret cannot be read back from GitHub), and set the secret again; issuing the new one does not
-cancel the old one, so there is no gap. The proxy's client certificate expires too, and a proxy
-that starts once its certificate bundle has expired refuses every request: *Deploying* in
-`functions/README.md` says what that looks like and how to roll the certificate, and
+cancel the old one, so there is no gap. The proxy's client certificate expires too: a proxy that
+starts after a bundle carrying its `CERTIFICATE` block has expired refuses every request, and one
+that holds only the private key finds out at its first token request instead. *Deploying* in
+`functions/README.md` says what each looks like and how to roll the certificate, and
 `npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a
 PEM that carries its certificate. Put both dates in a calendar.
 
@@ -637,9 +642,9 @@ az role assignment create --assignee <appId> --role Contributor \
 ```
 
 That is `Contributor` on the whole resource group, wider than the Function App itself: the
-credential can also read and change every other resource in `rg-lh-sa-dev`, keys and app settings
-included. Whether a narrower role or scope still deploys has not been tested here, so narrowing it
-is the administrator's call.
+credential can manage every other resource in `rg-lh-sa-dev` too, and `Contributor` can list
+storage account keys and read app settings. Whether a narrower role or scope still deploys has not
+been tested here, so narrowing it is the administrator's call.
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the

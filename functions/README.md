@@ -280,8 +280,8 @@ block (what `cert:new` writes) fails closed when it lapses: a proxy that starts 
 carries none of the proxy's own CORS headers, because the configuration failure is raised before
 they are added, so depending on the Function App's platform CORS setting a browser may report a
 CORS or network error instead of the 500. A PEM that holds only the private key, with
-`GRAPH_CERT_THUMBPRINT` set, is not checked for expiry when it loads; the lapse then shows at the
-first token request instead. A proxy that was already running keeps serving each tenant whose
+`GRAPH_CERT_THUMBPRINT` set, is not checked for expiry when it loads, so that proxy starts and the
+lapse shows only as the `502` below. A proxy that was already running keeps serving each tenant whose
 application token is cached until that token needs refreshing (a minute before it expires; an
 Entra token typically lives about an hour); the first request that needs a new token (another
 tenant, or one whose token is due) signs a new assertion with the lapsed certificate and gets
