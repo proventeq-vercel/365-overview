@@ -9,7 +9,7 @@ order: 10
 
 ## Storage usage
 
-One line shows where SharePoint storage sits, split into six parts, and ends in what is left of
+One line shows where SharePoint storage sits, split into five parts, and ends in what is left of
 your SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to
 see its size, its share of the line and what it counts. When the SharePoint site usage report does
 not come back, the Teams, Deleted and Inactive parts are left out and the SharePoint part holds all
