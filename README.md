@@ -559,6 +559,18 @@ a new proxy, and as a SPA redirect URI on the registration.
 **The proxy still needs credentials the repo does not have yet**, so its job stays inert until
 someone configures them.
 
+**Rolling back.** A deploy is the build of one commit, so a bad release is undone by deploying a
+good commit again: revert the change on `main` and CI deploys the revert, or open the Actions tab,
+pick the last good *Deploy* run and choose *Re-run all jobs* — a re-run builds the commit of the
+original run, and GitHub keeps a run re-runnable for 30 days. A re-run reads the repository
+variables as they are at that moment.
+
+**Two credentials expire and nothing warns before they do.** The `AZURE_STORAGE_SAS` secret stops
+the `site-application` upload on 2027-09-29 — that job fails and turns the run red, while the
+`site` job is unaffected — so issue a new SAS for the `$web` container and set the secret again
+before then. The proxy's client certificate makes every proxy request answer 500 from its expiry;
+roll it as described under *Deploying* in `functions/README.md`. Put both dates in a calendar.
+
 ### Pull request previews
 
 `.github/workflows/preview.yml` builds every pull request from this repository in **mock mode**
