@@ -169,7 +169,6 @@ describe('OffendersSection', () => {
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
     const placeholder = screen.getByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' })
-    expect(placeholder).toHaveAttribute('aria-busy', 'true')
     expect(placeholder).toHaveTextContent('Loading the fastest-growing sites and OneDrives')
     expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
     expect(growthLegend()).toBeNull()

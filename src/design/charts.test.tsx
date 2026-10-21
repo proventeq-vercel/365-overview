@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import { render } from '@/test/render'
 import { FacetBars } from './charts'
 import { Legend } from './primitives'
@@ -21,7 +21,7 @@ describe('FacetBars', () => {
         ariaLabel="Ranked"
       />,
     )
-    const rows = screen.getAllByRole('listitem')
+    const rows = within(screen.getByRole('list', { name: 'Ranked' })).getAllByRole('listitem')
     expect(rows).toHaveLength(2)
     const fills = rows.map((row) => (row.querySelector('[aria-hidden]') as HTMLElement).style.width)
     expect(fills).toEqual(['100%', '25%'])
