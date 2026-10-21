@@ -259,6 +259,8 @@ export function MonoBarChart({
   )
 }
 
+const FACET_NAME_CLASS = 'relative px-2 text-xs font-semibold text-p365-navy'
+
 export function FacetBars({
   items,
   formatValue,
@@ -284,13 +286,9 @@ export function FacetBars({
               aria-hidden="true"
             />
             {nameMask === null ? (
-              <TruncatedText text={item.name} className="relative px-2 text-xs font-semibold text-p365-navy" />
+              <TruncatedText text={item.name} className={FACET_NAME_CLASS} />
             ) : (
-              <HiddenName
-                mask={nameMask}
-                seed={item.name}
-                className="relative px-2 text-xs font-semibold text-p365-navy"
-              />
+              <HiddenName mask={nameMask} seed={item.name} className={FACET_NAME_CLASS} />
             )}
           </div>
           <span className="tabular shrink-0 text-xs text-p365-grey-700">{formatValue(item.value)}</span>

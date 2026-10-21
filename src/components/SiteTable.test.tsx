@@ -51,7 +51,10 @@ const drive: StorageRow = {
   allocatedBytes: 1000,
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 describe('SiteTable', () => {
   it('renders only the requested columns', () => {
@@ -194,6 +197,15 @@ describe('SiteTable', () => {
     expect(link).toHaveAttribute('href', 'https://c.sharepoint.com/sites/alpha')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('lets the keyboard reach a cut-short name and owner', () => {
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(640)
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
+    const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
+    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name', 'owner']} />)
+    expect(screen.getByText('Alpha Finance', { exact: true })).toHaveAttribute('tabindex', '0')
+    expect(screen.getByText('Ada', { exact: true })).toHaveAttribute('tabindex', '0')
   })
 
   it('marks each row with its pool icon', () => {

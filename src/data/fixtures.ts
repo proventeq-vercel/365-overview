@@ -41,8 +41,8 @@ const LONGEST_SITE = {
   owner: 'Maximiliana Featherstonehaugh-Montgomery-Abernathy',
 }
 const LONGEST_DRIVE = {
-  upn: 'maximiliana.featherstonehaugh-montgomery-abernathy@contoso.onmicrosoft.com',
-  leaf: 'maximiliana_featherstonehaugh-montgomery-abernathy_contoso_onmicrosoft_com',
+  upn: 'maximiliana.featherstonehaughmontgomeryabernathy@contoso.com',
+  leaf: 'maximiliana_featherstonehaughmontgomeryabernathy_contoso_com',
   owner: 'Maximiliana Featherstonehaugh-Montgomery-Abernathy',
 }
 
