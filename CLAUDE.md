@@ -561,8 +561,8 @@ typecheck · test · build as a separate job.
   own `assertMatrix` entry** — the `.*` entry holds neither colour contrast nor
   the accessibility score. Help articles share one template; `/help` and one
   article stand for them. A flaky performance median is re-run, not lowered; on
-  `main`, only while its commit is the tip (a green re-run deploys that
-  commit). Reports go to the
+  `main`, only while its commit is the tip and no newer run exists (a green
+  re-run deploys that commit and cancels a newer run in progress). Reports go to the
   `lighthouse-reports` artifact, never to `temporary-public-storage`.
 
 ## Design system / brand
