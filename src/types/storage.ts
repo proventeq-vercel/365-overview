@@ -25,6 +25,10 @@ export interface Slice {
   value: number
 }
 
+export interface GrowthSlice extends Slice {
+  pool: StoragePool
+}
+
 export interface GrowthPoint {
   month: string
   actualUsedBytes: number | null
@@ -80,7 +84,7 @@ export interface StorageGrowth {
   baselineDate: string
   reportRefreshDate: string
   windowDays: number
-  topGrowers: Slice[]
+  topGrowers: GrowthSlice[]
 }
 
 export interface OverEntitlement {

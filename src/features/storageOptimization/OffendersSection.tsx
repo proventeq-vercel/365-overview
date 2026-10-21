@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
 import type { StorageOverview } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
+import { POOL_COLOR } from '@/design/theme'
 import { PanelDescription, PanelLabel, Panel, Section, SplitGrid } from '@/design/primitives'
 import { FastestGrowingPanel, type GrowthState } from './FastestGrowingPanel'
 
@@ -44,6 +45,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.offenders.topSites')}</PanelLabel>
           <FacetBars
             items={topSites}
+            color={POOL_COLOR.SharePoint}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}
             nameMask={overview.caveats.nameMask}
@@ -53,6 +55,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.offenders.topDrives')}</PanelLabel>
           <FacetBars
             items={topDrives}
+            color={POOL_COLOR.OneDrive}
             formatValue={formatBytes}
             emptyText={t('storageOptimisation.offenders.empty')}
             nameMask={overview.caveats.nameMask}

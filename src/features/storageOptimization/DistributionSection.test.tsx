@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { rgb } from '@/test/colour'
 import { render } from '@/test/render'
 import type { StorageOverview } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
@@ -24,11 +25,6 @@ const withTemplates: StorageOverview = {
 const parts = () => within(screen.getByRole('list', { name: 'Storage usage' })).getAllByRole('button')
 
 const part = (label: string) => parts().find((button) => button.textContent?.startsWith(label))!
-
-function rgb(hex: string): string {
-  const n = parseInt(hex.slice(1), 16)
-  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
-}
 
 describe('DistributionSection', () => {
   it('names the section', () => {
@@ -60,7 +56,7 @@ describe('DistributionSection', () => {
     const { container } = render(<DistributionSection overview={withTemplates} />)
     const fill = (id: string) => (container.querySelector(`[data-segment="${id}"]`) as HTMLElement).style.background
     expect(fill('sharePoint')).toBe(rgb('#038387'))
-    expect(fill('oneDrive')).toBe(rgb('#0078d4'))
+    expect(fill('oneDrive')).toBe(rgb('#0364b8'))
     expect(fill('teams')).toBe(rgb('#5b5fc7'))
   })
 

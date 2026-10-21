@@ -2,9 +2,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
 import type { NameMask, StorageGrowth } from '@/types/storage'
-import { MonoBarChart } from '@/design/charts'
+import { FacetBars } from '@/design/charts'
 import { EmptyBlock, Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
-import { P365 } from '@/design/theme'
+import { POOL_COLOR } from '@/design/theme'
 
 export interface GrowthState {
   data: StorageGrowth | undefined
@@ -19,16 +19,13 @@ function GrowthChart({ growth, nameMask }: { growth: StorageGrowth; nameMask: Na
       <PanelDescription>
         {t('storageOptimisation.offenders.fastestSubtitle', { ...window, days: growth.windowDays })}
       </PanelDescription>
-      {growth.topGrowers.length === 0 ? (
-        <EmptyBlock>{t('storageOptimisation.offenders.fastestNone', window)}</EmptyBlock>
-      ) : (
-        <MonoBarChart
-          data={growth.topGrowers.map((slice) => ({ ...slice }))}
-          formatValue={formatBytes}
-          ariaLabel={t('storageOptimisation.offenders.fastest')}
-          nameMask={nameMask}
-        />
-      )}
+      <FacetBars
+        items={growth.topGrowers}
+        formatValue={formatBytes}
+        emptyText={t('storageOptimisation.offenders.fastestNone', window)}
+        ariaLabel={t('storageOptimisation.offenders.fastest')}
+        nameMask={nameMask}
+      />
     </>
   )
 }
@@ -39,7 +36,13 @@ export function FastestGrowingPanel({ growth, nameMask }: { growth: GrowthState;
     <Panel>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PanelLabel>{t('storageOptimisation.offenders.fastest')}</PanelLabel>
-        <Legend items={[{ name: t('storageOptimisation.offenders.added'), color: P365.blue }]} />
+        <Legend
+          columns={2}
+          items={[
+            { name: t('storageOptimisation.offenders.growerSharePoint'), color: POOL_COLOR.SharePoint },
+            { name: t('storageOptimisation.offenders.growerOneDrive'), color: POOL_COLOR.OneDrive },
+          ]}
+        />
       </div>
       {growth.data ? (
         <GrowthChart growth={growth.data} nameMask={nameMask} />

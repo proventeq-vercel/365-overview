@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { screen, cleanup } from '@testing-library/react'
+import { screen, cleanup, within } from '@testing-library/react'
+import { rgb } from '@/test/colour'
 import { renderWithData } from '@/test/render'
 import type { StorageGrowth, StorageOverview, StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
@@ -11,8 +12,8 @@ const growthData: StorageGrowth = {
   reportRefreshDate: '2026-08-30',
   windowDays: 28,
   topGrowers: [
-    { name: 'gamma', value: 900 },
-    { name: 'dana', value: 400 },
+    { name: 'gamma', value: 900, pool: 'SharePoint' },
+    { name: 'dana', value: 400, pool: 'OneDrive' },
   ],
 }
 const grown: GrowthState = { data: growthData, isError: false }
@@ -70,7 +71,7 @@ describe('OffendersSection', () => {
   it('names the section and charts the fastest-growing sites and OneDrives over the window', () => {
     renderOffenders(withSites)
     expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
     expect(
       screen.getByText(
         "Storage added between 2026-08-02 and 2026-08-30 (28 days), from Microsoft's usage reports for both days",
@@ -79,10 +80,33 @@ describe('OffendersSection', () => {
     expect(screen.queryByText(/biggest sites & onedrives/i)).not.toBeInTheDocument()
   })
 
+  it('marks every fastest grower as a SharePoint site or a OneDrive, by icon and product colour', () => {
+    renderOffenders(withSites)
+    const rows = within(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).getAllByRole('listitem')
+    const describe = (row: HTMLElement) => {
+      const bar = row.querySelector<HTMLElement>('[data-slot="facet-bar"]')!
+      const icon = within(row).getByRole('img')
+      return [row.textContent, icon.getAttribute('aria-label'), icon.style.color, bar.style.borderLeft]
+    }
+    expect(rows.map(describe)).toEqual([
+      ['SharePointgamma900 B', 'SharePoint', rgb('#038387'), `3px solid ${rgb('#038387')}`],
+      ['OneDrivedana400 B', 'OneDrive', rgb('#0364b8'), `3px solid ${rgb('#0364b8')}`],
+    ])
+    expect(screen.getByText('SharePoint site')).toBeInTheDocument()
+  })
+
+  it('tints the largest sites in SharePoint teal and the largest OneDrives in OneDrive blue', () => {
+    renderOffenders(withSites)
+    const firstBar = (label: string) =>
+      screen.getByText(label).parentElement!.querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background
+    expect(firstBar('Top SharePoint sites by storage')).toContain(rgb('#038387'))
+    expect(firstBar('Top OneDrives by storage')).toContain(rgb('#0364b8'))
+  })
+
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderOffenders(withSites, { data: undefined, isError: false })
     expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   it('says growth is unavailable, rather than zero, when the earlier report fails', () => {
@@ -94,7 +118,7 @@ describe('OffendersSection', () => {
   it('says nothing grew instead of drawing an empty chart', () => {
     renderOffenders(withSites, { data: { ...growthData, topGrowers: [] }, isError: false })
     expect(screen.getByText('No site or OneDrive grew between 2026-08-02 and 2026-08-30.')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {
