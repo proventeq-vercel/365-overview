@@ -54,6 +54,14 @@ const headerOf = (headers: Record<string, string> | undefined, name: string) =>
     ? Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1]
     : undefined
 
+const sameOrigin = (url: string, origin: string) => {
+  try {
+    return new URL(url).origin === new URL(origin).origin
+  } catch {
+    return false
+  }
+}
+
 export function createGraphClient(
   getToken: () => Promise<string>,
   fetchImpl: typeof fetch = fetch,
@@ -76,6 +84,13 @@ export function createGraphClient(
   }
 
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+    if (!sameOrigin(url, origin)) {
+      throw new ApiError(
+        502,
+        'The data service sent a link to another address, so the report could not be loaded.',
+        'LinkNotAllowed',
+      )
+    }
     for (let attempt = 0; ; attempt++) {
       const token = await getToken()
       const res = await fetchImpl(url, {
