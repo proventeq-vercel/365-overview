@@ -625,8 +625,8 @@ deployment* waits for the whole CI workflow). A performance median under 0.9 fro
 with nothing else red, is re-run with *Re-run failed jobs* rather than lowered. A pull request's
 run never deploys; on `main`, re-run only while that commit is still the tip and no newer run
 exists. A green re-run deploys its own commit, and it joins the same concurrency group, so
-re-running an older run cancels a newer run still in progress and puts the older commit out
-instead. If that happens, re-run the newer commit's run.
+re-running an older run cancels a newer run still in progress, green or red, and a green one
+puts the older commit out instead. If that happens, re-run the newer commit's run.
 
 ### Preview production build locally
 
