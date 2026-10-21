@@ -31,3 +31,4 @@ dist-ssr
 .superpowers/
 .temp/
 test-results/
+.lighthouseci/
