@@ -29,7 +29,7 @@ Each site also serves `/help` — the help centre for every report and for enabl
 | Section | What it shows |
 |---|---|
 | **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
-| **Current storage distribution** | One storage usage line — SharePoint, OneDrive, Teams, deleted, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover, and SharePoint split by site template |
+| **Current storage distribution** | One storage usage line — SharePoint, OneDrive, Teams, deleted, inactive and free — against the SharePoint entitlement, each part explained in a popover, and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 

@@ -327,15 +327,17 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   them while the entitlement is unknown). *Inactive sites to archive* always
   shows. The grid's `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
-  never double-counts.** Seven parts in this order: SharePoint · OneDrive ·
-  Teams · Deleted · Inactive · Versions · Free. Inactive wins over Teams (an
+  never double-counts.** Six parts in this order: SharePoint · OneDrive ·
+  Teams · Deleted · Inactive · Free. Inactive wins over Teams (an
   inactive Teams site counts once, as inactive); Deleted holds deleted sites
   **and** deleted drives; the SharePoint part is the trend total less Teams,
   Inactive and deleted sites, clamped at 0; OneDrive is the OneDrive trend less
   deleted drives; Free is `remainingBytes` (null when unknown — no Free part).
-  **Versions is always `null`**: the usage reports count version history inside
-  each site's storage and never split it out, so it is shown *Not measured*,
-  never as a size or a guess. The headline percentage stays SharePoint-only —
+  **There is no Versions part**: the usage reports count version history inside
+  each site's storage and never split it out, and the app never crawls, so it
+  is neither a segment nor a figure anywhere (evidence in agent-context
+  `proventeq-365-lite/specs/versioning.md`); a note under the line says why.
+  Never add one back as a size or a guess. The headline percentage stays SharePoint-only —
   OneDrive is on the line but never in that percentage. Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
   `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).

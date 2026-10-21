@@ -43,7 +43,7 @@ describe('DistributionSection', () => {
     for (const chart of charts) expect(chart).toHaveAccessibleName()
   })
 
-  it('lists the seven parts of the usage line in order, each with its size and share', () => {
+  it('lists the six parts of the usage line in order, each with its size and share', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(parts().map((button) => button.textContent)).toEqual([
       'SharePoint200 GB17.9% of the line',
@@ -51,7 +51,6 @@ describe('DistributionSection', () => {
       'Teams170 GB15.2% of the line',
       'Deleted10 GB0.9% of the line',
       'Inactive120 GB10.7% of the line',
-      'VersionsNot measured',
       'Free500 GB44.6% of the line',
     ])
   })
@@ -93,13 +92,10 @@ describe('DistributionSection', () => {
     expect(popover).toHaveTextContent('does not use the SharePoint entitlement')
   })
 
-  it('says versions are not measured and why, rather than showing a size', async () => {
+  it('draws no Versions part and says in a note why version history is not on the line', () => {
     render(<DistributionSection overview={withTemplates} />)
-    await userEvent.click(part('Versions'))
-    const popover = await screen.findByRole('dialog', { name: 'Versions' })
-    expect(popover).toHaveTextContent('Not measured')
-    expect(popover).not.toHaveTextContent('of the line')
-    expect(popover).toHaveTextContent('without splitting it out')
+    expect(screen.queryByRole('button', { name: /Versions/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/Microsoft's usage reports do not split it out/)).toBeInTheDocument()
   })
 
   it('counts the deleted sites and OneDrives still held', async () => {
