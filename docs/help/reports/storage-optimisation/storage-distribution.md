@@ -9,7 +9,7 @@ order: 10
 
 ## Storage usage
 
-One line shows where all storage sits, split into seven parts, and ends in what is left of your
+One line shows where all storage sits, split into six parts, and ends in what is left of your
 SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to see
 its size, its share of the line and what it counts.
 

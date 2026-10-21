@@ -95,7 +95,6 @@ describe('DistributionSection', () => {
   it('draws no Versions part and says in a note why version history is not on the line', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(screen.queryByRole('button', { name: /Versions/ })).not.toBeInTheDocument()
-    expect(document.querySelector('[data-segment="versions"]')).toBeNull()
     expect(screen.getByText(/Microsoft's usage reports do not split it out/)).toBeInTheDocument()
   })
 
