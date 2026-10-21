@@ -31,3 +31,4 @@ dist-ssr
 .temp/
 test-results/
 .lighthouseci/
+lighthouse-reports/
