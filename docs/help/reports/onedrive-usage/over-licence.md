@@ -47,4 +47,5 @@ Largest first.
 | Quota used | How much of the drive's own storage quota is used. The quota can be higher than the licence. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
 
-Deleted drives are not listed.
+Deleted drives are not listed. A long name or owner is cut short; hover over or focus it to see
+it in full (see [Long names](../../reference/site-names.md#long-names)).
