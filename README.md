@@ -606,11 +606,28 @@ repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. T
 reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
 from repository variables, so the Azure-hosted copy is configured without touching the code.
 
+### Lighthouse
+
+The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
+builds in **mock mode** with both reports on, serves the build with `npm run preview`, and runs
+Lighthouse CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
+`/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
+`lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
+best practices, SEO, accessibility on the help pages and the key audits (title, `lang`, image
+alt, labels, console errors, text compression) at 1, and at most the one known CSP finding. The
+report pages hold accessibility at today's 0.97 and 0.96 and color-contrast at no more failing elements than today,
+because the P365 palette's teal links, grey secondary text and state-coloured card values sit
+under 4.5:1. A regression fails the job. The reports are kept as the `lighthouse-reports` artifact
+for 14 days and are never uploaded to a public server.
+
 ### Preview production build locally
 
 ```bash
 npm run preview
 ```
+
+The preview server sends the `globalHeaders` of `public/staticwebapp.config.json` (CSP, HSTS and
+the rest), so a local check, and the Lighthouse job, see the headers production serves.
 
 ---
 
@@ -620,7 +637,7 @@ npm run preview
 |---|---|
 | `dev` | Start Vite dev server with HMR |
 | `build` | TypeScript compile then Vite production bundle (output: `dist/`) |
-| `preview` | Serve the production build locally for inspection |
+| `preview` | Serve the production build locally, with the production response headers |
 | `lint` | Run Oxlint static analysis |
 | `typecheck` | TypeScript type-check without emitting files |
 | `test` | Run Vitest unit tests (single run) |

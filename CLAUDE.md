@@ -546,6 +546,15 @@ typecheck · test · build as a separate job.
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a
   LIVE build (would gate on MSAL) — screenshot/preview from the mock dev server,
   not `dist`.
+- CI's `lighthouse` job builds in mock mode with both reports, serves it with
+  `npm run preview` (which sends the SWA `globalHeaders`, so the CSP is real)
+  and runs `npx @lhci/cli@<pinned> autorun` on `lighthouserc.json`. The
+  thresholds are the measured baseline: a change that adds a contrast failure,
+  drops a label or costs a category point fails CI. The report pages are held
+  at accessibility 0.97 / 0.96 and their current color-contrast count only
+  because of the P365 palette's low-contrast text; raise them to 1 when that
+  is fixed, never lower them to get a PR green. Reports go to the `lighthouse-reports` artifact,
+  never to `temporary-public-storage`.
 
 ## Design system / brand
 
