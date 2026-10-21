@@ -274,11 +274,15 @@ Function's identity *Key Vault Secrets User*, and set `GRAPH_CERT_PEM` to
 setting is fine for a test deployment; the Key Vault reference needs a role assignment, which is
 an owner-level step.
 
-**The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: every
-request answers 500 `InvalidConfiguration` from the moment it expires. `npm run cert:new` dates one
-two years out — put its expiry in the calendar, and roll it with
-`az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old one
-keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
+**The certificate is an expiry-dated credential and the proxy fails closed when it lapses**: a
+proxy that starts after the expiry (cold start, restart, deploy) answers every request
+`500 InvalidConfiguration`, and the browser reports that as a CORS or network error because a
+configuration failure is raised before the CORS headers are added. A proxy that was already running
+keeps serving until its cached tokens run out, then answers `502 TokenAcquisitionFailed` because
+Entra refuses the assertion. `npm run cert:new` dates one two years out and
+`npm run cert:check -- --pem <file>` prints a bundle's expiry — put it in the calendar, and roll it
+with `az ad app credential reset --id <client id> --cert @<new>.crt --append` (append, so the old
+one keeps working until the new PEM is in place), then update `GRAPH_CERT_PEM`.
 
 Then set `VITE_GRAPH_PROXY_URL=https://<function-app>.azurewebsites.net/api/graph` (and
 `VITE_GRAPH_PROXY_SCOPE` if the proxy is a separate registration) as repository variables: the

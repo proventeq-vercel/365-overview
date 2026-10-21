@@ -565,11 +565,13 @@ pick the last good *Deploy* run and choose *Re-run all jobs* — a re-run builds
 original run, and GitHub keeps a run re-runnable for 30 days. A re-run reads the repository
 variables as they are at that moment.
 
-**Two credentials expire and nothing warns before they do.** The `AZURE_STORAGE_SAS` secret stops
-the `site-application` upload on 2027-09-29 — that job fails and turns the run red, while the
-`site` job is unaffected — so issue a new SAS for the `$web` container and set the secret again
-before then. The proxy's client certificate makes every proxy request answer 500 from its expiry;
-roll it as described under *Deploying* in `functions/README.md`. Put both dates in a calendar.
+**Two credentials expire and nothing in the repo warns before they do.** When the SAS behind
+`AZURE_STORAGE_SAS` expires (its date is in the table above), the `site-application` upload fails
+and turns the run red while the `site` job is unaffected, so issue a new SAS for the `$web`
+container and set the secret again before then. The proxy's client certificate expires too, and an
+expired one takes the proxy down: *Deploying* in `functions/README.md` says what it does and how to
+roll it, and `npm run cert:check -- --pem <file>` there prints a bundle's expiry. Put both dates in
+a calendar.
 
 ### Pull request previews
 
