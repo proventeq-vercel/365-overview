@@ -20,7 +20,8 @@ the subtitle says how many.
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
 
 **Search** matches the name, owner and id as you type, **sort** by selecting a column header,
-and choose 50, 100, 250 or 500 **rows per page**. Search and sort go back to the first page.
+and choose 50, 100, 250 or 500 **rows per page**. Search and sort go back to the first page. A long
+name or owner is cut short; hover over or focus it to see it in full (see [Long names](../../reference/site-names.md#long-names)).
 
 ## Near their quota
 

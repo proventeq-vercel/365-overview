@@ -32,7 +32,8 @@ A name you have seen anywhere in the report becomes searchable in the table.
 
 A name, owner or id too long for its list or column is cut short with an ellipsis, so it never
 spills out of its card. Hover over it, or move to it with the Tab key, to see it in full. A name
-that fits adds no Tab stop.
+that fits adds no Tab stop. A touch screen has no hover, so there the name stays cut short: turn
+the device to landscape or use a wider window to see more of it.
 
 ## Blurred names
 
