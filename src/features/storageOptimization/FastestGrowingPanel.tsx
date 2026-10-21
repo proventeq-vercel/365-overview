@@ -82,6 +82,7 @@ export function FastestGrowingPanel({
           aria-label={t('storageOptimisation.offenders.fastestLoading')}
           className="flex flex-col gap-2.5"
         >
+          <span className="sr-only">{t('storageOptimisation.offenders.fastestLoading')}</span>
           {Array.from({ length: TOP_GROWERS }, (_, index) => (
             <Skeleton key={index} className="h-7 w-full" />
           ))}
