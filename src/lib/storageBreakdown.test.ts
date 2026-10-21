@@ -15,13 +15,13 @@ describe('storageBreakdown', () => {
   it('gives every part a zero share, not a division by zero, on an empty tenant', () => {
     const breakdown = storageBreakdown(empty)
     expect(breakdown.totalBytes).toBe(0)
-    expect(breakdown.segments.map((segment) => segment.share)).toEqual([0, 0, 0, 0, 0, 0])
+    expect(breakdown.segments.map((segment) => segment.share)).toEqual([0, 0, 0, 0, 0])
   })
 
   it('draws only SharePoint storage against the SharePoint entitlement', () => {
     const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100, deletedSiteBytes: 5, freeBytes: 900 })
     const bytes = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.bytes]))
-    expect(bytes).toEqual({ sharePoint: 95, teams: 0, deleted: 5, inactive: 0, versions: null, free: 900 })
+    expect(bytes).toEqual({ sharePoint: 95, teams: 0, deleted: 5, inactive: 0, free: 900 })
     expect(breakdown.totalBytes).toBe(1000)
   })
 
@@ -32,7 +32,6 @@ describe('storageBreakdown', () => {
       'teams',
       'deleted',
       'inactive',
-      'versions',
     ])
     expect(breakdown.totalBytes).toBe(100)
   })
@@ -41,17 +40,12 @@ describe('storageBreakdown', () => {
     const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100, freeBytes: 900, siteFiguresRead: false })
     expect(breakdown.segments.map((segment) => [segment.key, segment.bytes])).toEqual([
       ['sharePoint', 100],
-      ['versions', null],
       ['free', 900],
     ])
   })
 
-  it('never measures versions', () => {
+  it('has no versions segment', () => {
     const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100 })
-    expect(breakdown.segments.find((segment) => segment.key === 'versions')).toEqual({
-      key: 'versions',
-      bytes: null,
-      share: 0,
-    })
+    expect(breakdown.segments.map((segment) => String(segment.key))).not.toContain('versions')
   })
 })

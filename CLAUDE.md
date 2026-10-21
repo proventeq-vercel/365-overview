@@ -480,8 +480,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
-  for each licensed user"). Six parts in this order: SharePoint · Teams ·
-  Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
+  for each licensed user"). Five parts in this order: SharePoint · Teams ·
+  Deleted · Inactive · Free. Inactive wins over Teams (an inactive
   Teams site counts once, as inactive); Deleted holds deleted **sites** only;
   the SharePoint part is the trend total (the site rows' total when the trend
   lists no day with storage) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
@@ -493,9 +493,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
   a trend lists no day with storage). A pool total of 0 therefore means every
   row in it is 0 B, and the Share reads 0.0%, never *Unknown*.
-  **Versions is always `null`**: the usage reports count version history inside
-  each site's storage and never split it out, so it is shown *Not measured*,
-  never as a size or a guess. Workload colours are
+  **There is no Versions part**: the usage reports count version history inside
+  each site's storage and never split it out, and the app never crawls, so it
+  is neither a segment nor a figure anywhere (evidence in agent-context
+  `proventeq-365-lite/specs/versioning.md`); a note under the line says why.
+  Never add one back as a size or a guess. Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
   `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
 - Settings (rate, currency, override) are **not** part of the React Query key.

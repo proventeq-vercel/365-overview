@@ -492,7 +492,6 @@ describe('buildStorageOverview composition', () => {
         'teams',
         'deleted',
         'inactive',
-        'versions',
         'free',
       ])
       expect(bytesOf(overview)).toEqual({
@@ -500,7 +499,6 @@ describe('buildStorageOverview composition', () => {
         teams: 30 * GB,
         deleted: 10 * GB,
         inactive: 40 * GB,
-        versions: null,
         free: 1874 * GB,
       })
       expect(overview.breakdown.totalBytes).toBe(2024 * GB)
@@ -569,12 +567,11 @@ describe('buildStorageOverview composition', () => {
       expect(oneDrive.pool.allocation).toMatchObject({ allocatedBytes: 10 * GB, freeBytes: 0, usedShare: 1, freeShare: 0 })
     })
 
-    it('gives each part its share of the line, and an unmeasured part none', () => {
+    it('gives each part its share of the line', () => {
       const { breakdown } = buildStorageOverview(estate())
       const share = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.share]))
       expect(share.teams).toBeCloseTo(30 / 2024, 10)
       expect(share.free).toBeCloseTo(1874 / 2024, 10)
-      expect(share.versions).toBe(0)
     })
 
     it('has no free part, rather than a zero, when the entitlement is unknown', () => {

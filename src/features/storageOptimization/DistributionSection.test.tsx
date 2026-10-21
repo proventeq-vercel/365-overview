@@ -43,14 +43,13 @@ describe('DistributionSection', () => {
     for (const chart of charts) expect(chart).toHaveAccessibleName()
   })
 
-  it('lists the six SharePoint parts of the usage line in order, each with its size and share', () => {
+  it('lists the five SharePoint parts of the usage line in order, each with its size and share', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(parts().map((button) => button.textContent)).toEqual([
       'SharePoint200 GB20.0% of the line',
       'Teams170 GB17.0% of the line',
       'Deleted10 GB1.0% of the line',
       'Inactive120 GB12.0% of the line',
-      'VersionsNot measured',
       'Free500 GB50.0% of the line',
     ])
   })
@@ -157,13 +156,11 @@ describe('DistributionSection', () => {
     expect(screen.queryByRole('list', { name: 'Live OneDrive storage' })).not.toBeInTheDocument()
   })
 
-  it('says versions are not measured and why, rather than showing a size', async () => {
+  it('draws no Versions part and says in a note why version history is not on the line', () => {
     render(<DistributionSection overview={withTemplates} />)
-    await userEvent.click(part('Versions'))
-    const popover = await screen.findByRole('dialog', { name: 'Versions' })
-    expect(popover).toHaveTextContent('Not measured')
-    expect(popover).not.toHaveTextContent('of the line')
-    expect(popover).toHaveTextContent('without splitting it out')
+    expect(screen.queryByRole('button', { name: /Versions/ })).not.toBeInTheDocument()
+    expect(document.querySelector('[data-segment="versions"]')).toBeNull()
+    expect(screen.getByText(/Microsoft's usage reports do not split it out/)).toBeInTheDocument()
   })
 
   it('counts the deleted sites still held', async () => {

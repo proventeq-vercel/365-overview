@@ -223,7 +223,7 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.archive.savingApplies).toBe(false)
     expect(overview.growth.afterCleanUp).toMatchObject({ applies: false, endBytes: null, staysUnderEntitlement: null })
     expect(overview.growth.points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
-    expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual(['sharePoint', 'versions', 'free'])
+    expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual(['sharePoint', 'free'])
     expect(overview.offenders.retained).toBeNull()
     expect(overview.oneDrive.attention).not.toBeNull()
   })

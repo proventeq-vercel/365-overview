@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement } from 'react'
+import type { ReactElement } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -7,7 +7,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { P365 } from './theme'
 
 export interface BarSegment {
   id: string
@@ -17,20 +16,10 @@ export interface BarSegment {
   value: string
   shareLabel: string | null
   description: string
-  unmeasured?: boolean
 }
 
 const HOVER_OPEN_DELAY = 80
 const HOVER_CLOSE_DELAY = 120
-
-function swatchStyle(segment: BarSegment): CSSProperties {
-  return segment.unmeasured
-    ? {
-        background: `repeating-linear-gradient(135deg, ${P365.grey400} 0 2px, transparent 2px 5px)`,
-        boxShadow: `inset 0 0 0 1px ${P365.grey400}`,
-      }
-    : { background: segment.color }
-}
 
 function SegmentDetails({
   segment,
@@ -49,13 +38,10 @@ function SegmentDetails({
       />
       <PopoverContent>
         <div className="flex items-center gap-2">
-          <i className="size-3 shrink-0 rounded-sm" style={swatchStyle(segment)} aria-hidden="true" />
+          <i className="size-3 shrink-0 rounded-sm" style={{ background: segment.color }} aria-hidden="true" />
           <PopoverTitle>{segment.label}</PopoverTitle>
         </div>
-        <p
-          className="tabular mt-1 text-lg font-bold"
-          style={{ color: segment.unmeasured ? P365.grey500 : segment.color }}
-        >
+        <p className="tabular mt-1 text-lg font-bold" style={{ color: segment.color }}>
           {segment.value}
         </p>
         {segment.shareLabel && <p className="text-p365-grey-500">{segment.shareLabel}</p>}
@@ -96,7 +82,7 @@ export function SegmentedBar({
       </div>
       <ul
         aria-label={ariaLabel}
-        className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
       >
         {segments.map((segment) => (
           <li key={segment.id} className="min-w-0">
@@ -108,17 +94,10 @@ export function SegmentedBar({
                   className="flex w-full min-w-0 flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left transition-colors duration-150 ease-out hover:bg-p365-grey-50 focus-visible:bg-p365-grey-50 focus-visible:outline-2 focus-visible:outline-p365-teal data-popup-open:bg-p365-grey-50"
                 >
                   <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-p365-grey-700">
-                    <i className="size-2.5 shrink-0 rounded-sm" style={swatchStyle(segment)} aria-hidden="true" />
+                    <i className="size-2.5 shrink-0 rounded-sm" style={{ background: segment.color }} aria-hidden="true" />
                     <span className="truncate">{segment.label}</span>
                   </span>
-                  <span
-                    className={cn(
-                      'tabular text-sm font-semibold',
-                      segment.unmeasured ? 'text-p365-grey-500' : 'text-p365-navy',
-                    )}
-                  >
-                    {segment.value}
-                  </span>
+                  <span className="tabular text-sm font-semibold text-p365-navy">{segment.value}</span>
                   {segment.shareLabel && (
                     <span className="tabular text-xs text-p365-grey-500">{segment.shareLabel}</span>
                   )}

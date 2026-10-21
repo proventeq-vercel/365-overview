@@ -31,10 +31,13 @@ shows how far over it is, in red.
 | Teams | Teams purple | Live sites with activity inside the inactivity window, created from a Teams channel or group template. |
 | Deleted | Red | Deleted sites that Microsoft still holds, and counts against the entitlement, until their retention period ends. Deleted OneDrives are not part of the SharePoint entitlement, so they are not on this line. [Main offenders](main-offenders.md#deleted-but-still-billing) lists both. |
 | Inactive | Amber | Live sites, Teams sites included, with no activity for the [inactivity window](../../reference/settings.md#archive-sites-inactive-for). It is the same storage as the [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card. |
-| Versions | Striped grey, **Not measured** | Version history. Microsoft's usage reports count it inside each site's storage and do not split it out, so it has no size here. Proventeq 365 measures it library by library. |
 | Free | Light grey | The SharePoint entitlement less SharePoint storage, never below zero. Left out when the entitlement is unknown. |
 
 - The parts never overlap: an inactive Teams site counts once, under **Inactive**.
+- **Version history has no part of its own.** Microsoft's usage reports count it inside each site's
+  and OneDrive's storage and do not split it out, and this report never crawls a library to measure
+  it, so a note under the line says so rather than showing a size. Proventeq 365 measures it library
+  by library.
 - Microsoft Graph does not say which sites belong to Teams. The report groups by the template each
   site was created from, so these figures will not match the SharePoint admin centre, which
   groups differently.
