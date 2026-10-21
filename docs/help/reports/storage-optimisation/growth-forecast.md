@@ -3,6 +3,7 @@ title: Future state & growth impact
 nav: Growth & forecast
 description: Where SharePoint storage is heading at the current growth rate, when it passes the entitlement, and what that costs if nothing changes.
 section: storage-optimisation
+feature: optimization.storage.report.overview
 order: 30
 ---
 
@@ -23,7 +24,12 @@ Under the chart:
 | Added last N mo | Storage added between the first and last month of the trend. N counts the month-to-month steps it covers. |
 | Live sites | SharePoint sites that are not deleted. |
 | Drives near their quota | OneDrives at 90% or more of their own storage quota, the per-drive limit in the usage report. An admin can set it above or below the licence. |
+::: feature optimization.storage.report.onedrive
 | Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). |
+:::
+::: unless-feature optimization.storage.report.onedrive
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user. |
+:::
 
 ## Growth impact
 

@@ -3,6 +3,7 @@ title: Current storage distribution
 nav: Storage distribution
 description: Where storage sits today — every workload on one line against the SharePoint entitlement, and how SharePoint splits by site template.
 section: storage-optimisation
+feature: optimization.storage.report.overview
 order: 10
 ---
 

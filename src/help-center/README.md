@@ -45,6 +45,12 @@ the history API; no router is needed.
 - **Links**: relative `.md` links resolve against the linking file and navigate in place.
 - **Blocks**: `::: audience <id>`, `::: if <variable>`, `::: unless <variable>`, closed by `:::`,
   nestable. A page with an audience block gets the audience switch; `?audience=<id>` selects one.
+- **Features**: pass `createHelpCatalogue(sources, sections, root, enabled)` an
+  `enabled(feature) => boolean`. A page with `feature: <id>` in its frontmatter is dropped unless
+  it is enabled, a section with no pages left is dropped, and `::: feature <id>` /
+  `::: unless-feature <id>` blocks are resolved when the catalogue is built, so search, the
+  pager and `llms.txt` never see disabled content. `helpLlms` takes the same `enabled` option.
+  Without it everything is shown.
 - **Variables**: `{{name}}`, from `variables(audience)`; missing ones render empty.
 - **Landing**: the root page (`index.md`) renders as a hero (its title and description), quick
   links to the other pages of its section, a card per section (its `description`, or its page

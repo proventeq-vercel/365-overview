@@ -2,6 +2,7 @@
 title: Main offenders
 description: The sites and OneDrives driving the most storage, storage that is deleted but still billing, and a searchable table of everything.
 section: storage-optimisation
+feature: optimization.storage.report.overview
 order: 40
 ---
 

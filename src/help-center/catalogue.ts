@@ -1,4 +1,4 @@
-import { hasAudienceBlocks } from './prepare'
+import { hasAudienceBlocks, selectFeatureBlocks, type FeatureCheck } from './prepare'
 import type { HelpPage, HelpSection } from './types'
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
@@ -44,8 +44,11 @@ function required(fields: Record<string, string>, name: string, file: string): s
   return value
 }
 
-export function parseHelpPage(file: string, raw: string): HelpPage {
-  const { fields, body } = parseFrontmatter(raw)
+const EVERY_FEATURE: FeatureCheck = () => true
+
+export function parseHelpPage(file: string, raw: string, enabled = EVERY_FEATURE): HelpPage {
+  const { fields, body: source } = parseFrontmatter(raw)
+  const body = selectFeatureBlocks(source, enabled)
   const title = required(fields, 'title', file)
   const order = Number(fields.order ?? 0)
   return {
@@ -56,6 +59,7 @@ export function parseHelpPage(file: string, raw: string): HelpPage {
     description: required(fields, 'description', file),
     section: required(fields, 'section', file),
     order: Number.isFinite(order) ? order : 0,
+    feature: fields.feature || null,
     body: body.trim(),
     hasAudienceContent: hasAudienceBlocks(body),
   }
@@ -65,11 +69,14 @@ export function createHelpCatalogue(
   sources: Readonly<Record<string, string>>,
   sections: readonly HelpSection[],
   root = '',
+  enabled = EVERY_FEATURE,
 ): HelpCatalogue {
   const sectionRank = new Map(sections.map((section, index) => [section.id, index]))
   const pages = Object.entries(sources)
     .filter(([path]) => !path.endsWith(`/${AUTHORING_GUIDE}`) && path !== AUTHORING_GUIDE)
-    .map(([path, raw]) => parseHelpPage(path.startsWith(root) ? path.slice(root.length) : path, raw))
+    .map(([path, raw]) =>
+      parseHelpPage(path.startsWith(root) ? path.slice(root.length) : path, raw, enabled),
+    )
   for (const page of pages) {
     if (!sectionRank.has(page.section)) {
       throw new Error(`Help page ${page.file} names an unknown section "${page.section}"`)
@@ -81,22 +88,24 @@ export function createHelpCatalogue(
       a.order - b.order ||
       a.slug.localeCompare(b.slug),
   )
-  const bySlug = new Map<string, HelpPage>()
+  const taken = new Map<string, HelpPage>()
   for (const page of pages) {
-    const taken = bySlug.get(page.slug)
-    if (taken) throw new Error(`Help pages ${taken.file} and ${page.file} share the address "/${page.slug}"`)
-    bySlug.set(page.slug, page)
+    const other = taken.get(page.slug)
+    if (other) throw new Error(`Help pages ${other.file} and ${page.file} share the address "/${page.slug}"`)
+    taken.set(page.slug, page)
   }
+  const shown = pages.filter((page) => page.feature === null || enabled(page.feature))
+  const bySlug = new Map(shown.map((page) => [page.slug, page]))
 
   return {
-    pages,
-    sections,
+    pages: shown,
+    sections: sections.filter((section) => shown.some((page) => page.section === section.id)),
     page: (slug) => bySlug.get(slug),
-    pagesIn: (section) => pages.filter((page) => page.section === section),
+    pagesIn: (section) => shown.filter((page) => page.section === section),
     neighbours(slug) {
-      const index = pages.findIndex((page) => page.slug === slug)
+      const index = shown.findIndex((page) => page.slug === slug)
       if (index < 0) return { previous: null, next: null }
-      return { previous: pages[index - 1] ?? null, next: pages[index + 1] ?? null }
+      return { previous: shown[index - 1] ?? null, next: shown[index + 1] ?? null }
     },
   }
 }

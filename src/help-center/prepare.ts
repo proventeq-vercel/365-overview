@@ -3,6 +3,8 @@ import type { HelpContext, HelpHeading, HelpVariables } from './types'
 
 const BLOCK_OPEN = /^:::\s+(audience|if|unless)\s+(\S+)\s*$/
 const BLOCK_CLOSE = /^:::\s*$/
+const FEATURE_OPEN = /^:::\s+(feature|unless-feature)\s+(\S+)\s*$/
+const ANY_OPEN = /^:::\s+\S+/
 const VARIABLE = /\{\{\s*([A-Za-z][\w]*)\s*\}\}/g
 const FENCE = /^(```|~~~)/
 const HEADING = /^(#{2,3})\s+(.+?)\s*#*\s*$/
@@ -39,6 +41,52 @@ export function selectBlocks(body: string, context: HelpContext): string {
   }
   if (visible.length > 0) throw new Error('A help block opened with ::: was never closed')
   return kept.join('\n').replace(/\n{3,}/g, '\n\n')
+}
+
+export type FeatureCheck = (feature: string) => boolean
+
+export function selectFeatureBlocks(body: string, enabled: FeatureCheck): string {
+  const stack: { feature: boolean; visible: boolean }[] = []
+  const kept: string[] = []
+  let inFence = false
+  const visible = () => stack.every((block) => block.visible)
+  for (const line of body.split(/\r?\n/)) {
+    if (FENCE.test(line)) inFence = !inFence
+    if (!inFence) {
+      const feature = FEATURE_OPEN.exec(line)
+      if (feature) {
+        const on = enabled(feature[2])
+        stack.push({ feature: true, visible: feature[1] === 'feature' ? on : !on })
+        continue
+      }
+      if (ANY_OPEN.test(line)) {
+        if (visible()) kept.push(line)
+        stack.push({ feature: false, visible: true })
+        continue
+      }
+      if (BLOCK_CLOSE.test(line) && stack.length > 0) {
+        const closed = stack.pop()!
+        if (!closed.feature && visible()) kept.push(line)
+        continue
+      }
+    }
+    if (visible()) kept.push(line)
+  }
+  if (stack.length > 0) throw new Error('A help block opened with ::: was never closed')
+  return kept.join('\n').replace(/\n{3,}/g, '\n\n')
+}
+
+export function featuresUsed(body: string): string[] {
+  const features = new Set<string>()
+  let inFence = false
+  for (const line of body.split(/\r?\n/)) {
+    if (FENCE.test(line)) inFence = !inFence
+    else if (!inFence) {
+      const feature = FEATURE_OPEN.exec(line)
+      if (feature) features.add(feature[2])
+    }
+  }
+  return [...features]
 }
 
 export function hasAudienceBlocks(body: string): boolean {

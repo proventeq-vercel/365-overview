@@ -3,6 +3,7 @@ title: Top OneDrives by storage
 nav: Top OneDrives
 description: The five largest personal drives, ranked by the storage they use.
 section: onedrive-usage
+feature: optimization.storage.report.onedrive
 order: 5
 ---
 

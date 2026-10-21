@@ -25,8 +25,12 @@ include. It also shows what that growth costs and which sites and drives drive t
 
 | Report | What it answers |
 | --- | --- |
+::: feature optimization.storage.report.overview
 | [Storage Optimisation](reports/storage-optimisation/index.md) | Where tenant storage sits, how much is inactive, when the SharePoint entitlement runs out and what growth will cost. |
+:::
+::: feature optimization.storage.report.onedrive
 | [OneDrive Usage](reports/onedrive-usage/index.md) | How much sits in personal OneDrives, who holds the most, and which drives are near their quota or over their licence. |
+:::
 
 Every section of a report has a **?** button next to its title. It explains the section in a
 sentence and links to the matching page here.
@@ -49,6 +53,8 @@ You can replace either in [Report settings](reference/settings.md).
 
 - **Options (⋯)**, top right, lets you refresh the data, open Report settings, open this help,
   switch account or sign out.
-- On a site set up with a report menu, the menu button at the top left lists the reports.
+::: feature app.menu
+- The menu button at the top left lists the reports.
+:::
 - [Data and privacy](reference/data-and-privacy.md) explains what leaves your browser and what
   does not.

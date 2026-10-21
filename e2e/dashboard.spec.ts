@@ -388,6 +388,17 @@ test('a tenant over its entitlement sees the saving instead of the forecast', as
   await expect(page.getByText(/over the entitlement$/)).toBeVisible()
 })
 
+test('the help lists only the reports this site has switched on', async ({ page }) => {
+  await page.goto('/help')
+  const areas = page.getByRole('region', { name: 'Browse by area' })
+  await expect(areas.getByRole('link', { name: /Storage Optimisation/ })).toBeVisible()
+  await expect(areas.getByRole('link', { name: /OneDrive Usage/ })).toHaveCount(0)
+  await page.goto('/help/reports/onedrive-usage')
+  await expect(page.getByRole('heading', { name: 'OneDrive Usage report', level: 1 })).toHaveCount(0)
+  await page.goto('/help?features=optimization.storage.report.overview,optimization.storage.report.onedrive')
+  await expect(page.getByRole('region', { name: 'Browse by area' }).getByRole('link', { name: /OneDrive Usage/ })).toBeVisible()
+})
+
 test('the options menu opens the help in a new tab', async ({ page, context }) => {
   await page.goto('/')
   await reportLoaded(page)

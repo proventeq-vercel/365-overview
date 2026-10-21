@@ -2,6 +2,7 @@
 title: All OneDrives
 description: Every personal drive in the usage report, with how much of its own storage quota it uses.
 section: onedrive-usage
+feature: optimization.storage.report.onedrive
 order: 20
 ---
 
@@ -18,8 +19,8 @@ the subtitle says how many.
 | Active files | Files created, edited or otherwise active in the 180-day period. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
 
-Search, sorting and rows per page work as in the
-[Storage Optimisation table](../storage-optimisation/main-offenders.md#search-sort-and-pages).
+**Search** matches the name, owner and id as you type, **sort** by selecting a column header,
+and choose 50, 100, 250 or 500 **rows per page**. Search and sort go back to the first page.
 
 ## Near their quota
 
