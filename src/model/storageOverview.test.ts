@@ -430,7 +430,6 @@ describe('buildStorageOverview composition', () => {
         'teams',
         'deleted',
         'inactive',
-        'versions',
         'free',
       ])
       expect(bytesOf(overview)).toEqual({
@@ -439,19 +438,17 @@ describe('buildStorageOverview composition', () => {
         teams: 30 * GB,
         deleted: 14 * GB,
         inactive: 40 * GB,
-        versions: null,
         free: 1874 * GB,
       })
       expect(overview.breakdown.totalBytes).toBe(2084 * GB)
       expect(overview.breakdown.deletedCount).toBe(2)
     })
 
-    it('gives each part its share of the line, and an unmeasured part none', () => {
+    it('gives each part its share of the line', () => {
       const { breakdown } = buildStorageOverview(estate())
       const share = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.share]))
       expect(share.teams).toBeCloseTo(30 / 2084, 10)
       expect(share.free).toBeCloseTo(1874 / 2084, 10)
-      expect(share.versions).toBe(0)
     })
 
     it('has no free part, rather than a zero, when the entitlement is unknown', () => {

@@ -11,7 +11,6 @@ const SEGMENT_COLOR: Record<StorageSegmentKey, string> = {
   teams: WORKLOAD_COLOR.teams,
   deleted: P365.red,
   inactive: P365.yellow,
-  versions: P365.grey400,
   free: P365.grey100,
 }
 
@@ -41,12 +40,7 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
 }
 
 function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: TranslateFn): BarSegment {
-  const value =
-    segment.bytes !== null
-      ? formatBytes(segment.bytes)
-      : segment.key === 'versions'
-        ? t('storageOptimisation.usage.notMeasured')
-        : t('storageOptimisation.kpi.unknown')
+  const value = segment.bytes !== null ? formatBytes(segment.bytes) : t('storageOptimisation.kpi.unknown')
   return {
     id: segment.key,
     label: t(`storageOptimisation.usage.segment.${segment.key}`),
@@ -58,7 +52,6 @@ function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: Tra
         ? null
         : t('storageOptimisation.usage.share', { percent: formatPercent(segment.share, 1) }),
     description: describe(segment.key, overview, t),
-    unmeasured: segment.key === 'versions',
   }
 }
 
@@ -113,6 +106,7 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
       {caveats.entitlementIsEstimated && sharePoint.entitledBytes !== null && (
         <PanelDescription>{t('storageOptimisation.growth.estimatedQuotaNote')}</PanelDescription>
       )}
+      <p className="text-xs text-p365-grey-500">{t('storageOptimisation.usage.versionsNote')}</p>
       <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
     </Panel>
   )
