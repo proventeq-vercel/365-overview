@@ -52,7 +52,12 @@ export function FastestGrowingPanel({ growth, nameMask }: { growth: GrowthState;
       ) : growth.isError ? (
         <EmptyBlock>{t('storageOptimisation.offenders.fastestUnavailable')}</EmptyBlock>
       ) : (
-        <div aria-label={t('storageOptimisation.offenders.fastestLoading')} className="flex flex-col gap-2.5">
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label={t('storageOptimisation.offenders.fastestLoading')}
+          className="flex flex-col gap-2.5"
+        >
           {Array.from({ length: TOP_GROWERS }, (_, index) => (
             <Skeleton key={index} className="h-7 w-full" />
           ))}

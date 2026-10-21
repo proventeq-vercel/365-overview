@@ -24,6 +24,14 @@ function renderOffenders(overview: StorageOverview, growth: GrowthState = grown)
 
 afterEach(cleanup)
 
+const growthPanel = () =>
+  screen.getByRole('heading', { name: 'Fastest-growing sites & OneDrives' }).parentElement!.parentElement!
+
+const growthLegend = () =>
+  within(growthPanel())
+    .queryAllByRole('list')
+    .find((list) => !list.hasAttribute('aria-label')) ?? null
+
 const site = (id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool: 'SharePoint',
   id,
@@ -100,7 +108,7 @@ describe('OffendersSection', () => {
   it('names both products in the growth legend, each in its own colour', () => {
     renderOffenders(withSites)
     const swatch = (name: string) =>
-      screen.getAllByText(name).find((el) => el.closest('ul:not([aria-label])'))!.previousElementSibling as HTMLElement
+      within(growthLegend()!).getByText(name).closest('li')!.querySelector<HTMLElement>('i')!
     expect(swatch('SharePoint').style.background).toBe(rgb('#038387'))
     expect(swatch('OneDrive').style.background).toBe(rgb('#0364b8'))
   })
@@ -125,9 +133,8 @@ describe('OffendersSection', () => {
 
   it('shows no product legend until there are growers to label', () => {
     renderOffenders(withSites, { data: { ...growthData, topGrowers: [] }, isError: false })
-    const panel = screen.getByRole('heading', { name: 'Fastest-growing sites & OneDrives' }).parentElement!.parentElement!
-    expect(within(panel).queryByText('SharePoint')).not.toBeInTheDocument()
-    expect(within(panel).getByText('No site or OneDrive grew between 2026-08-02 and 2026-08-30.')).toBeInTheDocument()
+    expect(growthLegend()).toBeNull()
+    expect(within(growthPanel()).getByText('No site or OneDrive grew between 2026-08-02 and 2026-08-30.')).toBeInTheDocument()
   })
 
   it('tints the largest sites in SharePoint teal and the largest OneDrives in OneDrive blue', () => {
@@ -140,14 +147,19 @@ describe('OffendersSection', () => {
 
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderOffenders(withSites, { data: undefined, isError: false })
-    expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
     expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(growthLegend()).toBeNull()
   })
 
   it('says growth is unavailable, rather than zero, when the earlier report fails', () => {
     renderOffenders(withSites, { data: undefined, isError: true })
     expect(screen.getByText(/Growth is unavailable/)).toBeInTheDocument()
     expect(screen.queryByLabelText('Loading the fastest-growing sites and OneDrives')).not.toBeInTheDocument()
+    expect(growthLegend()).toBeNull()
   })
 
   it('says nothing grew instead of drawing an empty chart', () => {
