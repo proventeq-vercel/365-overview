@@ -623,9 +623,10 @@ kept as the `lighthouse-reports` artifact for 14 days and are never uploaded to 
 The job is part of CI, so a red Lighthouse run on `main` also holds the deploy back (*Automatic
 deployment* waits for the whole CI workflow). A performance median under 0.9 from a slow runner,
 with nothing else red, is re-run with *Re-run failed jobs* rather than lowered. A pull request's
-run never deploys; on `main`, re-run only while that commit is still the tip: a green re-run
-deploys its own commit, so re-running an older run would put it out over a newer one. Once a
-later commit has landed, its own run deploys.
+run never deploys; on `main`, re-run only while that commit is still the tip and no newer run
+exists. A green re-run deploys its own commit, and it joins the same concurrency group, so
+re-running an older run cancels a newer run still in progress and puts the older commit out
+instead. If that happens, re-run the newer commit's run.
 
 ### Preview production build locally
 
