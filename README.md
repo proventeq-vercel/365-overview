@@ -200,11 +200,12 @@ Only the exact value `true` locks. The lock covers the mode overrides and nothin
 on the help pages and `?admin_consent=` after an admin-consent redirect are read either way. The
 deploy workflow takes the value from the repository variable of the same name (see *Automatic
 deployment*), and the lock is baked into the bundle, so each production site is locked exactly when
-that variable was `true` at the time `deploy.yml` last built it; a change to the variable reaches a
-site only with its next build. The variable was `false` on 2026-10-21 (`gh variable list` shows the
-current value). A site built that way lets a visitor switch it into mock mode from the URL — fixture
-data, no sign-in — pick a mock scenario, show the report menu or the admin bar, or drop a report.
-Pull request previews never read the variable and are never locked.
+that variable was `true` at the time `deploy.yml` last built that site; a change to the variable
+reaches a site only with its next build. The variable was `false` on 2026-10-21 (`gh variable list`
+shows the current value). A site built with the variable not `true` lets a visitor switch it into
+mock mode from the URL — fixture data, no sign-in — pick a mock scenario, show the report menu or
+the admin bar, or drop a report. Pull request previews never read the variable and are never
+locked.
 
 ---
 
@@ -589,21 +590,27 @@ so the next push deploys it again — revert it on `main` too. GitHub does not d
 re-run reads the repository variables as they are now or as they were, so a variable changed since
 that run (`VITE_MODES_LOCKED`, say) may or may not apply: check the rebuilt site rather than
 assuming. Deploys queue under one `concurrency` group: one run executes, at most one waits, and a
-newer waiting run replaces an older one, so confirm that the rollback run itself finished. Neither
-route rolls the proxy back while its job is inert (see above): the Function App is deployed by
-hand.
+newer waiting run replaces an older one. A CI run on `main` that does not succeed, red or cancelled
+by a newer push, still starts a *Deploy* run: it skips every job, but it queues in the same group
+and can replace a real deploy that was waiting. So confirm that the rollback run itself finished.
+Neither route rolls the proxy back while its job is inert (see above): the Function App is deployed
+by hand.
 
 **Two credentials expire and nothing in the repo warns before they do.** When the SAS behind
 `AZURE_STORAGE_SAS` expires (its date is in the table above), the `site-application` upload fails
 and turns the run red while the `site` job is unaffected. Before then, issue a new SAS for the
 `$web` container with the same permissions as the current one (its owner reads them from `sp=`;
 the secret cannot be read back from GitHub), and set the secret again; issuing the new one does not
-cancel the old one, so there is no gap. The proxy's client certificate expires too: a proxy that
-starts after a bundle carrying its `CERTIFICATE` block has expired refuses every request, and one
-that holds only the private key finds out at its first token request instead. *Deploying* in
-`functions/README.md` says what each looks like and how to roll the certificate, and
-`npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a
-PEM that carries its certificate. Put both dates in a calendar.
+cancel the old one, so there is no gap. The proxy's client certificate expires too: a proxy whose
+`GRAPH_CERT_PEM` carries its `CERTIFICATE` block and that starts after the certificate has expired
+refuses every request, and one whose PEM holds only the private key finds out at its first token
+request instead, which for a proxy that is already running comes only when a tenant's cached token
+needs refreshing. *Deploying* in `functions/README.md` says what each looks like and how to roll
+the certificate.
+`npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a PEM
+that carries its certificate; a key-only PEM needs `--thumbprint` and prints no expiry, so read its
+date from the certificate's row under *Certificates & secrets* on the registration. Put both dates
+in a calendar.
 
 ### Pull request previews
 
@@ -643,8 +650,10 @@ az role assignment create --assignee <appId> --role Contributor \
 
 That is `Contributor` on the whole resource group, wider than the Function App itself: the
 credential can manage every other resource in `rg-lh-sa-dev` too, and `Contributor` can list
-storage account keys and read app settings. Whether a narrower role or scope still deploys has not
-been tested here, so narrowing it is the administrator's call.
+storage account keys and read app settings. Those include `GRAPH_CERT_PEM`, the proxy's private key,
+whenever it is a plain app setting; as a Key Vault reference the setting holds only the reference
+(*Deploying* in `functions/README.md`). Whether a narrower role or scope still deploys has not been
+tested here, so narrowing it is the administrator's call.
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the
