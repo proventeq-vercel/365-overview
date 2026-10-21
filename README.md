@@ -591,8 +591,9 @@ re-run reads the repository variables as they are now or as they were, so a vari
 that run (`VITE_MODES_LOCKED`, say) may or may not apply: check the rebuilt site rather than
 assuming. Deploys queue under one `concurrency` group: one run executes, at most one waits, and a
 newer waiting run replaces an older one. A CI run on `main` that does not succeed, red or cancelled
-by a newer push, still starts a *Deploy* run: it skips every job, but it queues in the same group
-and can replace a real deploy that was waiting. So confirm that the rollback run itself finished.
+by a newer push, still starts a *Deploy* run that skips every job. Going by the trigger and the
+`concurrency` setting (no run has shown it yet), that skipped run also queues in the same group and
+can replace a real deploy that was waiting. So confirm that the rollback run itself finished.
 Neither route rolls the proxy back while its job is inert (see above): the Function App is deployed
 by hand.
 
@@ -604,9 +605,9 @@ the secret cannot be read back from GitHub), and set the secret again; issuing t
 cancel the old one, so there is no gap. The proxy's client certificate expires too: a proxy whose
 `GRAPH_CERT_PEM` carries its `CERTIFICATE` block and that starts after the certificate has expired
 refuses every request, and one whose PEM holds only the private key finds out at its first token
-request instead, which for a proxy that is already running comes only when a tenant's cached token
-needs refreshing. *Deploying* in `functions/README.md` says what each looks like and how to roll
-the certificate.
+request instead, which for a proxy that is already running is the next request that needs a new
+token (a tenant it holds none for, or one whose cached token is due). *Deploying* in
+`functions/README.md` says what each looks like and how to roll the certificate.
 `npm run cert:check -- --pem <file>`, run in `functions/` after `npm ci`, prints the expiry of a PEM
 that carries its certificate; a key-only PEM needs `--thumbprint` and prints no expiry, so read its
 date from the certificate's row under *Certificates & secrets* on the registration. Put both dates
@@ -651,9 +652,10 @@ az role assignment create --assignee <appId> --role Contributor \
 That is `Contributor` on the whole resource group, wider than the Function App itself: the
 credential can manage every other resource in `rg-lh-sa-dev` too, and `Contributor` can list
 storage account keys and read app settings. Those include `GRAPH_CERT_PEM`, the proxy's private key,
-whenever it is a plain app setting; as a Key Vault reference the setting holds only the reference
-(*Deploying* in `functions/README.md`). Whether a narrower role or scope still deploys has not been
-tested here, so narrowing it is the administrator's call.
+whenever it is a plain app setting; as a Key Vault reference the listing holds only the reference,
+but the credential deploys code to the Function App, and that code reads the resolved value from its
+environment (*Deploying* in `functions/README.md`). Whether a narrower role or scope still deploys
+has not been tested here, so narrowing it is the administrator's call.
 
 Then set three repository **secrets** — `AZURE_CLIENT_ID` (the appId), `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` — and, if the Function App's name ever differs from the default in the
