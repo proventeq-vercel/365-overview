@@ -104,6 +104,10 @@ cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/gra
 build ignores it, so it cannot ship. The SPA then skips MSAL the way mock mode does, takes its
 caller token from the fake Entra and renders the whole report through the proxy.
 
+The in-process host builds every request address on `http://127.0.0.1:<port>`, so the paging
+links it rewrites point there and `VITE_GRAPH_PROXY_URL` must say `127.0.0.1`, not `localhost`:
+the SPA refuses a link on any other origin than the one it was configured with.
+
 The stack allows `http://localhost:5173` and `http://127.0.0.1:5173` — Vite's default. On any
 other port every call dies at the CORS preflight, so name it when starting the stack:
 

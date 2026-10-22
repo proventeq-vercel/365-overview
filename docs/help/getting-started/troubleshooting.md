@@ -69,6 +69,27 @@ The report could not start in your browser. Refresh the page. If the screen says
 overrides the deployed modes, select **Reset the modes for this tab**. If it keeps happening,
 send Proventeq the message shown under the heading.
 
+## The data service sent a link to another address
+
+The screen says "The data service sent a link to another address, so the report could not be
+loaded." A large answer arrives a page at a time, and each page links to the next. The report
+follows a link only when it leads back to the same data service, so your sign-in token is never
+sent to another address. Select **Try again** once. If the screen returns, contact Proventeq.
+
+::: audience application
+The data service here is Proventeq's Graph proxy. This is a setup fault on Proventeq's side:
+either the address the proxy puts in its links does not match the address this site calls, or
+this site was built with a proxy address that is not a full web address. In the first case only
+answers that span more than one page are refused; in the second every request is.
+:::
+
+::: audience delegated
+The data service here is Microsoft Graph, and its links always lead back to Microsoft Graph. A
+link anywhere else means something between your browser and Microsoft changed the answer, for
+example a browser extension or a network appliance that inspects traffic. Try another browser or
+network.
+:::
+
 ## Sites are listed by an id instead of a name
 
 The figures are still correct. The app has no `Sites.Read.All`, or, with delegated permissions,

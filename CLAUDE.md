@@ -48,12 +48,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (`https://graph.microsoft.com` or the proxy URL) and resolves paths against
   it: `/x` → `<origin>/v1.0/x`, `/beta/x` or `/v1.0/x` as given — so `live.ts`
   names `/beta/reports/…` and the same code runs against either. An absolute
-  URL (an `@odata.nextLink`) is followed only on that same origin; any other
-  address is refused with a 502 `ApiError` (`LinkNotAllowed`) before the token
-  is read or anything is sent, so a hostile response cannot collect the bearer
-  token. Through the proxy that means its rewritten links must point back at
-  the `VITE_GRAPH_PROXY_URL` origin (`PROXY_PUBLIC_URL`, see
-  `functions/README.md`). `ApiError` keeps the Graph-shaped `error.code`;
+  URL (an `@odata.nextLink`) is followed only when it is an `http(s)` address
+  on that same origin with no user name or password in it; any other (another
+  host, scheme or port, a link with no host) is refused with a 502 `ApiError`
+  (`LinkNotAllowed`) before the token is read or anything is sent, so a hostile
+  response cannot collect the bearer token. Through the proxy that means its
+  rewritten links must point back at the `VITE_GRAPH_PROXY_URL` origin
+  (`PROXY_PUBLIC_URL`, see `functions/README.md`; the local node host links on
+  `127.0.0.1`). `ApiError` keeps the Graph-shaped `error.code`;
   `AdminConsentRequired` from the proxy counts as a consent failure. A 429/503/504 — on the request or on
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
