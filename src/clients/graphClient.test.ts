@@ -6,7 +6,7 @@ import {
   MAX_RETRY_AFTER_MS,
   MAX_THROTTLE_RETRIES,
 } from './graphClient'
-import { ApiError } from './apiError'
+import { ApiError, isConsentRequired, isForbidden, isTenantNotAllowed } from './apiError'
 
 const token = () => Promise.resolve('tok')
 
@@ -106,6 +106,137 @@ describe('graphClient', () => {
       .mockResolvedValueOnce(jsonResponse({ value: [2] }))
     const client = createGraphClient(token, fetchImpl)
     expect(await client.getAllPages<number>('/x')).toEqual([1, 2])
+  })
+
+  describe('followed links', () => {
+    const PROXY = 'http://127.0.0.1:7071/api/graph'
+    const withNextLink = (link: string) => jsonResponse({ value: [1], '@odata.nextLink': link })
+    const refusedAddresses: [string, string][] = [
+      ['another host', 'https://evil.example/v1.0/x?p=2'],
+      ['a host that only starts with the name of Graph', 'https://graph.microsoft.com.evil.example/v1.0/x?p=2'],
+      ['a host that follows Graph as userinfo', 'https://graph.microsoft.com@evil.example/v1.0/x?p=2'],
+      ['Graph over plain http', 'http://graph.microsoft.com/v1.0/x?p=2'],
+      ['Graph on another port', 'https://graph.microsoft.com:8443/v1.0/x?p=2'],
+      ['Graph with a user name before the host', 'https://user@graph.microsoft.com/v1.0/x?p=2'],
+      ['Graph with a user name and password before the host', 'https://user:secret@graph.microsoft.com/v1.0/x?p=2'],
+      ['Graph with a password and no user name before the host', 'https://:secret@graph.microsoft.com/v1.0/x?p=2'],
+    ]
+    const notAnHttpAddress: [string, string][] = [
+      ['a protocol-relative address', '//evil.example/v1.0/x?p=2'],
+      ['a path with no host', '/v1.0/x?p=2'],
+      ['text that is not an address', 'not a url'],
+      ['a blob address that names Graph', 'blob:https://graph.microsoft.com/0b1c2d3e-4f5a-6789-abcd-ef0123456789'],
+    ]
+    const sameOriginSpellings: [string, string][] = [
+      ['the default port spelled out', 'https://graph.microsoft.com:443/v1.0/x?p=2'],
+      ['a scheme and host in capitals', 'HTTPS://GRAPH.MICROSOFT.COM/v1.0/x?p=2'],
+    ]
+
+    it.each([...refusedAddresses, ...notAnHttpAddress])(
+      'refuses a nextLink to %s before reading a token or sending anything to it',
+      async (_case, link) => {
+        const getToken = vi.fn(token)
+        const fetchImpl = vi.fn().mockResolvedValueOnce(withNextLink(link))
+        const client = createGraphClient(getToken, fetchImpl)
+
+        const err = (await client.getAllPages<number>('/x').catch((e: unknown) => e)) as ApiError
+
+        expect(err).toBeInstanceOf(ApiError)
+        expect(err.status).toBe(502)
+        expect(err.code).toBe('LinkNotAllowed')
+        expect(err.message).not.toContain(link)
+        expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual(['https://graph.microsoft.com/v1.0/x'])
+        expect(getToken).toHaveBeenCalledTimes(1)
+      },
+    )
+
+    it.each(refusedAddresses)('refuses to get an address on %s', async (_case, address) => {
+      const getToken = vi.fn(token)
+      const fetchImpl = vi.fn()
+      const client = createGraphClient(getToken, fetchImpl)
+
+      await expect(client.get(address)).rejects.toMatchObject({ status: 502, code: 'LinkNotAllowed' })
+
+      expect(getToken).not.toHaveBeenCalled()
+      expect(fetchImpl).not.toHaveBeenCalled()
+    })
+
+    it.each(sameOriginSpellings)('follows a nextLink with %s as sent', async (_case, link) => {
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(withNextLink(link))
+        .mockResolvedValueOnce(jsonResponse({ value: [2] }))
+      const client = createGraphClient(token, fetchImpl)
+
+      expect(await client.getAllPages<number>('/x')).toEqual([1, 2])
+      expect(fetchImpl.mock.calls[1][0]).toBe(link)
+    })
+
+    it.each(sameOriginSpellings)('gets an address with %s as sent', async (_case, address) => {
+      const fetchImpl = vi.fn().mockResolvedValueOnce(jsonResponse({ value: [1] }))
+      const client = createGraphClient(token, fetchImpl)
+
+      await client.get(address)
+
+      expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([address])
+    })
+
+    it('compares origins, not spellings, when the configured address is written differently', async () => {
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(withNextLink('https://graph.microsoft.com/v1.0/x?p=2'))
+        .mockResolvedValueOnce(jsonResponse({ value: [2] }))
+      const client = createGraphClient(token, fetchImpl, 'HTTPS://Graph.Microsoft.com:443')
+
+      expect(await client.getAllPages<number>('/x')).toEqual([1, 2])
+      expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+        'HTTPS://Graph.Microsoft.com:443/v1.0/x',
+        'https://graph.microsoft.com/v1.0/x?p=2',
+      ])
+    })
+
+    it.each([
+      ['an address with no host', '/api/graph'],
+      ['not an http address', 'data:text/plain,x'],
+    ])('refuses every call when the configured address is %s', async (_case, configured) => {
+      const getToken = vi.fn(token)
+      const fetchImpl = vi.fn()
+      const client = createGraphClient(getToken, fetchImpl, configured)
+
+      await expect(client.get('/x')).rejects.toMatchObject({ status: 502, code: 'LinkNotAllowed' })
+
+      expect(getToken).not.toHaveBeenCalled()
+      expect(fetchImpl).not.toHaveBeenCalled()
+    })
+
+    it('follows a nextLink the proxy put on its own address', async () => {
+      const fetchImpl = vi.fn()
+        .mockResolvedValueOnce(withNextLink(`${PROXY}/v1.0/x?p=2`))
+        .mockResolvedValueOnce(jsonResponse({ value: [2] }))
+      const client = createGraphClient(token, fetchImpl, PROXY)
+
+      expect(await client.getAllPages<number>('/x')).toEqual([1, 2])
+      expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([`${PROXY}/v1.0/x`, `${PROXY}/v1.0/x?p=2`])
+    })
+
+    it('refuses a nextLink to Graph itself once calls go through a proxy', async () => {
+      const fetchImpl = vi.fn().mockResolvedValueOnce(withNextLink('https://graph.microsoft.com/v1.0/x?p=2'))
+      const client = createGraphClient(token, fetchImpl, PROXY)
+
+      await expect(client.getAllPages('/x')).rejects.toMatchObject({ status: 502, code: 'LinkNotAllowed' })
+
+      expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([`${PROXY}/v1.0/x`])
+    })
+
+    it('is not read as a consent, tenant or permission refusal', async () => {
+      const fetchImpl = vi.fn().mockResolvedValueOnce(withNextLink('https://evil.example/v1.0/x?p=2'))
+      const client = createGraphClient(token, fetchImpl)
+
+      const err = (await client.getAllPages('/x').catch((e: unknown) => e)) as ApiError
+
+      expect(isConsentRequired(err)).toBe(false)
+      expect(isTenantNotAllowed(err)).toBe(false)
+      expect(isForbidden(err)).toBe(false)
+      expect(err.isAuth).toBe(false)
+    })
   })
 
   describe('throttling', () => {

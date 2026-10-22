@@ -41,7 +41,7 @@ Errors come back Graph-shaped, `{ "error": { "code", "message" } }`, so the SPA'
 | `PROXY_ALLOWED_ORIGINS` | yes | Comma list of SPA origins allowed to call the proxy. |
 | `PROXY_ALLOWED_TENANT_IDS` | no | Comma list of tenant ids; unset = any consented tenant. |
 | `PROXY_REQUIRED_DIRECTORY_ROLES` | no | Comma list of directory role template ids the caller must hold one of. **Unset = no role required.** `DIRECTORY_ROLES` in `config.ts` carries the ids for Global Administrator, Global Reader, SharePoint Administrator and Reports Reader. |
-| `PROXY_PUBLIC_URL` | no | The URL the SPA reaches the proxy on, used in rewritten links when it differs from the request host (front door, custom domain). |
+| `PROXY_PUBLIC_URL` | no | The URL the SPA reaches the proxy on, used in rewritten links when it differs from the request host (front door, custom domain). The SPA follows a link only on the origin in its `VITE_GRAPH_PROXY_URL`, so this must be that origin. |
 | `ENTRA_AUTHORITY_HOST`, `GRAPH_ORIGIN` | no | Only the local stack sets these, to its fake Entra and fake Graph. |
 
 ## Running it locally
@@ -103,6 +103,10 @@ cd ~/projects/365-overview && VITE_GRAPH_PROXY_URL=http://127.0.0.1:7071/api/gra
 `VITE_LOCAL_AUTH_URL` is honoured **only by the Vite dev server** (`import.meta.env.DEV`); a
 build ignores it, so it cannot ship. The SPA then skips MSAL the way mock mode does, takes its
 caller token from the fake Entra and renders the whole report through the proxy.
+
+The in-process host builds every request address on `http://127.0.0.1:<port>`, so the paging
+links it rewrites point there and `VITE_GRAPH_PROXY_URL` must say `127.0.0.1`, not `localhost`:
+the SPA refuses a link on any other origin than the one it was configured with.
 
 The stack allows `http://localhost:5173` and `http://127.0.0.1:5173` — Vite's default. On any
 other port every call dies at the CORS preflight, so name it when starting the stack:
@@ -239,7 +243,9 @@ branch. A request carrying an origin outside the list is refused before its toke
 
 `PROXY_PUBLIC_URL` is the address the browser reaches the proxy on. It is only needed when the host
 the Function sees differs from the one the browser used (a custom domain, a front door); leave it
-unset otherwise. It is accepted with or without the `/api/graph` suffix.
+unset otherwise. It is accepted with or without the `/api/graph` suffix. The SPA refuses a paging
+link to any other address than the origin in its `VITE_GRAPH_PROXY_URL`, so when it is set it must
+be that origin.
 
 **The package** is a production install plus the build, zipped minus `.funcignore` — about 200
 files and under 300 KiB: `host.json`, `package.json`, `dist/src/**` and the four runtime packages,

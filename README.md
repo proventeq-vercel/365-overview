@@ -135,7 +135,7 @@ interaction-required / browser-auth errors).
 
 | Var | Default | Description |
 |---|---|---|
-| `VITE_GRAPH_PROXY_URL` | unset (call Graph directly) | Base URL of the deployed [Graph proxy](functions/README.md), e.g. `https://<function-app>.azurewebsites.net/api/graph`. When set, every Graph call goes there and MSAL asks for the proxy scope alone — no delegated report scope is requested from the prospect |
+| `VITE_GRAPH_PROXY_URL` | unset (call Graph directly) | Base URL of the deployed [Graph proxy](functions/README.md), e.g. `https://<function-app>.azurewebsites.net/api/graph`. When set, every Graph call goes there and MSAL asks for the proxy scope alone — no delegated report scope is requested from the prospect. Paging links are followed only on this origin, so it must be the address the proxy puts in its rewritten links (`PROXY_PUBLIC_URL`, see [functions/README.md](functions/README.md)) |
 | `VITE_GRAPH_PROXY_SCOPE` | `api://<VITE_CLIENT_ID>/access_as_user` | The proxy's exposed scope; only needed when the proxy is a separate registration |
 | `VITE_LOCAL_AUTH_URL` | unset | **Dev server only** (ignored by every build): the local stack's fake Entra, e.g. `http://127.0.0.1:7080`. Skips MSAL and takes the caller token from there, so the real UI runs against the local proxy with no tenant. Needs `VITE_GRAPH_PROXY_URL` |
 
