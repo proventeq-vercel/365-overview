@@ -131,8 +131,9 @@ figure is the same. Selected strings (P365 i18n keys shown for traceability):
 All report endpoints must be called on **`/beta`** with
 `?$format=application/json`. On `/v1.0` they answer with a `302` to a CSV
 download and reject `$format=application/json` outright. The repo's
-`graphClient` already passes absolute URLs through unchanged, and
-`REPORTS_BASE` already points at `https://graph.microsoft.com/beta/reports`.
+`graphClient` resolves a `/beta/…` path against its configured origin and
+follows an absolute URL only on that same origin, and `REPORTS_BASE` is the
+`/beta/reports` path.
 
 ### The five calls
 
