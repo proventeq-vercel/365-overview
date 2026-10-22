@@ -358,12 +358,15 @@ describe('getSiteDirectory', () => {
     await expect(createLiveDataSource(graph).getSiteDirectory()).rejects.toThrow('network down')
   })
 
-  it('does not follow a delta link to another address, and the report still renders', async () => {
+  it.each([
+    ['another address', 'https://evil.example/v1.0/sites/delta?$skiptoken=x'],
+    ['Graph with a user name before the host', 'https://user@graph.microsoft.com/v1.0/sites/delta?$skiptoken=x'],
+  ])('does not follow a delta link to %s, and the directory comes back empty', async (_case, link) => {
     const fetchImpl = vi.fn().mockResolvedValueOnce({
       ok: true,
       status: 200,
       headers: new Headers(),
-      json: () => Promise.resolve(page(2, 'https://evil.example/v1.0/sites/delta?$skiptoken=x')),
+      json: () => Promise.resolve(page(2, link)),
     } as Response)
     const ds = createLiveDataSource(createGraphClient(() => Promise.resolve('tok'), fetchImpl))
 
