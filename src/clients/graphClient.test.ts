@@ -133,18 +133,20 @@ describe('graphClient', () => {
       ['Graph on another port', 'https://graph.microsoft.com:8443/v1.0/x?p=2'],
       ['Graph with a user name before the host', 'https://user@graph.microsoft.com/v1.0/x?p=2'],
       ['Graph with a user name and password before the host', 'https://user:secret@graph.microsoft.com/v1.0/x?p=2'],
+      ['Graph with a password and no user name before the host', 'https://:secret@graph.microsoft.com/v1.0/x?p=2'],
     ]
-    const notAnAddress: [string, string][] = [
+    const notAnHttpAddress: [string, string][] = [
       ['a protocol-relative address', '//evil.example/v1.0/x?p=2'],
       ['a path with no host', '/v1.0/x?p=2'],
       ['text that is not an address', 'not a url'],
+      ['a blob address that names Graph', 'blob:https://graph.microsoft.com/0b1c2d3e-4f5a-6789-abcd-ef0123456789'],
     ]
     const sameOriginSpellings: [string, string][] = [
       ['the default port spelled out', 'https://graph.microsoft.com:443/v1.0/x?p=2'],
       ['a scheme and host in capitals', 'HTTPS://GRAPH.MICROSOFT.COM/v1.0/x?p=2'],
     ]
 
-    it.each([...refusedAddresses, ...notAnAddress])(
+    it.each([...refusedAddresses, ...notAnHttpAddress])(
       'refuses a nextLink to %s before reading a token or sending anything to it',
       async (_case, link) => {
         const getToken = vi.fn(token)
