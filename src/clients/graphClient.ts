@@ -3,6 +3,7 @@ import { ApiError } from './apiError'
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
 const VERSIONED_PATH = /^\/(v1\.0|beta)\//
+const ABSOLUTE_URL = /^https?:\/\//i
 
 export const BATCH_LIMIT = 20
 export const MAX_THROTTLE_RETRIES = 3
@@ -49,7 +50,13 @@ const headerOf = (headers: Record<string, string> | undefined, name: string) =>
 
 const sameOrigin = (url: string, origin: string) => {
   try {
-    return new URL(url).origin === new URL(origin).origin
+    const target = new URL(url)
+    return (
+      (target.protocol === 'https:' || target.protocol === 'http:') &&
+      target.username === '' &&
+      target.password === '' &&
+      target.origin === new URL(origin).origin
+    )
   } catch {
     return false
   }
@@ -61,7 +68,7 @@ export function createGraphClient(
   origin: string = GRAPH_ORIGIN,
 ): GraphClient {
   const resolve = (path: string) => {
-    if (path.startsWith('http')) return path
+    if (ABSOLUTE_URL.test(path)) return path
     return VERSIONED_PATH.test(path) ? `${origin}${path}` : `${origin}/v1.0${path}`
   }
 
