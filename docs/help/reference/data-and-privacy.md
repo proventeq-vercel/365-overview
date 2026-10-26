@@ -16,6 +16,7 @@ Through Microsoft Graph, read-only:
 | SharePoint and OneDrive storage trends (180 days) | Used storage today and the growth rate. |
 | SharePoint site usage and OneDrive account detail for each day of about the last four weeks | The fastest-growing sites and OneDrives. |
 | Subscribed licences | The SharePoint entitlement and OneDrive storage per user. |
+| Microsoft 365 active user detail (180 days) | Which OneDrive owners hold a OneDrive licence, for the unlicensed OneDrives. |
 | Organisation | The tenant name in the header. |
 | Site details and the site directory | Site names and links (see [Site names](site-names.md)). |
 

@@ -96,6 +96,14 @@ const driveRow = (index: number) => ({
   storageAllocatedInBytes: String(1024 * GB),
 })
 
+const activeUserRow = (index: number) => ({
+  reportRefreshDate: REPORT_REFRESH_DATE,
+  userPrincipalName: `user${index}@contoso.local`,
+  displayName: `User ${index}`,
+  isDeleted: false,
+  hasOneDriveLicense: index % 40 !== 13,
+})
+
 const trendRows = (siteType: string, startBytes: number, dailyGrowth: number) =>
   Array.from({ length: TREND_DAYS }, (_, day) => {
     const date = new Date(Date.UTC(2026, 8, 19) - (TREND_DAYS - 1 - day) * 86_400_000)
@@ -211,6 +219,10 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
       if (path === "/beta/reports/getOneDriveUsageAccountDetail(period='D180')") {
         const rows = Array.from({ length: driveCount }, (_, index) => driveRow(index))
         return json(response, 200, pageOf(rows, skip, reportLink('getOneDriveUsageAccountDetail')))
+      }
+      if (path === "/beta/reports/getOffice365ActiveUserDetail(period='D180')") {
+        const rows = Array.from({ length: driveCount }, (_, index) => activeUserRow(index))
+        return json(response, 200, pageOf(rows, skip, reportLink('getOffice365ActiveUserDetail')))
       }
       if (dated) {
         const [, report, date] = dated

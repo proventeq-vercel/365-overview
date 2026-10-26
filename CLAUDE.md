@@ -54,10 +54,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (twelve methods plus `namesHidden`); `fixtures.ts` (six mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (six mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
   `onedrive-over-licence`, `nothing-to-clean`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
+  `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
+  `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
+  only `Reports.Read.All`; `null` on any Graph error, never "all licensed";
+  the proxy allowlists it; plus
   `getSitesOn(date)` / `getDrivesOn(date)`: the two detail reports for one
   earlier day, `(date=YYYY-MM-DD)`. That form lists ONLY the rows active on
   that day, with their size that day: it is not a snapshot. Graph accepts it
@@ -146,8 +150,19 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   flag in `FeatureFlags`, one entry here and one folder under `src/features/`.
 - `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards
   incl. *Over licensed storage*, top drives, `OverLicenceSection` with the
-  *Over licence by* column, drive table with the per-drive capacity column). Same
-  `useStorageOverview` query, so switching reports never refetches.
+  *Over licence by* column, `InactiveDrivesSection`, drive table with the
+  per-drive capacity column). Same `useStorageOverview` query, so switching
+  reports never refetches. `InactiveDrivesSection` renders
+  `oneDrive.attention` (`model/oneDriveAttention.ts`): three disjoint groups,
+  never one total — inactive (live, no activity since the archive cutoff or
+  none recorded, owner not known to be unlicensed; banded by years past the
+  cutoff), deleted (`deletedButBilling`), unlicensed (owner's
+  `hasOneDriveLicense` false; `null` when the licence report failed). Billing
+  copy is Microsoft's "Manage unlicensed OneDrive user accounts" only ($0.05/GB
+  a month once archived after 93 days with billing on); the report never
+  prices it, because the reports do not say how long an owner has been
+  unlicensed. `OneDrivePoolPanel` repeats the three figures in one line and
+  links to `/onedrive-usage` when that report is on.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection` (with `CleanUpForecast`, the

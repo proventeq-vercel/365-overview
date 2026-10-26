@@ -4,8 +4,8 @@ const MAX_INITIALS = 5
 const WORD_SEPARATOR = /[^\p{L}\p{N}]+/u
 const PSEUDONYM = /^[0-9a-f]{16}$/
 
-const INITIALS_KEYS = new Set(['ownerDisplayName'])
-const PSEUDONYM_KEYS = new Set(['siteId', 'ownerPrincipalName'])
+const INITIALS_KEYS = new Set(['ownerDisplayName', 'displayName'])
+const PSEUDONYM_KEYS = new Set(['siteId', 'ownerPrincipalName', 'userPrincipalName'])
 const DROPPED_KEYS = new Set(['siteUrl'])
 
 export function initialsOf(text: string): string {

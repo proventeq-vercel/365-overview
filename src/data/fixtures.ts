@@ -1,6 +1,7 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
+import type { OneDriveLicences } from '../reports/activeUsers'
 import { hideRowNames } from '../lib/hiddenNames'
 import { growthWindowDates } from '../lib/growthWindow'
 
@@ -24,6 +25,7 @@ export interface DataSource {
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
   getLicenses(): Promise<LicenseSku[] | null>
+  getOneDriveLicences(): Promise<OneDriveLicences | null>
   getOrg(): Promise<OrgInfo>
   getReportRefreshDate(): Promise<string>
 }
@@ -138,7 +140,7 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
       storageUsedBytes: mb * MB,
       fileCount: (i % 300) * 5 + 20,
       activeFileCount: (i % 30) * 2,
-      lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
+      lastActivityDate: i % 23 === 0 ? null : i % 11 === 5 ? `20${21 + (i % 3)}-0${(i % 8) + 1}-1${i % 9}` : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
       allocatedBytes: raised ? BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
@@ -262,6 +264,12 @@ function activeEarlier(rows: StorageRow[], date: string): StorageRow[] {
   })
 }
 
+const UNLICENSED_OWNER_EVERY = 37
+
+function oneDriveLicencesFor(drives: StorageRow[]): OneDriveLicences {
+  return new Map(drives.map((drive, index) => [drive.id.toLowerCase(), index % UNLICENSED_OWNER_EVERY !== 11]))
+}
+
 function withHiddenNames(data: ScenarioData): ScenarioData {
   return {
     ...data,
@@ -295,6 +303,7 @@ export function createMockDataSource(
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => licenses,
+    getOneDriveLicences: async () => oneDriveLicencesFor(data.drives),
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,
   }

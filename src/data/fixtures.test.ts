@@ -31,6 +31,14 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0],
 }
 
 describe('mock data source', () => {
+  it('lists some OneDrive owners without a licence, keyed the way the drives are', async () => {
+    const ds = createMockDataSource()
+    const [drives, licences] = await Promise.all([ds.getDrives(), ds.getOneDriveLicences()])
+    const unlicensed = drives.filter((drive) => licences?.get(drive.id.toLowerCase()) === false)
+    expect(unlicensed.length).toBeGreaterThan(0)
+    expect(unlicensed.length).toBeLessThan(drives.length / 10)
+  })
+
   it('lists only some rows each day, smaller on earlier days, like Graph’s daily reports', async () => {
     const ds = createMockDataSource()
     const [all, early, late] = await Promise.all([ds.getSites(), ds.getSitesOn('2026-08-10'), ds.getSitesOn('2026-08-25')])

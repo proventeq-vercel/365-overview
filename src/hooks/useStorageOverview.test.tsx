@@ -55,13 +55,39 @@ function sourceWith(over: Partial<DataSource> = {}) {
     getSharePointTrend: async () => [],
     getOneDriveTrend: async () => [],
     getLicenses: async () => [],
+    getOneDriveLicences: async () => null,
     getReportRefreshDate: async () => '2026-09-20',
     getOrg: async () => ({ displayName: 'Contoso' }),
     ...over,
   } as DataSource
 }
 
+function Unlicensed() {
+  const { data } = useStorageOverview(DEFAULT_SETTINGS)
+  if (!data) return <p>pending</p>
+  const { unlicensed } = data.oneDrive.attention
+  return <p>{unlicensed === null ? 'licences unknown' : `unlicensed ${unlicensed.count}`}</p>
+}
+
+const ownerDrive = (id: string): StorageRow => ({ ...site(id, 50), pool: 'OneDrive', template: undefined, allocatedBytes: 100 })
+
 describe('useStorageOverview', () => {
+  it('reads who holds a OneDrive licence and counts the OneDrives of owners without one', async () => {
+    renderWithData(
+      <Unlicensed />,
+      sourceWith({
+        getDrives: async () => [ownerDrive('ada@contoso.com'), ownerDrive('leaver@contoso.com')],
+        getOneDriveLicences: async () => new Map([['ada@contoso.com', true], ['leaver@contoso.com', false]]),
+      }),
+    )
+    expect(await screen.findByText('unlicensed 1')).toBeInTheDocument()
+  })
+
+  it('keeps the unlicensed OneDrives unknown when the licence report could not be read', async () => {
+    renderWithData(<Unlicensed />, sourceWith({ getDrives: async () => [ownerDrive('leaver@contoso.com')] }))
+    expect(await screen.findByText('licences unknown')).toBeInTheDocument()
+  })
+
   it('names the report rows from the tenant directory', async () => {
     renderWithData(<Probe />, sourceWith())
 

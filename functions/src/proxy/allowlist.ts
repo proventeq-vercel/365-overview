@@ -34,6 +34,7 @@ const USAGE_REPORTS = [
   'getOneDriveUsageAccountDetail',
   'getSharePointSiteUsageStorage',
   'getOneDriveUsageStorage',
+  'getOffice365ActiveUserDetail',
 ].join('|')
 
 const PAGING = ['$top', '$skiptoken']

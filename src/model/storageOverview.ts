@@ -20,6 +20,8 @@ import {
 } from '@/lib/cost'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
 import { storageBreakdown } from '@/lib/storageBreakdown'
+import type { OneDriveLicences } from '@/reports/activeUsers'
+import { oneDriveAttention } from './oneDriveAttention'
 import { nameMaskOf } from '@/lib/concealment'
 import { hideRowNames } from '@/lib/hiddenNames'
 import { rowName } from '@/lib/rowName'
@@ -57,6 +59,7 @@ export interface OverviewInputs {
   currency: string
   entitlementOverrideBytes: number | null
   oneDriveEntitlementOverrideBytes: number | null
+  oneDriveLicences?: OneDriveLicences | null
   inactiveYears?: number
   now?: Date
   forceUnknownEntitlement?: boolean
@@ -150,6 +153,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     currency,
     entitlementOverrideBytes,
     oneDriveEntitlementOverrideBytes,
+    oneDriveLicences = null,
     inactiveYears = DEFAULT_SETTINGS.inactiveYears,
     now = new Date(),
     forceUnknownEntitlement = false,
@@ -270,6 +274,13 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           ? null
           : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
       pool: oneDrivePool(liveDrives),
+      attention: oneDriveAttention({
+        drives,
+        licences: oneDriveLicences,
+        reportRefreshDate,
+        inactiveYears,
+        now,
+      }),
     },
 
     breakdown: storageBreakdown({

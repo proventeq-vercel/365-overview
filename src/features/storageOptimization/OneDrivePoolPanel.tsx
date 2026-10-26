@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+import { env } from '@/config/env'
+import { FeatureFlags } from '@/config/featureFlags'
 import { formatBytes, formatShare } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { StorageOverview } from '@/types/storage'
@@ -5,6 +8,28 @@ import { SegmentedBar } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { P365, WORKLOAD_COLOR } from '@/design/theme'
+
+const ONEDRIVE_REPORT_PATH = '/onedrive-usage'
+
+function AttentionLine({ overview }: { overview: StorageOverview }) {
+  const t = useTranslation()
+  const { attention, deletedButBilling } = overview.oneDrive
+  const line = t('storageOptimisation.oneDrivePool.attention', {
+    inactive: formatBytes(attention.inactive.bytes),
+    deleted: formatBytes(deletedButBilling.bytes),
+    unlicensed: attention.unlicensed === null ? t('storageOptimisation.kpi.unknown') : formatBytes(attention.unlicensed.bytes),
+  })
+  return (
+    <PanelDescription>
+      {line}{' '}
+      {env.features.has(FeatureFlags.OptimizationStorageReportOneDrive) && (
+        <Link to={ONEDRIVE_REPORT_PATH} className="font-semibold text-p365-teal underline-offset-2 hover:underline">
+          {t('storageOptimisation.oneDrivePool.attentionLink')}
+        </Link>
+      )}
+    </PanelDescription>
+  )
+}
 
 export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
@@ -63,6 +88,7 @@ export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
           />
         </>
       )}
+      <AttentionLine overview={overview} />
       {drivesNearCap > 0 && (
         <PanelDescription>{t('storageOptimisation.oneDrivePool.nearCap', { count: drivesNearCap })}</PanelDescription>
       )}
