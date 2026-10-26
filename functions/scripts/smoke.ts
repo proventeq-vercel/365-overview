@@ -46,6 +46,7 @@ const reports = [
   'getOneDriveUsageAccountDetail',
   'getSharePointSiteUsageStorage',
   'getOneDriveUsageStorage',
+  'getOffice365ActiveUserDetail',
 ]
 
 const checks: Check[] = [

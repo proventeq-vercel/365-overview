@@ -52,6 +52,28 @@ export interface CleanUpForecast {
 
 export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
 
+export const INACTIVE_DRIVE_BANDS = ['firstYear', 'secondYear', 'older', 'never'] as const
+
+export type InactiveDriveBand = (typeof INACTIVE_DRIVE_BANDS)[number]
+
+export interface DriveGroup {
+  count: number
+  bytes: number
+}
+
+export interface InactiveDriveBandTotal extends DriveGroup {
+  band: InactiveDriveBand
+  fromYears: number | null
+  toYears: number | null
+}
+
+export interface OneDriveAttention {
+  inactiveYears: number
+  inactiveSince: string
+  inactive: DriveGroup & { bands: InactiveDriveBandTotal[] }
+  unlicensed: (DriveGroup & { notListed: number }) | null
+}
+
 export interface OneDriveAllocation {
   allocatedBytes: number
   freeBytes: number
@@ -133,6 +155,7 @@ export interface StorageOverview {
     entitlementUnknownReason: OneDriveEntitlementUnknown | null
     overEntitlement: OverEntitlement | null
     pool: OneDrivePool
+    attention: OneDriveAttention
   }
 
   breakdown: StorageBreakdown

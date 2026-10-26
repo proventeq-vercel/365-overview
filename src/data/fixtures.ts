@@ -1,6 +1,7 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
+import type { OneDriveLicences } from '../reports/activeUsers'
 import { hideRowNames } from '../lib/hiddenNames'
 import { growthWindowDates } from '../lib/growthWindow'
 
@@ -24,6 +25,7 @@ export interface DataSource {
   getSharePointTrend(): Promise<UsagePoint[]>
   getOneDriveTrend(): Promise<UsagePoint[]>
   getLicenses(): Promise<LicenseSku[] | null>
+  getOneDriveLicences(): Promise<OneDriveLicences | null>
   getOrg(): Promise<OrgInfo>
   getReportRefreshDate(): Promise<string>
 }
@@ -120,6 +122,9 @@ function namedSites(concealed: boolean): StorageRow[] {
   }))
 }
 
+const NEVER_ACTIVE_DRIVE_EVERY = 29
+const LONG_INACTIVE_DRIVE_EVERY = 11
+
 function generateDrives(count: number, concealed = false, overLicence = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
@@ -137,8 +142,13 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
       ownerDisplayName: concealed ? hashName(3000 + i) : `User ${i}`,
       storageUsedBytes: mb * MB,
       fileCount: (i % 300) * 5 + 20,
-      activeFileCount: (i % 30) * 2,
-      lastActivityDate: i % 23 === 0 ? null : `2026-0${(i % 8) + 1}-2${i % 9}`,
+      activeFileCount: i % LONG_INACTIVE_DRIVE_EVERY === 5 ? 0 : (i % 30) * 2,
+      lastActivityDate:
+        i % NEVER_ACTIVE_DRIVE_EVERY === 1
+          ? null
+          : i % LONG_INACTIVE_DRIVE_EVERY === 5
+            ? `20${21 + (i % 3)}-0${(i % 8) + 1}-1${i % 9}`
+            : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
       allocatedBytes: raised ? BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,
@@ -262,6 +272,20 @@ function activeEarlier(rows: StorageRow[], date: string): StorageRow[] {
   })
 }
 
+const UNLICENSED_OWNER_EVERY = 37
+const NOT_LISTED_OWNER = 11
+const LISTED_WITHOUT_ONEDRIVE_OWNER = 24
+
+function oneDriveLicencesFor(drives: StorageRow[]): OneDriveLicences {
+  return new Map(
+    drives.flatMap((drive, index) =>
+      index % UNLICENSED_OWNER_EVERY === NOT_LISTED_OWNER
+        ? []
+        : [[drive.id.toLowerCase(), index % UNLICENSED_OWNER_EVERY !== LISTED_WITHOUT_ONEDRIVE_OWNER] as const],
+    ),
+  )
+}
+
 function withHiddenNames(data: ScenarioData): ScenarioData {
   return {
     ...data,
@@ -295,6 +319,7 @@ export function createMockDataSource(
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => licenses,
+    getOneDriveLicences: async () => oneDriveLicencesFor(data.drives),
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,
   }

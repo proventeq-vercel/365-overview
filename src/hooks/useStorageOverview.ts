@@ -38,7 +38,7 @@ export function useStorageOverview(settings: ReportSettings) {
     refetchInterval: (query) => accessRecheckInterval(query.state.error, consentRecentlyGranted(Date.now())),
     refetchOnWindowFocus: (query) => isAccessFailure(query.state.error),
     queryFn: async () => {
-      const [rawSites, directory, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
+      const [rawSites, directory, drives, sharePointTrend, oneDriveTrend, skus, oneDriveLicences, reportRefreshDate] =
         await Promise.all([
           ds.getSites(),
           ds.getSiteDirectory(),
@@ -46,12 +46,13 @@ export function useStorageOverview(settings: ReportSettings) {
           ds.getSharePointTrend(),
           ds.getOneDriveTrend(),
           ds.getLicenses(),
+          ds.getOneDriveLicences(),
           ds.getReportRefreshDate(),
         ])
       const sites = namesAreConcealed([...rawSites, ...drives])
         ? rawSites
         : await nameTopSites(ds, withSiteDirectory(rawSites, directory))
-      return { sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate }
+      return { sites, drives, sharePointTrend, oneDriveTrend, skus, oneDriveLicences, reportRefreshDate }
     },
   })
 

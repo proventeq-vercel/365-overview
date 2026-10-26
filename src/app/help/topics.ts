@@ -9,6 +9,7 @@ export const HELP_TOPICS = {
   oneDriveOverLicence: 'reports/onedrive-usage/over-licence',
   oneDriveTopDrives: 'reports/onedrive-usage/top-drives',
   oneDriveDrives: 'reports/onedrive-usage/drives',
+  oneDriveInactive: 'reports/onedrive-usage/inactive',
 } as const
 
 export type HelpTopic = keyof typeof HELP_TOPICS

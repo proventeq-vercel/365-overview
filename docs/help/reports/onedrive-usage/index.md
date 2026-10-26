@@ -33,4 +33,6 @@ when none of them has a OneDrive allowance the report knows. Set the figure in
 - [Top OneDrives by storage](top-drives.md): the five largest drives.
 - [OneDrives over their licensed storage](over-licence.md): the drives that hold more than any
   licence in the tenant includes.
+- [Inactive, deleted and unlicensed OneDrives](inactive.md): three groups kept apart, and which
+  of them Microsoft can bill.
 - [All OneDrives](drives.md): every drive, with how much of its allocation it uses.

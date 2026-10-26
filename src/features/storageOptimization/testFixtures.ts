@@ -40,6 +40,21 @@ export const base: StorageOverview = {
         freeShare: 40_840 / 40_960,
       },
     },
+    attention: {
+      inactiveYears: 3,
+      inactiveSince: '2023-08-30',
+      inactive: {
+        count: 6,
+        bytes: 30 * GB,
+        bands: [
+          { band: 'firstYear', fromYears: 3, toYears: 4, count: 3, bytes: 12 * GB },
+          { band: 'secondYear', fromYears: 4, toYears: 5, count: 1, bytes: 8 * GB },
+          { band: 'older', fromYears: 5, toYears: null, count: 1, bytes: 9 * GB },
+          { band: 'never', fromYears: null, toYears: null, count: 1, bytes: 1 * GB },
+        ],
+      },
+      unlicensed: { count: 2, bytes: 40 * GB, notListed: 1 },
+    },
   },
   breakdown: {
     segments: [

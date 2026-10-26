@@ -1,3 +1,7 @@
+import { Link } from 'react-router-dom'
+import { env } from '@/config/env'
+import { FeatureFlags } from '@/config/featureFlags'
+import { REPORT_PATHS } from '@/features/reportPaths'
 import { formatBytes, formatShare } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { StorageOverview } from '@/types/storage'
@@ -5,6 +9,30 @@ import { SegmentedBar } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { P365, WORKLOAD_COLOR } from '@/design/theme'
+
+function AttentionLine({ overview }: { overview: StorageOverview }) {
+  const t = useTranslation()
+  const { attention, deletedButBilling } = overview.oneDrive
+  const figures = { inactive: formatBytes(attention.inactive.bytes), deleted: formatBytes(deletedButBilling.bytes) }
+  const line =
+    attention.unlicensed === null
+      ? t('storageOptimisation.oneDrivePool.attentionUnknown', figures)
+      : t('storageOptimisation.oneDrivePool.attention', {
+          ...figures,
+          unlicensed: formatBytes(attention.unlicensed.bytes),
+          notListed: attention.unlicensed.notListed,
+        })
+  return (
+    <PanelDescription>
+      {line}{' '}
+      {env.features.has(FeatureFlags.OptimizationStorageReportOneDrive) && (
+        <Link to={REPORT_PATHS.oneDriveUsage} className="font-semibold text-p365-teal underline-offset-2 hover:underline">
+          {t('storageOptimisation.oneDrivePool.attentionLink')}
+        </Link>
+      )}
+    </PanelDescription>
+  )
+}
 
 export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
@@ -63,6 +91,7 @@ export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
           />
         </>
       )}
+      <AttentionLine overview={overview} />
       {drivesNearCap > 0 && (
         <PanelDescription>{t('storageOptimisation.oneDrivePool.nearCap', { count: drivesNearCap })}</PanelDescription>
       )}

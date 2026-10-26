@@ -16,10 +16,11 @@ Through Microsoft Graph, read-only:
 | SharePoint and OneDrive storage trends (180 days) | Used storage today and the growth rate. |
 | SharePoint site usage and OneDrive account detail for each day of about the last four weeks | The fastest-growing sites and OneDrives. |
 | Subscribed licences | The SharePoint entitlement and OneDrive storage per user. |
+| Microsoft 365 active user detail (180 days) | One row per licensed user: name, principal name, licences and last activity per service. The report keeps each principal name with whether it holds a OneDrive licence, to find the unlicensed OneDrives. |
 | Organisation | The tenant name in the header. |
 | Site details and the site directory | Site names and links (see [Site names](site-names.md)). |
 
-It does not read files, file contents, lists, mail or user profiles.
+It does not read files, file contents, lists, mail or user profiles. With **hidden names**, user names and principal names are masked in the browser the same way as site and OneDrive owners.
 
 ## Where the data goes
 

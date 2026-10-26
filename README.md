@@ -631,7 +631,7 @@ src/
   auth/          # MSAL: getMsalInstance, GRAPH_SCOPES, tokens, MsalAuthProvider/Handler
   clients/       # graphClient — thin fetch wrapper + ApiError
   config/        # env.ts (VITE_USE_MOCK, VITE_MOCK_SCENARIO, VITE_FEATURES + URL overrides), modes.ts, featureFlags.ts, appConfig.ts
-  data/          # live.ts (the five Graph calls), fixtures.ts (five mock tenants + DataSource interface)
+  data/          # live.ts (the Graph calls), fixtures.ts (mock tenants + DataSource interface)
   reports/       # Pure parsers for each Graph response shape
   model/         # buildStorageOverview — the single derivation of every figure on screen
   lib/           # entitlement, forecast, cost, concealment, settings, topNWithOther, format
@@ -651,6 +651,6 @@ functions/       # The Graph proxy (Azure Functions v4) with its own package.jso
 ## Data flow
 
 1. In live mode, `MsalAuthProvider` initialises the MSAL singleton and `MsalAuthHandler` gates the app — with no signed-in account it calls `loginRedirect(loginRequest())`, asking for the report's scopes in the same prompt.
-2. `useStorageOverview` issues the five Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs — plus `/organization` for the header. Once the report has loaded, `useStorageGrowth` reads the site and OneDrive detail reports for each day Microsoft still keeps (about 25 days, four at a time) for the fastest-growing panel. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
+2. `useStorageOverview` issues the five Graph calls once — SharePoint site detail, OneDrive account detail, both 180-day storage trends and the subscribed SKUs — plus the Microsoft 365 active-user report for who holds a OneDrive licence, and `/organization` for the header. Once the report has loaded, `useStorageGrowth` reads the site and OneDrive detail reports for each day Microsoft still keeps (about 25 days, four at a time) for the fastest-growing panel. The `/reports/*` functions are read from the `/beta` endpoint, which is the only one that serves them as JSON.
 3. The parsed inputs go through `buildStorageOverview`, which produces every figure the screen shows. Sections render the model; none of them compute a number.
 4. The Graph scopes are consented on the first token round-trip, so an unconsented organisation fails there with `AADSTS65001`: `MsalAuthHandler` keeps the error object and `AuthErrorScreen` shows the Global Administrator action with the admin-consent link (built for the multi-tenant `organizations` endpoint, `redirect_uri` included). Once signed in, a failed Graph call is classified the same way in `AccessFailure`: consent error → consent screen; the proxy's `TenantNotAllowed` → the tenant screen, which says no role or consent will change it; any other authorisation failure → the role screen; anything else → the generic error state.

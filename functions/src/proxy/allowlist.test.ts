@@ -29,6 +29,7 @@ describe('assertAllowed', () => {
     { version: 'beta', path: "reports/getOneDriveUsageAccountDetail(period='D180')", search: '?$format=application/json' },
     { version: 'beta', path: "reports/getSharePointSiteUsageStorage(period='D30')", search: '?$format=application/json' },
     { version: 'beta', path: "reports/getOneDriveUsageStorage(period='D7')", search: '?$format=application/json' },
+    { version: 'beta', path: "reports/getOffice365ActiveUserDetail(period='D180')", search: '?$format=application/json&$skiptoken=200' },
     { version: 'beta', path: 'reports/getSharePointSiteUsageDetail(date=2026-09-20)', search: '?$format=application/json' },
     { version: 'beta', path: 'reports/getOneDriveUsageAccountDetail(date=2026-09-20)', search: '?$format=application/json&$skiptoken=200' },
     { version: 'beta', path: 'reports/getSharePointSiteUsageDetail(date=2026-09-20)', search: '?$format=application/json&$top=10000' },

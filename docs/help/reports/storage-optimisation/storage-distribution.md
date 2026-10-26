@@ -55,8 +55,15 @@ live OneDrive's own limit, as the OneDrive usage report gives it.
 - If Microsoft does not report an allocation for every live OneDrive, the total allocation is
   unknown: the panel gives the storage used and says so, with no line. With no live OneDrive at
   all, it says so.
+- One line under it gives the storage of inactive OneDrives, of deleted ones under retention and
+  of those whose owner has no OneDrive licence, never added together.
 - A small total does not mean no OneDrive is full: each has its own limit. The panel says how many
   are at 90% or more of theirs, whether or not the total allocation is known.
+
+::: feature optimization.storage.report.onedrive
+The line links to the [OneDrive report](../onedrive-usage/inactive.md), which breaks the three
+groups down.
+:::
 
 On both lines, the percentages above them and each part's share: a share that would round to
 0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**. A tenant over its

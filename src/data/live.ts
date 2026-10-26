@@ -21,6 +21,8 @@ import { parseStorageTrend } from '../reports/storageTrend'
 import type { RawTrendRow } from '../reports/storageTrend'
 import { parseSubscribedSkus } from '../reports/licensing'
 import type { RawSku } from '../reports/licensing'
+import { parseOneDriveLicences } from '../reports/activeUsers'
+import type { RawActiveUserRow } from '../reports/activeUsers'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
 import { hideReportRowNames } from '../lib/hiddenNames'
@@ -176,6 +178,18 @@ export function createLiveDataSource(
         return parseSubscribedSkus(await graph.getAllPages<RawSku>('/subscribedSkus'))
       } catch (error) {
         if (isForbidden(error)) return null
+        throw error
+      }
+    },
+
+    async getOneDriveLicences() {
+      try {
+        const rows = await graph.getAllPages<RawActiveUserRow>(
+          `${reportUrl('getOffice365ActiveUserDetail')}&$top=${LARGEST_REPORT_PAGE}`,
+        )
+        return parseOneDriveLicences(concealRows(rows))
+      } catch (error) {
+        if (error instanceof ApiError) return null
         throw error
       }
     },

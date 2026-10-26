@@ -92,6 +92,42 @@ describe('createLiveDataSource', () => {
     expect(earlier.id).not.toBe(FINANCE_ID)
   })
 
+  it('reads who holds a OneDrive licence from the active-user usage report, which needs only the report permission', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockResolvedValueOnce([
+      { userPrincipalName: 'Leaver@Contoso.com', hasOneDriveLicense: false },
+    ])
+    const licences = await createLiveDataSource(graph).getOneDriveLicences()
+    expect(vi.mocked(graph.getAllPages).mock.calls.map(([url]) => url)).toEqual([
+      "/beta/reports/getOffice365ActiveUserDetail(period='D180')?$format=application/json&$top=10000",
+    ])
+    expect(licences?.get('leaver@contoso.com')).toBe(false)
+  })
+
+  it('masks the licence report’s users the same way as the OneDrive owners when names are hidden, so they still match', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages)
+      .mockResolvedValueOnce([{ ownerPrincipalName: 'leaver@contoso.com', storageUsedInBytes: 5 }])
+      .mockResolvedValueOnce([{ userPrincipalName: 'leaver@contoso.com', hasOneDriveLicense: false }])
+    const ds = createLiveDataSource(graph, { hideNames: true })
+    const [owner] = await ds.getDrives()
+    const licences = await ds.getOneDriveLicences()
+    expect(owner.id).not.toBe('leaver@contoso.com')
+    expect(licences?.get(owner.id)).toBe(false)
+  })
+
+  it('reads the OneDrive licences as unknown, never as all licensed, when the report is refused', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockRejectedValueOnce(new ApiError(403, 'Forbidden', 'Authorization_RequestDenied'))
+    expect(await createLiveDataSource(graph).getOneDriveLicences()).toBeNull()
+  })
+
+  it('still fails the OneDrive licences on anything that is not a Graph answer', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockRejectedValueOnce(new TypeError('network down'))
+    await expect(createLiveDataSource(graph).getOneDriveLicences()).rejects.toThrow('network down')
+  })
+
   it('reads the licences as unavailable when the tenant granted only the report permission', async () => {
     const { graph } = recordingGraph()
     vi.mocked(graph.getAllPages).mockRejectedValueOnce(
