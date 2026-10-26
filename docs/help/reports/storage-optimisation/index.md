@@ -13,9 +13,9 @@ from today's position to the actions that would change it:
 1. [Capacity cards](tenant-capacity.md), straight under the title: inactive sites to archive,
    what archiving would save once you are over the entitlement, what growth beyond the
    entitlement costs, and when the entitlement runs out.
-2. [Current storage distribution](storage-distribution.md): one line for SharePoint, OneDrive,
-   Teams, deleted, inactive, versions and free storage against the SharePoint entitlement, and
-   how SharePoint splits by site template.
+2. [Current storage distribution](storage-distribution.md): one line for SharePoint, Teams,
+   deleted sites, inactive, versions and free storage against the SharePoint entitlement, live
+   OneDrive storage as its own pool, and how SharePoint splits by site template.
 3. [Future state & growth impact](growth-forecast.md): the storage trend, a six-month forecast,
    and the projected cost if nothing changes.
 4. [Main offenders](main-offenders.md): the biggest sites and OneDrives, storage that is deleted

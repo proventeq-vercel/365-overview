@@ -116,7 +116,8 @@ function drivesOverEntitlement(liveDrives: StorageRow[], perUserBytes: number): 
   }
 }
 
-function oneDrivePool(liveDrives: StorageRow[], usedBytes: number): OneDrivePool {
+function oneDrivePool(liveDrives: StorageRow[]): OneDrivePool {
+  const usedBytes = sumBytes(liveDrives)
   const allocations = liveDrives.map((drive) => drive.allocatedBytes ?? 0)
   if (allocations.length === 0 || allocations.some((bytes) => bytes <= 0)) {
     return { usedBytes, allocation: null }
@@ -268,7 +269,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         oneDrivePerUserBytes === null
           ? null
           : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
-      pool: oneDrivePool(liveDrives, Math.max(0, oneDriveUsed - deletedDrives.bytes)),
+      pool: oneDrivePool(liveDrives),
     },
 
     breakdown: storageBreakdown({

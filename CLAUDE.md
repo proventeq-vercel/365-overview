@@ -172,7 +172,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ByteOverrideInput` (a byte figure
+  `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading both the SharePoint usage line and the OneDrive pool), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
@@ -346,16 +346,22 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   them while the entitlement is unknown). *Inactive sites to archive* always
   shows. The grid's `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
-  never double-counts.** Seven parts in this order: SharePoint · OneDrive ·
-  Teams · Deleted · Inactive · Versions · Free. Inactive wins over Teams (an
-  inactive Teams site counts once, as inactive); Deleted holds deleted sites
-  **and** deleted drives; the SharePoint part is the trend total less Teams,
-  Inactive and deleted sites, clamped at 0; OneDrive is the OneDrive trend less
-  deleted drives; Free is `remainingBytes` (null when unknown — no Free part).
+  never double-counts and holds SharePoint only** (Microsoft's SharePoint
+  limits: the organisation's storage is "not including the OneDrive created
+  for each licensed user"). Six parts in this order: SharePoint · Teams ·
+  Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
+  Teams site counts once, as inactive); Deleted holds deleted **sites** only;
+  the SharePoint part is the trend total less Teams, Inactive and deleted
+  sites, clamped at 0; Free is `remainingBytes` (null when unknown — no Free
+  part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
+  storage in live drives against the sum of their own allocations, both from
+  the account rows; `allocation` is `null` (unknown, never partial) when any
+  live drive reports none. The Share column divides each row by its own pool
+  (`offenders.poolUsedBytes`, the two trend totals) and shows *Unknown* for a
+  pool total of 0.
   **Versions is always `null`**: the usage reports count version history inside
   each site's storage and never split it out, so it is shown *Not measured*,
-  never as a size or a guess. The headline percentage stays SharePoint-only —
-  OneDrive is on the line but never in that percentage. Workload colours are
+  never as a size or a guess. Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
   `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
 - Settings (rate, currency, override) are **not** part of the React Query key.

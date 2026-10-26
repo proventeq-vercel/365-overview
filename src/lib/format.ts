@@ -30,6 +30,11 @@ export function formatPercent(ratio: number, digits = 0): string {
   return `${(ratio * 100).toFixed(digits)}%`
 }
 
+export function formatShare(ratio: number, digits = 1): string {
+  const smallest = 10 ** -digits / 100
+  return ratio > 0 && ratio < smallest / 2 ? `<${formatPercent(smallest, digits)}` : formatPercent(ratio, digits)
+}
+
 export function formatSignedPercent(pct: number, digits = 1): string {
   const sign = pct > 0 ? '+' : ''
   return `${sign}${pct.toFixed(digits)}%`

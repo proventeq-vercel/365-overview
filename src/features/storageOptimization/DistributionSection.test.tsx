@@ -93,16 +93,12 @@ describe('DistributionSection', () => {
     expect(popover).toHaveTextContent('Counts against your SharePoint entitlement')
   })
 
-  it('keeps OneDrive off the SharePoint line, since OneDrive storage is not in the SharePoint quota', () => {
-    render(<DistributionSection overview={withTemplates} />)
-    expect(parts().map((button) => button.textContent)).not.toContainEqual(expect.stringContaining('OneDrive'))
-  })
-
   it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
     render(<DistributionSection overview={withTemplates} />)
-    expect(screen.getByRole('heading', { name: 'OneDrive storage' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Live OneDrive storage' })).toBeInTheDocument()
+    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits, whatever the total above says.')).toBeInTheDocument()
     expect(screen.getByText('of the 40 TB allocated to 40 OneDrives used (120 GB)')).toBeInTheDocument()
-    const pool = within(screen.getByRole('list', { name: 'OneDrive storage' })).getAllByRole('button')
+    const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
     expect(pool.map((button) => button.textContent)).toEqual([
       'Used120 GB0.3% of the allocation',
       'Unused allocation39.9 TB99.7% of the allocation',
@@ -117,8 +113,8 @@ describe('DistributionSection', () => {
         overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 120 * GB, allocation: null } } }}
       />,
     )
-    expect(screen.getByText(/120 GB of OneDrive storage used\. Microsoft did not report an allocation/)).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: 'OneDrive storage' })).not.toBeInTheDocument()
+    expect(screen.getByText(/120 GB in live OneDrives\. Microsoft did not report an allocation/)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Live OneDrive storage' })).not.toBeInTheDocument()
   })
 
   it('says versions are not measured and why, rather than showing a size', async () => {
@@ -170,5 +166,28 @@ describe('DistributionSection', () => {
   it('says the template grouping will not match the admin centre', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(screen.getByText(/will not match the SharePoint admin centre/i)).toBeInTheDocument()
+  })
+
+  it('says there is no live OneDrive, not that an allocation is missing, when the report lists none', () => {
+    render(
+      <DistributionSection
+        overview={{
+          ...withTemplates,
+          oneDrive: { ...withTemplates.oneDrive, driveCount: 0, drivesNearCap: 0, pool: { usedBytes: 0, allocation: null } },
+        }}
+      />,
+    )
+    expect(screen.getByText("No live OneDrive is in Microsoft's usage report.")).toBeInTheDocument()
+    expect(screen.queryByText(/did not report an allocation/)).not.toBeInTheDocument()
+  })
+
+  it('shows a used share too small to round as under 0.1%, not as nothing used', () => {
+    const allocation = { allocatedBytes: 10_000 * 1024 * GB, freeBytes: 0, usedShare: 0.0002, freeShare: 0.9998 }
+    render(
+      <DistributionSection
+        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 2 * 1024 * GB, allocation } } }}
+      />,
+    )
+    expect(screen.getByText('<0.1%')).toBeInTheDocument()
   })
 })

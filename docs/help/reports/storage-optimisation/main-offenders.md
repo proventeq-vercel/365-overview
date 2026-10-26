@@ -45,8 +45,10 @@ When a name cannot be found, the row is listed by its id (see
 
 ## Deleted but still billing
 
-Sites and OneDrives that have been deleted but still count against your storage under retention.
-They keep using quota until retention ends or they are purged from the recycle bin. The panel
+Sites and OneDrives that have been deleted but are still held under retention. A deleted site
+keeps using the SharePoint entitlement until retention ends or it is purged from the recycle bin.
+A deleted OneDrive is not part of the SharePoint entitlement, but Microsoft keeps it, and its
+storage, until its own retention ends. The panel
 only appears when there are some. It shows their total size and how many there are.
 
 ## All sites and OneDrives

@@ -2,6 +2,7 @@ import { formatBytes, formatLongMonthYear, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
 import { SegmentedBar, type BarSegment } from '@/design/SegmentedBar'
+import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { HEALTH_COLOR, P365, WORKLOAD_COLOR } from '@/design/theme'
 
@@ -73,10 +74,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
   }
   const color = sharePoint.utilization === null ? P365.navy : HEALTH_COLOR[sharePoint.utilization]
   return (
-    <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-p365-grey-700">
-      <span className="tabular text-2xl font-bold" style={{ color }}>
-        {formatPercent(sharePoint.usedPercentage, 1)}
-      </span>
+    <ShareHeadline share={formatPercent(sharePoint.usedPercentage, 1)} color={color}>
       <span>
         {t('storageOptimisation.usage.headline', {
           used: formatBytes(sharePoint.usedBytes),
@@ -88,7 +86,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
           {t('storageOptimisation.usage.over', { overage: formatBytes(sharePoint.overageBytes) })}
         </span>
       )}
-    </p>
+    </ShareHeadline>
   )
 }
 

@@ -187,15 +187,24 @@ describe('SiteTable', () => {
     expect(shares).toEqual(['50.0%', '10.0%'])
   })
 
-  it('renders both pools in one table without merging their totals', () => {
+  it('sorts the Share column by each row’s share of its pool, not by its size', async () => {
+    const bigSite: StorageRow = { ...rows[0], storageUsedBytes: 900 }
     render(
       <SiteTable
-        rows={[...rows, drive]}
-        poolUsedBytes={{ SharePoint: 1500, OneDrive: 1500 }}
+        rows={[bigSite, drive]}
+        poolUsedBytes={{ SharePoint: 30_000, OneDrive: 1000 }}
         columns={['name', 'share']}
       />,
     )
-    expect(screen.getAllByRole('row').length).toBeGreaterThan(3)
+    await userEvent.setup().click(screen.getByRole('columnheader', { name: /share/i }))
+    const shares = screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].textContent)
+    expect(shares).toEqual(['50.0%', '3.0%'])
+  })
+
+  it('shows an unknown share, not 0%, when its pool total is not known', () => {
+    render(<SiteTable rows={[drive]} poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }} columns={['name', 'share']} />)
+    const [cell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell').slice(1)
+    expect(cell).toHaveTextContent('Unknown')
   })
 
   it('shows the resolved display name over a link to the site that opens in a new tab', () => {

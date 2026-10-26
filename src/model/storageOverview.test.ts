@@ -444,19 +444,24 @@ describe('buildStorageOverview composition', () => {
       expect(overview.breakdown.deletedCount).toBe(1)
     })
 
-    it('measures OneDrive as its own pool: live storage against the drives’ own allocations', () => {
+    it('measures OneDrive as its own pool: live drives’ storage against their own allocations, both from the account rows', () => {
       const { oneDrive } = buildStorageOverview(estate())
       expect(oneDrive.pool).toEqual({
-        usedBytes: 56 * GB,
-        allocation: { allocatedBytes: 1024 * GB, freeBytes: 968 * GB, usedShare: 56 / 1024, freeShare: 968 / 1024 },
+        usedBytes: 5 * GB,
+        allocation: { allocatedBytes: 1024 * GB, freeBytes: 1019 * GB, usedShare: 5 / 1024, freeShare: 1019 / 1024 },
       })
     })
 
     it('leaves the OneDrive allocation unknown, not partial, when a live drive reports none', () => {
       const { oneDrive } = buildStorageOverview(
-        estate({ drives: [drive(), drive({ id: 'no-cap', allocatedBytes: undefined })] }),
+        estate({ drives: [drive(), drive({ id: 'no-cap', allocatedBytes: 0 })] }),
       )
-      expect(oneDrive.pool).toEqual({ usedBytes: 60 * GB, allocation: null })
+      expect(oneDrive.pool).toEqual({ usedBytes: 10 * GB, allocation: null })
+    })
+
+    it('keeps the OneDrive pool off the trend, so a missing OneDrive trend never reads as nothing used', () => {
+      const { oneDrive } = buildStorageOverview(estate({ oneDriveTrend: [] }))
+      expect(oneDrive.pool.usedBytes).toBe(5 * GB)
     })
 
     it('has no OneDrive allocation, rather than a zero one, when there is no live drive', () => {
@@ -465,7 +470,7 @@ describe('buildStorageOverview composition', () => {
     })
 
     it('never shows more than the whole allocation used', () => {
-      const { oneDrive } = buildStorageOverview(estate({ drives: [drive({ allocatedBytes: 10 * GB })] }))
+      const { oneDrive } = buildStorageOverview(estate({ drives: [drive({ storageUsedBytes: 20 * GB, allocatedBytes: 10 * GB })] }))
       expect(oneDrive.pool.allocation).toEqual({ allocatedBytes: 10 * GB, freeBytes: 0, usedShare: 1, freeShare: 0 })
     })
 

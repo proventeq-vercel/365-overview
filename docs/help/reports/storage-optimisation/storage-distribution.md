@@ -17,7 +17,7 @@ OneDrive is not on this line. Microsoft's
 [SharePoint limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/sharepoint-online-service-description/sharepoint-online-limits)
 give the organisation's total storage as "not including the OneDrive created for each licensed
 user": each OneDrive has its own allowance from the user's licence. OneDrive is shown on its own
-under [OneDrive storage](#onedrive-storage).
+under [Live OneDrive storage](#live-onedrive-storage).
 
 Above the line, the percentage is SharePoint storage against the SharePoint entitlement. The percentage is
 green below 85%, orange from 85% and red from 95%. A tenant already over its entitlement also
@@ -41,7 +41,7 @@ shows how far over it is, in red.
 - If the entitlement was [estimated from licences](../../reference/calculations.md#sharepoint-entitlement),
   a note under the line says so.
 
-## OneDrive storage
+## Live OneDrive storage
 
 OneDrive is a separate pool, so it gets its own line under the SharePoint one. The percentage is
 the storage in live OneDrives against the storage Microsoft allocates to them: the sum of every
@@ -49,11 +49,14 @@ live OneDrive's own limit, as the OneDrive usage report gives it.
 
 | Part | Colour | What it counts |
 | --- | --- | --- |
-| Used | OneDrive blue | Microsoft's OneDrive storage total less deleted OneDrives. Deleted OneDrives are listed under [Deleted but still billing](main-offenders.md#deleted-but-still-billing). |
+| Used | OneDrive blue | The storage in live OneDrives, as the OneDrive usage report lists them. Deleted OneDrives are listed under [Deleted but still billing](main-offenders.md#deleted-but-still-billing). |
 | Unused allocation | Light grey | The allocation less the storage used, never below zero. |
 
 - If Microsoft does not report an allocation for every live OneDrive, the total allocation is
-  unknown: the panel gives the storage used and says so, with no line.
+  unknown: the panel gives the storage used and says so, with no line. With no live OneDrive at
+  all, it says so.
+- A small total does not mean no OneDrive is full: each has its own limit. The panel says how many
+  are at 90% or more of theirs. A share under 0.1% shows as **<0.1%**.
 
 ## Storage by site template
 
