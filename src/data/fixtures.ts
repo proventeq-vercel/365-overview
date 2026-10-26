@@ -122,6 +122,9 @@ function namedSites(concealed: boolean): StorageRow[] {
   }))
 }
 
+const NEVER_ACTIVE_DRIVE_EVERY = 29
+const LONG_INACTIVE_DRIVE_EVERY = 11
+
 function generateDrives(count: number, concealed = false, overLicence = false): StorageRow[] {
   const out: StorageRow[] = []
   for (let i = 0; i < count; i++) {
@@ -139,8 +142,13 @@ function generateDrives(count: number, concealed = false, overLicence = false): 
       ownerDisplayName: concealed ? hashName(3000 + i) : `User ${i}`,
       storageUsedBytes: mb * MB,
       fileCount: (i % 300) * 5 + 20,
-      activeFileCount: (i % 30) * 2,
-      lastActivityDate: i % 23 === 0 ? null : i % 11 === 5 ? `20${21 + (i % 3)}-0${(i % 8) + 1}-1${i % 9}` : `2026-0${(i % 8) + 1}-2${i % 9}`,
+      activeFileCount: i % LONG_INACTIVE_DRIVE_EVERY === 5 ? 0 : (i % 30) * 2,
+      lastActivityDate:
+        i % NEVER_ACTIVE_DRIVE_EVERY === 1
+          ? null
+          : i % LONG_INACTIVE_DRIVE_EVERY === 5
+            ? `20${21 + (i % 3)}-0${(i % 8) + 1}-1${i % 9}`
+            : `2026-0${(i % 8) + 1}-2${i % 9}`,
       isDeleted: i % 300 === 7,
       template: undefined,
       allocatedBytes: raised ? BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES : ONE_DRIVE_CAP_BYTES,

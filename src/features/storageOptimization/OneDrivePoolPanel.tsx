@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { env } from '@/config/env'
 import { FeatureFlags } from '@/config/featureFlags'
+import { REPORT_PATHS } from '@/features/reportPaths'
 import { formatBytes, formatShare } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { StorageOverview } from '@/types/storage'
@@ -9,21 +10,19 @@ import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { P365, WORKLOAD_COLOR } from '@/design/theme'
 
-const ONEDRIVE_REPORT_PATH = '/onedrive-usage'
-
 function AttentionLine({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
   const { attention, deletedButBilling } = overview.oneDrive
-  const line = t('storageOptimisation.oneDrivePool.attention', {
-    inactive: formatBytes(attention.inactive.bytes),
-    deleted: formatBytes(deletedButBilling.bytes),
-    unlicensed: attention.unlicensed === null ? t('storageOptimisation.kpi.unknown') : formatBytes(attention.unlicensed.bytes),
-  })
+  const figures = { inactive: formatBytes(attention.inactive.bytes), deleted: formatBytes(deletedButBilling.bytes) }
+  const line =
+    attention.unlicensed === null
+      ? t('storageOptimisation.oneDrivePool.attentionUnknown', figures)
+      : t('storageOptimisation.oneDrivePool.attention', { ...figures, unlicensed: formatBytes(attention.unlicensed.bytes) })
   return (
     <PanelDescription>
       {line}{' '}
       {env.features.has(FeatureFlags.OptimizationStorageReportOneDrive) && (
-        <Link to={ONEDRIVE_REPORT_PATH} className="font-semibold text-p365-teal underline-offset-2 hover:underline">
+        <Link to={REPORT_PATHS.oneDriveUsage} className="font-semibold text-p365-teal underline-offset-2 hover:underline">
           {t('storageOptimisation.oneDrivePool.attentionLink')}
         </Link>
       )}

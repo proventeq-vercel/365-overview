@@ -184,7 +184,9 @@ export function createLiveDataSource(
 
     async getOneDriveLicences() {
       try {
-        const rows = await graph.getAllPages<RawActiveUserRow>(reportUrl('getOffice365ActiveUserDetail'))
+        const rows = await graph.getAllPages<RawActiveUserRow>(
+          `${reportUrl('getOffice365ActiveUserDetail')}&$top=${LARGEST_REPORT_PAGE}`,
+        )
         return parseOneDriveLicences(concealRows(rows))
       } catch (error) {
         if (error instanceof ApiError) return null

@@ -53,27 +53,48 @@ describe('oneDriveAttention', () => {
     ])
   })
 
+  const allLicensed = new Map(drives.map((drive) => [drive.id, true]))
+
   it('puts a live OneDrive whose owner has no OneDrive licence in the unlicensed group, never also in inactive', () => {
-    const licences = new Map([
-      ['busy@c.com', true],
-      ['ancient@c.com', false],
-      ['leaver@c.com', false],
-    ])
+    const licences = new Map([...allLicensed, ['ancient@c.com', false], ['leaver@c.com', false]])
     const { inactive, unlicensed } = at(licences)
     expect(unlicensed).toEqual({ count: 2, bytes: 70 * GB })
     expect([inactive.count, inactive.bytes]).toEqual([3, 31 * GB])
+  })
+
+  it('counts an owner the licence report does not list as unlicensed, since it lists licensed users only', () => {
+    const licences = new Map([...allLicensed].filter(([id]) => id !== 'leaver@c.com'))
+    expect(at(licences).unlicensed).toEqual({ count: 1, bytes: 40 * GB })
   })
 
   it('leaves the unlicensed group unknown, not empty, when the licence report could not be read', () => {
     expect(at(null).unlicensed).toBeNull()
   })
 
-  it('treats an owner the licence report does not list as not known to be unlicensed', () => {
-    expect(at(new Map([['busy@c.com', true]])).unlicensed).toEqual({ count: 0, bytes: 0 })
+  it('leaves the unlicensed group unknown, never all OneDrives, when no owner matches the licence report at all', () => {
+    const { unlicensed, inactive } = at(new Map([['someone-else@c.com', true]]))
+    expect(unlicensed).toBeNull()
+    expect(inactive.count).toBe(4)
+  })
+
+  it('bands a OneDrive last active exactly on a cutoff into the newer band, and one a day before into the older', () => {
+    const edge = (id: string, date: string) => drive(id, date, 1)
+    const banded = oneDriveAttention({
+      drives: [edge('on-window', '2023-08-30'), edge('on-year', '2022-08-30'), edge('day-before-year', '2022-08-29'), edge('on-two', '2021-08-30'), edge('day-before-two', '2021-08-29')],
+      licences: null,
+      reportRefreshDate: '2026-08-30',
+      inactiveYears: 3,
+      now: new Date('2026-09-01T00:00:00Z'),
+    })
+    expect(banded.inactive.bands.map(({ band, count }) => [band, count])).toEqual([
+      ['firstYear', 1],
+      ['secondYear', 2],
+      ['older', 1],
+      ['never', 0],
+    ])
   })
 
   it('matches owners whatever case Graph returns their principal name in', () => {
-    expect(at(new Map([['leaver@c.com', false]])).unlicensed?.count).toBe(1)
     const shouting = oneDriveAttention({
       drives: [drive('Leaver@C.com', '2026-07-01', 40)],
       licences: new Map([['leaver@c.com', false]]),

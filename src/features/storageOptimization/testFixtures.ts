@@ -50,7 +50,7 @@ export const base: StorageOverview = {
           { band: 'firstYear', fromYears: 3, toYears: 4, count: 3, bytes: 12 * GB },
           { band: 'secondYear', fromYears: 4, toYears: 5, count: 1, bytes: 8 * GB },
           { band: 'older', fromYears: 5, toYears: null, count: 1, bytes: 9 * GB },
-          { band: 'never', fromYears: null, toYears: null, count: 0, bytes: 0 },
+          { band: 'never', fromYears: null, toYears: null, count: 1, bytes: 1 * GB },
         ],
       },
       unlicensed: { count: 2, bytes: 40 * GB },

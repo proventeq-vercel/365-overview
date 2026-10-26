@@ -99,7 +99,7 @@ describe('createLiveDataSource', () => {
     ])
     const licences = await createLiveDataSource(graph).getOneDriveLicences()
     expect(vi.mocked(graph.getAllPages).mock.calls.map(([url]) => url)).toEqual([
-      "/beta/reports/getOffice365ActiveUserDetail(period='D180')?$format=application/json",
+      "/beta/reports/getOffice365ActiveUserDetail(period='D180')?$format=application/json&$top=10000",
     ])
     expect(licences?.get('leaver@contoso.com')).toBe(false)
   })

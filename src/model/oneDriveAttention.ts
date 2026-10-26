@@ -1,4 +1,4 @@
-import { inactiveSince, isInactiveSince } from '@/lib/archive'
+import { inactiveSince } from '@/lib/archive'
 import type { OneDriveLicences } from '@/reports/activeUsers'
 import {
   INACTIVE_DRIVE_BANDS,
@@ -23,10 +23,15 @@ const BAND_YEARS: Record<InactiveDriveBand, (years: number) => { fromYears: numb
   never: () => ({ fromYears: null, toYears: null }),
 }
 
-const groupOf = (rows: StorageRow[]): DriveGroup => ({
-  count: rows.length,
-  bytes: rows.reduce((total, row) => total + row.storageUsedBytes, 0),
-})
+const emptyGroup = (): DriveGroup => ({ count: 0, bytes: 0 })
+
+const add = (group: DriveGroup, drive: StorageRow) => {
+  group.count += 1
+  group.bytes += drive.storageUsedBytes
+}
+
+const hasLicence = (licences: OneDriveLicences, drive: StorageRow): boolean =>
+  licences.get(drive.id.toLowerCase()) === true
 
 export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
   const { drives, licences, reportRefreshDate, inactiveYears, now } = inputs
@@ -35,30 +40,34 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
   const twoYearsBefore = inactiveSince(reportRefreshDate, inactiveYears + 2, now)
 
   const live = drives.filter((drive) => !drive.isDeleted)
-  const unlicensed = licences === null ? [] : live.filter((drive) => licences.get(drive.id.toLowerCase()) === false)
-  const billable = new Set(unlicensed)
-  const inactive = live.filter(
-    (drive) => !billable.has(drive) && (drive.lastActivityDate === null || isInactiveSince(drive, since)),
-  )
+  const licencesMatch = licences !== null && live.some((drive) => licences.has(drive.id.toLowerCase()))
+  const usableLicences = licencesMatch ? licences : null
 
-  const bandOf = (drive: StorageRow): InactiveDriveBand => {
-    if (drive.lastActivityDate === null) return 'never'
-    if (!isInactiveSince(drive, yearBefore)) return 'firstYear'
-    if (!isInactiveSince(drive, twoYearsBefore)) return 'secondYear'
-    return 'older'
+  const inactive = emptyGroup()
+  const unlicensed = emptyGroup()
+  const bands = new Map<InactiveDriveBand, DriveGroup>(INACTIVE_DRIVE_BANDS.map((band) => [band, emptyGroup()]))
+
+  for (const drive of live) {
+    if (usableLicences !== null && !hasLicence(usableLicences, drive)) {
+      add(unlicensed, drive)
+      continue
+    }
+    const last = drive.lastActivityDate
+    if (last !== null && last >= since) continue
+    add(inactive, drive)
+    add(
+      bands.get(last === null ? 'never' : last >= yearBefore ? 'firstYear' : last >= twoYearsBefore ? 'secondYear' : 'older')!,
+      drive,
+    )
   }
 
   return {
     inactiveYears,
     inactiveSince: since,
     inactive: {
-      ...groupOf(inactive),
-      bands: INACTIVE_DRIVE_BANDS.map((band) => ({
-        band,
-        ...BAND_YEARS[band](inactiveYears),
-        ...groupOf(inactive.filter((drive) => bandOf(drive) === band)),
-      })),
+      ...inactive,
+      bands: INACTIVE_DRIVE_BANDS.map((band) => ({ band, ...BAND_YEARS[band](inactiveYears), ...bands.get(band)! })),
     },
-    unlicensed: licences === null ? null : groupOf(unlicensed),
+    unlicensed: usableLicences === null ? null : unlicensed,
   }
 }

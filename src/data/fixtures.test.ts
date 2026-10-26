@@ -6,13 +6,14 @@ import { loadSettings } from '../lib/settings'
 async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0], hideNames = false) {
   const ds = createMockDataSource(scenario, { hideNames })
   const settings = loadSettings()
-  const [sites, drives, sharePointTrend, oneDriveTrend, skus, reportRefreshDate] =
+  const [sites, drives, sharePointTrend, oneDriveTrend, skus, oneDriveLicences, reportRefreshDate] =
     await Promise.all([
       ds.getSites(),
       ds.getDrives(),
       ds.getSharePointTrend(),
       ds.getOneDriveTrend(),
       ds.getLicenses(),
+      ds.getOneDriveLicences(),
       ds.getReportRefreshDate(),
     ])
   return buildStorageOverview({
@@ -21,6 +22,7 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0],
     sharePointTrend,
     oneDriveTrend,
     skus,
+    oneDriveLicences,
     reportRefreshDate,
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
@@ -97,6 +99,19 @@ describe('mock data source', () => {
     const first = await createMockDataSource().getSites()
     const second = await createMockDataSource().getSites()
     expect(first).toEqual(second)
+  })
+})
+
+describe('unlicensed OneDrives in every mock tenant', () => {
+  it.each(['healthy', 'concealed'] as const)('finds the unlicensed owners in the %s tenant, names concealed or not', async (scenario) => {
+    const { oneDrive, caveats } = await overviewFor(scenario)
+    expect(caveats.nameMask).toBe(scenario === 'concealed' ? 'concealed' : null)
+    expect(oneDrive.attention.unlicensed?.count).toBe(10)
+  })
+
+  it('finds them when the app hides names too', async () => {
+    const { oneDrive } = await overviewFor('healthy', true)
+    expect(oneDrive.attention.unlicensed?.count).toBe(10)
   })
 })
 

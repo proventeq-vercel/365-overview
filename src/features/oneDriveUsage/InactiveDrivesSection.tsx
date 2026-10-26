@@ -4,7 +4,7 @@ import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitive
 import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
-import { formatBytes, formatNumber } from '@/lib/format'
+import { formatBytes, formatLongMonthYear } from '@/lib/format'
 import type { InactiveDriveBandTotal, OneDriveAttention, StorageOverview } from '@/types/storage'
 
 function bandLabel(band: InactiveDriveBandTotal, t: TranslateFn): string {
@@ -39,6 +39,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
   const t = useTranslation()
   const { attention, deletedButBilling } = overview.oneDrive
   const { inactive, inactiveYears, inactiveSince } = attention
+  const inactiveValues = { count: inactive.count, date: formatLongMonthYear(inactiveSince) }
 
   return (
     <Section
@@ -52,7 +53,11 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           label={t('oneDrive.attention.inactive')}
           value={formatBytes(inactive.bytes)}
           color={inactive.count > 0 ? P365.yellow : P365.grey400}
-          information={t('oneDrive.attention.inactiveHint', { count: inactive.count, date: inactiveSince })}
+          information={
+            attention.unlicensed === null
+              ? t('oneDrive.attention.inactiveHintUnknown', inactiveValues)
+              : t('oneDrive.attention.inactiveHint', inactiveValues)
+          }
         />
         <StatCard
           label={t('oneDrive.attention.deleted')}
@@ -64,7 +69,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
       </div>
       <Panel>
         <PanelLabel>{t('oneDrive.attention.bandsTitle')}</PanelLabel>
-        <PanelDescription>{t('oneDrive.attention.bandsSubtitle', { count: formatNumber(inactive.count) })}</PanelDescription>
+        <PanelDescription>{t('oneDrive.attention.bandsSubtitle', { count: inactive.count })}</PanelDescription>
         <FacetBars
           items={inactive.bands
             .filter((band) => band.count > 0)

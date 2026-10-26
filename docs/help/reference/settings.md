@@ -53,13 +53,17 @@ The [OneDrives over licence](../reports/onedrive-usage/over-licence.md) page lis
 
 ## Archive sites inactive for
 
-How long a site must go without activity to count as ready to archive. You can pick 1 to 10
-years. The default is 3 years.
+How long a site must go without activity to count as ready to archive, and a OneDrive to count
+as inactive. You can pick 1 to 10 years. The default is 3 years.
 
 ::: feature optimization.storage.report.overview
 It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
 and the **Inactive** part of the
 [storage usage line](../reports/storage-optimisation/storage-distribution.md#storage-usage).
+:::
+
+::: feature optimization.storage.report.onedrive
+It also decides the [inactive OneDrives](../reports/onedrive-usage/inactive.md) and their bands.
 :::
 
 ## Other options in the menu

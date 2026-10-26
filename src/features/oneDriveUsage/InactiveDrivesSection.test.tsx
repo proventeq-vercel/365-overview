@@ -31,7 +31,7 @@ describe('InactiveDrivesSection', () => {
   it('shows inactive, deleted and unlicensed OneDrives as three cards, never one total', () => {
     render(<InactiveDrivesSection overview={base} />)
     expect(card('Inactive OneDrives')).toHaveTextContent('30 GB')
-    expect(card('Inactive OneDrives')).toHaveTextContent('6 live OneDrives have had no activity since 2023-08-30')
+    expect(card('Inactive OneDrives')).toHaveTextContent('6 live OneDrives have had no activity since August 2023, or none recorded, and their owners hold a OneDrive licence')
     expect(card('Deleted, under retention')).toHaveTextContent('0 B')
     expect(card('Owner unlicensed')).toHaveTextContent('40 GB')
     expect(card('Owner unlicensed')).toHaveTextContent('2 live OneDrives belong to owners without a OneDrive licence')
@@ -49,13 +49,16 @@ describe('InactiveDrivesSection', () => {
     render(<InactiveDrivesSection overview={withAttention({ unlicensed: null })} />)
     expect(card('Owner unlicensed')).toHaveTextContent('Unknown')
     expect(card('Owner unlicensed')).toHaveTextContent('not known which owners have a OneDrive licence')
+    expect(card('Inactive OneDrives')).toHaveTextContent('some of these may belong to owners without a licence')
   })
 
   it('bands the inactive OneDrives by years past the window, leaving out empty bands', () => {
-    render(<InactiveDrivesSection overview={base} />)
+    const bands = base.oneDrive.attention.inactive.bands.map((band) => (band.band === 'never' ? { ...band, count: 0, bytes: 0 } : band))
+    render(<InactiveDrivesSection overview={withAttention({ inactive: { ...base.oneDrive.attention.inactive, bands } })} />)
     expect(screen.getByText('3–4 years')).toBeInTheDocument()
     expect(screen.getByText('4–5 years')).toBeInTheDocument()
     expect(screen.getByText('More than 5 years')).toBeInTheDocument()
+    expect(screen.getByText('6 inactive OneDrives, by time since the last activity')).toBeInTheDocument()
     expect(screen.queryByText('No activity recorded')).not.toBeInTheDocument()
   })
 

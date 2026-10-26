@@ -275,7 +275,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
       pool: oneDrivePool(liveDrives),
       attention: oneDriveAttention({
-        drives,
+        drives: reportedDrives,
         licences: oneDriveLicences,
         reportRefreshDate,
         inactiveYears,

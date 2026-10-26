@@ -53,6 +53,6 @@ describe('OneDrivePoolPanel', () => {
   it('says the unlicensed storage is unknown when the licences could not be read', () => {
     features.oneDrive = true
     renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, unlicensed: null } } })
-    expect(screen.getByText(/owners without a OneDrive licence Unknown\./)).toBeInTheDocument()
+    expect(screen.getByText(/Which owners lack a OneDrive licence is unknown\./)).toBeInTheDocument()
   })
 })
