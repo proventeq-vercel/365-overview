@@ -6,7 +6,7 @@ import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/
 import type { SortDirection } from '@/lib/rowSearch'
 import type { SiteDirectory } from '@/reports/siteDirectory'
 import type { NameMask, StoragePool, StorageRow } from '@/types/storage'
-import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
+import { formatBytes, formatNumber, formatPercent, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
 import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
@@ -299,7 +299,7 @@ export function SiteTable({
         }
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
-            <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
+            <span className="tabular w-12 text-p365-grey-600">{formatShare(share, 1)}</span>
             <span className="h-1.5 flex-1 rounded-full bg-p365-grey-50">
               <span
                 className="block h-full rounded-full bg-p365-teal transition-[width] duration-300 ease-out"

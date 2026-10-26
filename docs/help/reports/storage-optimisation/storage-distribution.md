@@ -56,7 +56,8 @@ live OneDrive's own limit, as the OneDrive usage report gives it.
   unknown: the panel gives the storage used and says so, with no line. With no live OneDrive at
   all, it says so.
 - A small total does not mean no OneDrive is full: each has its own limit. The panel says how many
-  are at 90% or more of theirs. A share under 0.1% shows as **<0.1%**.
+  are at 90% or more of theirs, whether or not the total allocation is known. A share that would
+  round to 0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**.
 
 ## Storage by site template
 

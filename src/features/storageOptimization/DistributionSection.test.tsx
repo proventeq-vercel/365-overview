@@ -96,7 +96,7 @@ describe('DistributionSection', () => {
   it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(screen.getByRole('heading', { name: 'Live OneDrive storage' })).toBeInTheDocument()
-    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits, whatever the total above says.')).toBeInTheDocument()
+    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits, even when the total is low.')).toBeInTheDocument()
     expect(screen.getByText('of the 40 TB allocated to 40 OneDrives used (120 GB)')).toBeInTheDocument()
     const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
     expect(pool.map((button) => button.textContent)).toEqual([
@@ -114,6 +114,7 @@ describe('DistributionSection', () => {
       />,
     )
     expect(screen.getByText(/120 GB in live OneDrives\. Microsoft did not report an allocation/)).toBeInTheDocument()
+    expect(screen.getByText(/3 OneDrives are at 90% or more of their own limits/)).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Live OneDrive storage' })).not.toBeInTheDocument()
   })
 
@@ -182,12 +183,22 @@ describe('DistributionSection', () => {
   })
 
   it('shows a used share too small to round as under 0.1%, not as nothing used', () => {
-    const allocation = { allocatedBytes: 10_000 * 1024 * GB, freeBytes: 0, usedShare: 0.0002, freeShare: 0.9998 }
+    const allocation = { allocatedBytes: 10_000 * 1024 * GB, freeBytes: 9_998 * 1024 * GB, usedShare: 0.0002, freeShare: 0.9998 }
     render(
       <DistributionSection
         overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 2 * 1024 * GB, allocation } } }}
       />,
     )
     expect(screen.getByText('<0.1%')).toBeInTheDocument()
+    const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
+    expect(pool.map((button) => button.textContent)).toEqual([
+      'Used2 TB<0.1% of the allocation',
+      'Unused allocation9998 TB>99.9% of the allocation',
+    ])
+  })
+
+  it('says nothing about full OneDrives when none is near its limit', () => {
+    render(<DistributionSection overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, drivesNearCap: 0 } }} />)
+    expect(screen.queryByText(/at 90% or more of/)).not.toBeInTheDocument()
   })
 })

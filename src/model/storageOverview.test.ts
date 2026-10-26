@@ -464,6 +464,11 @@ describe('buildStorageOverview composition', () => {
       expect(oneDrive.pool.usedBytes).toBe(5 * GB)
     })
 
+    it('leaves the OneDrive allocation unknown when a drive carries no allocation field at all', () => {
+      const { oneDrive } = buildStorageOverview(estate({ drives: [drive(), drive({ id: 'bare', allocatedBytes: undefined })] }))
+      expect(oneDrive.pool.allocation).toBeNull()
+    })
+
     it('has no OneDrive allocation, rather than a zero one, when there is no live drive', () => {
       const { oneDrive } = buildStorageOverview(estate({ drives: [] }))
       expect(oneDrive.pool.allocation).toBeNull()

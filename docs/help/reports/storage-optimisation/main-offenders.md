@@ -60,7 +60,7 @@ Every site and drive in the usage reports, in one table.
 | Site | The display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. |
 | Owner | The primary owner as Microsoft records it. For group-connected sites, these are the Microsoft 365 group's owners. |
 | Storage used | Storage consumed as of the report date. |
-| Share | This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is on the same scale. |
+| Share | This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is on the same scale. **Unknown** when Microsoft did not report that pool's total; a share that would round to 0.0% shows as **<0.1%**. |
 | Files | Files stored as of the report date. |
 | Active files | Files created, edited or otherwise active in the 180-day period. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |

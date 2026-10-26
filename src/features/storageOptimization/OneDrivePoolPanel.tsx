@@ -61,10 +61,10 @@ export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
               },
             ]}
           />
-          {drivesNearCap > 0 && (
-            <PanelDescription>{t('storageOptimisation.oneDrivePool.nearCap', { count: drivesNearCap })}</PanelDescription>
-          )}
         </>
+      )}
+      {driveCount > 0 && drivesNearCap > 0 && (
+        <PanelDescription>{t('storageOptimisation.oneDrivePool.nearCap', { count: drivesNearCap })}</PanelDescription>
       )}
     </Panel>
   )

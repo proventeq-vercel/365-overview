@@ -201,6 +201,12 @@ describe('SiteTable', () => {
     expect(shares).toEqual(['50.0%', '3.0%'])
   })
 
+  it('shows a tiny share as under 0.1%, never as 0.0%', () => {
+    render(<SiteTable rows={[drive]} poolUsedBytes={{ SharePoint: 1000, OneDrive: 5_000_000 }} columns={['name', 'share']} />)
+    const [cell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell').slice(1)
+    expect(cell).toHaveTextContent('<0.1%')
+  })
+
   it('shows an unknown share, not 0%, when its pool total is not known', () => {
     render(<SiteTable rows={[drive]} poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }} columns={['name', 'share']} />)
     const [cell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell').slice(1)
