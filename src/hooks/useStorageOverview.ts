@@ -9,6 +9,7 @@ import { buildStorageOverview } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
 import type { StorageOverview, StorageRow } from '../types/storage'
 import { accessRecheckInterval, isAccessFailure } from './accessRevalidation'
+import { isLoadedGrowth } from './useStorageGrowth'
 
 export const STORAGE_INPUTS_KEY = 'storageInputs'
 
@@ -24,7 +25,9 @@ function useRevalidateOnRecovery(error: unknown, recovered: boolean) {
     forgetConsentGrant()
     if (!wasRefused.current) return
     wasRefused.current = false
-    void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] !== STORAGE_INPUTS_KEY })
+    void queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] !== STORAGE_INPUTS_KEY && !isLoadedGrowth(query),
+    })
   }, [error, recovered, queryClient])
 }
 

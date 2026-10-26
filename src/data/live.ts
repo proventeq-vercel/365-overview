@@ -45,7 +45,7 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
-export const LARGEST_REPORT_PAGE = 10_000
+const LARGEST_REPORT_PAGE = 10_000
 
 const reportUrlOn = (fn: string, date: string) =>
   `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json&$top=${LARGEST_REPORT_PAGE}`

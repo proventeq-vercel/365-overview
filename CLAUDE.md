@@ -198,7 +198,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
   UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
-  fetching), Report settings (opens `SettingsDialog`), and in live mode Switch
+  fetching, not while only growth reads; re-reads growth only if it failed for
+  the report date the refresh brings back), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB and OneDrive storage per user in GB, each with its

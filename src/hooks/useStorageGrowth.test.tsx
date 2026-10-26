@@ -139,11 +139,27 @@ describe('useStorageGrowth', () => {
       if (failing && date === '2026-10-10') throw new Error('503 Service Unavailable')
       return sitesActiveOn[date] ?? []
     })
-    const { result } = renderGrowth({ getSitesOn })
+    const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
+    client.setQueryData(['storageInputs'], { reportRefreshDate: '2026-10-24' })
+    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', client)
     await waitFor(() => expect(result.current.growth.isError).toBe(true))
     failing = false
     await act(() => result.current.refresh())
     await waitFor(() => expect(result.current.growth.data?.measuredRows).toBe(2))
+  })
+
+  it('leaves a failed growth for an old report date alone when Refresh brings a newer one', async () => {
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date === '2026-10-10') throw new Error('503 Service Unavailable')
+      return []
+    })
+    const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
+    client.setQueryData(['storageInputs'], { reportRefreshDate: '2026-10-25' })
+    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', client)
+    await waitFor(() => expect(result.current.growth.isError).toBe(true))
+    const calls = getSitesOn.mock.calls.length
+    await act(() => result.current.refresh())
+    expect(getSitesOn).toHaveBeenCalledTimes(calls)
   })
 
   it('leaves Refresh data free while only the growth reads are running', async () => {

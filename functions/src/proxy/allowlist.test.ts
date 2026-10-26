@@ -31,6 +31,8 @@ describe('assertAllowed', () => {
     { version: 'beta', path: "reports/getOneDriveUsageStorage(period='D7')", search: '?$format=application/json' },
     { version: 'beta', path: 'reports/getSharePointSiteUsageDetail(date=2026-09-20)', search: '?$format=application/json' },
     { version: 'beta', path: 'reports/getOneDriveUsageAccountDetail(date=2026-09-20)', search: '?$format=application/json&$skiptoken=200' },
+    { version: 'beta', path: 'reports/getSharePointSiteUsageDetail(date=2026-09-20)', search: '?$format=application/json&$top=10000' },
+    { version: 'beta', path: 'reports/getOneDriveUsageAccountDetail(date=2026-09-20)', search: '?$format=application/json&$top=10000' },
   ])('allows %o', (request) => {
     expect(() => assertAllowed(request)).not.toThrow()
   })

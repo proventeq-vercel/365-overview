@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type Query } from '@tanstack/react-query'
 import { useDataSource } from '../data/useDataSource'
 import { buildStorageGrowth, earliestRows, growthLeaders } from '../model/storageGrowth'
 import { unresolvedSiteIds, withSiteDirectory } from '../reports/siteDirectory'
@@ -7,6 +7,10 @@ import type { StorageOverview, StorageRow } from '../types/storage'
 export const STORAGE_GROWTH_KEY = 'storageGrowth'
 
 const DAILY_REPORTS_AT_ONCE = 4
+
+export const isGrowth = (query: Query) => query.queryKey[0] === STORAGE_GROWTH_KEY
+
+export const isLoadedGrowth = (query: Query) => isGrowth(query) && query.state.status === 'success'
 
 export function useStorageGrowth(overview: StorageOverview | undefined) {
   const ds = useDataSource()

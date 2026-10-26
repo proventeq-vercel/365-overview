@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithData } from '@/test/render'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
 import type { DataSource } from '@/data/fixtures'
@@ -11,6 +11,8 @@ import { queryClient as appQueryClient } from '@/app/queryClient'
 import { ApiError } from '@/clients/apiError'
 import { CONSENT_GRANTED_KEY } from '@/config/consentReturn'
 import { useOrg, useStorageOverview } from './useStorageOverview'
+import { useStorageGrowth } from './useStorageGrowth'
+import { useRefreshReport } from './useRefreshReport'
 
 const FINANCE_ID = '8f3c1a2b-9d4e-4f60-a1b2-c3d4e5f60718'
 const LEGAL_ID = 'c3d4e5f6-0718-4f60-a1b2-8f3c1a2b9d4e'
@@ -185,6 +187,41 @@ describe('useStorageOverview after access is refused', () => {
 
     expect(await screen.findByText('loaded for Contoso')).toBeInTheDocument()
     expect(getOrg).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves a growth that had already loaded alone once access works again', async () => {
+    let refuse = false
+    const getSites = vi.fn(async () => {
+      if (refuse) throw REFUSED
+      return [site(FINANCE_ID, 900)]
+    })
+    const getSitesOn = vi.fn(async () => [site(FINANCE_ID, 400)])
+    function WithGrowth() {
+      const { data, error } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{error ? 'refused' : growth.isSuccess ? 'grown' : 'pending'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({ getSites, getSitesOn, getDrivesOn: async () => [], getDailyReportDates: () => ['2026-09-19', '2026-09-20'] }),
+    )
+    expect(await screen.findByText('grown')).toBeInTheDocument()
+    refuse = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    expect(await screen.findByText('refused')).toBeInTheDocument()
+    refuse = false
+
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(await screen.findByText('grown')).toBeInTheDocument()
+    expect(getSites).toHaveBeenCalledTimes(3)
+    expect(getSitesOn).toHaveBeenCalledTimes(2)
   })
 
   it('does not keep asking after a failure access cannot fix', async () => {
