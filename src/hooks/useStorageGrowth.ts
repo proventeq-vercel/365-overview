@@ -4,7 +4,7 @@ import { buildStorageGrowth, earliestRows, growthLeaders } from '../model/storag
 import { unresolvedSiteIds, withSiteDirectory } from '../reports/siteDirectory'
 import type { StorageOverview, StorageRow } from '../types/storage'
 
-export const STORAGE_GROWTH_KEY = 'storageGrowth'
+const STORAGE_GROWTH_KEY = 'storageGrowth'
 
 const DAILY_REPORTS_AT_ONCE = 4
 

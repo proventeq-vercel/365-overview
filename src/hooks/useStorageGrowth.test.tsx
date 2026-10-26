@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { DataSourceContext } from '@/data/useDataSource'
 import type { DataSource } from '@/data/fixtures'
 import { growthWindowDates } from '@/lib/growthWindow'
@@ -41,6 +41,7 @@ function renderGrowth(
   source: Partial<DataSource>,
   reportRefreshDate = '2026-10-24',
   client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } }),
+  loadReport?: () => Promise<{ reportRefreshDate: string }>,
 ) {
   const ds = {
     getSiteDetails: async () => new Map(),
@@ -55,7 +56,13 @@ function renderGrowth(
     </QueryClientProvider>
   )
   const overview = overviewOn(reportRefreshDate)
-  return renderHook(() => ({ growth: useStorageGrowth(overview), ...useRefreshReport() }), { wrapper })
+  return renderHook(
+    () => {
+      useQuery({ queryKey: ['storageInputs'], queryFn: loadReport ?? (async () => ({ reportRefreshDate })), retry: false })
+      return { growth: useStorageGrowth(overview), ...useRefreshReport() }
+    },
+    { wrapper },
+  )
 }
 
 describe('useStorageGrowth', () => {
@@ -139,9 +146,7 @@ describe('useStorageGrowth', () => {
       if (failing && date === '2026-10-10') throw new Error('503 Service Unavailable')
       return sitesActiveOn[date] ?? []
     })
-    const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
-    client.setQueryData(['storageInputs'], { reportRefreshDate: '2026-10-24' })
-    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', client)
+    const { result } = renderGrowth({ getSitesOn })
     await waitFor(() => expect(result.current.growth.isError).toBe(true))
     failing = false
     await act(() => result.current.refresh())
@@ -153,12 +158,32 @@ describe('useStorageGrowth', () => {
       if (date === '2026-10-10') throw new Error('503 Service Unavailable')
       return []
     })
-    const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
-    client.setQueryData(['storageInputs'], { reportRefreshDate: '2026-10-25' })
-    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', client)
+    const loadReport = vi
+      .fn()
+      .mockResolvedValueOnce({ reportRefreshDate: '2026-10-24' })
+      .mockResolvedValue({ reportRefreshDate: '2026-10-25' })
+    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', undefined, loadReport)
     await waitFor(() => expect(result.current.growth.isError).toBe(true))
     const calls = getSitesOn.mock.calls.length
     await act(() => result.current.refresh())
+    expect(loadReport).toHaveBeenCalledTimes(2)
+    expect(getSitesOn).toHaveBeenCalledTimes(calls)
+  })
+
+  it('does not re-read a failed growth when refreshing the report itself fails, so a throttle is not hit twice', async () => {
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date === '2026-10-10') throw new Error('429 Too Many Requests')
+      return []
+    })
+    const loadReport = vi
+      .fn()
+      .mockResolvedValueOnce({ reportRefreshDate: '2026-10-24' })
+      .mockRejectedValue(new Error('429 Too Many Requests'))
+    const { result } = renderGrowth({ getSitesOn }, '2026-10-24', undefined, loadReport)
+    await waitFor(() => expect(result.current.growth.isError).toBe(true))
+    const calls = getSitesOn.mock.calls.length
+    await act(() => result.current.refresh())
+    expect(loadReport).toHaveBeenCalledTimes(2)
     expect(getSitesOn).toHaveBeenCalledTimes(calls)
   })
 

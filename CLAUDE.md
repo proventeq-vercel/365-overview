@@ -41,7 +41,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   failure, `config/consentReturn.ts` turns the admin-consent return
   (`?admin_consent=True`) into a two-minute settling window (3 s rechecks,
   `AccessFailure` shows the loading screen instead of the refusal), and
-  recovery invalidates every other query. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
+  recovery invalidates every other query except a growth that has loaded. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
   kept byte-identical with a `365-oversharing` sibling; that app is dropped.)
 - `src/clients/` — `graphClient` fetch wrapper (`get`, `getAllPages`,
   `batchGet` over `$batch`) + `apiError`. It takes an **origin**
@@ -119,7 +119,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
   with `staleTime: Infinity`, `retry: false`; Refresh data re-reads it only if
-  it failed, and its busy state ignores it (the daily reports change once a
+  it failed and the refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
   day; each load spends ~25 of the 100 report requests Graph allows per 10
   minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
