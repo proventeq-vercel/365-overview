@@ -126,7 +126,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
   skeleton while pending and an "unavailable" panel on error (any failed day,
-  or a report date older than the days Graph keeps), never zero. A row with no
+  or a report date at or before today − 26, the window's first day), never zero. A row with no
   dated appearance has no daily figure, so it is left out (never counted from
   0, which would rank the biggest sites as the fastest growers); shrinking and
   deleted rows are out; `measuredRows` 0 says nothing could be measured rather
