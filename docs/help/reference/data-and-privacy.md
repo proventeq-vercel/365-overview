@@ -14,6 +14,7 @@ Through Microsoft Graph, read-only:
 | SharePoint site usage detail (180 days) | Storage, files, activity and template per site. |
 | OneDrive account detail (180 days) | Storage, files, activity and allocation per drive. |
 | SharePoint and OneDrive storage trends (180 days) | Used storage today and the growth rate. |
+| SharePoint site usage and OneDrive account detail for each of the last four weeks | The fastest-growing sites and OneDrives. |
 | Subscribed licences | The SharePoint entitlement and OneDrive storage per user. |
 | Organisation | The tenant name in the header. |
 | Site details and the site directory | Site names and links (see [Site names](site-names.md)). |

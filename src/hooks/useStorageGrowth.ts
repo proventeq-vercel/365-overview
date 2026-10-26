@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useDataSource } from '../data/useDataSource'
-import { growthBaselineDate } from '../lib/growthWindow'
-import { buildStorageGrowth, growthLeaders } from '../model/storageGrowth'
+import { growthWindowDates } from '../lib/growthWindow'
+import { buildStorageGrowth, earliestRows, growthLeaders } from '../model/storageGrowth'
 import { unresolvedSiteIds, withSiteDirectory } from '../reports/siteDirectory'
 import type { StorageOverview } from '../types/storage'
 
@@ -14,12 +14,14 @@ export function useStorageGrowth(overview: StorageOverview | undefined) {
     enabled: overview !== undefined,
     queryFn: async () => {
       const { reportRefreshDate, sharePoint, oneDrive, caveats } = overview!
-      const baselineDate = growthBaselineDate(reportRefreshDate, new Date())
-      const [baselineSites, baselineDrives] = await Promise.all([
-        ds.getSitesOn(baselineDate),
-        ds.getDrivesOn(baselineDate),
-      ])
-      const baseline = [...baselineSites, ...baselineDrives]
+      const dates = growthWindowDates(reportRefreshDate, new Date())
+      const daily = await Promise.all(
+        dates.map(async (date) => {
+          const [sites, drives] = await Promise.all([ds.getSitesOn(date), ds.getDrivesOn(date)])
+          return [...sites, ...drives]
+        }),
+      )
+      const baseline = earliestRows(daily)
       const current = [...sharePoint.sites, ...oneDrive.drives]
       const unnamed =
         caveats.nameMask === null
@@ -29,7 +31,7 @@ export function useStorageGrowth(overview: StorageOverview | undefined) {
       return buildStorageGrowth({
         current: withSiteDirectory(current, names),
         baseline,
-        baselineDate,
+        baselineDate: dates[0],
         reportRefreshDate,
       })
     },

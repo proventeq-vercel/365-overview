@@ -73,7 +73,7 @@ describe('OffendersSection', () => {
     expect(screen.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Storage added between 2026-08-02 and 2026-08-30 (28 days), from Microsoft's usage reports for both days",
+        "Storage added between 2026-08-02 and 2026-08-30 (28 days), counted from the first day in that window each site or OneDrive was active",
       ),
     ).toBeInTheDocument()
     expect(screen.queryByText(/biggest sites & onedrives/i)).not.toBeInTheDocument()

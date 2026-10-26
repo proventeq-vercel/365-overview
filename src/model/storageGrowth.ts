@@ -11,6 +11,16 @@ export interface GrowthLeader {
 
 const rowKey = (row: StorageRow) => `${row.pool}:${row.id.toLowerCase()}`
 
+export function earliestRows(days: StorageRow[][]): StorageRow[] {
+  const first = new Map<string, StorageRow>()
+  for (const rows of days) {
+    for (const row of rows) {
+      if (!first.has(rowKey(row))) first.set(rowKey(row), row)
+    }
+  }
+  return [...first.values()]
+}
+
 export function growthLeaders(
   current: StorageRow[],
   baseline: StorageRow[],
@@ -19,7 +29,10 @@ export function growthLeaders(
   const before = new Map(baseline.map((row) => [rowKey(row), row.storageUsedBytes]))
   return current
     .filter((row) => !row.isDeleted)
-    .map((row) => ({ row, growthBytes: row.storageUsedBytes - (before.get(rowKey(row)) ?? 0) }))
+    .flatMap((row) => {
+      const earlier = before.get(rowKey(row))
+      return earlier === undefined ? [] : [{ row, growthBytes: row.storageUsedBytes - earlier }]
+    })
     .filter((leader) => leader.growthBytes > 0)
     .sort((a, b) => b.growthBytes - a.growthBytes)
     .slice(0, limit)

@@ -11,17 +11,21 @@ order: 40
 The ten sites and OneDrives together that added the most storage over about the last four weeks,
 ranked by storage added. It shows who is driving growth, which the size alone does not.
 
-- The report reads Microsoft's site and OneDrive usage reports twice: for the report date, and
-  for the day four weeks earlier. Microsoft keeps those daily reports for 30 days only, so when
-  four weeks back is older than that, the earlier day is the oldest one Microsoft still has. The
-  description under the title gives both dates and the number of days.
-- **Storage added** is the size on the report date less the size on the earlier day. A site or
-  OneDrive that did not exist on the earlier day counts from nothing.
-- Sites and OneDrives that shrank, stayed the same or were deleted are left out. If nothing grew,
-  the panel says so instead of drawing an empty chart.
+- Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
+  only the sites and OneDrives that had activity on that day, with their size at the end of it.
+  The report reads every day Microsoft still offers, which is the last 28 days counting today, up
+  to the report date. The description under the title gives the first and last day and the
+  number of days.
+- **Storage added** is the size on the report date less the size on the first day in that window
+  the site or OneDrive was active. Storage added on that first day itself is not counted, so a
+  site that received everything in one day, or was created inside the window, can show less
+  growth than it had.
+- A site or OneDrive with no activity in the window did not grow and is left out. So are those
+  that shrank, stayed the same or were deleted. If nothing grew, the panel says so instead of
+  drawing an empty chart.
 - The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
-  does not return the earlier day's report, the panel says growth is unavailable. It never shows
-  zero growth in its place.
+  does not return the daily reports, the panel says growth is unavailable. It never shows zero
+  growth in its place.
 
 ## Largest sites and OneDrives
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { StorageRow } from '@/types/storage'
-import { buildStorageGrowth, growthLeaders } from './storageGrowth'
+import { buildStorageGrowth, earliestRows, growthLeaders } from './storageGrowth'
 
 const row = (pool: StorageRow['pool'], id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool,
@@ -26,8 +26,11 @@ describe('growthLeaders', () => {
     ])
   })
 
-  it('counts a site created inside the window as growth from nothing', () => {
-    expect(growthLeaders([row('SharePoint', 'new', 40)], [])[0].growthBytes).toBe(40)
+  it('leaves out a row with no earlier size, since the dated report lists only the rows active that day', () => {
+    const current = [row('SharePoint', 'measured', 60), row('SharePoint', 'unmeasured', 900)]
+    expect(growthLeaders(current, [row('SharePoint', 'measured', 20)]).map(({ row: leader }) => leader.id)).toEqual([
+      'measured',
+    ])
   })
 
   it('leaves out shrinking, unchanged and deleted rows', () => {
@@ -51,7 +54,23 @@ describe('growthLeaders', () => {
 
   it('keeps the ten fastest growers', () => {
     const current = Array.from({ length: 14 }, (_, i) => row('SharePoint', `s${i}`, 100 + i))
-    expect(growthLeaders(current, [])).toHaveLength(10)
+    const baseline = current.map((grown) => ({ ...grown, storageUsedBytes: 1 }))
+    expect(growthLeaders(current, baseline)).toHaveLength(10)
+  })
+})
+
+describe('earliestRows', () => {
+  it('keeps each row as it was on the first day it appears', () => {
+    const days = [
+      [row('SharePoint', 'a', 10)],
+      [row('SharePoint', 'A', 30), row('OneDrive', 'a', 5)],
+      [row('OneDrive', 'a', 9), row('SharePoint', 'b', 70)],
+    ]
+    expect(earliestRows(days).map((first) => [first.pool, first.id, first.storageUsedBytes])).toEqual([
+      ['SharePoint', 'a', 10],
+      ['OneDrive', 'a', 5],
+      ['SharePoint', 'b', 70],
+    ])
   })
 })
 

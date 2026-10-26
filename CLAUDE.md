@@ -59,7 +59,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `onedrive-over-licence`, `nothing-to-clean`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getSitesOn(date)` / `getDrivesOn(date)`: the two detail reports for one
-  earlier day, `(date=YYYY-MM-DD)`, which Microsoft keeps for 30 days).
+  earlier day, `(date=YYYY-MM-DD)`. That form lists ONLY the rows active on
+  that day, with their size that day: it is not a snapshot. Graph accepts it
+  for today − 27 days at the oldest (today − 28 answers `400 Only support data
+  for the past 28 days`, though Microsoft Learn says 30)).
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
   The usage report returns a **blank `siteUrl` for every site** (Microsoft-side
@@ -105,14 +108,18 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/hooks/useStorageOverview.ts` — fetches the inputs once under
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   The ONLY data entry point for the page — except growth:
-  `src/hooks/useStorageGrowth.ts` reads the detail reports for the day
-  `lib/growthWindow.growthBaselineDate` picks (28 days before the report date,
-  clamped to the 30 days Microsoft keeps) under `['storageGrowth', date, nameMask]`,
+  `src/hooks/useStorageGrowth.ts` reads the detail reports for every day
+  `lib/growthWindow.growthWindowDates` lists (the oldest day Graph accepts up
+  to the report date, ~26 days × 2 calls, in parallel) and takes each row's
+  earliest appearance as its baseline (`model/storageGrowth.earliestRows`)
+  under `['storageGrowth', date, nameMask]`,
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
   skeleton while pending and an "unavailable" panel on error, never zero. A row
-  absent on the earlier day counts from 0; shrinking and deleted rows are out.
+  with no dated appearance had no activity, so it is left out (never counted
+  from 0, which would rank the biggest sites as the fastest growers); shrinking
+  and deleted rows are out.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),
