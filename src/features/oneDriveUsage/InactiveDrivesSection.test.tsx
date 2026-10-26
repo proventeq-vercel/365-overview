@@ -76,7 +76,7 @@ describe('InactiveDrivesSection', () => {
 
   it('colours the deleted card like the Deleted but still billing card above it, and the uncharged inactive one apart', () => {
     render(<InactiveDrivesSection overview={withAttention({})} />)
-    expect((card('Inactive OneDrives') as HTMLElement).style.borderLeftColor).not.toBe((card('Owner unlicensed') as HTMLElement).style.borderLeftColor)
+    expect((card('Inactive OneDrives') as HTMLElement).style.borderLeftColor).toBe(rgb(P365.blue))
     const deleted = { ...base, oneDrive: { ...base.oneDrive, deletedButBilling: { bytes: 5, count: 1 } } }
     cleanup()
     render(<InactiveDrivesSection overview={deleted} />)
