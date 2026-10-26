@@ -1,6 +1,7 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type {
   CleanUpUnavailable,
+  OneDrivePool,
   OverEntitlement,
   Slice,
   StoragePool,
@@ -112,6 +113,24 @@ function drivesOverEntitlement(liveDrives: StorageRow[], perUserBytes: number): 
     drives: over,
     count: over.length,
     excessBytes: over.reduce((total, drive) => total + drive.overEntitlementBytes, 0),
+  }
+}
+
+function oneDrivePool(liveDrives: StorageRow[], usedBytes: number): OneDrivePool {
+  const allocations = liveDrives.map((drive) => drive.allocatedBytes ?? 0)
+  if (allocations.length === 0 || allocations.some((bytes) => bytes <= 0)) {
+    return { usedBytes, allocation: null }
+  }
+  const allocatedBytes = allocations.reduce((total, bytes) => total + bytes, 0)
+  const usedShare = Math.min(1, usedBytes / allocatedBytes)
+  return {
+    usedBytes,
+    allocation: {
+      allocatedBytes,
+      freeBytes: Math.max(0, allocatedBytes - usedBytes),
+      usedShare,
+      freeShare: 1 - usedShare,
+    },
   }
 }
 
@@ -249,22 +268,21 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         oneDrivePerUserBytes === null
           ? null
           : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
+      pool: oneDrivePool(liveDrives, Math.max(0, oneDriveUsed - deletedDrives.bytes)),
     },
 
     breakdown: storageBreakdown({
       sharePointUsedBytes: sharePointUsed,
-      oneDriveUsedBytes: oneDriveUsed,
       teamsBytes: activeTeamsBytes,
       inactiveBytes: archivableBytes,
       deletedSiteBytes: deletedSites.bytes,
-      deletedDriveBytes: deletedDrives.bytes,
-      deletedCount: deletedSites.count + deletedDrives.count,
+      deletedCount: deletedSites.count,
       freeBytes: remainingBytes,
     }),
 
     offenders: {
       rows,
-      totalUsedBytes: sharePointUsed + oneDriveUsed,
+      poolUsedBytes: { SharePoint: sharePointUsed, OneDrive: oneDriveUsed },
       topSites: topByPool(rows, 'SharePoint'),
       topDrives: topByPool(rows, 'OneDrive'),
       retained: retainedTotal(rows),

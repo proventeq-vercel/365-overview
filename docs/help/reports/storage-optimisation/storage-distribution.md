@@ -1,7 +1,7 @@
 ---
 title: Current storage distribution
 nav: Storage distribution
-description: Where storage sits today — every workload on one line against the SharePoint entitlement, and how SharePoint splits by site template.
+description: Where storage sits today — every SharePoint workload on one line against the SharePoint entitlement, OneDrive as its own pool, and how SharePoint splits by site template.
 section: storage-optimisation
 feature: optimization.storage.report.overview
 order: 10
@@ -9,23 +9,27 @@ order: 10
 
 ## Storage usage
 
-One line shows where all storage sits, split into seven parts, and ends in what is left of your
-SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to see
-its size, its share of the line and what it counts.
+One line shows where SharePoint storage sits, split into six parts, and ends in what is left of
+your SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to
+see its size, its share of the line and what it counts.
 
-Above the line, the percentage is SharePoint storage against the SharePoint entitlement. OneDrive
-is not part of that percentage, because each OneDrive has its own allowance. The percentage is
+OneDrive is not on this line. Microsoft's
+[SharePoint limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/sharepoint-online-service-description/sharepoint-online-limits)
+give the organisation's total storage as "not including the OneDrive created for each licensed
+user": each OneDrive has its own allowance from the user's licence. OneDrive is shown on its own
+under [OneDrive storage](#onedrive-storage).
+
+Above the line, the percentage is SharePoint storage against the SharePoint entitlement. The percentage is
 green below 85%, orange from 85% and red from 95%. A tenant already over its entitlement also
 shows how far over it is, in red.
 
 | Part | Colour | What it counts |
 | --- | --- | --- |
 | SharePoint | SharePoint teal | Live SharePoint sites with activity inside the inactivity window. It is Microsoft's SharePoint storage total less the Teams, Inactive and deleted-site parts, so the SharePoint parts add up to that total. |
-| OneDrive | OneDrive blue | Live OneDrives: Microsoft's OneDrive storage total less deleted OneDrives. It does not use the SharePoint entitlement. |
 | Teams | Teams purple | Live sites with activity inside the inactivity window, created from a Teams channel or group template. |
-| Deleted | Red | Deleted sites and OneDrives that Microsoft still holds, and bills for, until their retention period ends. [Main offenders](main-offenders.md#deleted-but-still-billing) lists them. |
+| Deleted | Red | Deleted sites that Microsoft still holds, and counts against the entitlement, until their retention period ends. Deleted OneDrives are not part of the SharePoint entitlement, so they are not on this line. [Main offenders](main-offenders.md#deleted-but-still-billing) lists both. |
 | Inactive | Amber | Live sites, Teams sites included, with no activity for the [inactivity window](../../reference/settings.md#archive-sites-inactive-for). It is the same storage as the [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card. |
-| Versions | Striped grey, **Not measured** | Version history. Microsoft's usage reports count it inside each site's and OneDrive's storage and do not split it out, so it has no size here. Proventeq 365 measures it library by library. |
+| Versions | Striped grey, **Not measured** | Version history. Microsoft's usage reports count it inside each site's storage and do not split it out, so it has no size here. Proventeq 365 measures it library by library. |
 | Free | Light grey | The SharePoint entitlement less SharePoint storage, never below zero. **Unknown** when the entitlement is unknown. |
 
 - The parts never overlap: an inactive Teams site counts once, under **Inactive**.
@@ -36,6 +40,20 @@ shows how far over it is, in red.
   entitlement under **Options (⋯) → Report settings**.
 - If the entitlement was [estimated from licences](../../reference/calculations.md#sharepoint-entitlement),
   a note under the line says so.
+
+## OneDrive storage
+
+OneDrive is a separate pool, so it gets its own line under the SharePoint one. The percentage is
+the storage in live OneDrives against the storage Microsoft allocates to them: the sum of every
+live OneDrive's own limit, as the OneDrive usage report gives it.
+
+| Part | Colour | What it counts |
+| --- | --- | --- |
+| Used | OneDrive blue | Microsoft's OneDrive storage total less deleted OneDrives. Deleted OneDrives are listed under [Deleted but still billing](main-offenders.md#deleted-but-still-billing). |
+| Unused allocation | Light grey | The allocation less the storage used, never below zero. |
+
+- If Microsoft does not report an allocation for every live OneDrive, the total allocation is
+  unknown: the panel gives the storage used and says so, with no line.
 
 ## Storage by site template
 

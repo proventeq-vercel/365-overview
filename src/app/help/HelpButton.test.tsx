@@ -19,7 +19,7 @@ describe('HelpButton', () => {
     await userEvent.click(screen.getByRole('button', { name: 'About Current storage distribution' }))
     const dialog = await screen.findByRole('dialog', { name: 'Current storage distribution' })
     expect(dialog).toHaveTextContent(
-      'Where storage sits today — every workload on one line against the SharePoint entitlement, and how SharePoint splits by site template.',
+      'Where storage sits today — every SharePoint workload on one line against the SharePoint entitlement, OneDrive as its own pool, and how SharePoint splits by site template.',
     )
     const seeMore = within(dialog).getByRole('link', { name: 'See more' })
     expect(seeMore).toHaveAttribute('href', '/help/reports/storage-optimisation/storage-distribution')

@@ -57,7 +57,7 @@ const withSites = {
   ...base,
   offenders: {
     rows,
-    totalUsedBytes: 1500,
+    poolUsedBytes: { SharePoint: 1000, OneDrive: 500 },
     topSites: [
       { name: 'beta', value: 700 },
       { name: 'alpha', value: 300 },

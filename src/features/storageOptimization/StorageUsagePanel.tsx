@@ -7,7 +7,6 @@ import { HEALTH_COLOR, P365, WORKLOAD_COLOR } from '@/design/theme'
 
 const SEGMENT_COLOR: Record<StorageSegmentKey, string> = {
   sharePoint: WORKLOAD_COLOR.sharePoint,
-  oneDrive: WORKLOAD_COLOR.oneDrive,
   teams: WORKLOAD_COLOR.teams,
   deleted: P365.red,
   inactive: P365.yellow,

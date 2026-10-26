@@ -5,6 +5,7 @@ import type { Slice, StorageOverview } from '@/types/storage'
 import { MonoDoughnut } from '@/design/charts'
 import { Legend, PanelDescription, PanelLabel, Panel, Section } from '@/design/primitives'
 import { monoColor } from '@/design/theme'
+import { OneDrivePoolPanel } from './OneDrivePoolPanel'
 import { StorageUsagePanel } from './StorageUsagePanel'
 
 interface Props {
@@ -28,6 +29,7 @@ export function DistributionSection({ overview, delay }: Props) {
       help={<HelpButton topic="storageDistribution" />}
     >
       <StorageUsagePanel overview={overview} />
+      <OneDrivePoolPanel overview={overview} />
 
       <Panel>
         <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>

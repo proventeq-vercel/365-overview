@@ -43,16 +43,15 @@ describe('DistributionSection', () => {
     for (const chart of charts) expect(chart).toHaveAccessibleName()
   })
 
-  it('lists the seven parts of the usage line in order, each with its size and share', () => {
+  it('lists the six SharePoint parts of the usage line in order, each with its size and share', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(parts().map((button) => button.textContent)).toEqual([
-      'SharePoint200 GB17.9% of the line',
-      'OneDrive120 GB10.7% of the line',
-      'Teams170 GB15.2% of the line',
-      'Deleted10 GB0.9% of the line',
-      'Inactive120 GB10.7% of the line',
+      'SharePoint200 GB20.0% of the line',
+      'Teams170 GB17.0% of the line',
+      'Deleted10 GB1.0% of the line',
+      'Inactive120 GB12.0% of the line',
       'VersionsNot measured',
-      'Free500 GB44.6% of the line',
+      'Free500 GB50.0% of the line',
     ])
   })
 
@@ -60,7 +59,7 @@ describe('DistributionSection', () => {
     const { container } = render(<DistributionSection overview={withTemplates} />)
     const fill = (id: string) => (container.querySelector(`[data-segment="${id}"]`) as HTMLElement).style.background
     expect(fill('sharePoint')).toBe(rgb('#038387'))
-    expect(fill('oneDrive')).toBe(rgb('#0078d4'))
+    expect(fill('oneDriveUsed')).toBe(rgb('#0078d4'))
     expect(fill('teams')).toBe(rgb('#5b5fc7'))
   })
 
@@ -69,13 +68,14 @@ describe('DistributionSection', () => {
     const drawn = [...container.querySelectorAll<HTMLElement>('[data-segment]')]
     expect(drawn.map((segment) => segment.dataset.segment)).toEqual([
       'sharePoint',
-      'oneDrive',
       'teams',
       'deleted',
       'inactive',
       'free',
+      'oneDriveUsed',
+      'oneDriveFree',
     ])
-    expect(Number(drawn[0].style.flexGrow)).toBeCloseTo(200 / 1120, 6)
+    expect(Number(drawn[0].style.flexGrow)).toBeCloseTo(200 / 1000, 6)
   })
 
   it('heads the line with the SharePoint pool alone against its entitlement', () => {
@@ -86,11 +86,39 @@ describe('DistributionSection', () => {
 
   it('explains a part in a popover when it is selected', async () => {
     render(<DistributionSection overview={withTemplates} />)
-    await userEvent.click(part('OneDrive'))
-    const popover = await screen.findByRole('dialog', { name: 'OneDrive' })
-    expect(popover).toHaveTextContent('120 GB')
-    expect(popover).toHaveTextContent('10.7% of the line')
-    expect(popover).toHaveTextContent('does not use the SharePoint entitlement')
+    await userEvent.click(part('Teams'))
+    const popover = await screen.findByRole('dialog', { name: 'Teams' })
+    expect(popover).toHaveTextContent('170 GB')
+    expect(popover).toHaveTextContent('17.0% of the line')
+    expect(popover).toHaveTextContent('Counts against your SharePoint entitlement')
+  })
+
+  it('keeps OneDrive off the SharePoint line, since OneDrive storage is not in the SharePoint quota', () => {
+    render(<DistributionSection overview={withTemplates} />)
+    expect(parts().map((button) => button.textContent)).not.toContainEqual(expect.stringContaining('OneDrive'))
+  })
+
+  it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
+    render(<DistributionSection overview={withTemplates} />)
+    expect(screen.getByRole('heading', { name: 'OneDrive storage' })).toBeInTheDocument()
+    expect(screen.getByText('of the 40 TB allocated to 40 OneDrives used (120 GB)')).toBeInTheDocument()
+    const pool = within(screen.getByRole('list', { name: 'OneDrive storage' })).getAllByRole('button')
+    expect(pool.map((button) => button.textContent)).toEqual([
+      'Used120 GB0.3% of the allocation',
+      'Unused allocation39.9 TB99.7% of the allocation',
+    ])
+    await userEvent.click(pool[0])
+    expect(await screen.findByRole('dialog', { name: 'Used' })).toHaveTextContent('Storage in live OneDrives')
+  })
+
+  it('says the OneDrive allocation is unknown, with no bar, when a drive reports none', () => {
+    render(
+      <DistributionSection
+        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 120 * GB, allocation: null } } }}
+      />,
+    )
+    expect(screen.getByText(/120 GB of OneDrive storage used\. Microsoft did not report an allocation/)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'OneDrive storage' })).not.toBeInTheDocument()
   })
 
   it('says versions are not measured and why, rather than showing a size', async () => {
@@ -102,11 +130,11 @@ describe('DistributionSection', () => {
     expect(popover).toHaveTextContent('without splitting it out')
   })
 
-  it('counts the deleted sites and OneDrives still held', async () => {
+  it('counts the deleted sites still held', async () => {
     render(<DistributionSection overview={withTemplates} />)
     await userEvent.click(part('Deleted'))
     expect(await screen.findByRole('dialog', { name: 'Deleted' })).toHaveTextContent(
-      '4 deleted sites and OneDrives are still held',
+      '4 deleted sites are still held',
     )
   })
 

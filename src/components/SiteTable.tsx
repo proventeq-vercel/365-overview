@@ -5,7 +5,7 @@ import { rowName } from '@/lib/rowName'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
 import type { SiteDirectory } from '@/reports/siteDirectory'
-import type { NameMask, StorageRow } from '@/types/storage'
+import type { NameMask, StoragePool, StorageRow } from '@/types/storage'
 import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
@@ -31,7 +31,7 @@ export type ColumnKey =
 
 interface SiteTableProps {
   rows: StorageRow[]
-  totalUsedBytes: number
+  poolUsedBytes: Partial<Record<StoragePool, number>>
   columns: ColumnKey[]
   label?: string
   nameHeader?: string
@@ -128,7 +128,7 @@ const NO_KNOWN_SITES: SiteDirectory = new Map()
 
 export function SiteTable({
   rows,
-  totalUsedBytes,
+  poolUsedBytes,
   columns,
   label,
   nameHeader,
@@ -284,7 +284,8 @@ export function SiteTable({
           </span>
         )
       case 'share': {
-        const share = totalUsedBytes ? row.storageUsedBytes / totalUsedBytes : 0
+        const poolBytes = poolUsedBytes[row.pool]
+        const share = poolBytes ? row.storageUsedBytes / poolBytes : 0
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
             <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
