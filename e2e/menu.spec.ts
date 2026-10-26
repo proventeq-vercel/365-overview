@@ -65,7 +65,11 @@ test('the OneDrive report is reachable from the menu and renders its own cards a
   await page.getByRole('link', { name: 'OneDrive Usage' }).click()
   await expect(page).toHaveURL(/\/onedrive-usage$/)
   await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible()
-  await expect(page.locator('[data-slot="stat-card"]')).toHaveCount(5)
+  await expect(page.locator('[data-slot="stat-card"]')).toHaveCount(8)
+  await expect(page.getByRole('heading', { name: 'Inactive, deleted and unlicensed OneDrives' })).toBeVisible()
+  await expect(page.getByText('Owner unlicensed').locator('xpath=ancestor::*[@data-slot="stat-card"][1]')).toContainText(
+    'belong to owners without a OneDrive licence',
+  )
   await expect(page.getByRole('table', { name: 'OneDrives', exact: true })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'Drive' })).toBeVisible()
   await expect(page.getByRole('banner')).toContainText('Contoso Ltd')
