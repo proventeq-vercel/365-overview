@@ -19,7 +19,9 @@ function GrowthChart({ growth, nameMask }: { growth: StorageGrowth; nameMask: Na
       <PanelDescription>
         {t('storageOptimisation.offenders.fastestSubtitle', { ...window, days: growth.windowDays })}
       </PanelDescription>
-      {growth.topGrowers.length === 0 ? (
+      {growth.measuredRows === 0 ? (
+        <EmptyBlock>{t('storageOptimisation.offenders.fastestNotMeasured', window)}</EmptyBlock>
+      ) : growth.topGrowers.length === 0 ? (
         <EmptyBlock>{t('storageOptimisation.offenders.fastestNone', window)}</EmptyBlock>
       ) : (
         <MonoBarChart

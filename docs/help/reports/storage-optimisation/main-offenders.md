@@ -11,17 +11,25 @@ order: 40
 The ten sites and OneDrives together that added the most storage over about the last four weeks,
 ranked by storage added. It shows who is driving growth, which the size alone does not.
 
-- The report reads Microsoft's site and OneDrive usage reports twice: for the report date, and
-  for the day four weeks earlier. Microsoft keeps those daily reports for 30 days only, so when
-  four weeks back is older than that, the earlier day is the oldest one Microsoft still has. The
-  description under the title gives both dates and the number of days.
-- **Storage added** is the size on the report date less the size on the earlier day. A site or
-  OneDrive that did not exist on the earlier day counts from nothing.
-- Sites and OneDrives that shrank, stayed the same or were deleted are left out. If nothing grew,
-  the panel says so instead of drawing an empty chart.
+- Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
+  only the sites and OneDrives that had activity on that day, with their size on that day.
+  Microsoft offers those daily reports for the last 28 days, counting today. The report reads
+  every day from 26 days ago, keeping a day in hand, up to the report date. The description
+  under the title gives the first and last day and the number of days.
+- **Storage added** is the size on the report date less the size on the first day in that window
+  the site or OneDrive was active. Storage added on that first day itself is not counted, so a
+  site that received everything in one day, or was created inside the window, can show less
+  growth than it had. Each one is measured from its own first active day, so two rows can cover
+  different spans of the window.
+- A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
+  are those that shrank, stayed the same or were deleted. If none of the measured ones grew, the
+  panel says so instead of drawing an empty chart. If no site or OneDrive in the report has a daily
+  figure, it says there was nothing to measure, which is not the same as no growth.
 - The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
-  does not return the earlier day's report, the panel says growth is unavailable. It never shows
-  zero growth in its place.
+  does not return every daily report, or the report date is not at least two days inside the days
+  Microsoft keeps, the panel says growth is unavailable. It never shows zero growth in its place.
+- Microsoft limits how often its usage reports can be read, so once growth has loaded for a report
+  date, **Refresh data** does not read it again. If it failed, **Refresh data** tries again once the report itself reloads.
 
 ## Largest sites and OneDrives
 

@@ -24,6 +24,7 @@ import type { RawSku } from '../reports/licensing'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
 import { hideReportRowNames } from '../lib/hiddenNames'
+import { growthWindowDates } from '../lib/growthWindow'
 import type { DataSource } from './fixtures'
 
 interface JsonReport<T> {
@@ -44,8 +45,10 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
+const LARGEST_REPORT_PAGE = 10_000
+
 const reportUrlOn = (fn: string, date: string) =>
-  `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json`
+  `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json&$top=${LARGEST_REPORT_PAGE}`
 
 const SETTLED_STATUSES = new Set([200, 403, 404])
 
@@ -110,6 +113,8 @@ export function createLiveDataSource(
     async getSites() {
       return parseSharePointSites(await rawSites())
     },
+
+    getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, new Date()),
 
     async getSitesOn(date) {
       const rows = await graph.getAllPages<RawSiteRow>(reportUrlOn('getSharePointSiteUsageDetail', date))
