@@ -6,7 +6,7 @@ import type { StorageOverview, StorageRow } from '../types/storage'
 
 export const STORAGE_GROWTH_KEY = 'storageGrowth'
 
-export const DAILY_REPORTS_AT_ONCE = 4
+const DAILY_REPORTS_AT_ONCE = 4
 
 export function useStorageGrowth(overview: StorageOverview | undefined) {
   const ds = useDataSource()

@@ -100,7 +100,7 @@ describe('OffendersSection', () => {
 
   it('says nothing could be measured, not that nothing grew, when no daily report lists any activity', () => {
     renderOffenders(withSites, { data: { ...growthData, measuredRows: 0, topGrowers: [] }, isError: false })
-    expect(screen.getByText(/list no site or OneDrive with activity, so there is nothing to measure growth from/)).toBeInTheDocument()
+    expect(screen.getByText(/has a figure in Microsoft's daily usage reports between 2026-08-02 and 2026-08-30, so there is nothing to measure growth from/)).toBeInTheDocument()
     expect(screen.queryByText(/active between 2026-08-02 and 2026-08-30 grew/)).not.toBeInTheDocument()
   })
 

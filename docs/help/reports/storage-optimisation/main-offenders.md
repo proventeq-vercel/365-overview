@@ -28,8 +28,8 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
   does not return every daily report, or the report date is older than the days Microsoft keeps,
   the panel says growth is unavailable. It never shows zero growth in its place.
-- Microsoft limits how often its usage reports can be read, so growth is read once per report
-  date: **Refresh data** does not read it again.
+- Microsoft limits how often its usage reports can be read, so once growth has loaded for a report
+  date, **Refresh data** does not read it again. If it failed, **Refresh data** tries again.
 
 ## Largest sites and OneDrives
 

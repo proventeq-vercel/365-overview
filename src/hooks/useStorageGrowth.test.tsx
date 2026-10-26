@@ -55,7 +55,7 @@ function renderGrowth(
     </QueryClientProvider>
   )
   const overview = overviewOn(reportRefreshDate)
-  return renderHook(() => ({ growth: useStorageGrowth(overview), refresh: useRefreshReport().refresh }), { wrapper })
+  return renderHook(() => ({ growth: useStorageGrowth(overview), ...useRefreshReport() }), { wrapper })
 }
 
 describe('useStorageGrowth', () => {
@@ -99,7 +99,7 @@ describe('useStorageGrowth', () => {
     expect(getSitesOn).not.toHaveBeenCalled()
   })
 
-  it('keeps at most four days in flight, so a load never bursts the report quota', async () => {
+  it('keeps at most four days in flight, so a load does not burst into Graph throttling', async () => {
     let inFlight = 0
     let peak = 0
     const getSitesOn = vi.fn(async (date: string) => {
@@ -131,5 +131,30 @@ describe('useStorageGrowth', () => {
     const second = renderGrowth({ getSitesOn }, '2026-10-24', client)
     expect(second.result.current.growth.data?.measuredRows).toBe(2)
     expect(getSitesOn).toHaveBeenCalledTimes(25)
+  })
+
+  it('reads a failed growth again on Refresh data, so a passing error does not stick for the session', async () => {
+    let failing = true
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (failing && date === '2026-10-10') throw new Error('503 Service Unavailable')
+      return sitesActiveOn[date] ?? []
+    })
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth.isError).toBe(true))
+    failing = false
+    await act(() => result.current.refresh())
+    await waitFor(() => expect(result.current.growth.data?.measuredRows).toBe(2))
+  })
+
+  it('leaves Refresh data free while only the growth reads are running', async () => {
+    const { result } = renderGrowth({ getSitesOn: () => new Promise<StorageRow[]>(() => {}) })
+    await waitFor(() => expect(result.current.growth.fetchStatus).toBe('fetching'))
+    expect(result.current.isRefreshing).toBe(false)
+  })
+
+  it('ends the window today, and says so, when the report date is ahead of the clock', async () => {
+    const { result } = renderGrowth({}, '2026-10-28')
+    await waitFor(() => expect(result.current.growth.data).toBeDefined())
+    expect(result.current.growth.data).toMatchObject({ reportRefreshDate: '2026-10-26', windowDays: 26 })
   })
 })

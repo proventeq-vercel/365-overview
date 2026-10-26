@@ -66,7 +66,7 @@ and the **Inactive** part of the
 
 | Option | What it does |
 | --- | --- |
-| Refresh data | Reloads every usage report from Microsoft Graph, except the daily reports behind the fastest-growing panel, which are read once per report date. It is disabled while a refresh runs. |
+| Refresh data | Reloads every usage report from Microsoft Graph, except the daily reports behind the fastest-growing panel once they have loaded for the report date (a failed read is tried again). It is disabled while a refresh runs. |
 | Report settings | Opens these settings. |
 | Help | Opens this help in a new tab. |
 | Switch account | Signs in with a different Microsoft account. |

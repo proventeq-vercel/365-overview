@@ -31,6 +31,21 @@ async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0],
 }
 
 describe('mock data source', () => {
+  it('lists only some rows each day, smaller on earlier days, like Graph’s daily reports', async () => {
+    const ds = createMockDataSource()
+    const [all, early, late] = await Promise.all([ds.getSites(), ds.getSitesOn('2026-08-10'), ds.getSitesOn('2026-08-25')])
+    expect(early.length).toBeLessThan(all.length / 3)
+    const fastGrower = all[0]
+    const sizeOn = (rows: typeof all) => rows.find((row) => row.id === fastGrower.id)!.storageUsedBytes
+    expect(sizeOn(early)).toBeLessThan(sizeOn(late))
+    expect(sizeOn(late)).toBeLessThan(fastGrower.storageUsedBytes)
+  })
+
+  it('keeps a window of daily reports by its own frozen clock, whatever the real date', () => {
+    const dates = createMockDataSource().getDailyReportDates('2026-08-30')
+    expect([dates[0], dates.at(-1)]).toEqual(['2026-08-06', '2026-08-30'])
+  })
+
   it('generates a large estate so virtualization is exercised', async () => {
     const sites = await createMockDataSource().getSites()
     expect(sites.length).toBeGreaterThan(2500)

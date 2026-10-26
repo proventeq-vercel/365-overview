@@ -250,12 +250,15 @@ const FAST_GROWER_EVERY = 23
 const FAST_GROWER_SHARE = 0.12
 const STEADY_GROWTH_STEP = 0.0025
 
+const DAYS_IN_MONTH = 31
+
 function activeEarlier(rows: StorageRow[], date: string): StorageRow[] {
   const day = Number(date.slice(8, 10))
+  const stillToGrow = 1 - day / DAYS_IN_MONTH
   return rows.flatMap((row, index) => {
     if (index % INACTIVE_IN_WINDOW_EVERY === 13 || (index + day) % ACTIVE_EVERY_DAYS !== 0) return []
     const grown = index % FAST_GROWER_EVERY === 0 ? FAST_GROWER_SHARE : (index % 10) * STEADY_GROWTH_STEP
-    return [{ ...row, storageUsedBytes: Math.round(row.storageUsedBytes * (1 - grown)) }]
+    return [{ ...row, storageUsedBytes: Math.round(row.storageUsedBytes * (1 - grown * stillToGrow)) }]
   })
 }
 

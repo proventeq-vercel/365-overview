@@ -45,8 +45,10 @@ const PERIOD = 'D180'
 const reportUrl = (fn: string) =>
   `${REPORTS_BASE}/${fn}(period='${PERIOD}')?$format=application/json`
 
+export const LARGEST_REPORT_PAGE = 10_000
+
 const reportUrlOn = (fn: string, date: string) =>
-  `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json`
+  `${REPORTS_BASE}/${fn}(date=${date})?$format=application/json&$top=${LARGEST_REPORT_PAGE}`
 
 const SETTLED_STATUSES = new Set([200, 403, 404])
 
@@ -112,6 +114,8 @@ export function createLiveDataSource(
       return parseSharePointSites(await rawSites())
     },
 
+    getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, new Date()),
+
     async getSitesOn(date) {
       const rows = await graph.getAllPages<RawSiteRow>(reportUrlOn('getSharePointSiteUsageDetail', date))
       return parseSharePointSites(concealRows(rows))
@@ -147,8 +151,6 @@ export function createLiveDataSource(
       )
       return parseOneDriveAccounts(concealRows(rows))
     },
-
-    getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, new Date()),
 
     async getDrivesOn(date) {
       const rows = await graph.getAllPages<RawDriveRow>(reportUrlOn('getOneDriveUsageAccountDetail', date))

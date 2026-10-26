@@ -114,12 +114,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   The ONLY data entry point for the page — except growth:
   `src/hooks/useStorageGrowth.ts` reads the detail reports for every day
   `DataSource.getDailyReportDates` lists (`lib/growthWindow`: today − 26 up to
-  the report date, ~25 days × 2 calls, four days at a time, folded as they
-  land) and takes each row's earliest appearance as its baseline
+  the report date, ~25 days × 2 calls with `$top=10000`, Graph's largest page,
+  so one request per day; four days at a time, folded as they land) and takes
+  each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
-  with `staleTime: Infinity`, `retry: false`, and Refresh data leaves it alone
-  (the daily reports change once a day; each load spends ~25 of the 100
-  report requests Graph allows per 10 minutes),
+  with `staleTime: Infinity`, `retry: false`; Refresh data re-reads it only if
+  it failed, and its busy state ignores it (the daily reports change once a
+  day; each load spends ~25 of the 100 report requests Graph allows per 10
+  minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
