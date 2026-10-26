@@ -5,6 +5,7 @@ import type * as EnvModule from '@/config/env'
 import { FeatureFlags } from '@/config/featureFlags'
 import type { StorageOverview } from '@/types/storage'
 import { base } from '@/features/storageOptimization/testFixtures'
+import { P365 } from '@/design/theme'
 import { InactiveDrivesSection } from './InactiveDrivesSection'
 
 vi.mock('@/config/env', async (importOriginal) => {
@@ -19,6 +20,11 @@ vi.mock('@/config/env', async (importOriginal) => {
 })
 
 afterEach(cleanup)
+
+function rgb(hex: string): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
+}
 
 const card = (label: string) => screen.getByText(label).closest('[data-slot="stat-card"]')!
 
@@ -66,5 +72,14 @@ describe('InactiveDrivesSection', () => {
     const bands = base.oneDrive.attention.inactive.bands.map((band) => ({ ...band, count: 0, bytes: 0 }))
     render(<InactiveDrivesSection overview={withAttention({ inactive: { count: 0, bytes: 0, bands } })} />)
     expect(screen.getByText('No live OneDrive has gone 3 years without activity.')).toBeInTheDocument()
+  })
+
+  it('colours the deleted card like the Deleted but still billing card above it, and the uncharged inactive one apart', () => {
+    render(<InactiveDrivesSection overview={withAttention({})} />)
+    expect((card('Inactive OneDrives') as HTMLElement).style.borderLeftColor).not.toBe((card('Owner unlicensed') as HTMLElement).style.borderLeftColor)
+    const deleted = { ...base, oneDrive: { ...base.oneDrive, deletedButBilling: { bytes: 5, count: 1 } } }
+    cleanup()
+    render(<InactiveDrivesSection overview={deleted} />)
+    expect((card('Deleted, under retention') as HTMLElement).style.borderLeftColor).toBe(rgb(P365.yellow))
   })
 })

@@ -52,7 +52,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
         <StatCard
           label={t('oneDrive.attention.inactive')}
           value={formatBytes(inactive.bytes)}
-          color={inactive.count > 0 ? P365.yellow : P365.grey400}
+          color={inactive.count > 0 ? P365.blue : P365.grey400}
           information={
             attention.unlicensed === null
               ? t('oneDrive.attention.inactiveHintUnknown', inactiveValues)
@@ -62,7 +62,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
         <StatCard
           label={t('oneDrive.attention.deleted')}
           value={formatBytes(deletedButBilling.bytes)}
-          color={deletedButBilling.count > 0 ? P365.orange : P365.grey400}
+          color={deletedButBilling.count > 0 ? P365.yellow : P365.grey400}
           information={t('oneDrive.attention.deletedHint', { count: deletedButBilling.count })}
         />
         <UnlicensedCard unlicensed={attention.unlicensed} />
