@@ -40,8 +40,8 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
   const twoYearsBefore = inactiveSince(reportRefreshDate, inactiveYears + 2, now)
 
   const live = drives.filter((drive) => !drive.isDeleted)
-  const listed = licences === null ? 0 : live.filter((drive) => licences.has(drive.id.toLowerCase())).length
-  const usableLicences = licences !== null && (live.length === 0 || listed > 0) ? licences : null
+  const anyListed = licences !== null && live.some((drive) => licences.has(drive.id.toLowerCase()))
+  const usableLicences = licences !== null && (live.length === 0 || anyListed) ? licences : null
 
   const inactive = emptyGroup()
   const unlicensed = { ...emptyGroup(), notListed: 0 }
