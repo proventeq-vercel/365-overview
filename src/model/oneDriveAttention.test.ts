@@ -58,17 +58,24 @@ describe('oneDriveAttention', () => {
   it('puts a live OneDrive whose owner has no OneDrive licence in the unlicensed group, never also in inactive', () => {
     const licences = new Map([...allLicensed, ['ancient@c.com', false], ['leaver@c.com', false]])
     const { inactive, unlicensed } = at(licences)
-    expect(unlicensed).toEqual({ count: 2, bytes: 70 * GB })
+    expect(unlicensed).toEqual({ count: 2, bytes: 70 * GB, notListed: 0 })
     expect([inactive.count, inactive.bytes]).toEqual([3, 31 * GB])
   })
 
   it('counts an owner the licence report does not list as unlicensed, since it lists licensed users only', () => {
     const licences = new Map([...allLicensed].filter(([id]) => id !== 'leaver@c.com'))
-    expect(at(licences).unlicensed).toEqual({ count: 1, bytes: 40 * GB })
+    expect(at(licences).unlicensed).toEqual({ count: 1, bytes: 40 * GB, notListed: 1 })
   })
 
   it('leaves the unlicensed group unknown, not empty, when the licence report could not be read', () => {
     expect(at(null).unlicensed).toBeNull()
+  })
+
+  it('leaves the unlicensed group unknown when fewer than half the owners match the licence report', () => {
+    const half = new Map([...allLicensed].slice(0, 2))
+    expect(at(half).unlicensed).toBeNull()
+    const most = new Map([...allLicensed].slice(0, 3))
+    expect(at(most).unlicensed?.count).toBe(3)
   })
 
   it('leaves the unlicensed group unknown, never all OneDrives, when no owner matches the licence report at all', () => {

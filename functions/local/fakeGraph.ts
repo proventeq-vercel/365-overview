@@ -101,7 +101,7 @@ const activeUserRow = (index: number) => ({
   userPrincipalName: `user${index}@contoso.local`,
   displayName: `User ${index}`,
   isDeleted: false,
-  hasOneDriveLicense: index % 40 !== 13,
+  hasOneDriveLicense: index % 40 !== 27,
 })
 
 const trendRows = (siteType: string, startBytes: number, dailyGrowth: number) =>
@@ -221,7 +221,7 @@ export async function startFakeGraph(options: FakeGraphOptions = {}): Promise<Fa
         return json(response, 200, pageOf(rows, skip, reportLink('getOneDriveUsageAccountDetail')))
       }
       if (path === "/beta/reports/getOffice365ActiveUserDetail(period='D180')") {
-        const rows = Array.from({ length: driveCount }, (_, index) => activeUserRow(index))
+        const rows = Array.from({ length: driveCount }, (_, index) => activeUserRow(index)).filter((_, index) => index % 40 !== 13)
         return json(response, 200, pageOf(rows, skip, reportLink('getOffice365ActiveUserDetail')))
       }
       if (dated) {

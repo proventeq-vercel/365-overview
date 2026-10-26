@@ -36,9 +36,11 @@ describe('mock data source', () => {
   it('lists some OneDrive owners without a licence, keyed the way the drives are', async () => {
     const ds = createMockDataSource()
     const [drives, licences] = await Promise.all([ds.getDrives(), ds.getOneDriveLicences()])
-    const unlicensed = drives.filter((drive) => licences?.get(drive.id.toLowerCase()) === false)
-    expect(unlicensed.length).toBeGreaterThan(0)
-    expect(unlicensed.length).toBeLessThan(drives.length / 10)
+    const listedWithout = drives.filter((drive) => licences?.get(drive.id.toLowerCase()) === false)
+    const notListed = drives.filter((drive) => !licences?.has(drive.id.toLowerCase()))
+    expect(listedWithout.length).toBeGreaterThan(0)
+    expect(notListed.length).toBeGreaterThan(0)
+    expect(listedWithout.length + notListed.length).toBeLessThan(drives.length / 10)
   })
 
   it('lists only some rows each day, smaller on earlier days, like Graph’s daily reports', async () => {
@@ -106,12 +108,12 @@ describe('unlicensed OneDrives in every mock tenant', () => {
   it.each(['healthy', 'concealed'] as const)('finds the unlicensed owners in the %s tenant, names concealed or not', async (scenario) => {
     const { oneDrive, caveats } = await overviewFor(scenario)
     expect(caveats.nameMask).toBe(scenario === 'concealed' ? 'concealed' : null)
-    expect(oneDrive.attention.unlicensed?.count).toBe(10)
+    expect(oneDrive.attention.unlicensed?.count).toBe(21)
   })
 
   it('finds them when the app hides names too', async () => {
     const { oneDrive } = await overviewFor('healthy', true)
-    expect(oneDrive.attention.unlicensed?.count).toBe(10)
+    expect(oneDrive.attention.unlicensed?.count).toBe(21)
   })
 })
 

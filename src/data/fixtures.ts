@@ -273,9 +273,17 @@ function activeEarlier(rows: StorageRow[], date: string): StorageRow[] {
 }
 
 const UNLICENSED_OWNER_EVERY = 37
+const NOT_LISTED_OWNER = 11
+const LISTED_WITHOUT_ONEDRIVE_OWNER = 24
 
 function oneDriveLicencesFor(drives: StorageRow[]): OneDriveLicences {
-  return new Map(drives.map((drive, index) => [drive.id.toLowerCase(), index % UNLICENSED_OWNER_EVERY !== 11]))
+  return new Map(
+    drives.flatMap((drive, index) =>
+      index % UNLICENSED_OWNER_EVERY === NOT_LISTED_OWNER
+        ? []
+        : [[drive.id.toLowerCase(), index % UNLICENSED_OWNER_EVERY !== LISTED_WITHOUT_ONEDRIVE_OWNER] as const],
+    ),
+  )
 }
 
 function withHiddenNames(data: ScenarioData): ScenarioData {

@@ -71,7 +71,7 @@ export interface OneDriveAttention {
   inactiveYears: number
   inactiveSince: string
   inactive: DriveGroup & { bands: InactiveDriveBandTotal[] }
-  unlicensed: DriveGroup | null
+  unlicensed: (DriveGroup & { notListed: number }) | null
 }
 
 export interface OneDriveAllocation {

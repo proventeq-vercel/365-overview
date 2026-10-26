@@ -23,6 +23,8 @@ const BAND_YEARS: Record<InactiveDriveBand, (years: number) => { fromYears: numb
   never: () => ({ fromYears: null, toYears: null }),
 }
 
+const MIN_LISTED_SHARE = 0.5
+
 const emptyGroup = (): DriveGroup => ({ count: 0, bytes: 0 })
 
 const add = (group: DriveGroup, drive: StorageRow) => {
@@ -40,16 +42,17 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
   const twoYearsBefore = inactiveSince(reportRefreshDate, inactiveYears + 2, now)
 
   const live = drives.filter((drive) => !drive.isDeleted)
-  const licencesMatch = licences !== null && live.some((drive) => licences.has(drive.id.toLowerCase()))
-  const usableLicences = licencesMatch ? licences : null
+  const listed = licences === null ? 0 : live.filter((drive) => licences.has(drive.id.toLowerCase())).length
+  const usableLicences = licences !== null && listed > 0 && listed >= live.length * MIN_LISTED_SHARE ? licences : null
 
   const inactive = emptyGroup()
-  const unlicensed = emptyGroup()
+  const unlicensed = { ...emptyGroup(), notListed: 0 }
   const bands = new Map<InactiveDriveBand, DriveGroup>(INACTIVE_DRIVE_BANDS.map((band) => [band, emptyGroup()]))
 
   for (const drive of live) {
     if (usableLicences !== null && !hasLicence(usableLicences, drive)) {
       add(unlicensed, drive)
+      if (!usableLicences.has(drive.id.toLowerCase())) unlicensed.notListed += 1
       continue
     }
     const last = drive.lastActivityDate

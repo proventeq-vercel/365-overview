@@ -53,7 +53,7 @@ export const base: StorageOverview = {
           { band: 'never', fromYears: null, toYears: null, count: 1, bytes: 1 * GB },
         ],
       },
-      unlicensed: { count: 2, bytes: 40 * GB },
+      unlicensed: { count: 2, bytes: 40 * GB, notListed: 1 },
     },
   },
   breakdown: {

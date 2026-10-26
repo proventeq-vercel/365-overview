@@ -30,7 +30,7 @@ function UnlicensedCard({ unlicensed }: { unlicensed: OneDriveAttention['unlicen
       label={t('oneDrive.attention.unlicensed')}
       value={formatBytes(unlicensed.bytes)}
       color={unlicensed.count > 0 ? P365.red : P365.grey400}
-      information={t('oneDrive.attention.unlicensedHint', { count: unlicensed.count })}
+      information={t('oneDrive.attention.unlicensedHint', { count: unlicensed.count, notListed: unlicensed.notListed })}
     />
   )
 }

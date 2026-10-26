@@ -34,7 +34,7 @@ describe('InactiveDrivesSection', () => {
     expect(card('Inactive OneDrives')).toHaveTextContent('6 live OneDrives have had no activity since August 2023, or none recorded, and their owners hold a OneDrive licence')
     expect(card('Deleted, under retention')).toHaveTextContent('0 B')
     expect(card('Owner unlicensed')).toHaveTextContent('40 GB')
-    expect(card('Owner unlicensed')).toHaveTextContent('2 live OneDrives belong to owners without a OneDrive licence')
+    expect(card('Owner unlicensed')).toHaveTextContent('2 live OneDrives belong to owners without a OneDrive licence. 1 of them is not in Microsoft’s licence report at all'.replace('’', "'"))
     expect(screen.queryByText('70 GB')).not.toBeInTheDocument()
   })
 
