@@ -33,7 +33,7 @@ export function formatPercent(ratio: number, digits = 0): string {
 export function formatShare(ratio: number, digits = 1): string {
   const smallest = 10 ** -digits / 100
   if (ratio > 0 && ratio < smallest / 2) return `<${formatPercent(smallest, digits)}`
-  if (ratio < 1 && ratio > 1 - smallest / 2) return `>${formatPercent(1 - smallest, digits)}`
+  if (ratio < 1 && ratio >= 1 - smallest / 2) return `>${formatPercent(1 - smallest, digits)}`
   return formatPercent(ratio, digits)
 }
 

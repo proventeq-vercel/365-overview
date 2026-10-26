@@ -111,6 +111,7 @@ describe('formatShare', () => {
     expect(formatShare(0)).toBe('0.0%')
     expect(formatShare(0.4567)).toBe('45.7%')
     expect(formatShare(0.9998)).toBe('>99.9%')
+    expect(formatShare(0.9995)).toBe('>99.9%')
     expect(formatShare(1)).toBe('100.0%')
   })
 })

@@ -96,7 +96,7 @@ describe('DistributionSection', () => {
   it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(screen.getByRole('heading', { name: 'Live OneDrive storage' })).toBeInTheDocument()
-    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits, even when the total is low.')).toBeInTheDocument()
+    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits. Each OneDrive stops at its own limit, whatever the pool total.')).toBeInTheDocument()
     expect(screen.getByText('of the 40 TB allocated to 40 OneDrives used (120 GB)')).toBeInTheDocument()
     const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
     expect(pool.map((button) => button.textContent)).toEqual([
