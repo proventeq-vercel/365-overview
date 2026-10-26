@@ -201,4 +201,12 @@ describe('DistributionSection', () => {
     render(<DistributionSection overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, drivesNearCap: 0 } }} />)
     expect(screen.queryByText(/at 90% or more of/)).not.toBeInTheDocument()
   })
+
+  it('shows a SharePoint part too small to round as under 0.1% of the line, not as nothing', () => {
+    const segments = withTemplates.breakdown.segments.map((segment) =>
+      segment.key === 'deleted' ? { ...segment, bytes: 1_000_000, share: 0.0001 } : segment,
+    )
+    render(<DistributionSection overview={{ ...withTemplates, breakdown: { ...withTemplates.breakdown, segments } }} />)
+    expect(part('Deleted')).toHaveTextContent('<0.1% of the line')
+  })
 })

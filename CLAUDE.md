@@ -285,7 +285,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `buildStorageOverview`.** That includes clamps (`remainingBytes` is already
   ≥ 0, as P365's backend returns it), grades (`sharePoint.utilization`), the
   offenders' top-N and retained totals (`overview.offenders`), and display
-  names (`lib/rowName.ts`, shared with `SiteTable`).
+  names (`lib/rowName.ts`, shared with `SiteTable`). The one sanctioned
+  exception is the generic `SiteTable`'s per-row Share (`shareOfPool`: the
+  row over the model's `poolUsedBytes` for its pool), computed for the rows it
+  pages and sorts, since the table is fed by several pages.
 - **Exhausted is a state, not a date.** Used ≥ entitled ⇒ `forecastStatus`
   `Critical`, `forecastMonthsToExhaustion` `0`, `forecastExhaustionDate`
   `null` — decided before the history check, exactly as P365's

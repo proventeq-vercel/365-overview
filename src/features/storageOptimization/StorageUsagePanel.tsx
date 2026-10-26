@@ -1,4 +1,4 @@
-import { formatBytes, formatLongMonthYear, formatPercent } from '@/lib/format'
+import { formatBytes, formatLongMonthYear, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
 import { SegmentedBar, type BarSegment } from '@/design/SegmentedBar'
@@ -56,7 +56,7 @@ function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: Tra
     shareLabel:
       segment.bytes === null
         ? null
-        : t('storageOptimisation.usage.share', { percent: formatPercent(segment.share, 1) }),
+        : t('storageOptimisation.usage.share', { percent: formatShare(segment.share, 1) }),
     description: describe(segment.key, overview, t),
     unmeasured: segment.key === 'versions',
   }
@@ -74,7 +74,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
   }
   const color = sharePoint.utilization === null ? P365.navy : HEALTH_COLOR[sharePoint.utilization]
   return (
-    <ShareHeadline share={formatPercent(sharePoint.usedPercentage, 1)} color={color}>
+    <ShareHeadline share={formatShare(sharePoint.usedPercentage, 1)} color={color}>
       <span>
         {t('storageOptimisation.usage.headline', {
           used: formatBytes(sharePoint.usedBytes),
