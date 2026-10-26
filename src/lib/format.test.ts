@@ -6,6 +6,7 @@ import {
   formatShortMonthYear,
   formatNumber,
   formatPercent,
+  formatShare,
   formatSignedBytes,
   formatSignedPercent,
 } from './format'
@@ -100,5 +101,17 @@ describe('formatLongMonthYear', () => {
 
   it('returns the input untouched when it is not a date', () => {
     expect(formatLongMonthYear('soon')).toBe('soon')
+  })
+})
+
+describe('formatShare', () => {
+  it('shows a share too small to round as under the smallest step, never as zero', () => {
+    expect(formatShare(0.0002)).toBe('<0.1%')
+    expect(formatShare(0.0005)).toBe('0.1%')
+    expect(formatShare(0)).toBe('0.0%')
+    expect(formatShare(0.4567)).toBe('45.7%')
+    expect(formatShare(0.9998)).toBe('>99.9%')
+    expect(formatShare(0.9995)).toBe('>99.9%')
+    expect(formatShare(1)).toBe('100.0%')
   })
 })

@@ -5,8 +5,8 @@ import { rowName } from '@/lib/rowName'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
 import type { SiteDirectory } from '@/reports/siteDirectory'
-import type { NameMask, StorageRow } from '@/types/storage'
-import { formatBytes, formatNumber, formatPercent } from '@/lib/format'
+import type { NameMask, StoragePool, StorageRow } from '@/types/storage'
+import { formatBytes, formatNumber, formatPercent, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
 import { usePagination } from '@/hooks/usePagination'
 import { useKnownSites, useSiteDetails } from '@/hooks/useSiteDetails'
@@ -31,7 +31,7 @@ export type ColumnKey =
 
 interface SiteTableProps {
   rows: StorageRow[]
-  totalUsedBytes: number
+  poolUsedBytes: Record<StoragePool, number>
   columns: ColumnKey[]
   label?: string
   nameHeader?: string
@@ -44,7 +44,12 @@ interface ColumnSpec {
   help: TranslateKey
   sortable: boolean
   width: string
-  sortValue?: (row: StorageRow) => number
+  sortValue?: (row: StorageRow, poolUsedBytes: Record<StoragePool, number>) => number
+}
+
+function shareOfPool(row: StorageRow, poolUsedBytes: Record<StoragePool, number>): number | null {
+  const poolBytes = poolUsedBytes[row.pool]
+  return poolBytes > 0 ? row.storageUsedBytes / poolBytes : null
 }
 
 const capacityRatio = (row: StorageRow): number =>
@@ -91,7 +96,7 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
     help: 'table.column.help.share',
     sortable: true,
     width: 'minmax(120px,1.4fr)',
-    sortValue: (r) => r.storageUsedBytes,
+    sortValue: (r, poolUsedBytes) => shareOfPool(r, poolUsedBytes) ?? -1,
   },
   lastActivity: {
     label: 'table.column.lastActivity',
@@ -128,7 +133,7 @@ const NO_KNOWN_SITES: SiteDirectory = new Map()
 
 export function SiteTable({
   rows,
-  totalUsedBytes,
+  poolUsedBytes,
   columns,
   label,
   nameHeader,
@@ -150,8 +155,8 @@ export function SiteTable({
   const index = useMemo(() => buildSearchIndex(rows), [rows])
   const order = useMemo(() => {
     const sortValue = COLUMNS[sortKey].sortValue ?? COLUMNS[DEFAULT_SORT].sortValue!
-    return sortOrder(rows, sortValue, sortDir)
-  }, [rows, sortKey, sortDir])
+    return sortOrder(rows, (row) => sortValue(row, poolUsedBytes), sortDir)
+  }, [rows, sortKey, sortDir, poolUsedBytes])
   const visible = useMemo(
     () => searchOrder(order, index, query, known),
     [order, index, query, known],
@@ -284,10 +289,17 @@ export function SiteTable({
           </span>
         )
       case 'share': {
-        const share = totalUsedBytes ? row.storageUsedBytes / totalUsedBytes : 0
+        const share = shareOfPool(row, poolUsedBytes)
+        if (share === null) {
+          return (
+            <span role="cell" key={key} className="tabular text-p365-grey-500">
+              {t('table.shareUnknown')}
+            </span>
+          )
+        }
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
-            <span className="tabular w-12 text-p365-grey-600">{formatPercent(share, 1)}</span>
+            <span className="tabular w-12 text-p365-grey-600">{formatShare(share, 1)}</span>
             <span className="h-1.5 flex-1 rounded-full bg-p365-grey-50">
               <span
                 className="block h-full rounded-full bg-p365-teal transition-[width] duration-300 ease-out"

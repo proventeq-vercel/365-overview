@@ -426,7 +426,6 @@ describe('buildStorageOverview composition', () => {
       const overview = buildStorageOverview(estate())
       expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual([
         'sharePoint',
-        'oneDrive',
         'teams',
         'deleted',
         'inactive',
@@ -435,29 +434,63 @@ describe('buildStorageOverview composition', () => {
       ])
       expect(bytesOf(overview)).toEqual({
         sharePoint: 70 * GB,
-        oneDrive: 56 * GB,
         teams: 30 * GB,
-        deleted: 14 * GB,
+        deleted: 10 * GB,
         inactive: 40 * GB,
         versions: null,
         free: 1874 * GB,
       })
-      expect(overview.breakdown.totalBytes).toBe(2084 * GB)
-      expect(overview.breakdown.deletedCount).toBe(2)
+      expect(overview.breakdown.totalBytes).toBe(2024 * GB)
+      expect(overview.breakdown.deletedCount).toBe(1)
+    })
+
+    it('measures OneDrive as its own pool: live drives’ storage against their own allocations, both from the account rows', () => {
+      const { oneDrive } = buildStorageOverview(estate())
+      expect(oneDrive.pool).toEqual({
+        usedBytes: 5 * GB,
+        allocation: { allocatedBytes: 1024 * GB, freeBytes: 1019 * GB, usedShare: 5 / 1024, freeShare: 1019 / 1024 },
+      })
+    })
+
+    it('leaves the OneDrive allocation unknown, not partial, when a live drive reports none', () => {
+      const { oneDrive } = buildStorageOverview(
+        estate({ drives: [drive(), drive({ id: 'no-cap', allocatedBytes: 0 })] }),
+      )
+      expect(oneDrive.pool).toEqual({ usedBytes: 10 * GB, allocation: null })
+    })
+
+    it('keeps the OneDrive pool off the trend, so a missing OneDrive trend never reads as nothing used', () => {
+      const { oneDrive } = buildStorageOverview(estate({ oneDriveTrend: [] }))
+      expect(oneDrive.pool.usedBytes).toBe(5 * GB)
+    })
+
+    it('leaves the OneDrive allocation unknown when a drive carries no allocation field at all', () => {
+      const { oneDrive } = buildStorageOverview(estate({ drives: [drive(), drive({ id: 'bare', allocatedBytes: undefined })] }))
+      expect(oneDrive.pool.allocation).toBeNull()
+    })
+
+    it('has no OneDrive allocation, rather than a zero one, when there is no live drive', () => {
+      const { oneDrive } = buildStorageOverview(estate({ drives: [] }))
+      expect(oneDrive.pool.allocation).toBeNull()
+    })
+
+    it('never shows more than the whole allocation used', () => {
+      const { oneDrive } = buildStorageOverview(estate({ drives: [drive({ storageUsedBytes: 20 * GB, allocatedBytes: 10 * GB })] }))
+      expect(oneDrive.pool.allocation).toEqual({ allocatedBytes: 10 * GB, freeBytes: 0, usedShare: 1, freeShare: 0 })
     })
 
     it('gives each part its share of the line, and an unmeasured part none', () => {
       const { breakdown } = buildStorageOverview(estate())
       const share = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.share]))
-      expect(share.teams).toBeCloseTo(30 / 2084, 10)
-      expect(share.free).toBeCloseTo(1874 / 2084, 10)
+      expect(share.teams).toBeCloseTo(30 / 2024, 10)
+      expect(share.free).toBeCloseTo(1874 / 2024, 10)
       expect(share.versions).toBe(0)
     })
 
     it('has no free part, rather than a zero, when the entitlement is unknown', () => {
       const overview = buildStorageOverview(unknownEntitlement({ sites: estate().sites, drives: estate().drives }))
       expect(bytesOf(overview).free).toBeNull()
-      expect(overview.breakdown.totalBytes).toBe(210 * GB)
+      expect(overview.breakdown.totalBytes).toBe(150 * GB)
     })
 
     it('leaves nothing free once SharePoint storage passes the entitlement', () => {
@@ -712,14 +745,14 @@ describe('buildStorageOverview growth and cost', () => {
     expect(offenders.topDrives[4]).toEqual({ name: 'd1', value: 200 * GB })
   })
 
-  it('totals the offender pool across SharePoint and OneDrive and counts every retained row', () => {
+  it('totals each pool on its own, so a site is a share of SharePoint and a OneDrive of OneDrive', () => {
     const { offenders } = buildStorageOverview(
       inputs({
         sites: [site(), site({ id: 'gone', isDeleted: true, storageUsedBytes: 3 * GB })],
         drives: [drive(), drive({ id: 'left', isDeleted: true, storageUsedBytes: 2 * GB })],
       }),
     )
-    expect(offenders.totalUsedBytes).toBe(210 * GB)
+    expect(offenders.poolUsedBytes).toEqual({ SharePoint: 150 * GB, OneDrive: 60 * GB })
     expect(offenders.retained).toEqual({ bytes: 5 * GB, count: 2 })
   })
 

@@ -1,13 +1,13 @@
-import { formatBytes, formatLongMonthYear, formatPercent } from '@/lib/format'
+import { formatBytes, formatLongMonthYear, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
 import { SegmentedBar, type BarSegment } from '@/design/SegmentedBar'
+import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { HEALTH_COLOR, P365, WORKLOAD_COLOR } from '@/design/theme'
 
 const SEGMENT_COLOR: Record<StorageSegmentKey, string> = {
   sharePoint: WORKLOAD_COLOR.sharePoint,
-  oneDrive: WORKLOAD_COLOR.oneDrive,
   teams: WORKLOAD_COLOR.teams,
   deleted: P365.red,
   inactive: P365.yellow,
@@ -56,7 +56,7 @@ function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: Tra
     shareLabel:
       segment.bytes === null
         ? null
-        : t('storageOptimisation.usage.share', { percent: formatPercent(segment.share, 1) }),
+        : t('storageOptimisation.usage.share', { percent: formatShare(segment.share, 1) }),
     description: describe(segment.key, overview, t),
     unmeasured: segment.key === 'versions',
   }
@@ -74,10 +74,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
   }
   const color = sharePoint.utilization === null ? P365.navy : HEALTH_COLOR[sharePoint.utilization]
   return (
-    <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-p365-grey-700">
-      <span className="tabular text-2xl font-bold" style={{ color }}>
-        {formatPercent(sharePoint.usedPercentage, 1)}
-      </span>
+    <ShareHeadline share={formatShare(sharePoint.usedPercentage, 1)} color={color}>
       <span>
         {t('storageOptimisation.usage.headline', {
           used: formatBytes(sharePoint.usedBytes),
@@ -89,7 +86,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
           {t('storageOptimisation.usage.over', { overage: formatBytes(sharePoint.overageBytes) })}
         </span>
       )}
-    </p>
+    </ShareHeadline>
   )
 }
 

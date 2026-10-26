@@ -15,7 +15,6 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
     entitlementPerUserIsSet,
     entitlementUnknownReason,
     licenceEstimatePerUserBytes,
-    usedBytes,
   } = overview.oneDrive
   const entitlement = entitlementPerUserBytes === null ? null : formatBytes(entitlementPerUserBytes)
 
@@ -43,7 +42,7 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
         ) : overEntitlement.count > 0 ? (
           <SiteTable
             rows={overEntitlement.drives}
-            totalUsedBytes={usedBytes}
+            poolUsedBytes={overview.offenders.poolUsedBytes}
             columns={[...OVER_LICENCE_COLUMNS]}
             label={t('oneDrive.overLicence.label')}
             nameHeader={t('oneDrive.table.driveHeader')}

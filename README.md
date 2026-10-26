@@ -29,7 +29,7 @@ Each site also serves `/help` — the help centre for every report and for enabl
 | Section | What it shows |
 |---|---|
 | **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
-| **Current storage distribution** | One storage usage line — SharePoint, OneDrive, Teams, deleted, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover, and SharePoint split by site template |
+| **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover; live OneDrive storage as its own pool against the drives' own allocations; and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
@@ -47,8 +47,8 @@ entitlement all four show:
 | **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth, explained with the rate and the headroom left | runway ≥ 36 months · ≥ 12 months · under 12 months |
 
 Storage used and remaining headroom are on the *Storage usage* line under the cards. SharePoint and
-OneDrive are reported as two separate pools — OneDrive sits on the same line but is never counted
-in the percentage against the SharePoint entitlement.
+OneDrive are reported as two separate pools: the line is SharePoint only, and OneDrive has its own
+panel under it, because OneDrive storage is not part of the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
 > The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service

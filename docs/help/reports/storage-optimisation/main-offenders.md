@@ -45,8 +45,10 @@ When a name cannot be found, the row is listed by its id (see
 
 ## Deleted but still billing
 
-Sites and OneDrives that have been deleted but still count against your storage under retention.
-They keep using quota until retention ends or they are purged from the recycle bin. The panel
+Sites and OneDrives that have been deleted but are still held under retention. A deleted site
+keeps using the SharePoint entitlement until retention ends or it is purged from the recycle bin.
+A deleted OneDrive is not part of the SharePoint entitlement, but Microsoft keeps it, and its
+storage, until its own retention ends. The panel
 only appears when there are some. It shows their total size and how many there are.
 
 ## All sites and OneDrives
@@ -58,7 +60,7 @@ Every site and drive in the usage reports, in one table.
 | Site | The display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. |
 | Owner | The primary owner as Microsoft records it. For group-connected sites, these are the Microsoft 365 group's owners. |
 | Storage used | Storage consumed as of the report date. |
-| Share | This row's storage as a percentage of all SharePoint and OneDrive storage in use, with a bar on the same scale. |
+| Share | This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is on the same scale. **Unknown** when Microsoft did not report that pool's total; a share that would round to 0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**. |
 | Files | Files stored as of the report date. |
 | Active files | Files created, edited or otherwise active in the 180-day period. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |

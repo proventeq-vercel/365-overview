@@ -61,7 +61,7 @@ export function OneDriveUsage() {
           <PanelLabel>{t('oneDrive.table.label')}</PanelLabel>
           <SiteTable
             rows={oneDrive.drives}
-            totalUsedBytes={oneDrive.usedBytes}
+            poolUsedBytes={offenders.poolUsedBytes}
             columns={[...DRIVE_COLUMNS]}
             label={t('oneDrive.table.label')}
             nameHeader={t('oneDrive.table.driveHeader')}

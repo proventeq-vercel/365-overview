@@ -52,9 +52,20 @@ export interface CleanUpForecast {
 
 export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
 
+export interface OneDriveAllocation {
+  allocatedBytes: number
+  freeBytes: number
+  usedShare: number
+  freeShare: number
+}
+
+export interface OneDrivePool {
+  usedBytes: number
+  allocation: OneDriveAllocation | null
+}
+
 export const STORAGE_SEGMENTS = [
   'sharePoint',
-  'oneDrive',
   'teams',
   'deleted',
   'inactive',
@@ -121,13 +132,14 @@ export interface StorageOverview {
     entitlementPerUserIsSet: boolean
     entitlementUnknownReason: OneDriveEntitlementUnknown | null
     overEntitlement: OverEntitlement | null
+    pool: OneDrivePool
   }
 
   breakdown: StorageBreakdown
 
   offenders: {
     rows: StorageRow[]
-    totalUsedBytes: number
+    poolUsedBytes: Record<StoragePool, number>
     topSites: Slice[]
     topDrives: Slice[]
     retained: RetainedTotal

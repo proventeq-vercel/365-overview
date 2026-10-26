@@ -27,7 +27,7 @@ interface Props {
 
 export function OffendersSection({ overview, growth, delay }: Props) {
   const t = useTranslation()
-  const { rows, totalUsedBytes, topSites, topDrives, retained } = overview.offenders
+  const { rows, poolUsedBytes, topSites, topDrives, retained } = overview.offenders
 
   return (
     <Section
@@ -75,7 +75,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
         <PanelDescription>{t('storageOptimisation.offenders.allSubtitle')}</PanelDescription>
         <SiteTable
           rows={rows}
-          totalUsedBytes={totalUsedBytes}
+          poolUsedBytes={poolUsedBytes}
           columns={[...OFFENDER_COLUMNS]}
           label={t('storageOptimisation.offenders.tableLabel')}
           nameMask={overview.caveats.nameMask}

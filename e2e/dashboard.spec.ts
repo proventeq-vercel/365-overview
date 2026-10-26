@@ -344,7 +344,7 @@ test('every report section explains itself and links to its help page', async ({
   }
   await main.getByRole('button', { name: 'About Current storage distribution' }).click()
   const dialog = page.getByRole('dialog', { name: 'Current storage distribution' })
-  await expect(dialog).toContainText('every workload on one line')
+  await expect(dialog).toContainText('every SharePoint workload on one line')
   const opened = context.waitForEvent('page')
   await dialog.getByRole('link', { name: 'See more' }).click()
   const help = await opened
@@ -372,7 +372,7 @@ test('hovering a part of the storage usage line explains it', async ({ page }) =
   await page.goto('/')
   await reportLoaded(page)
   const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
-  await expect(parts).toHaveCount(7)
+  await expect(parts).toHaveCount(6)
   await page.locator('[data-segment="teams"]').hover()
   const popover = page.getByRole('dialog', { name: 'Teams' })
   await expect(popover).toBeVisible()
@@ -383,6 +383,17 @@ test('hovering a part of the storage usage line explains it', async ({ page }) =
   await parts.filter({ hasText: 'Versions' }).focus()
   await page.keyboard.press('Enter')
   await expect(page.getByRole('dialog', { name: 'Versions' })).toContainText('Not measured')
+})
+
+test('OneDrive sits in its own pool, off the SharePoint usage line', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const main = page.getByRole('main')
+  await expect(main.getByRole('list', { name: 'Storage usage' }).getByRole('button', { name: /OneDrive/ })).toHaveCount(0)
+  await expect(main.getByRole('heading', { name: 'Live OneDrive storage' })).toBeVisible()
+  const pool = main.getByRole('list', { name: 'Live OneDrive storage' }).getByRole('button')
+  await expect(pool).toHaveCount(2)
+  await expect(pool.first()).toContainText('of the allocation')
 })
 
 test('a clicked part of the usage line gives way to the next one hovered', async ({ page }) => {
