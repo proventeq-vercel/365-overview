@@ -12,7 +12,7 @@ The ten sites and OneDrives together that added the most storage over about the 
 ranked by storage added. It shows who is driving growth, which the size alone does not.
 
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
-  only the sites and OneDrives that had activity on that day, with their size at the end of it.
+  only the sites and OneDrives that had activity on that day, with their size on that day.
   Microsoft offers those daily reports for the last 28 days, counting today. The report reads
   every day from 26 days ago, keeping a day in hand, up to the report date. The description
   under the title gives the first and last day and the number of days.
