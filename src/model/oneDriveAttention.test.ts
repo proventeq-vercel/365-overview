@@ -71,11 +71,20 @@ describe('oneDriveAttention', () => {
     expect(at(null).unlicensed).toBeNull()
   })
 
-  it('leaves the unlicensed group unknown when fewer than half the owners match the licence report', () => {
-    const half = new Map([...allLicensed].slice(0, 2))
-    expect(at(half).unlicensed).toBeNull()
-    const most = new Map([...allLicensed].slice(0, 3))
-    expect(at(most).unlicensed?.count).toBe(3)
+  it('keeps counting when most owners are leavers the licence report does not list', () => {
+    const fewListed = new Map([...allLicensed].slice(0, 1))
+    expect(at(fewListed).unlicensed).toEqual({ count: 5, bytes: 101 * GB, notListed: 5 })
+  })
+
+  it('counts no unlicensed OneDrive, rather than an unknown, when there is no live OneDrive', () => {
+    const empty = oneDriveAttention({
+      drives: [drive('gone@c.com', null, 3, { isDeleted: true })],
+      licences: new Map([['someone@c.com', true]]),
+      reportRefreshDate: '2026-08-30',
+      inactiveYears: 3,
+      now: new Date('2026-09-01T00:00:00Z'),
+    })
+    expect(empty.unlicensed).toEqual({ count: 0, bytes: 0, notListed: 0 })
   })
 
   it('leaves the unlicensed group unknown, never all OneDrives, when no owner matches the licence report at all', () => {

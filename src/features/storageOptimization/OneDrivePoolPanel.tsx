@@ -17,7 +17,11 @@ function AttentionLine({ overview }: { overview: StorageOverview }) {
   const line =
     attention.unlicensed === null
       ? t('storageOptimisation.oneDrivePool.attentionUnknown', figures)
-      : t('storageOptimisation.oneDrivePool.attention', { ...figures, unlicensed: formatBytes(attention.unlicensed.bytes) })
+      : t('storageOptimisation.oneDrivePool.attention', {
+          ...figures,
+          unlicensed: formatBytes(attention.unlicensed.bytes),
+          notListed: attention.unlicensed.notListed,
+        })
   return (
     <PanelDescription>
       {line}{' '}

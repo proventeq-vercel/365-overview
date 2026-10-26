@@ -161,7 +161,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   without a OneDrive licence, or not listed), inactive (licensed owner, no
   activity since the archive cutoff or none recorded; banded by years past the
   cutoff), deleted (`deletedButBilling`). Unlicensed is `null` (Unknown) when
-  the licence report failed or matches no live owner at all. Billing
+  the licence report failed or matches no live owner at all (a key mismatch is
+  all-or-nothing; a guard on the share of owners listed would hide leaver-heavy
+  tenants); `notListed` counts the owners inferred from absence, and both the
+  card and the Storage-page line say it. Billing
   copy is Microsoft's "Manage unlicensed OneDrive user accounts" only ($0.05/GB
   a month once archived after 93 days with billing on); the report never
   prices it, because the reports do not say how long an owner has been

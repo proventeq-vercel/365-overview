@@ -35,7 +35,7 @@ describe('OneDrivePoolPanel', () => {
   it('names the inactive, deleted and unlicensed OneDrive storage apart, never as one total', () => {
     features.oneDrive = true
     renderPanel()
-    expect(screen.getByText(/inactive OneDrives hold 30 GB, deleted ones under retention 0 B, and those of owners without a OneDrive licence 40 GB\./)).toBeInTheDocument()
+    expect(screen.getByText(/inactive OneDrives hold 30 GB, deleted ones under retention 0 B, and those of owners without a OneDrive licence 40 GB \(1 owner inferred from not being in Microsoft's licence report\)\./)).toBeInTheDocument()
   })
 
   it('links to the OneDrive report when it is switched on', () => {

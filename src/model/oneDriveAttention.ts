@@ -23,8 +23,6 @@ const BAND_YEARS: Record<InactiveDriveBand, (years: number) => { fromYears: numb
   never: () => ({ fromYears: null, toYears: null }),
 }
 
-const MIN_LISTED_SHARE = 0.5
-
 const emptyGroup = (): DriveGroup => ({ count: 0, bytes: 0 })
 
 const add = (group: DriveGroup, drive: StorageRow) => {
@@ -43,7 +41,7 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
 
   const live = drives.filter((drive) => !drive.isDeleted)
   const listed = licences === null ? 0 : live.filter((drive) => licences.has(drive.id.toLowerCase())).length
-  const usableLicences = licences !== null && listed > 0 && listed >= live.length * MIN_LISTED_SHARE ? licences : null
+  const usableLicences = licences !== null && (live.length === 0 || listed > 0) ? licences : null
 
   const inactive = emptyGroup()
   const unlicensed = { ...emptyGroup(), notListed: 0 }

@@ -19,13 +19,13 @@ together, because they cost different things.
 ## Who counts as unlicensed
 
 The licence comes from Microsoft's active-user usage report, read with the same permission as the
-other usage reports. That report lists **licensed users only**. So an owner it lists without a
-OneDrive licence, and an owner it does not list at all, both count as unlicensed. That includes
-owners deleted from Entra ID, which Microsoft also treats as unlicensed.
+other usage reports. That report lists **licensed users**. So an owner it lists without a OneDrive licence, and an
+owner it does not list at all, both count as unlicensed. That includes owners deleted from Entra
+ID, which Microsoft also treats as unlicensed. An owner the report does not list most likely holds
+no licence; the card says how many owners are counted that way.
 
-The card says how many of its owners the report does not list at all. The group shows
-**Unknown** when the report cannot be read, or when it lists fewer than half of the OneDrives'
-owners, which would mean the two reports cannot be matched. The inactive group may then
+The group shows **Unknown** when the report cannot be read, or when it lists none of the
+OneDrives' owners, which would mean the two reports cannot be matched at all. The inactive group may then
 include unlicensed OneDrives, and its card says so.
 
 ## What Microsoft does with an unlicensed OneDrive
