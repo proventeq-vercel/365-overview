@@ -13,19 +13,23 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
   only the sites and OneDrives that had activity on that day, with their size at the end of it.
-  The report reads every day Microsoft still offers, which is the last 28 days counting today, up
-  to the report date. The description under the title gives the first and last day and the
-  number of days.
+  Microsoft offers those daily reports for the last 28 days, counting today. The report reads
+  every day from 26 days ago, keeping a day in hand, up to the report date. The description
+  under the title gives the first and last day and the number of days.
 - **Storage added** is the size on the report date less the size on the first day in that window
   the site or OneDrive was active. Storage added on that first day itself is not counted, so a
   site that received everything in one day, or was created inside the window, can show less
-  growth than it had.
-- A site or OneDrive with no activity in the window did not grow and is left out. So are those
-  that shrank, stayed the same or were deleted. If nothing grew, the panel says so instead of
-  drawing an empty chart.
+  growth than it had. Each one is measured from its own first active day, so two rows can cover
+  different spans of the window.
+- A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
+  are those that shrank, stayed the same or were deleted. If none of the measured ones grew, the
+  panel says so instead of drawing an empty chart. If no daily report lists any activity at all,
+  it says there was nothing to measure, which is not the same as no growth.
 - The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
-  does not return the daily reports, the panel says growth is unavailable. It never shows zero
-  growth in its place.
+  does not return every daily report, or the report date is older than the days Microsoft keeps,
+  the panel says growth is unavailable. It never shows zero growth in its place.
+- Microsoft limits how often its usage reports can be read, so growth is read once per report
+  date: **Refresh data** does not read it again.
 
 ## Largest sites and OneDrives
 

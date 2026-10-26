@@ -1,35 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { daysBetween, growthBaselineDate, growthWindowDates } from './growthWindow'
-
-describe('growthBaselineDate', () => {
-  it('starts at the oldest day Graph accepts, 27 days before today', () => {
-    expect(growthBaselineDate('2026-10-24', new Date('2026-10-26T16:00:00Z'))).toBe('2026-09-29')
-  })
-
-  it('stops at the oldest day Microsoft keeps when four weeks back is out of range', () => {
-    expect(growthBaselineDate('2026-10-16', new Date('2026-10-19T09:00:00Z'))).toBe('2026-09-22')
-  })
-
-  it('keeps four weeks before an old report date rather than reaching past it', () => {
-    expect(growthBaselineDate('2026-08-30', new Date('2026-10-19T09:00:00Z'))).toBe('2026-08-02')
-  })
-
-  it('counts back from today when the report carries no refresh date', () => {
-    expect(growthBaselineDate('', new Date('2026-10-19T09:00:00Z'))).toBe('2026-09-22')
-  })
-})
+import { daysBetween, growthWindowDates } from './growthWindow'
 
 describe('growthWindowDates', () => {
-  it('lists every day from the oldest Graph accepts to the report date', () => {
+  it('lists every day from 26 days before today, a day inside the 28 Graph accepts, to the report date', () => {
     const dates = growthWindowDates('2026-10-24', new Date('2026-10-26T16:00:00Z'))
-    expect(dates).toHaveLength(26)
-    expect(dates.slice(0, 2)).toEqual(['2026-09-29', '2026-09-30'])
-    expect(dates.at(-1)).toBe('2026-10-24')
+    expect([dates[0], dates[1], dates.at(-1), dates.length]).toEqual(['2026-09-30', '2026-10-01', '2026-10-24', 25])
+  })
+
+  it('never asks for a day older than Graph accepts, the 400 that made growth unavailable', () => {
+    const dates = growthWindowDates('2026-10-24', new Date('2026-10-26T23:59:59Z'))
+    expect(dates).not.toContain('2026-09-28')
+    expect(dates).not.toContain('2026-09-29')
   })
 
   it('ends today when the report carries no refresh date', () => {
     const dates = growthWindowDates('', new Date('2026-10-19T09:00:00Z'))
-    expect([dates[0], dates.at(-1), dates.length]).toEqual(['2026-09-22', '2026-10-19', 28])
+    expect([dates[0], dates.at(-1), dates.length]).toEqual(['2026-09-23', '2026-10-19', 27])
+  })
+
+  it('never asks for a day after today when the report date is ahead of the clock', () => {
+    expect(growthWindowDates('2026-10-28', new Date('2026-10-26T09:00:00Z')).at(-1)).toBe('2026-10-26')
+  })
+
+  it('asks for nothing when the report date is older than every day Graph still keeps', () => {
+    expect(growthWindowDates('2026-08-30', new Date('2026-10-19T09:00:00Z'))).toEqual([])
+    expect(growthWindowDates('2026-09-23', new Date('2026-10-19T09:00:00Z'))).toEqual([])
   })
 })
 

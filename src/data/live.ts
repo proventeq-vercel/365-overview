@@ -24,6 +24,7 @@ import type { RawSku } from '../reports/licensing'
 import { parseOrg } from '../reports/org'
 import type { RawOrg } from '../reports/org'
 import { hideReportRowNames } from '../lib/hiddenNames'
+import { growthWindowDates } from '../lib/growthWindow'
 import type { DataSource } from './fixtures'
 
 interface JsonReport<T> {
@@ -146,6 +147,8 @@ export function createLiveDataSource(
       )
       return parseOneDriveAccounts(concealRows(rows))
     },
+
+    getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, new Date()),
 
     async getDrivesOn(date) {
       const rows = await graph.getAllPages<RawDriveRow>(reportUrlOn('getOneDriveUsageAccountDetail', date))

@@ -86,10 +86,25 @@ describe('buildStorageGrowth', () => {
       baselineDate: '2026-08-02',
       reportRefreshDate: '2026-08-30',
       windowDays: 28,
+      measuredRows: 2,
       topGrowers: [
         { name: 'Finance', value: 60 },
         { name: 'legal', value: 10 },
       ],
     })
+  })
+
+  it('counts only the live rows that have an earlier size as measured', () => {
+    const growth = buildStorageGrowth({
+      current: [
+        row('SharePoint', 'measured', 80),
+        row('SharePoint', 'unmeasured', 90),
+        row('SharePoint', 'gone', 70, { isDeleted: true }),
+      ],
+      baseline: [row('SharePoint', 'measured', 80), row('SharePoint', 'gone', 10)],
+      baselineDate: '2026-09-30',
+      reportRefreshDate: '2026-10-24',
+    })
+    expect([growth.measuredRows, growth.topGrowers]).toEqual([1, []])
   })
 })

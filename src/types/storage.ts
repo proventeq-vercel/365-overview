@@ -80,6 +80,7 @@ export interface StorageGrowth {
   baselineDate: string
   reportRefreshDate: string
   windowDays: number
+  measuredRows: number
   topGrowers: Slice[]
 }
 

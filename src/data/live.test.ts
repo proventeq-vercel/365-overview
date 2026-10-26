@@ -62,6 +62,14 @@ describe('createLiveDataSource', () => {
     for (const url of urls) expect(url).toContain("(period='D180')")
   })
 
+  it('lists the daily reports Graph still keeps by the real clock, never one it refuses', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-26T16:00:00Z'))
+    const dates = createLiveDataSource(recordingGraph().graph).getDailyReportDates('2026-10-24')
+    vi.useRealTimers()
+    expect([dates[0], dates.at(-1), dates.length]).toEqual(['2026-09-30', '2026-10-24', 25])
+  })
+
   it('reads the site and OneDrive reports for an earlier day by its date', async () => {
     const { graph, urls } = recordingGraph()
     const ds = createLiveDataSource(graph)

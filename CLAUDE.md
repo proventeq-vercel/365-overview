@@ -54,7 +54,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (nine methods); `fixtures.ts` (six mock
+- `src/data/` — `DataSource` interface (twelve methods plus `namesHidden`); `fixtures.ts` (six mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
   `onedrive-over-licence`, `nothing-to-clean`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
@@ -62,7 +62,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   earlier day, `(date=YYYY-MM-DD)`. That form lists ONLY the rows active on
   that day, with their size that day: it is not a snapshot. Graph accepts it
   for today − 27 days at the oldest (today − 28 answers `400 Only support data
-  for the past 28 days`, though Microsoft Learn says 30)).
+  for the past 28 days`, though Microsoft Learn says 30); `getDailyReportDates`
+  asks from today − 26, a day of margin, by the real clock (the mock by a clock
+  frozen two days after its report date)). The JSON `/reports` budget is 100
+  requests per 10 minutes per app per tenant, for each report API: every
+  dated or paged read spends it.
 - `src/reports/` — pure parsers per Graph response shape (`sharePointSites`,
   `oneDriveAccounts`, `storageTrend`, `licensing`, `org`, `siteDirectory`).
   The usage report returns a **blank `siteUrl` for every site** (Microsoft-side
@@ -109,17 +113,22 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   The ONLY data entry point for the page — except growth:
   `src/hooks/useStorageGrowth.ts` reads the detail reports for every day
-  `lib/growthWindow.growthWindowDates` lists (the oldest day Graph accepts up
-  to the report date, ~26 days × 2 calls, in parallel) and takes each row's
-  earliest appearance as its baseline (`model/storageGrowth.earliestRows`)
-  under `['storageGrowth', date, nameMask]`,
+  `DataSource.getDailyReportDates` lists (`lib/growthWindow`: today − 26 up to
+  the report date, ~25 days × 2 calls, four days at a time, folded as they
+  land) and takes each row's earliest appearance as its baseline
+  (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
+  with `staleTime: Infinity`, `retry: false`, and Refresh data leaves it alone
+  (the daily reports change once a day; each load spends ~25 of the 100
+  report requests Graph allows per 10 minutes),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
-  skeleton while pending and an "unavailable" panel on error, never zero. A row
-  with no dated appearance had no activity, so it is left out (never counted
-  from 0, which would rank the biggest sites as the fastest growers); shrinking
-  and deleted rows are out.
+  skeleton while pending and an "unavailable" panel on error (any failed day,
+  or a report date older than the days Graph keeps), never zero. A row with no
+  dated appearance has no daily figure, so it is left out (never counted from
+  0, which would rank the biggest sites as the fastest growers); shrinking and
+  deleted rows are out; `measuredRows` 0 says nothing could be measured rather
+  than "nothing grew".
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),

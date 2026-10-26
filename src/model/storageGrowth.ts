@@ -47,10 +47,12 @@ export interface GrowthInputs {
 
 export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
   const { current, baseline, baselineDate, reportRefreshDate } = inputs
+  const measured = new Set(baseline.map(rowKey))
   return {
     baselineDate,
     reportRefreshDate,
     windowDays: daysBetween(baselineDate, reportRefreshDate),
+    measuredRows: current.filter((row) => !row.isDeleted && measured.has(rowKey(row))).length,
     topGrowers: growthLeaders(current, baseline).map(({ row, growthBytes }) => ({
       name: rowName(row),
       value: growthBytes,

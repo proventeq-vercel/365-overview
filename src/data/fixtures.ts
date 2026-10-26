@@ -2,6 +2,7 @@ import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
 import type { StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
 import { hideRowNames } from '../lib/hiddenNames'
+import { growthWindowDates } from '../lib/growthWindow'
 
 export type MockScenario =
   | 'healthy'
@@ -14,6 +15,7 @@ export type MockScenario =
 export interface DataSource {
   readonly namesHidden: boolean
   getSites(): Promise<StorageRow[]>
+  getDailyReportDates(reportRefreshDate: string): string[]
   getSitesOn(date: string): Promise<StorageRow[]>
   getSiteDetails(ids: string[]): Promise<SiteDirectory>
   getSiteDirectory(): Promise<SiteDirectory>
@@ -32,6 +34,7 @@ const ONE_DRIVE_CAP_BYTES = 1024 * GB
 const BEYOND_LICENCE_ONE_DRIVE_CAP_BYTES = 25 * ONE_DRIVE_CAP_BYTES
 
 const MOCK_REFRESH_DATE = '2026-08-30'
+const MOCK_CLOCK = new Date('2026-09-01T12:00:00Z')
 const DORMANT_YEAR = 2022
 
 const TEMPLATES = ['Team Site', 'Group', 'Team Channel', 'Site Page Publishing', 'Publishing Site']
@@ -241,14 +244,16 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   }
 }
 
-const NEW_IN_WINDOW_EVERY = 97
+const INACTIVE_IN_WINDOW_EVERY = 97
+const ACTIVE_EVERY_DAYS = 5
 const FAST_GROWER_EVERY = 23
 const FAST_GROWER_SHARE = 0.12
 const STEADY_GROWTH_STEP = 0.0025
 
-function fourWeeksEarlier(rows: StorageRow[]): StorageRow[] {
+function activeEarlier(rows: StorageRow[], date: string): StorageRow[] {
+  const day = Number(date.slice(8, 10))
   return rows.flatMap((row, index) => {
-    if (index % NEW_IN_WINDOW_EVERY === 13) return []
+    if (index % INACTIVE_IN_WINDOW_EVERY === 13 || (index + day) % ACTIVE_EVERY_DAYS !== 0) return []
     const grown = index % FAST_GROWER_EVERY === 0 ? FAST_GROWER_SHARE : (index % 10) * STEADY_GROWTH_STEP
     return [{ ...row, storageUsedBytes: Math.round(row.storageUsedBytes * (1 - grown)) }]
   })
@@ -271,7 +276,8 @@ export function createMockDataSource(
   return {
     namesHidden: hideNames,
     getSites: async () => data.sites,
-    getSitesOn: async () => fourWeeksEarlier(data.sites),
+    getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, MOCK_CLOCK),
+    getSitesOn: async (date) => activeEarlier(data.sites, date),
     getSiteDetails: async (ids) => {
       const found: SiteDirectory = new Map()
       for (const id of ids) {
@@ -282,7 +288,7 @@ export function createMockDataSource(
     },
     getSiteDirectory: async () => data.directory,
     getDrives: async () => data.drives,
-    getDrivesOn: async () => fourWeeksEarlier(data.drives),
+    getDrivesOn: async (date) => activeEarlier(data.drives, date),
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => licenses,

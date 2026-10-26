@@ -10,6 +10,7 @@ const growthData: StorageGrowth = {
   baselineDate: '2026-08-02',
   reportRefreshDate: '2026-08-30',
   windowDays: 28,
+  measuredRows: 40,
   topGrowers: [
     { name: 'gamma', value: 900 },
     { name: 'dana', value: 400 },
@@ -85,7 +86,7 @@ describe('OffendersSection', () => {
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
-  it('says growth is unavailable, rather than zero, when the earlier report fails', () => {
+  it('says growth is unavailable, rather than zero, when a daily report fails', () => {
     renderOffenders(withSites, { data: undefined, isError: true })
     expect(screen.getByText(/Growth is unavailable/)).toBeInTheDocument()
     expect(screen.queryByLabelText('Loading the fastest-growing sites and OneDrives')).not.toBeInTheDocument()
@@ -93,8 +94,14 @@ describe('OffendersSection', () => {
 
   it('says nothing grew instead of drawing an empty chart', () => {
     renderOffenders(withSites, { data: { ...growthData, topGrowers: [] }, isError: false })
-    expect(screen.getByText('No site or OneDrive grew between 2026-08-02 and 2026-08-30.')).toBeInTheDocument()
+    expect(screen.getByText('No site or OneDrive active between 2026-08-02 and 2026-08-30 grew.')).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+  })
+
+  it('says nothing could be measured, not that nothing grew, when no daily report lists any activity', () => {
+    renderOffenders(withSites, { data: { ...growthData, measuredRows: 0, topGrowers: [] }, isError: false })
+    expect(screen.getByText(/list no site or OneDrive with activity, so there is nothing to measure growth from/)).toBeInTheDocument()
+    expect(screen.queryByText(/active between 2026-08-02 and 2026-08-30 grew/)).not.toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {
