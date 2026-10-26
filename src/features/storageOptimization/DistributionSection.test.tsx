@@ -209,4 +209,9 @@ describe('DistributionSection', () => {
     render(<DistributionSection overview={{ ...withTemplates, breakdown: { ...withTemplates.breakdown, segments } }} />)
     expect(part('Deleted')).toHaveTextContent('<0.1% of the line')
   })
+
+  it('heads a tenant just short of its entitlement with >99.9%, not a rounded 100.0%', () => {
+    render(<DistributionSection overview={{ ...withTemplates, sharePoint: { ...withTemplates.sharePoint, usedPercentage: 0.9997 } }} />)
+    expect(screen.getByText('>99.9%')).toBeInTheDocument()
+  })
 })
