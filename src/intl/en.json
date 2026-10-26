@@ -215,7 +215,7 @@
   "storageOptimisation.kpi.forecastUnknownHint": "Needs the tenant entitlement. Enter it in Report settings to see when SharePoint storage runs out.",
 
   "storageOptimisation.distribution.title": "Current storage distribution",
-  "storageOptimisation.distribution.subtitle": "Where storage sits today — every workload against your SharePoint entitlement, and which site types drive the volume",
+  "storageOptimisation.distribution.subtitle": "Where storage sits today — every SharePoint workload against your SharePoint entitlement, OneDrive as its own pool, and which site types drive the volume",
   "storageOptimisation.usage.title": "Storage usage",
   "storageOptimisation.usage.subtitle": "Every SharePoint workload on one line, ending in what is left of your SharePoint entitlement. OneDrive is a separate pool, shown below. Hover or select a part for details.",
   "storageOptimisation.usage.headline": "of the {entitled} SharePoint entitlement used ({used})",
