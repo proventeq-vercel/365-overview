@@ -4,28 +4,24 @@ import { ApiError } from '../clients/apiError'
 import type { DataSource } from '../data/fixtures'
 import { useDataSource } from '../data/useDataSource'
 import { hideRowNames } from '../lib/hiddenNames'
-import { buildStorageGrowth, earliestRows, rankLeaders } from '../model/storageGrowth'
+import { buildStorageGrowth, earliestRows, rankLeaders, type ReportsRead } from '../model/storageGrowth'
 import { unresolvedSiteIds, withSiteDirectory, type SiteDirectory } from '../reports/siteDirectory'
-import type { MissingReports, StorageGrowth, StorageOverview, StorageRow } from '../types/storage'
+import type { StorageGrowth, StorageOverview, StorageRow } from '../types/storage'
 
 const STORAGE_GROWTH_KEY = 'storageGrowth'
 
 const DAILY_REPORTS_AT_ONCE = 4
 
-export const THROTTLE_COOLDOWN_MS = 10 * 60_000
+export const REREAD_COOLDOWN_MS = 10 * 60_000
 
 export const isGrowth = (query: Query) => query.queryKey[0] === STORAGE_GROWTH_KEY
-
-function waitsOutThrottling(growth: StorageGrowth, updatedAt: number, now: number) {
-  return growth.missingReports === 'throttled' && now - updatedAt < THROTTLE_COOLDOWN_MS
-}
 
 export function canReadGrowthAgain(query: Query, now = Date.now()): boolean {
   if (!isGrowth(query) || query.state.fetchStatus === 'fetching') return false
   if (query.state.status === 'error') return true
   const growth = query.state.data as StorageGrowth | undefined
-  if (growth === undefined || growth.missingReports === null || growth.missingReports === 'refused') return false
-  return !waitsOutThrottling(growth, query.state.dataUpdatedAt, now)
+  if (growth === undefined || growth.complete) return false
+  return now - query.state.dataUpdatedAt >= REREAD_COOLDOWN_MS
 }
 
 type ReportRead = { rows: StorageRow[] } | { failure: ApiError }
@@ -39,13 +35,17 @@ async function readReport(read: () => Promise<StorageRow[]>): Promise<ReportRead
   }
 }
 
-const isRefusal = (error: ApiError) => error.status >= 400 && error.status < 500 && !error.isThrottled
+interface ReportProgress {
+  read: (date: string) => Promise<StorageRow[]>
+  count: number
+  stopped: boolean
+}
 
-function stopReason(reads: ReportRead[]): MissingReports | null {
+function afterBatch(report: ReportProgress, reads: ReportRead[], firstBatch: boolean) {
   const failures = reads.flatMap((read) => ('failure' in read ? [read.failure] : []))
-  if (failures.some((failure) => failure.isThrottled)) return 'throttled'
-  if (failures.length === reads.length && failures.every(isRefusal)) return 'refused'
-  return null
+  const allFailed = failures.length === reads.length
+  report.stopped = failures.some((failure) => failure.isThrottled) || (allFailed && !firstBatch)
+  report.count += reads.length - failures.length
 }
 
 async function namesOf(ds: DataSource, ids: string[]): Promise<SiteDirectory> {
@@ -65,40 +65,32 @@ const sizesDateOf = (dates: string[], reportRefreshDate: string) => reportRefres
 interface DailyReads {
   baseline: StorageRow[]
   baselineDate: string | null
-  reportsRead: number
-  missingReports: MissingReports | null
+  reportsRead: ReportsRead
 }
 
 async function readDailyReports(ds: DataSource, dates: string[], masked: boolean): Promise<DailyReads> {
-  const pools = [ds.getSitesOn.bind(ds), ds.getDrivesOn.bind(ds)].map((read) => ({ read, stopped: null as MissingReports | null }))
+  const report = (read: ReportProgress['read']): ReportProgress => ({ read, count: 0, stopped: false })
+  const sharePoint = report(ds.getSitesOn.bind(ds))
+  const oneDrive = report(ds.getDrivesOn.bind(ds))
   let baseline: StorageRow[] = []
   let baselineDate: string | null = null
-  let reportsRead = 0
   for (let start = 0; start < dates.length; start += DAILY_REPORTS_AT_ONCE) {
-    const open = pools.filter((pool) => pool.stopped === null)
+    const open = [sharePoint, oneDrive].filter((progress) => !progress.stopped)
     if (open.length === 0) break
     const batch = dates.slice(start, start + DAILY_REPORTS_AT_ONCE)
-    const reads = await Promise.all(open.map((pool) => Promise.all(batch.map((date) => readReport(() => pool.read(date))))))
+    const reads = await Promise.all(open.map((progress) => Promise.all(batch.map((date) => readReport(() => progress.read(date))))))
     const days = batch.map((date, day) => {
-      const rows = reads.flatMap((poolReads) => {
-        const read = poolReads[day]
+      const rows = reads.flatMap((reportReads) => {
+        const read = reportReads[day]
         return 'rows' in read ? [masked ? read.rows.map(hideRowNames) : read.rows] : []
       })
       if (rows.length > 0 && baselineDate === null) baselineDate = date
-      reportsRead += rows.length
       return rows.flat()
     })
     baseline = earliestRows([baseline, ...days])
-    open.forEach((pool, i) => {
-      pool.stopped = stopReason(reads[i])
-    })
+    open.forEach((progress, i) => afterBatch(progress, reads[i], start === 0))
   }
-  const stops = pools.map((pool) => pool.stopped)
-  const missingReports =
-    stops.find((stop) => stop === 'throttled') ??
-    stops.find((stop) => stop === 'refused') ??
-    (reportsRead < dates.length * pools.length ? 'notReturned' : null)
-  return { baseline, baselineDate, reportsRead, missingReports }
+  return { baseline, baselineDate, reportsRead: { sharePoint: sharePoint.count, oneDrive: oneDrive.count } }
 }
 
 export function useStorageGrowth(overview: StorageOverview | undefined): StorageGrowth | undefined {
@@ -113,21 +105,20 @@ export function useStorageGrowth(overview: StorageOverview | undefined): Storage
       const { reportRefreshDate, caveats } = overview!
       const masked = caveats.nameMask !== null
       const dates = ds.getDailyReportDates(reportRefreshDate)
-      const { baseline, baselineDate, reportsRead, missingReports } = await readDailyReports(ds, dates, masked)
-      const previous = queryClient.getQueryData<StorageGrowth>(queryKey)
-      if (previous !== undefined && previous.reportsRead > reportsRead) return previous
+      const { baseline, baselineDate, reportsRead } = await readDailyReports(ds, dates, masked)
       const current = currentRows(overview!)
       const unnamed = masked ? [] : unresolvedSiteIds(rankLeaders(current, baseline).leaders.map((leader) => leader.row))
-      return buildStorageGrowth({
+      const growth = buildStorageGrowth({
         current: withSiteDirectory(current, await namesOf(ds, unnamed)),
         baseline,
         baselineDate,
         sizesOn: sizesDateOf(dates, reportRefreshDate),
+        dates,
         reportsRead,
-        reportsInWindow: dates.length * 2,
-        missingReports,
         measurementFailed: false,
       })
+      const previous = queryClient.getQueryData<StorageGrowth>(queryKey)
+      return previous !== undefined && previous.reportsMissing < growth.reportsMissing ? previous : growth
     },
   })
   const failed = query.data === undefined && query.errorUpdateCount > 0
@@ -139,9 +130,8 @@ export function useStorageGrowth(overview: StorageOverview | undefined): Storage
       baseline: [],
       baselineDate: null,
       sizesOn: sizesDateOf(ds.getDailyReportDates(reportRefreshDate), reportRefreshDate),
-      reportsRead: 0,
-      reportsInWindow: 0,
-      missingReports: null,
+      dates: [],
+      reportsRead: { sharePoint: 0, oneDrive: 0 },
       measurementFailed: true,
     })
   }, [failed, overview, ds])

@@ -148,12 +148,13 @@ describe('earliestRows', () => {
   })
 })
 
+const dates = ['2026-09-30', '2026-10-01', '2026-10-02']
+
 const window = {
   baselineDate: '2026-09-30',
   sizesOn: '2026-10-24',
-  reportsRead: 50,
-  reportsInWindow: 50,
-  missingReports: null,
+  dates,
+  reportsRead: { sharePoint: 3, oneDrive: 3 },
   measurementFailed: false,
 }
 
@@ -166,9 +167,8 @@ describe('buildStorageGrowth', () => {
       baseline: [row('SharePoint', 'id-1', 20), row('SharePoint', 'id-2', 50)],
       baselineDate: '2026-08-02',
       sizesOn: '2026-08-31',
-      reportsRead: 40,
-      reportsInWindow: 50,
-      missingReports: 'notReturned',
+      dates,
+      reportsRead: { sharePoint: 2, oneDrive: 3 },
       measurementFailed: false,
     })
     expect(growth).toEqual({
@@ -177,10 +177,13 @@ describe('buildStorageGrowth', () => {
       baselineDate: '2026-08-02',
       sizesOn: '2026-08-31',
       windowDays: 29,
-      reportsRead: 40,
-      reportsInWindow: 50,
-      missingReports: 'notReturned',
-      missingNote: 'notReturned',
+      windowFrom: '2026-09-30',
+      windowTo: '2026-10-02',
+      daysInWindow: 3,
+      reportsRead: { sharePoint: 2, oneDrive: 3 },
+      reportsMissing: 1,
+      complete: false,
+      missingNote: true,
       measuredRows: 2,
       leaders: [
         { name: 'Finance', value: 60 },
@@ -190,13 +193,13 @@ describe('buildStorageGrowth', () => {
   })
 
   it.each([
-    [50, null, null],
-    [7, 'throttled', 'throttled'],
-    [0, 'throttled', null],
-    [3, 'refused', 'refused'],
-  ] as const)('with %i reports read and %s missing, adds the note %s', (reportsRead, missingReports, note) => {
-    const growth = buildStorageGrowth({ ...window, reportsRead, missingReports, current: one, baseline: [] })
-    expect(growth.missingNote).toBe(note)
+    [{ sharePoint: 3, oneDrive: 3 }, false, 0, true, false],
+    [{ sharePoint: 3, oneDrive: 0 }, false, 3, false, true],
+    [{ sharePoint: 0, oneDrive: 0 }, false, 6, false, false],
+    [{ sharePoint: 0, oneDrive: 0 }, true, 6, false, false],
+  ] as const)('with %o read (failed: %s), %i are missing, complete %s, note %s', (reportsRead, measurementFailed, missing, complete, note) => {
+    const growth = buildStorageGrowth({ ...window, reportsRead, measurementFailed, current: one, baseline: [] })
+    expect([growth.reportsMissing, growth.complete, growth.missingNote]).toEqual([missing, complete, note])
   })
 
   it('counts only the live rows that have an earlier size as measured', () => {
@@ -216,32 +219,33 @@ describe('buildStorageGrowth', () => {
     const growth = buildStorageGrowth({
       ...window,
       baselineDate: null,
-      reportsRead: 0,
-      reportsInWindow: 0,
+      dates: [],
+      reportsRead: { sharePoint: 0, oneDrive: 0 },
       measurementFailed: true,
       current: one,
       baseline: [],
     })
-    expect([growth.ranking, growth.explanation]).toEqual(['size', 'growthFailed'])
+    expect([growth.ranking, growth.explanation, growth.complete]).toEqual(['size', 'growthFailed', false])
   })
 
-  it('says the report is older than the daily reports go back when the window holds none', () => {
-    const growth = buildStorageGrowth({ ...window, baselineDate: null, reportsRead: 0, reportsInWindow: 0, current: one, baseline: [] })
-    expect([growth.ranking, growth.explanation, growth.windowDays]).toEqual(['size', 'reportDateTooOld', 0])
+  it('says the report is older than the daily reports go back when the window holds no day, and counts that as complete', () => {
+    const growth = buildStorageGrowth({ ...window, baselineDate: null, dates: [], reportsRead: { sharePoint: 0, oneDrive: 0 }, current: one, baseline: [] })
+    expect([growth.ranking, growth.explanation, growth.windowDays, growth.windowFrom, growth.complete]).toEqual([
+      'size',
+      'reportDateTooOld',
+      0,
+      null,
+      true,
+    ])
   })
 
-  it.each([
-    [null, 'noDailyReports'],
-    ['notReturned', 'noDailyReports'],
-    ['throttled', 'throttled'],
-    ['refused', 'refused'],
-  ] as const)('with no report read and %s missing, explains the size ranking as %s', (missingReports, explanation) => {
-    const growth = buildStorageGrowth({ ...window, baselineDate: null, reportsRead: 0, missingReports, current: one, baseline: [] })
-    expect([growth.ranking, growth.explanation, growth.windowDays]).toEqual(['size', explanation, 0])
+  it('says no daily report came back when the window held days and none was read', () => {
+    const growth = buildStorageGrowth({ ...window, baselineDate: null, reportsRead: { sharePoint: 0, oneDrive: 0 }, current: one, baseline: [] })
+    expect([growth.ranking, growth.explanation, growth.windowDays]).toEqual(['size', 'noDailyReports', 0])
   })
 
-  it('says no row was active in the daily reports when reports came back but measured nothing', () => {
-    const growth = buildStorageGrowth({ ...window, current: one, baseline: [row('SharePoint', 'other', 3)] })
+  it('says no row was active in the daily reports when one pool came back but measured nothing', () => {
+    const growth = buildStorageGrowth({ ...window, reportsRead: { sharePoint: 0, oneDrive: 1 }, current: one, baseline: [] })
     expect([growth.ranking, growth.explanation]).toEqual(['size', 'notMeasured'])
   })
 

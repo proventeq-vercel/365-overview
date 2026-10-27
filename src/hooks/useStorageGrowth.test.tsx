@@ -9,7 +9,7 @@ import { growthWindowDates } from '@/lib/growthWindow'
 import { hideRowNames } from '@/lib/hiddenNames'
 import type { StorageOverview, StorageRow } from '@/types/storage'
 import { useRefreshReport } from './useRefreshReport'
-import { THROTTLE_COOLDOWN_MS, useStorageGrowth } from './useStorageGrowth'
+import { REREAD_COOLDOWN_MS, useStorageGrowth } from './useStorageGrowth'
 
 const row = (pool: StorageRow['pool'], id: string, bytes: number): StorageRow => ({
   pool,
@@ -35,7 +35,7 @@ const overviewOn = (reportRefreshDate: string, nameMask: 'concealed' | null = nu
 
 const unavailable = () => new ApiError(500, 'Internal Server Error')
 const throttled = () => new ApiError(429, 'Too Many Requests')
-const refused = () => new ApiError(403, 'Forbidden')
+const offline = () => new ApiError(0, 'Failed to fetch', 'NetworkError')
 
 const sitesActiveOn: Record<string, StorageRow[]> = {
   '2026-10-02': [row('SharePoint', 'busy', 300)],
@@ -83,6 +83,8 @@ function renderGrowth(
 
 const askedDates = (read: { mock: { calls: unknown[][] } }) => read.mock.calls.map(([date]) => date)
 
+const afterCooldown = () => vi.setSystemTime(Date.now() + REREAD_COOLDOWN_MS)
+
 describe('useStorageGrowth', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
@@ -103,10 +105,12 @@ describe('useStorageGrowth', () => {
       baselineDate: '2026-09-30',
       sizesOn: '2026-10-24',
       windowDays: 24,
-      reportsRead: 50,
-      reportsInWindow: 50,
-      missingReports: null,
-      missingNote: null,
+      windowFrom: '2026-09-30',
+      windowTo: '2026-10-24',
+      daysInWindow: 25,
+      reportsRead: { sharePoint: 25, oneDrive: 25 },
+      complete: true,
+      missingNote: false,
       measuredRows: 2,
       leaders: [
         { name: 'dana', value: 1000 },
@@ -125,14 +129,24 @@ describe('useStorageGrowth', () => {
     expect(askedDates(getSitesOn).filter((date) => date === '2026-10-05')).toHaveLength(1)
     expect(result.current.growth).toMatchObject({
       ranking: 'growth',
-      reportsRead: 49,
-      missingReports: 'notReturned',
-      missingNote: 'notReturned',
+      reportsRead: { sharePoint: 24, oneDrive: 25 },
+      complete: false,
+      missingNote: true,
       leaders: [
         { name: 'dana', value: 1000 },
         { name: 'busy', value: 600 },
       ],
     })
+  })
+
+  it('skips a report that never reached Graph like any other failed report', async () => {
+    const getDrivesOn = vi.fn(async (date: string) => {
+      if (date === '2026-10-05') throw offline()
+      return drivesOn(date)
+    })
+    const { result } = renderGrowth({ getDrivesOn })
+    await waitFor(() => expect(result.current.growth).toBeDefined())
+    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsRead: { sharePoint: 25, oneDrive: 24 } })
   })
 
   it('starts the window on the first day a report came back', async () => {
@@ -142,25 +156,48 @@ describe('useStorageGrowth', () => {
     }
     const { result } = renderGrowth({ getSitesOn: failOnFirstDay(sitesOn), getDrivesOn: failOnFirstDay(drivesOn) })
     await waitFor(() => expect(result.current.growth).toBeDefined())
-    expect(result.current.growth).toMatchObject({ baselineDate: '2026-10-01', windowDays: 23, reportsRead: 48 })
+    expect(result.current.growth).toMatchObject({ baselineDate: '2026-10-01', windowDays: 23, windowFrom: '2026-09-30', reportsMissing: 2 })
   })
 
-  it('ranks by storage used when no report comes back, rather than showing nothing', async () => {
-    const fail = async () => {
+  it('ranks by storage used when no report comes back, after two failed batches of each', async () => {
+    const getSitesOn = vi.fn(async () => {
       throw unavailable()
-    }
-    const { result } = renderGrowth({ getSitesOn: fail, getDrivesOn: fail })
+    })
+    const getDrivesOn = vi.fn(async () => {
+      throw unavailable()
+    })
+    const { result } = renderGrowth({ getSitesOn, getDrivesOn })
     await waitFor(() => expect(result.current.growth).toBeDefined())
+    expect([getSitesOn.mock.calls.length, getDrivesOn.mock.calls.length]).toEqual([8, 8])
     expect(result.current.growth).toMatchObject({
       ranking: 'size',
       explanation: 'noDailyReports',
       baselineDate: null,
       sizesOn: '2026-10-24',
-      reportsRead: 0,
-      reportsInWindow: 50,
-      missingNote: null,
+      reportsRead: { sharePoint: 0, oneDrive: 0 },
+      missingNote: false,
       leaders: bySize,
     })
+  })
+
+  it('reads on past one failed first batch, so a clock a few days behind still measures the rest', async () => {
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date < '2026-10-04') throw new ApiError(400, 'Only support data for the past 28 days')
+      return sitesOn(date)
+    })
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth).toBeDefined())
+    expect(result.current.growth).toMatchObject({ reportsRead: { sharePoint: 21, oneDrive: 25 }, leaders: [{ name: 'dana' }, { name: 'busy', value: 200 }] })
+  })
+
+  it('stops asking a report once a whole batch of it fails after some came back', async () => {
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date >= '2026-10-04') throw unavailable()
+      return sitesOn(date)
+    })
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth).toBeDefined())
+    expect([askedDates(getSitesOn).at(-1), result.current.growth?.reportsRead]).toEqual(['2026-10-07', { sharePoint: 4, oneDrive: 25 }])
   })
 
   it('asks for no daily report, and ranks by storage used, when the report date is older than Graph keeps them', async () => {
@@ -168,7 +205,7 @@ describe('useStorageGrowth', () => {
     const { result } = renderGrowth({ getSitesOn }, '2026-08-30')
     await waitFor(() => expect(result.current.growth).toBeDefined())
     expect(getSitesOn).not.toHaveBeenCalled()
-    expect(result.current.growth).toMatchObject({ ranking: 'size', explanation: 'reportDateTooOld', reportsInWindow: 0 })
+    expect(result.current.growth).toMatchObject({ ranking: 'size', explanation: 'reportDateTooOld', daysInWindow: 0, complete: true })
   })
 
   it('stops asking one report once Graph throttles it, keeping the days of that batch that came back', async () => {
@@ -182,8 +219,7 @@ describe('useStorageGrowth', () => {
     expect([askedDates(getSitesOn).at(-1), getDrivesOn.mock.calls.length]).toEqual(['2026-10-03', 25])
     expect(result.current.growth).toMatchObject({
       ranking: 'growth',
-      reportsRead: 28,
-      missingReports: 'throttled',
+      reportsRead: { sharePoint: 3, oneDrive: 25 },
       leaders: [
         { name: 'dana', value: 1000 },
         { name: 'busy', value: 600 },
@@ -200,21 +236,9 @@ describe('useStorageGrowth', () => {
     expect(getDrivesOn).toHaveBeenCalledTimes(4)
     expect(result.current.growth).toMatchObject({
       ranking: 'growth',
-      reportsRead: 25,
-      missingReports: 'throttled',
+      reportsRead: { sharePoint: 25, oneDrive: 0 },
       leaders: [{ name: 'busy', value: 600 }],
     })
-  })
-
-  it('stops asking a report Graph refuses for a whole batch, and Refresh data does not ask it again', async () => {
-    const getSitesOn = vi.fn(async () => {
-      throw refused()
-    })
-    const { result } = renderGrowth({ getSitesOn })
-    await waitFor(() => expect(result.current.growth).toBeDefined())
-    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsRead: 25, missingReports: 'refused' })
-    await act(() => result.current.refresh())
-    expect(getSitesOn).toHaveBeenCalledTimes(4)
   })
 
   it('keeps the measured growth, with the rows unnamed, when looking up the site names fails', async () => {
@@ -224,7 +248,7 @@ describe('useStorageGrowth', () => {
     const { result } = renderGrowth({ getSiteDetails })
     await waitFor(() => expect(result.current.growth).toBeDefined())
     expect(getSiteDetails).toHaveBeenCalledWith(['busy'])
-    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsRead: 50, leaders: [{ value: 1000 }, { value: 600 }] })
+    expect(result.current.growth).toMatchObject({ ranking: 'growth', complete: true, leaders: [{ value: 1000 }, { value: 600 }] })
   })
 
   it('still ranks by storage used, and says measuring failed, when the query breaks outright', async () => {
@@ -276,6 +300,7 @@ describe('useStorageGrowth', () => {
     const getSitesOn = vi.fn(sitesOn)
     const { result } = renderGrowth({ getSitesOn })
     await waitFor(() => expect(result.current.growth).toBeDefined())
+    afterCooldown()
     await act(() => result.current.refresh())
     expect(getSitesOn).toHaveBeenCalledTimes(25)
   })
@@ -291,45 +316,49 @@ describe('useStorageGrowth', () => {
     expect(getSitesOn).toHaveBeenCalledTimes(25)
   })
 
-  it('reads the growth again on Refresh data when a report was missing, so a passing failure does not stick', async () => {
+  it('waits ten minutes after a read that missed reports before Refresh data reads the window again', async () => {
     let failing = true
     const getSitesOn = vi.fn(async (date: string) => {
       if (failing && date === '2026-10-10') throw unavailable()
       return sitesOn(date)
     })
     const { result } = renderGrowth({ getSitesOn })
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(49))
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
     failing = false
     await act(() => result.current.refresh())
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(50))
+    expect(getSitesOn).toHaveBeenCalledTimes(25)
+    afterCooldown()
+    await act(() => result.current.refresh())
+    await waitFor(() => expect(result.current.growth?.complete).toBe(true))
   })
 
-  it('keeps the earlier growth when reading it again on Refresh data brings back fewer reports', async () => {
+  it('keeps the earlier growth when reading it again misses more reports', async () => {
     let round = 1
     const getSitesOn = vi.fn(async (date: string) => {
-      if (round === 1 ? date === '2026-10-10' : date >= '2026-10-10') throw unavailable()
+      if (round === 1 ? date === '2026-10-10' : date === '2026-10-10' || date === '2026-10-11') throw unavailable()
       return sitesOn(date)
     })
     const { result } = renderGrowth({ getSitesOn })
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(49))
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
     round = 2
+    afterCooldown()
     await act(() => result.current.refresh())
     await waitFor(() => expect(getSitesOn).toHaveBeenCalledTimes(50))
-    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsRead: 49 })
+    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsMissing: 1 })
   })
 
-  it('waits ten minutes after Graph throttled the reads before Refresh data reads them again', async () => {
-    const getDrivesOn = vi.fn(async (date: string) => {
-      if (date === '2026-10-01') throw throttled()
-      return drivesOn(date)
+  it('takes the new read when it misses as many reports as the earlier one', async () => {
+    let round = 1
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date === (round === 1 ? '2026-10-10' : '2026-10-02')) throw unavailable()
+      return sitesOn(date)
     })
-    const { result } = renderGrowth({ getDrivesOn })
-    await waitFor(() => expect(result.current.growth?.missingReports).toBe('throttled'))
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 600 }))
+    round = 2
+    afterCooldown()
     await act(() => result.current.refresh())
-    expect(getDrivesOn).toHaveBeenCalledTimes(4)
-    vi.setSystemTime(Date.now() + THROTTLE_COOLDOWN_MS)
-    await act(() => result.current.refresh())
-    await waitFor(() => expect(getDrivesOn).toHaveBeenCalledTimes(8))
+    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 200 }))
   })
 
   it('starts no second read of the days when Refresh data is pressed again while one is running', async () => {
@@ -340,8 +369,9 @@ describe('useStorageGrowth', () => {
       return sitesOn(date)
     })
     const { result } = renderGrowth({ getSitesOn })
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(49))
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
     hold = true
+    afterCooldown()
     act(() => void result.current.refresh())
     await waitFor(() => expect(getSitesOn).toHaveBeenCalledTimes(29))
     act(() => void result.current.refresh())
@@ -349,7 +379,7 @@ describe('useStorageGrowth', () => {
     expect(getSitesOn).toHaveBeenCalledTimes(29)
   })
 
-  it('reads the growth again on Refresh data after it failed outright', async () => {
+  it('reads the growth again on Refresh data straight after it failed outright', async () => {
     let broken = true
     const getSitesOn = vi.fn(async (date: string) => {
       if (broken) throw new TypeError('rows is not iterable')
@@ -387,8 +417,9 @@ describe('useStorageGrowth', () => {
       .mockResolvedValueOnce({ reportRefreshDate: '2026-10-24' })
       .mockResolvedValue({ reportRefreshDate: '2026-10-25' })
     const { result } = renderGrowth({ getSitesOn }, '2026-10-24', undefined, loadReport)
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(49))
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
     const calls = getSitesOn.mock.calls.length
+    afterCooldown()
     await act(() => result.current.refresh())
     expect(loadReport).toHaveBeenCalledTimes(2)
     expect(getSitesOn).toHaveBeenCalledTimes(calls)
@@ -404,8 +435,9 @@ describe('useStorageGrowth', () => {
       .mockResolvedValueOnce({ reportRefreshDate: '2026-10-24' })
       .mockRejectedValue(new Error('429 Too Many Requests'))
     const { result } = renderGrowth({ getSitesOn }, '2026-10-24', undefined, loadReport)
-    await waitFor(() => expect(result.current.growth?.reportsRead).toBe(49))
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
     const calls = getSitesOn.mock.calls.length
+    afterCooldown()
     await act(() => result.current.refresh())
     expect(loadReport).toHaveBeenCalledTimes(2)
     expect(getSitesOn).toHaveBeenCalledTimes(calls)
@@ -423,6 +455,6 @@ describe('useStorageGrowth', () => {
     const { result } = renderGrowth({ getSitesOn }, '2026-10-28')
     await waitFor(() => expect(result.current.growth).toBeDefined())
     expect(askedDates(getSitesOn).at(-1)).toBe('2026-10-26')
-    expect(result.current.growth).toMatchObject({ sizesOn: '2026-10-28', windowDays: 28 })
+    expect(result.current.growth).toMatchObject({ sizesOn: '2026-10-28', windowDays: 28, windowTo: '2026-10-26' })
   })
 })

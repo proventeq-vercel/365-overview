@@ -7,6 +7,16 @@ describe('ApiError.isThrottled', () => {
   })
 })
 
+describe('ApiError.isNetworkFailure', () => {
+  it('marks only a request that never reached Graph', () => {
+    expect([new ApiError(0, 'Failed to fetch', 'NetworkError'), new ApiError(500, 'x'), new ApiError(0, 'x')].map((error) => error.isNetworkFailure)).toEqual([
+      true,
+      false,
+      false,
+    ])
+  })
+})
+
 describe('isUserNotAssigned', () => {
   it('recognises AADSTS50105 in the message or the MSAL error code', () => {
     expect(isUserNotAssigned(new Error('AADSTS50105: The signed in user is not assigned'))).toBe(true)

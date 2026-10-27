@@ -122,6 +122,12 @@ describe('createLiveDataSource', () => {
     expect(await createLiveDataSource(graph).getOneDriveLicences()).toBeNull()
   })
 
+  it('still fails the OneDrive licences when the request never reached Graph, so the load is retried rather than read as unknown', async () => {
+    const { graph } = recordingGraph()
+    vi.mocked(graph.getAllPages).mockRejectedValueOnce(new ApiError(0, 'Failed to fetch', 'NetworkError'))
+    await expect(createLiveDataSource(graph).getOneDriveLicences()).rejects.toThrow('Failed to fetch')
+  })
+
   it('still fails the OneDrive licences on anything that is not a Graph answer', async () => {
     const { graph } = recordingGraph()
     vi.mocked(graph.getAllPages).mockRejectedValueOnce(new TypeError('network down'))
@@ -314,6 +320,14 @@ describe('getSiteDirectory', () => {
 
     expect(get).toHaveBeenCalledTimes(1)
     expect(second).toBe(first)
+  })
+
+  it('fails the directory when the request never reached Graph, so the load is retried rather than left unnamed', async () => {
+    const { graph } = recordingGraph()
+    const get = graph.get as ReturnType<typeof vi.fn>
+    get.mockRejectedValue(new ApiError(0, 'Failed to fetch', 'NetworkError'))
+
+    await expect(createLiveDataSource(graph).getSiteDirectory()).rejects.toThrow('Failed to fetch')
   })
 
   it('degrades to no directory when Graph refuses the delta, so the report still renders', async () => {

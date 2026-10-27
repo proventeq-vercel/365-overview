@@ -41,7 +41,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   failure, `config/consentReturn.ts` turns the admin-consent return
   (`?admin_consent=True`) into a two-minute settling window (3 s rechecks,
   `AccessFailure` shows the loading screen instead of the refusal), and
-  recovery invalidates every other query except a growth that has loaded. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
+  recovery invalidates every other query, and a growth only when `canReadGrowthAgain` allows it. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
   kept byte-identical with a `365-oversharing` sibling; that app is dropped.)
 - `src/clients/` — `graphClient` fetch wrapper (`get`, `getAllPages`,
   `batchGet` over `$batch`) + `apiError`. It takes an **origin**
@@ -127,20 +127,24 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   with `staleTime: Infinity`, `retry: false`. Each day's SharePoint and
   OneDrive reports are read separately (their budgets are separate): one that
   fails with an `ApiError` is skipped (the window starts on the first day a
-  report came back; `reportsRead` / `reportsInWindow` count reports, two a
-  day; `missingReports` says why some are missing and `missingNote` is the
-  model's note), a 429 (`ApiError.isThrottled`, 429 only) stops asking that
-  report after its batch (`throttled`), a batch of nothing but other 4xx stops
-  it too (`refused`), and anything else fails the query. `graphClient` wraps a
-  request that never reached Graph in `ApiError` status 0 (`NetworkError`),
-  so a network blip skips a report rather than looking like a bug. A failed
-  name lookup leaves the leaders unnamed; on a masked tenant the dated rows go
-  through `hideRowNames` so their ids match the masked report rows. A re-read
-  that brings back fewer reports keeps the earlier result.
+  report came back; `reportsRead` counts each pool's reports, `reportsMissing`
+  and `complete` say what is left, `missingNote` is the model's note). A
+  report stops being asked after a batch with a 429 (`ApiError.isThrottled`,
+  429 only) or after a batch where every read of it failed, unless that was
+  the first batch (a clock a few days behind fails only the oldest days).
+  Anything that is not an `ApiError` fails the query. `graphClient` wraps a
+  request that never reached Graph in `ApiError` status 0 (`NetworkError`,
+  `isNetworkFailure`), so a network blip skips a report; the licence and
+  directory lookups in `live.ts` still fail on it instead of reading as
+  unknown. A failed name lookup leaves the leaders unnamed; on a masked tenant
+  the dated rows go through `hideRowNames` so their ids match the masked
+  report rows. A re-read that misses more reports keeps the earlier result.
+  The copy never names a cause: it gives each pool's count over the window
+  asked (`windowFrom` to `windowTo`).
   `canReadGrowthAgain` is the one rule for Refresh data and access recovery:
-  never while fetching, always after a failure, never once complete or
-  `refused`, and not within `THROTTLE_COOLDOWN_MS` (10 minutes) of a
-  `throttled` read; Refresh data also needs the refresh itself to have brought
+  never while fetching, always after a failure, never once complete, and an
+  incomplete read only `REREAD_COOLDOWN_MS` (10 minutes, Graph's budget
+  window) after it was read; Refresh data also needs the refresh itself to have brought
   the report back for that date, and its busy state ignores growth (the daily
   reports change once a day; each load spends ~25 of the 100 report requests
   Graph allows per 10 minutes per report API),
@@ -152,10 +156,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
   `sizesOn`, zero-byte rows left out). `explanation` names the description:
   `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
-  window: a report date at or before today − 26), `throttled` / `refused` /
-  `noDailyReports` (no report read), `notMeasured`, `unchanged` or
-  `growthFailed`; the panel reads it as `offenders.explain.<explanation>` and
-  the note as `offenders.missing.<missingNote>`. The window runs from
+  window: a report date at or before today − 26), `noDailyReports` (no report
+  read), `notMeasured`, `unchanged` or `growthFailed`; the panel reads it as
+  `offenders.explain.<explanation>` and the note as `offenders.reportsRead`.
+  The growth window runs from
   `baselineDate` to `sizesOn`, the day of the sizes growth is measured to. If the query
   itself fails, the hook returns that size ranking built from the overview
   (`growthFailed`), also while Refresh data re-reads it, so there is no error

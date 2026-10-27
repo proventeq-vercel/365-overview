@@ -163,7 +163,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so the *Forecast after clean-up* line is the forecast itself |
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
 | `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
-| `no-daily-reports` | Every daily usage report is throttled (the report itself loads) — the growth panel stops asking after the first four days, ranks the sites and OneDrives by storage used and says Microsoft limited the requests |
+| `no-daily-reports` | Every daily usage report is throttled (the report itself loads) — the growth panel stops asking after the first four days, ranks the sites and OneDrives by storage used and says none of the daily reports came back |
 
 ### Feature flags — `VITE_FEATURES`
 

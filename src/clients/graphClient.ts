@@ -1,4 +1,4 @@
-import { ApiError } from './apiError'
+import { ApiError, NETWORK_ERROR_CODE } from './apiError'
 
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
@@ -11,7 +11,6 @@ export const MAX_RETRY_AFTER_MS = 60_000
 
 const THROTTLED_STATUSES = new Set([429, 503, 504])
 
-export const NETWORK_ERROR_CODE = 'NetworkError'
 
 export interface BatchResponse<T> {
   status: number

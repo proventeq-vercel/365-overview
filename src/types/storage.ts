@@ -110,18 +110,9 @@ export interface StorageBreakdown {
 
 export type GrowthRanking = 'growth' | 'shrink' | 'size'
 
-export type SizeRankingReason =
-  | 'growthFailed'
-  | 'reportDateTooOld'
-  | 'throttled'
-  | 'refused'
-  | 'noDailyReports'
-  | 'notMeasured'
-  | 'unchanged'
+export type SizeRankingReason = 'growthFailed' | 'reportDateTooOld' | 'noDailyReports' | 'notMeasured' | 'unchanged'
 
 export type GrowthExplanation = 'growth' | 'shrink' | SizeRankingReason
-
-export type MissingReports = 'throttled' | 'refused' | 'notReturned'
 
 export interface StorageGrowth {
   ranking: GrowthRanking
@@ -129,10 +120,13 @@ export interface StorageGrowth {
   baselineDate: string | null
   sizesOn: string
   windowDays: number
-  reportsRead: number
-  reportsInWindow: number
-  missingReports: MissingReports | null
-  missingNote: MissingReports | null
+  windowFrom: string | null
+  windowTo: string | null
+  daysInWindow: number
+  reportsRead: { sharePoint: number; oneDrive: number }
+  reportsMissing: number
+  complete: boolean
+  missingNote: boolean
   measuredRows: number
   leaders: Slice[]
 }

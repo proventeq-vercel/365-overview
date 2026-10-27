@@ -22,13 +22,16 @@ function GrowthDescription({ growth }: { growth: StorageGrowth }) {
     to: growth.sizesOn,
     days: growth.windowDays,
     date: growth.sizesOn,
-    read: growth.reportsRead,
-    inWindow: growth.reportsInWindow,
+    windowFrom: growth.windowFrom,
+    windowTo: growth.windowTo,
+    inWindow: growth.daysInWindow,
+    sitesRead: growth.reportsRead.sharePoint,
+    drivesRead: growth.reportsRead.oneDrive,
   }
   return (
     <PanelDescription>
       {t(`storageOptimisation.offenders.explain.${growth.explanation}`, values)}
-      {growth.missingNote && ` ${t(`storageOptimisation.offenders.missing.${growth.missingNote}`, values)}`}
+      {growth.missingNote && ` ${t('storageOptimisation.offenders.reportsRead', values)}`}
     </PanelDescription>
   )
 }

@@ -11,10 +11,13 @@ const grown: StorageGrowth = {
   baselineDate: '2026-08-02',
   sizesOn: '2026-08-30',
   windowDays: 28,
-  reportsRead: 50,
-  reportsInWindow: 50,
-  missingReports: null,
-  missingNote: null,
+  windowFrom: '2026-08-06',
+  windowTo: '2026-08-30',
+  daysInWindow: 25,
+  reportsRead: { sharePoint: 25, oneDrive: 25 },
+  reportsMissing: 0,
+  complete: true,
+  missingNote: false,
   measuredRows: 40,
   leaders: [
     { name: 'gamma', value: 900 },
@@ -28,8 +31,9 @@ const bySize: StorageGrowth = {
   baselineDate: null,
   sizesOn: '2026-08-31',
   windowDays: 0,
-  reportsRead: 0,
-  missingReports: 'notReturned',
+  reportsRead: { sharePoint: 0, oneDrive: 0 },
+  reportsMissing: 50,
+  complete: false,
   measuredRows: 0,
   leaders: [{ name: 'gamma', value: 5000 }],
 }
@@ -102,25 +106,18 @@ describe('OffendersSection', () => {
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
-  it.each([
-    ['notReturned', '42 of the 50 daily usage reports in this window came back; Refresh data reads the window again.'],
-    [
-      'throttled',
-      '42 of the 50 daily usage reports in this window came back before Microsoft limited the requests; in about ten minutes, Refresh data reads the window again.',
-    ],
-    ['refused', '42 of the 50 daily usage reports in this window came back; Microsoft refused the rest.'],
-  ] as const)('says how many daily reports came back when some are missing (%s)', (missingNote, note) => {
-    renderOffenders(withSites, { ...grown, reportsRead: 42, missingReports: missingNote, missingNote })
+  it('says how many reports of each pool came back, and over which window, when some are missing', () => {
+    renderOffenders(withSites, { ...grown, reportsRead: { sharePoint: 20, oneDrive: 25 }, reportsMissing: 5, complete: false, missingNote: true })
     expect(
       screen.getByText(
-        `Storage added between 2026-08-02 and 2026-08-30 (28 days), counted from the first day in that window each site or OneDrive was active. ${note}`,
+        'Storage added between 2026-08-02 and 2026-08-30 (28 days), counted from the first day in that window each site or OneDrive was active. 20 of the 25 SharePoint and 25 of the 25 OneDrive daily usage reports from 2026-08-06 to 2026-08-30 came back; Refresh data reads them again once ten minutes have passed.',
       ),
     ).toBeInTheDocument()
   })
 
   it('does not mention missing daily reports when the model gives no note', () => {
-    renderOffenders(withSites, { ...grown, reportsRead: 42, missingReports: 'notReturned' })
-    expect(screen.queryByText(/daily usage reports in this window/)).not.toBeInTheDocument()
+    renderOffenders(withSites, { ...grown, reportsRead: { sharePoint: 20, oneDrive: 25 }, complete: false })
+    expect(screen.queryByText(/daily usage reports from/)).not.toBeInTheDocument()
   })
 
   it('charts the sites that freed the most storage when nothing grew, and says so', () => {
@@ -136,7 +133,7 @@ describe('OffendersSection', () => {
     expect(within(chart.parentElement!).getByText('Storage used')).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Ranked by storage used on 2026-08-31. Growth is measured from Microsoft's daily usage reports, and Microsoft returned none of the 50 in this window; Refresh data asks again.",
+        "Ranked by storage used on 2026-08-31. Growth is measured from Microsoft's daily usage reports, and none of those from 2026-08-06 to 2026-08-30 came back; Refresh data reads them again once ten minutes have passed.",
       ),
     ).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
@@ -152,14 +149,6 @@ describe('OffendersSection', () => {
       "Ranked by storage used on 2026-08-31. Measuring growth from Microsoft's daily usage reports did not finish this time; Refresh data tries again.",
     ],
     [
-      'throttled',
-      "Ranked by storage used on 2026-08-31. Growth is measured from Microsoft's daily usage reports, and Microsoft limited the requests before any came back; in about ten minutes, Refresh data asks again.",
-    ],
-    [
-      'refused',
-      "Ranked by storage used on 2026-08-31. Growth is measured from Microsoft's daily usage reports, and Microsoft refused the requests for them.",
-    ],
-    [
       'notMeasured',
       'Ranked by storage used on 2026-08-31, because no site or OneDrive in this report was active in the daily usage reports that came back.',
     ],
@@ -169,7 +158,7 @@ describe('OffendersSection', () => {
   })
 
   it('says nothing measured changed size, naming the window, when that is why it ranks by size', () => {
-    renderOffenders(withSites, { ...bySize, explanation: 'unchanged', baselineDate: '2026-08-02', reportsRead: 50, measuredRows: 3 })
+    renderOffenders(withSites, { ...bySize, explanation: 'unchanged', baselineDate: '2026-08-02', reportsRead: { sharePoint: 25, oneDrive: 25 }, measuredRows: 3 })
     expect(
       screen.getByText('Ranked by storage used on 2026-08-31, because no site or OneDrive measured between 2026-08-02 and 2026-08-31 changed size.'),
     ).toBeInTheDocument()

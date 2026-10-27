@@ -1,6 +1,6 @@
 import { daysBetween } from '@/lib/growthWindow'
 import { rowName } from '@/lib/rowName'
-import type { GrowthExplanation, GrowthRanking, MissingReports, SizeRankingReason, StorageGrowth, StorageRow } from '@/types/storage'
+import type { GrowthExplanation, GrowthRanking, SizeRankingReason, StorageGrowth, StorageRow } from '@/types/storage'
 
 export const TOP_GROWERS = 10
 
@@ -66,41 +66,47 @@ export interface GrowthInputs {
   baseline: StorageRow[]
   baselineDate: string | null
   sizesOn: string
-  reportsRead: number
-  reportsInWindow: number
-  missingReports: MissingReports | null
+  dates: string[]
+  reportsRead: ReportsRead
   measurementFailed: boolean
 }
 
-function sizeRankingReason(inputs: GrowthInputs, measuredRows: number): SizeRankingReason {
+export type ReportsRead = StorageGrowth['reportsRead']
+
+const DAILY_REPORTS_PER_DAY = 2
+
+function sizeRankingReason(inputs: GrowthInputs, measuredRows: number, read: number): SizeRankingReason {
   if (inputs.measurementFailed) return 'growthFailed'
-  if (inputs.reportsInWindow === 0) return 'reportDateTooOld'
-  if (inputs.reportsRead === 0) {
-    if (inputs.missingReports === 'throttled' || inputs.missingReports === 'refused') return inputs.missingReports
-    return 'noDailyReports'
-  }
+  if (inputs.dates.length === 0) return 'reportDateTooOld'
+  if (read === 0) return 'noDailyReports'
   return measuredRows === 0 ? 'notMeasured' : 'unchanged'
 }
 
-function explanationOf(ranking: GrowthRanking, inputs: GrowthInputs, measuredRows: number): GrowthExplanation {
-  return ranking === 'size' ? sizeRankingReason(inputs, measuredRows) : ranking
+function explanationOf(ranking: GrowthRanking, inputs: GrowthInputs, measuredRows: number, read: number): GrowthExplanation {
+  return ranking === 'size' ? sizeRankingReason(inputs, measuredRows, read) : ranking
 }
 
 export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
-  const { current, baseline, baselineDate, sizesOn, reportsRead, reportsInWindow, missingReports } = inputs
+  const { current, baseline, baselineDate, sizesOn, dates, reportsRead, measurementFailed } = inputs
   const measured = new Set(baseline.map(rowKey))
   const measuredRows = current.filter((row) => !row.isDeleted && measured.has(rowKey(row))).length
   const { ranking, leaders } = rankLeaders(current, baseline)
+  const read = reportsRead.sharePoint + reportsRead.oneDrive
+  const reportsMissing = dates.length * DAILY_REPORTS_PER_DAY - read
+  const complete = !measurementFailed && reportsMissing === 0
   return {
     ranking,
-    explanation: explanationOf(ranking, inputs, measuredRows),
+    explanation: explanationOf(ranking, inputs, measuredRows, read),
     baselineDate,
     sizesOn,
     windowDays: baselineDate === null ? 0 : daysBetween(baselineDate, sizesOn),
+    windowFrom: dates[0] ?? null,
+    windowTo: dates.at(-1) ?? null,
+    daysInWindow: dates.length,
     reportsRead,
-    reportsInWindow,
-    missingReports,
-    missingNote: reportsRead > 0 ? missingReports : null,
+    reportsMissing,
+    complete,
+    missingNote: read > 0 && !complete,
     measuredRows,
     leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes })),
   }
