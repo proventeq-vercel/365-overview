@@ -291,6 +291,11 @@ describe('betterGrowth', () => {
     expect(betterGrowth(earlier, completeAfterMidnight)).toBe(completeAfterMidnight)
   })
 
+  it('keeps the earlier read once the report date has fallen out of the window and nothing could be asked', () => {
+    const earlier = read(3, 2)
+    expect(betterGrowth(earlier, read(0, 0, []))).toBe(earlier)
+  })
+
   it('on a tie keeps the earlier read when the new one loses reports of a pool, and takes it otherwise', () => {
     const sharePointOnly = read(3, 0)
     const oneDriveOnly = read(0, 3)
