@@ -181,7 +181,7 @@ describe('GrowthSection', () => {
     })
   })
 
-  it('leaves drives over licence out, never Unknown, when the line is only the limit most OneDrives report', () => {
+  it('leaves drives over licence out, never Unknown, when the line is only the commonest OneDrive limit', () => {
     render(
       <GrowthSection
         overview={{

@@ -138,9 +138,12 @@ function oneDriveLimit(
   overrideBytes: number | null,
   licenceBytes: number | null,
 ): OneDriveLimit | null {
-  if (overrideBytes !== null) return { basis: 'set', perUserBytes: overrideBytes }
-  if (licenceBytes !== null) return { basis: 'licences', perUserBytes: licenceBytes }
-  return commonestDriveLimit(liveDrives)
+  const driveLimit = licenceBytes === null ? commonestDriveLimit(liveDrives) : null
+  if (overrideBytes !== null) {
+    const whenCleared = licenceBytes !== null ? 'licences' : driveLimit === null ? null : 'driveLimit'
+    return { basis: 'set', perUserBytes: overrideBytes, whenCleared }
+  }
+  return licenceBytes !== null ? { basis: 'licences', perUserBytes: licenceBytes } : driveLimit
 }
 
 function drivesOverEntitlement(liveDrives: StorageRow[], limit: OneDriveLimit): OverEntitlement {

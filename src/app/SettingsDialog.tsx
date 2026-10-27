@@ -158,7 +158,11 @@ export function SettingsDialog({
               step="0.5"
               min="0.5"
               suffix={t('settings.oneDriveEntitlementUnit')}
-              placeholder={t('settings.oneDriveEntitlementPlaceholder')}
+              placeholder={
+                oneDriveEstimateBytes === null
+                  ? t('settings.oneDriveEntitlementPlaceholderNoEstimate')
+                  : t('settings.oneDriveEntitlementPlaceholder')
+              }
               onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}
             />
           </Field>

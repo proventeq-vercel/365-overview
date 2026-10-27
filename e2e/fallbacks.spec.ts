@@ -33,10 +33,10 @@ for (const scenario of SCENARIOS) {
   })
 }
 
-test('without licences the OneDrive report measures against the limit most OneDrives report', async ({ page }) => {
+test('without licences the OneDrive report measures against the commonest OneDrive limit', async ({ page }) => {
   await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=no-licences`)
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Over the usual OneDrive limit' })).toHaveText(
-    /^0Over the usual OneDrive limitEvery drive fits within 1 TB, the limit most OneDrives report$/,
+    /^0Over the usual OneDrive limitEvery drive fits within 1 TB, the commonest OneDrive limit$/,
   )
   await expect(page.getByText('No OneDrive holds more than 1 TB')).toBeVisible()
 })
@@ -44,7 +44,7 @@ test('without licences the OneDrive report measures against the limit most OneDr
 test('without the active-user report the quiet OneDrives stand in for the unlicensed ones, and the pool is drawn over the drives with a limit', async ({ page }) => {
   await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=onedrive-gaps`)
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'No activity for 93 days' })).toContainText(
-    /live OneDrives have had no activity since 2026-05-29/,
+    /live OneDrives have had no activity since 29 May 2026/,
   )
   await page.goto('/?scenario=onedrive-gaps')
   await expect(page.getByText(/^of the .+ allocated to the 388 OneDrives that report a limit used/)).toBeVisible()

@@ -331,11 +331,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `SHAREPOINTENTERPRISE_MIDMARKET` counts as Plan 2: it is carried by E5 EEA
   with Calling Minutes as well as the retired Midsize Business.
   `oneDrive.overEntitlement.limit` says what the line is: `set`
-  (`oneDriveEntitlementOverrideBytes`, null or ≤ 0 = not set), else `licences`
+  (`oneDriveEntitlementOverrideBytes`, null or ≤ 0 = not set; `whenCleared`
+  names what clearing it goes back to, for the note), else `licences`
   (the estimate), else — no readable licences or none with a known allowance
   (`licenceGap` `licencesUnavailable` / `noSizedPlan`) — `driveLimit`: the
   commonest positive per-drive allocation among live drives (ties → the larger),
-  with `drivesReporting`, shown as *Over the usual OneDrive limit*, never a
+  with `drivesReporting`, shown as *Over the usual OneDrive limit* (the copy
+  says "commonest", never "most": it is a plurality) with an *Over the limit by*
+  column (`overDriveLimit`), never a
   guessed 1 TB. `overEntitlement` is `null` — card and section left out, never
   *Unknown* — only when no live drive reports a limit either. It lists live
   drives with `used > perUser`, largest first, each row a copy carrying

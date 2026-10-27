@@ -33,9 +33,11 @@ plans, and education plans (their allowances vary by agreement).
 
 If the licences cannot be read (the Organization.Read.All permission was not granted), or none
 has a known allowance, and no figure is set, the section becomes **OneDrives over the usual
-OneDrive limit**. It measures against the storage limit most live OneDrives report, which is
-usually the tenant's default, and its subtitle says how many report it. A drive listed then is
-one whose limit was raised above the default and that holds more than the default. If no live
+OneDrive limit**. It measures against the commonest storage limit among the live OneDrives,
+which is usually the tenant's default, and its subtitle says how many report it. A drive listed
+then most likely had its limit raised above the default, and holds more than the default. The
+*Over licence by* column becomes *Over the limit by*. Clearing a figure set in Report settings
+goes back to this limit when there is no licence estimate. If no live
 OneDrive reports a limit, the section is left out.
 
 To measure against a different figure, set **OneDrive storage per user** in

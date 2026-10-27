@@ -4,17 +4,12 @@ import { costHint, forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
+import { KPI_GRID_COLUMNS } from '@/design/kpiGrid'
 import { HEALTH_COLOR, P365, RISK_COLOR } from '@/design/theme'
 
 interface Props {
   overview: StorageOverview
   delay?: number
-}
-
-const GRID_COLUMNS: Record<number, string> = {
-  2: 'xl:grid-cols-2',
-  3: 'xl:grid-cols-3',
-  4: 'xl:grid-cols-4',
 }
 
 export function KpiCards({ overview, delay = 0 }: Props) {
@@ -86,7 +81,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   return (
     <section
       aria-label={t('storageOptimisation.capacity.title')}
-      className={`enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 ${GRID_COLUMNS[cards.length]}`}
+      className={`enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 ${KPI_GRID_COLUMNS[cards.length]}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {cards}

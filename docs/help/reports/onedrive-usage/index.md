@@ -26,7 +26,7 @@ a SharePoint site's allocation does not.
 
 When the tenant's licences give no OneDrive storage per user (they cannot be read, or none has
 an allowance the report knows) and none is set, the card becomes **Over the usual OneDrive limit**:
-the same count against the storage limit most live OneDrives report, usually the tenant's default.
+the same count against the commonest storage limit among the live OneDrives, usually the tenant's default.
 Set the licensed figure in [Report settings](../../reference/settings.md#onedrive-storage-per-user).
 If no live OneDrive reports a limit either, the card is left out.
 

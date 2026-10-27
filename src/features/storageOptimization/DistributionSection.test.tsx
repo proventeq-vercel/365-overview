@@ -123,6 +123,17 @@ describe('DistributionSection', () => {
     expect(screen.getByRole('list', { name: 'Live OneDrive storage' })).toBeInTheDocument()
   })
 
+  it('says one OneDrive reports a limit in the singular', () => {
+    const allocation = { ...withTemplates.oneDrive.pool.allocation!, driveCount: 1, withoutLimit: { count: 1, bytes: 6 * GB } }
+    render(
+      <DistributionSection
+        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 126 * GB, allocation } } }}
+      />,
+    )
+    expect(screen.getByText('of the 40 TB allocated to the 1 OneDrive that reports a limit used (120 GB)')).toBeInTheDocument()
+    expect(screen.getByText('1 live OneDrive holding 6 GB reports no limit and is left out of this line.')).toBeInTheDocument()
+  })
+
   it('says no OneDrive reports a limit, with no bar, rather than an unknown allocation', () => {
     render(
       <DistributionSection

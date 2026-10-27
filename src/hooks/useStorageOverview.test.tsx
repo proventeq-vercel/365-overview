@@ -84,8 +84,9 @@ describe('useStorageOverview', () => {
   })
 
   it('counts the quiet OneDrives in place of the unlicensed ones when the licence report could not be read', async () => {
-    renderWithData(<Unlicensed />, sourceWith({ getDrives: async () => [ownerDrive('leaver@contoso.com')] }))
-    expect(await screen.findByText(/^noActivity \d+$/)).toBeInTheDocument()
+    const quiet = { ...ownerDrive('leaver@contoso.com'), lastActivityDate: '2026-01-01' }
+    renderWithData(<Unlicensed />, sourceWith({ getDrives: async () => [quiet, ownerDrive('busy@contoso.com')] }))
+    expect(await screen.findByText('noActivity 1')).toBeInTheDocument()
   })
 
   it('names the report rows from the tenant directory', async () => {

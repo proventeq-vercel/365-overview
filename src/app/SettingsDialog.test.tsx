@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { DataSourceContext } from '@/data/useDataSource'
-import { createMockDataSource } from '@/data/fixtures'
+import { createMockDataSource, type MockScenario } from '@/data/fixtures'
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, type ReportSettings } from '@/lib/settings'
 import { SettingsDialog } from './SettingsDialog'
 import { SettingsProvider } from './SettingsProvider'
@@ -19,7 +19,7 @@ function Probe({ onChange }: { onChange: (settings: ReportSettings) => void }) {
   return null
 }
 
-function renderDialog(initial?: Partial<ReportSettings>, open = true) {
+function renderDialog(initial?: Partial<ReportSettings>, open = true, scenario: MockScenario = 'healthy') {
   if (initial) localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(initial))
   const onChange = vi.fn()
   const onOpenChange = vi.fn()
@@ -27,7 +27,7 @@ function renderDialog(initial?: Partial<ReportSettings>, open = true) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <DataSourceContext value={createMockDataSource('healthy')}>
+        <DataSourceContext value={createMockDataSource(scenario)}>
           <SettingsProvider>{children}</SettingsProvider>
         </DataSourceContext>
       </QueryClientProvider>
@@ -104,6 +104,12 @@ describe('SettingsDialog', () => {
   it('tells the admin the OneDrive storage per user the licences give, so they know what they are replacing', async () => {
     renderDialog()
     expect(await screen.findByText(/^From licences: 5120 GB — /)).toBeInTheDocument()
+  })
+
+  it('says an empty OneDrive storage per user falls back to the commonest OneDrive limit when the licences give none', async () => {
+    renderDialog(undefined, true, 'no-licences')
+    expect(await screen.findByText(/Left empty, drives are measured against the commonest OneDrive limit\.$/)).toBeInTheDocument()
+    expect(screen.getByLabelText('OneDrive storage per user')).toHaveAttribute('placeholder', 'Commonest OneDrive limit')
   })
 
   it('keeps a half-typed 0 on the way to 0.5 rather than clearing the field', async () => {

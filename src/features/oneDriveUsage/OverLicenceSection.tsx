@@ -6,6 +6,7 @@ import { formatBytes } from '@/lib/format'
 import type { OneDriveLicenceGap, OneDriveLimit, StorageOverview } from '@/types/storage'
 
 const OVER_LICENCE_COLUMNS = ['name', 'owner', 'used', 'overEntitlement', 'capacity', 'lastActivity'] as const
+const OVER_DRIVE_LIMIT_COLUMNS = ['name', 'owner', 'used', 'overDriveLimit', 'capacity', 'lastActivity'] as const
 
 function subtitle(limit: OneDriveLimit, driveCount: number, t: TranslateFn): string {
   const entitlement = formatBytes(limit.perUserBytes)
@@ -28,7 +29,10 @@ function note(limit: OneDriveLimit, licenceGap: OneDriveLicenceGap | null, t: Tr
       ? t('oneDrive.overLicence.noteDriveLimitNoSizedPlan')
       : t('oneDrive.overLicence.noteDriveLimit')
   }
-  return licenceGap === null ? t('oneDrive.overLicence.noteSet') : t('oneDrive.overLicence.noteSetNoEstimate')
+  if (limit.whenCleared === 'licences') return t('oneDrive.overLicence.noteSet')
+  return limit.whenCleared === 'driveLimit'
+    ? t('oneDrive.overLicence.noteSetNoEstimate')
+    : t('oneDrive.overLicence.noteSetNothing')
 }
 
 export function OverLicenceSection({ overview, delay }: { overview: StorageOverview; delay?: number }) {
@@ -52,7 +56,7 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
           <SiteTable
             rows={overEntitlement.drives}
             poolUsedBytes={overview.offenders.poolUsedBytes}
-            columns={[...OVER_LICENCE_COLUMNS]}
+            columns={[...(byDriveLimit ? OVER_DRIVE_LIMIT_COLUMNS : OVER_LICENCE_COLUMNS)]}
             label={label}
             nameHeader={t('oneDrive.table.driveHeader')}
             nameHelp={t('table.column.help.drive')}

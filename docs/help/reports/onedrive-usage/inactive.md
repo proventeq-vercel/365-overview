@@ -26,8 +26,8 @@ no licence; the card says how many owners are counted that way.
 
 When the report does not come back, or lists none of the OneDrives' owners (the two reports
 cannot be matched at all), the card becomes **No activity for 93 days**: the live OneDrives with
-no activity in the 93 days before the report date, but some within the inactive window (those
-count as inactive). An unlicensed owner's OneDrive goes quiet, and Microsoft archives it 93 days
+no activity in the 93 days before the report date, though they were active within the inactive
+window (longer quiet ones count as inactive). An unlicensed owner's OneDrive goes quiet, and Microsoft archives it 93 days
 after the licence goes, so these stand in for the unlicensed ones; the card says why. The
 inactive group may then include unlicensed OneDrives, and its card says so too.
 

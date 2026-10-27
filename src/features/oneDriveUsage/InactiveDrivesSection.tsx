@@ -4,7 +4,7 @@ import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitive
 import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
-import { formatBytes, formatLongMonthYear } from '@/lib/format'
+import { formatBytes, formatLongDate, formatLongMonthYear } from '@/lib/format'
 import type { InactiveDriveBandTotal, OneDriveAttention, StorageOverview } from '@/types/storage'
 
 function bandLabel(band: InactiveDriveBandTotal, t: TranslateFn): string {
@@ -24,7 +24,7 @@ function UnlicensedCard({ attention }: { attention: OneDriveAttention }) {
         color={unlicensed.count > 0 ? P365.red : P365.grey400}
         information={t('oneDrive.attention.noActivityHint', {
           count: unlicensed.count,
-          since: unlicensed.since,
+          since: formatLongDate(unlicensed.since),
           years: attention.inactiveYears,
           days: unlicensed.days,
         })}
