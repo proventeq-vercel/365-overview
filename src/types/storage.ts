@@ -108,12 +108,27 @@ export interface StorageBreakdown {
   deletedCount: number
 }
 
+export type GrowthRanking = 'growth' | 'shrink' | 'size'
+
+export type SizeRankingReason = 'growthFailed' | 'reportDateTooOld' | 'noDailyReports' | 'notMeasured' | 'unchanged'
+
+export type GrowthExplanation = 'growth' | 'shrink' | SizeRankingReason
+
 export interface StorageGrowth {
-  baselineDate: string
-  reportRefreshDate: string
+  ranking: GrowthRanking
+  explanation: GrowthExplanation
+  baselineDate: string | null
+  sizesOn: string
   windowDays: number
+  windowFrom: string | null
+  windowTo: string | null
+  daysInWindow: number
+  reportsRead: { sharePoint: number; oneDrive: number }
+  reportsMissing: number
+  complete: boolean
+  missingNote: boolean
   measuredRows: number
-  topGrowers: Slice[]
+  leaders: Slice[]
 }
 
 export interface OverEntitlement {

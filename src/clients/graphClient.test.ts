@@ -57,6 +57,20 @@ describe('graphClient', () => {
     expect(err.message).toBe('nope')
     expect(err.code).toBeNull()
   })
+  it('reports a request that never reached Graph as an ApiError, so callers can tell it from a bug', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+    const err = (await createGraphClient(token, fetchImpl).get('/x').catch((e) => e)) as ApiError
+    expect([err instanceof ApiError, err.status, err.code, err.message]).toEqual([true, 0, 'NetworkError', 'Failed to fetch'])
+  })
+  it('reports a body that stopped arriving as a network failure, and a malformed one as the bug it is', async () => {
+    const answer = (reason: Error) => ({ ...jsonResponse({}), json: () => Promise.reject(reason) }) as Response
+    const dropped = vi.fn().mockResolvedValue(answer(new TypeError('network error')))
+    const garbled = vi.fn().mockResolvedValue(answer(new SyntaxError('Unexpected end of JSON input')))
+    const lost = (await createGraphClient(token, dropped).get('/x').catch((e) => e)) as ApiError
+    const broken = await createGraphClient(token, garbled).get('/x').catch((e) => e)
+    expect([lost instanceof ApiError, lost.status, lost.code]).toEqual([true, 0, 'NetworkError'])
+    expect([broken instanceof ApiError, broken instanceof SyntaxError]).toEqual([false, true])
+  })
   it('keeps the error code a Graph-shaped body carries', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({ error: { code: 'AdminConsentRequired', message: 'consent first' } }, 403),

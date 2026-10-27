@@ -41,7 +41,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   failure, `config/consentReturn.ts` turns the admin-consent return
   (`?admin_consent=True`) into a two-minute settling window (3 s rechecks,
   `AccessFailure` shows the loading screen instead of the refusal), and
-  recovery invalidates every other query except a growth that has loaded. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
+  recovery invalidates every other query, and a growth only when `canReadGrowthAgain` allows it. (`src/auth/*`, `src/clients/*` and `src/config/*` were once
   kept byte-identical with a `365-oversharing` sibling; that app is dropped.)
 - `src/clients/` — `graphClient` fetch wrapper (`get`, `getAllPages`,
   `batchGet` over `$batch`) + `apiError`. It takes an **origin**
@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (eight mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (nine mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -124,19 +124,54 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   so one request per day; four days at a time, folded as they land) and takes
   each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
-  with `staleTime: Infinity`, `retry: false`; Refresh data re-reads it only if
-  it failed and the refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
-  day; each load spends ~25 of the 100 report requests Graph allows per 10
-  minutes per report API),
+  with `staleTime: Infinity`, `retry: false`. Each day's SharePoint and
+  OneDrive reports are read separately (their budgets are separate): one that
+  fails with an `ApiError` is skipped (the window starts on the first day a
+  report came back; `reportsRead` counts each pool's reports, `reportsMissing`
+  and `complete` say what is left, `missingNote` is the model's note). A
+  report stops being asked after a batch with a 429 (`ApiError.isThrottled`,
+  429 only) or after a batch where every read of it failed, unless that was
+  the first batch (a clock a few days behind fails only the oldest days).
+  Anything that is not an `ApiError` fails the query. `graphClient` wraps a
+  request that never reached Graph, or whose body did not arrive (a
+  `TypeError` from `res.json()`; a `SyntaxError` stays a bug), in `ApiError`
+  status 0 (`NetworkError`, `isNetworkFailure`), so a network blip skips a report; the licence and
+  directory lookups in `live.ts` still fail on it instead of reading as
+  unknown. A failed name lookup leaves the leaders unnamed; on a masked tenant
+  the dated rows go through `hideRowNames` so their ids match the masked
+  report rows. `model/storageGrowth.betterGrowth` keeps the earlier result of
+  a re-read when the new one is incomplete and brings back fewer reports, or as
+  many while losing reports of one pool — even after UTC midnight moves the
+  window, since the key pins the report date. A complete re-read always wins.
+  The copy never names a cause: it gives each pool's count over the window
+  asked (`windowFrom` to `windowTo`).
+  `canReadGrowthAgain` is the one rule for Refresh data and access recovery:
+  never while fetching, at once after a failure with nothing on screen, never
+  once complete, and an incomplete read only `REREAD_COOLDOWN_MS` (10 minutes,
+  Graph's budget window) after it was read; the query keeps `gcTime:
+  Infinity` so leaving the page does not reset that; Refresh data also needs the refresh itself to have brought
+  the report back for that date, and its busy state ignores growth (the daily
+  reports change once a day; each load spends ~25 of the 100 report requests
+  Graph allows per 10 minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
-  — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
-  skeleton while pending and an "unavailable" panel on error (any failed day,
-  or a report date at or before today − 26, the window's first day), never zero. A row with no
-  dated appearance has no daily figure, so it is left out (never counted from
-  0, which would rank the biggest sites as the fastest growers); shrinking and
-  deleted rows are out; `measuredRows` 0 says nothing could be measured rather
-  than "nothing grew".
+  — pure, table-tested. The panel always charts something, picked in the model
+  (`rankLeaders` → `ranking`): `growth` when a measured row grew (title
+  *Fastest-growing sites & OneDrives*), else `shrink` (storage freed) when one
+  shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
+  `sizesOn`, zero-byte rows left out). `explanation` names the description:
+  `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
+  window: a report date at or before today − 26), `noDailyReports` (no report
+  read), `notMeasured`, `unchanged` or `growthFailed`; the panel reads it as
+  `offenders.explain.<explanation>` and the note as `offenders.reportsRead`.
+  The growth window runs from
+  `baselineDate` to `sizesOn`, the day of the sizes growth is measured to. If the query
+  itself fails, the hook returns that size ranking built from the overview
+  (`growthFailed`), also while Refresh data re-reads it, so there is no error
+  panel; a skeleton shows only on the first load. A row with no
+  dated appearance has no daily figure, so it is left out of growth (never counted from
+  0, which would rank the biggest sites as the fastest growers); deleted rows
+  are out of every ranking.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),
@@ -220,8 +255,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
   UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
-  fetching, not while only growth reads; re-reads growth only if it failed for
-  the report date the refresh brings back), Report settings (opens `SettingsDialog`), and in live mode Switch
+  fetching, not while only growth reads; re-reads growth only if it failed or
+  missed a report for the report date the refresh brings back, an incomplete
+  read only 10 minutes after it was read), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB and OneDrive storage per user in GB, each with its
@@ -463,7 +499,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

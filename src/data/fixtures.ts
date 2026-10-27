@@ -4,6 +4,7 @@ import type { SiteDirectory } from '../reports/siteDirectory'
 import type { OneDriveLicences } from '../reports/activeUsers'
 import { hideRowNames } from '../lib/hiddenNames'
 import { growthWindowDates } from '../lib/growthWindow'
+import { ApiError } from '../clients/apiError'
 
 export type MockScenario =
   | 'healthy'
@@ -14,6 +15,7 @@ export type MockScenario =
   | 'nothing-to-clean'
   | 'no-licences'
   | 'first-day'
+  | 'no-daily-reports'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -297,6 +299,11 @@ function withHiddenNames(data: ScenarioData): ScenarioData {
   }
 }
 
+function dailyReport(scenario: MockScenario, rows: () => StorageRow[]): StorageRow[] {
+  if (scenario === 'no-daily-reports') throw new ApiError(429, 'Too many requests', 'TooManyRequests')
+  return rows()
+}
+
 export function createMockDataSource(
   scenario: MockScenario = 'healthy',
   { hideNames }: { hideNames: boolean } = { hideNames: false },
@@ -306,7 +313,7 @@ export function createMockDataSource(
     namesHidden: hideNames,
     getSites: async () => data.sites,
     getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, MOCK_CLOCK),
-    getSitesOn: async (date) => activeEarlier(data.sites, date),
+    getSitesOn: async (date) => dailyReport(scenario, () => activeEarlier(data.sites, date)),
     getSiteDetails: async (ids) => {
       const found: SiteDirectory = new Map()
       for (const id of ids) {
@@ -317,7 +324,7 @@ export function createMockDataSource(
     },
     getSiteDirectory: async () => data.directory,
     getDrives: async () => data.drives,
-    getDrivesOn: async (date) => activeEarlier(data.drives, date),
+    getDrivesOn: async (date) => dailyReport(scenario, () => activeEarlier(data.drives, date)),
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => (scenario === 'no-licences' ? null : licenses),

@@ -3,10 +3,10 @@ import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
-import type { StorageOverview } from '@/types/storage'
+import type { StorageGrowth, StorageOverview } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
 import { PanelDescription, PanelLabel, Panel, Section, SplitGrid } from '@/design/primitives'
-import { FastestGrowingPanel, type GrowthState } from './FastestGrowingPanel'
+import { FastestGrowingPanel } from './FastestGrowingPanel'
 
 const OFFENDER_COLUMNS = [
   'name',
@@ -21,7 +21,7 @@ const OFFENDER_COLUMNS = [
 
 interface Props {
   overview: StorageOverview
-  growth: GrowthState
+  growth: StorageGrowth | undefined
   delay?: number
 }
 

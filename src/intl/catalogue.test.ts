@@ -15,7 +15,8 @@ const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
   'help.audience.': 2,
   'storageOptimisation.usage.segment.': 6,
   'storageOptimisation.usage.describe.': 7,
-  'admin.source.': 9,
+  'admin.source.': 10,
+  'storageOptimisation.offenders.explain.': 7,
 }
 const DYNAMIC_PREFIXES = Object.keys(DYNAMIC_PREFIX_SIZES)
 
@@ -50,6 +51,12 @@ describe('en.json catalogue', () => {
       expect(used.has(`${prefix}*`)).toBe(true)
       expect([...catalogue].filter((key) => key.startsWith(prefix))).toHaveLength(size)
     }
+  })
+
+  it('never tells the reader that a figure of the main offenders is missing', () => {
+    const offenders = Object.entries(messages).filter(([key]) => key.startsWith('storageOptimisation.offenders.'))
+    expect(offenders.length).toBeGreaterThan(0)
+    for (const [key, message] of offenders) expect(message, key).not.toMatch(/unavailable|unknown|not enough history|could not be read|not an all-clear/i)
   })
 
   it('has no empty or unbalanced messages', () => {

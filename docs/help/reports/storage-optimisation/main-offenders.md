@@ -14,22 +14,42 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
   only the sites and OneDrives that had activity on that day, with their size on that day.
   Microsoft offers those daily reports for the last 28 days, counting today. The report reads
-  every day from 26 days ago, keeping a day in hand, up to the report date. The description
-  under the title gives the first and last day and the number of days.
+  every day from 26 days ago, keeping a day in hand, up to the report date. When it ranks by
+  growth or by storage freed, the description under the title gives the first and last day and
+  the number of days.
 - **Storage added** is the size on the report date less the size on the first day in that window
   the site or OneDrive was active. Storage added on that first day itself is not counted, so a
   site that received everything in one day, or was created inside the window, can show less
   growth than it had. Each one is measured from its own first active day, so two rows can cover
   different spans of the window.
-- A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
-  are those that shrank, stayed the same or were deleted. If none of the measured ones grew, the
-  panel says so instead of drawing an empty chart. If no site or OneDrive in the report has a daily
-  figure, it says there was nothing to measure, which is not the same as no growth.
-- The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
-  does not return every daily report, or the report date is not at least two days inside the days
-  Microsoft keeps, the panel says growth is unavailable. It never shows zero growth in its place.
-- Microsoft limits how often its usage reports can be read, so once growth has loaded for a report
-  date, **Refresh data** does not read it again. If it failed, **Refresh data** tries again once the report itself reloads.
+- From the growth ranking, a site or OneDrive with no activity in the window has no daily figure,
+  so it is left out. So are those that shrank, stayed the same or were deleted.
+- Each day has two daily reports, one for SharePoint and one for OneDrive, and each is read on its
+  own. If one does not come back, the panel measures from the ones that did. The window then
+  starts on the first day a report came back, and the description says how many of each came
+  back, out of the days in the window.
+- The panel asks four days at a time. It stops asking for one of the two reports once Microsoft
+  limits the requests for it, or once a whole group of four days of it fails after the first
+  group, and measures from what it already has, so it does not spend more of the limit the rest
+  of the report shares. The other report is still read.
+- The panel always draws a chart, and its title says what it ranks:
+  - **Sites & OneDrives that shrank the most**, by **Storage freed**, when none of the measured
+    ones grew but some shrank.
+  - **Sites & OneDrives by storage used**, by **Storage used** on the report date, when no daily
+    report came back, when the report date is not at least two days inside the days Microsoft
+    keeps, when no site or
+    OneDrive in the report was active in the reports that came back, when none of them changed
+    size, or when measuring did not finish. The description says which. It lists the
+    ten largest sites and OneDrives together, so it repeats the two lists below it.
+- The chart loads after the rest of the report, with a placeholder while it does.
+- Microsoft limits how often its usage reports can be read, so once growth has loaded from every
+  daily report for a report date, **Refresh data** does not read it again. If some daily reports did
+  not come back, **Refresh data** reads every day of the window again once the report itself
+  reloads and ten minutes have passed since they were read. Unless the new result has every
+  report, it keeps the earlier one if the new one brings back fewer reports, or as many but fewer
+  of SharePoint's or of OneDrive's. If
+  measuring did not finish, it reads them again at once. When the report itself moves to a new
+  date, the chart shows its placeholder again while the new date's daily reports are read.
 
 ## Largest sites and OneDrives
 

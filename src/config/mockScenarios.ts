@@ -9,6 +9,7 @@ const SCENARIO_SET: Record<MockScenario, true> = {
   'nothing-to-clean': true,
   'no-licences': true,
   'first-day': true,
+  'no-daily-reports': true,
 }
 
 export const MOCK_SCENARIOS = Object.keys(SCENARIO_SET) as MockScenario[]

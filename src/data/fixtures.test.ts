@@ -209,6 +209,14 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
   })
 
+  it('no-daily-reports: every dated report is throttled, while the report itself loads', async () => {
+    const ds = createMockDataSource('no-daily-reports')
+    const [date] = ds.getDailyReportDates(await ds.getReportRefreshDate())
+    await expect(ds.getSitesOn(date)).rejects.toMatchObject({ status: 429 })
+    await expect(ds.getDrivesOn(date)).rejects.toMatchObject({ status: 429 })
+    expect((await overviewFor('no-daily-reports')).sharePoint.sites.length).toBeGreaterThan(0)
+  })
+
   it('only the concealed tenant conceals names', async () => {
     for (const scenario of ['healthy', 'over-entitlement', 'short-history'] as const) {
       const overview = await overviewFor(scenario)

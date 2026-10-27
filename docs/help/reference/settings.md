@@ -71,7 +71,7 @@ It also decides the [inactive OneDrives](../reports/onedrive-usage/inactive.md) 
 
 | Option | What it does |
 | --- | --- |
-| Refresh data | Reloads every usage report from Microsoft Graph, except the daily reports behind the fastest-growing panel once they have loaded for the report date (a failed read is tried again once the report itself reloads). It is disabled while a refresh runs. |
+| Refresh data | Reloads every usage report from Microsoft Graph, except the daily reports behind the fastest-growing panel once every one has loaded for the report date (if some did not come back, the whole window is read again once the report itself reloads and ten minutes have passed since it was read; if measuring did not finish, at once). It is disabled while a refresh runs. |
 | Report settings | Opens these settings. |
 | Help | Opens this help in a new tab. |
 | Switch account | Signs in with a different Microsoft account. |

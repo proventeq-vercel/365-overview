@@ -127,7 +127,7 @@ export function createLiveDataSource(
       if (hideNames) return EMPTY_DIRECTORY
       directory ??= walkDirectory().catch((error: unknown) => {
         directory = null
-        if (error instanceof ApiError) return EMPTY_DIRECTORY
+        if (error instanceof ApiError && !error.isNetworkFailure) return EMPTY_DIRECTORY
         throw error
       })
       return directory
@@ -189,7 +189,7 @@ export function createLiveDataSource(
         )
         return parseOneDriveLicences(concealRows(rows))
       } catch (error) {
-        if (error instanceof ApiError) return null
+        if (error instanceof ApiError && !error.isNetworkFailure) return null
         throw error
       }
     },

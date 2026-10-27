@@ -1,7 +1,7 @@
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import type { OverviewInputs } from '../model/storageOverview'
 import { STORAGE_INPUTS_KEY } from './useStorageOverview'
-import { isGrowth } from './useStorageGrowth'
+import { canReadGrowthAgain, isGrowth } from './useStorageGrowth'
 
 export function useRefreshReport() {
   const queryClient = useQueryClient()
@@ -14,7 +14,7 @@ export function useRefreshReport() {
       if (inputs === undefined || inputs.dataUpdateCount === loadedBefore) return
       await queryClient.invalidateQueries({
         predicate: (query) =>
-          isGrowth(query) && query.state.status === 'error' && query.queryKey[1] === inputs.data?.reportRefreshDate,
+          canReadGrowthAgain(query) && query.queryKey[1] === inputs.data?.reportRefreshDate,
       })
     },
     isRefreshing: fetching > 0,
