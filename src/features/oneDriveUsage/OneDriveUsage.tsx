@@ -1,5 +1,6 @@
 import { useSettings } from '@/app/useSettings'
 import { NameCaveats } from '@/components/NameCaveats'
+import { UnreadReports } from '@/components/UnreadReports'
 import { SiteTable } from '@/components/SiteTable'
 import { FacetBars } from '@/design/charts'
 import { HelpButton } from '@/app/help/HelpButton'
@@ -10,6 +11,7 @@ import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
+import { REPORT_POOL, type StorageOverview } from '@/types/storage'
 import { OneDriveKpiCards } from './OneDriveKpiCards'
 import { InactiveDrivesSection } from './InactiveDrivesSection'
 import { OverLicenceSection } from './OverLicenceSection'
@@ -25,15 +27,28 @@ export function OneDriveUsage() {
   if (error) return <AccessFailure error={error} onRetry={refresh} />
   if (isPending || !data) return <ReportLoading stage="loadingReport" />
 
-  const { oneDrive, offenders, caveats } = data
+  const { oneDrive, caveats } = data
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('reports.oneDriveUsage.title')} help={<HelpButton topic="oneDriveUsage" />}>
-        {t('oneDrive.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
+        {t('oneDrive.description')}{' '}
+        {data.reportRefreshDate && <>{t('app.dataAsOf', { date: data.reportRefreshDate })} </>}
         {t('app.reportLagNote')}
       </PageHeader>
-      <OneDriveKpiCards overview={data} />
+      <UnreadReports reports={caveats.unreadReports.filter((report) => REPORT_POOL[report] === 'OneDrive')} />
+      {oneDrive.read && <OneDriveKpiCards overview={data} />}
+      {oneDrive.accountReportRead && <DriveSections overview={data} />}
+    </div>
+  )
+}
+
+function DriveSections({ overview }: { overview: StorageOverview }) {
+  const t = useTranslation()
+  const { oneDrive, offenders, caveats } = overview
+
+  return (
+    <>
       <NameCaveats caveats={caveats} />
       <Section
         title={t('oneDrive.top.title')}
@@ -51,8 +66,8 @@ export function OneDriveUsage() {
           <PanelDescription>{t('oneDrive.allocationNote')}</PanelDescription>
         </Panel>
       </Section>
-      <OverLicenceSection overview={data} delay={120} />
-      <InactiveDrivesSection overview={data} delay={140} />
+      <OverLicenceSection overview={overview} delay={120} />
+      <InactiveDrivesSection overview={overview} delay={140} />
       <Section
         title={t('oneDrive.table.title')}
         subtitle={t('oneDrive.table.subtitle', { retained: oneDrive.deletedButBilling.count })}
@@ -72,6 +87,6 @@ export function OneDriveUsage() {
           />
         </Panel>
       </Section>
-    </div>
+    </>
   )
 }

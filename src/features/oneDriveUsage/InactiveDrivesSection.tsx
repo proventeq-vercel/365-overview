@@ -44,6 +44,7 @@ function UnlicensedCard({ attention }: { attention: OneDriveAttention }) {
 export function InactiveDrivesSection({ overview, delay }: { overview: StorageOverview; delay?: number }) {
   const t = useTranslation()
   const { attention, deletedButBilling } = overview.oneDrive
+  if (attention === null) return null
   const { inactive, inactiveYears, inactiveSince } = attention
   const inactiveValues = { count: inactive.count, date: formatLongMonthYear(inactiveSince) }
   const quiet = attention.unlicensed.basis === 'noActivity'

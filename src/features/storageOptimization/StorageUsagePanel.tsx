@@ -108,7 +108,9 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
         <PanelDescription>{t('storageOptimisation.usage.enterEntitlement')}</PanelDescription>
       )}
       {quotaNote !== null && <PanelDescription>{quotaNote}</PanelDescription>}
-      <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
+      {sharePoint.siteReportRead && (
+        <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
+      )}
     </Panel>
   )
 }

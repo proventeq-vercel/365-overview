@@ -23,6 +23,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   }
 
   const cards = [
+    archive.applies && (
     <StatCard
       key="archivable"
       label={t('storageOptimisation.kpi.archivable')}
@@ -38,7 +39,8 @@ export function KpiCards({ overview, delay = 0 }: Props) {
               sites: formatNumber(archive.siteCount),
             })
       }
-    />,
+    />
+    ),
     archive.savingApplies && (
       <StatCard
         key="saving"

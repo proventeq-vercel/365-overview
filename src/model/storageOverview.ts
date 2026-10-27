@@ -1,12 +1,14 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
-import type {
-  OneDriveLimit,
-  OneDrivePool,
-  OverEntitlement,
-  Slice,
-  StoragePool,
-  StorageOverview,
-  StorageRow,
+import {
+  CORE_REPORTS,
+  type CoreReport,
+  type OneDriveLimit,
+  type OneDrivePool,
+  type OverEntitlement,
+  type Slice,
+  type StoragePool,
+  type StorageOverview,
+  type StorageRow,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
@@ -67,6 +69,7 @@ export interface OverviewInputs {
   now?: Date
   forceUnknownEntitlement?: boolean
   namesHidden?: boolean
+  unreadReports?: CoreReport[]
 }
 
 export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
@@ -84,6 +87,9 @@ const sumBytes = (rows: StorageRow[]): number =>
 
 const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
   trend.length === 0 ? sumBytes(rows) : latest(trend)
+
+const latestDay = (...trends: UsagePoint[][]): string =>
+  trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
 
 function reportedDays(trend: UsagePoint[], rows: StorageRow[]): UsagePoint[] {
   const days = trendWithoutGaps(trend)
@@ -182,7 +188,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     sharePointTrend: reportedSharePointTrend,
     oneDriveTrend: reportedOneDriveTrend,
     skus,
-    reportRefreshDate,
+    reportRefreshDate: reportedRefreshDate,
     ratePerGb,
     currency,
     entitlementOverrideBytes,
@@ -192,7 +198,13 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     now = new Date(),
     forceUnknownEntitlement = false,
     namesHidden = false,
+    unreadReports = [],
   } = inputs
+
+  const unread = new Set(unreadReports)
+  const siteReportRead = !unread.has('sites')
+  const accountReportRead = !unread.has('drives')
+  const reportRefreshDate = reportedRefreshDate || latestDay(reportedSharePointTrend, reportedOneDriveTrend)
 
   const sharePointTrend = reportedDays(reportedSharePointTrend, reportedSites)
   const oneDriveTrend = reportedDays(reportedOneDriveTrend, reportedDrives)
@@ -271,8 +283,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     buckets,
     rate,
     rateSource === 'none' ? 0 : FORECAST_CHART_MONTHS,
-    removableBytes,
+    siteReportRead ? removableBytes : null,
   )
+  const forecastsCleanUp = siteReportRead && rateSource !== 'none'
 
   const growthGb = annualGrowthGb(rate)
   const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
@@ -282,6 +295,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     reportRefreshDate,
 
     sharePoint: {
+      read: siteReportRead || !unread.has('sharePointTrend'),
+      siteReportRead,
+      trendRead: !unread.has('sharePointTrend'),
       usedBytes: sharePointUsed,
       usedFromSiteReport: sharePointTrend.length === 0,
       entitledBytes,
@@ -305,6 +321,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     },
 
     oneDrive: {
+      read: accountReportRead || !unread.has('oneDriveTrend'),
+      accountReportRead,
+      trendRead: !unread.has('oneDriveTrend'),
       usedBytes: oneDriveUsed,
       usedFromAccountReport: oneDriveTrend.length === 0,
       drives,
@@ -319,15 +338,18 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
       licenceGap: oneDriveLicencePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
       limitWhenUnset: limitWhenUnset === null ? null : limitWhenUnset.basis === 'licences' ? 'licences' : 'driveLimit',
-      overEntitlement: driveLimit === null ? null : drivesOverEntitlement(liveDrives, driveLimit),
+      overEntitlement:
+        driveLimit === null || !accountReportRead ? null : drivesOverEntitlement(liveDrives, driveLimit),
       pool: oneDrivePool(liveDrives),
-      attention: oneDriveAttention({
-        drives: reportedDrives,
-        licences: oneDriveLicences,
-        reportRefreshDate,
-        inactiveYears,
-        now,
-      }),
+      attention: accountReportRead
+        ? oneDriveAttention({
+            drives: reportedDrives,
+            licences: oneDriveLicences,
+            reportRefreshDate,
+            inactiveYears,
+            now,
+          })
+        : null,
     },
 
     breakdown: storageBreakdown({
@@ -337,6 +359,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       deletedSiteBytes: deletedSites.bytes,
       deletedCount: deletedSites.count,
       freeBytes: remainingBytes,
+      siteFiguresRead: siteReportRead,
     }),
 
     offenders: {
@@ -344,7 +367,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       poolUsedBytes: { SharePoint: sharePointUsed, OneDrive: oneDriveUsed },
       topSites: topByPool(rows, 'SharePoint'),
       topDrives: topByPool(rows, 'OneDrive'),
-      retained: retainedTotal(rows),
+      retained: siteReportRead && accountReportRead ? retainedTotal(rows) : null,
     },
 
     growth: {
@@ -362,28 +385,29 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastMonthsToExhaustion: runway,
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
       afterCleanUp: {
+        applies: siteReportRead,
         inactiveBytes: archivableBytes,
         deletedBytes: deletedSites.bytes,
         removableBytes,
-        endBytes: rateSource === 'none' ? null : (points.at(-1)?.afterCleanUpBytes ?? null),
-        staysUnderEntitlement:
-          rateSource === 'none'
-            ? null
-            : staysUnder(
-                points.map((point) => point.afterCleanUpBytes),
-                entitledBytes,
-              ),
+        endBytes: forecastsCleanUp ? (points.at(-1)?.afterCleanUpBytes ?? null) : null,
+        staysUnderEntitlement: forecastsCleanUp
+          ? staysUnder(
+              points.map((point) => point.afterCleanUpBytes),
+              entitledBytes,
+            )
+          : null,
       },
     },
 
     archive: {
+      applies: siteReportRead,
       inactiveYears,
       inactiveSince: archiveCutoff,
       siteCount: archivable.length,
       bytes: archivableBytes,
       shareOfSharePoint: archivableShare,
       status: archiveStatus(archivableShare),
-      savingApplies: entitledBytes === null || exhausted,
+      savingApplies: siteReportRead && (entitledBytes === null || exhausted),
       savingBytes,
       annualSaving: storageCostAnnual(savingBytes, ratePerGb),
     },
@@ -404,6 +428,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
       nameMask,
+      unreadReports: CORE_REPORTS.filter((report) => unread.has(report)),
     },
   }
 }

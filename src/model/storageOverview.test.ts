@@ -792,9 +792,24 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.offenders.poolUsedBytes.OneDrive).toBe(60 * GB)
   })
 
-  it('places the one point at the current month when the site report gives no report date', () => {
-    const overview = buildStorageOverview(inputs({ sharePointTrend: [], reportRefreshDate: '' }))
+  it('places the one point at the current month when no report gives a date', () => {
+    const overview = buildStorageOverview(inputs({ sharePointTrend: [], oneDriveTrend: [], reportRefreshDate: '' }))
     expect(overview.growth.points.map((point) => point.month)).toEqual(['2026-09'])
+  })
+
+  it('prices no archive saving when the site usage report did not come back, even without an entitlement', () => {
+    const { archive } = buildStorageOverview(unknownEntitlement({ sites: [], unreadReports: ['sites'] }))
+    expect(archive.applies).toBe(false)
+    expect(archive.savingApplies).toBe(false)
+    expect(buildStorageOverview(unknownEntitlement()).archive.savingApplies).toBe(true)
+  })
+
+  it('dates the report by the latest trend day when the site report gives no date', () => {
+    const overview = buildStorageOverview(
+      inputs({ oneDriveTrend: [{ date: '2026-07-03', value: 60 * GB }], reportRefreshDate: '' }),
+    )
+    expect(overview.reportRefreshDate).toBe('2026-07-03')
+    expect(overview.archive.inactiveSince).toBe('2023-07-03')
   })
 
   it('says OneDrive storage came from the account rows only when its trend lists no day', () => {
@@ -1085,7 +1100,7 @@ describe('buildStorageOverview inactive sites', () => {
   })
 
   it('measures inactivity from today, instead of crashing, when the report carries no refresh date', () => {
-    const { archive } = buildStorageOverview({ ...tenant(), reportRefreshDate: '' })
+    const { archive } = buildStorageOverview({ ...tenant(), reportRefreshDate: '', sharePointTrend: [], oneDriveTrend: [] })
     expect(archive.inactiveSince).toBe('2023-09-02')
     expect(archive.siteCount).toBe(2)
   })

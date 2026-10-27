@@ -28,6 +28,8 @@ interface Props {
 export function OffendersSection({ overview, growth, delay }: Props) {
   const t = useTranslation()
   const { rows, poolUsedBytes, topSites, topDrives, retained } = overview.offenders
+  const { siteReportRead } = overview.sharePoint
+  const { accountReportRead } = overview.oneDrive
 
   return (
     <Section
@@ -39,7 +41,8 @@ export function OffendersSection({ overview, growth, delay }: Props) {
       <NameCaveats caveats={overview.caveats} />
       <FastestGrowingPanel growth={growth} nameMask={overview.caveats.nameMask} />
 
-      <SplitGrid className="lg:grid-cols-2">
+      <SplitGrid className={siteReportRead && accountReportRead ? 'lg:grid-cols-2' : ''}>
+        {siteReportRead && (
         <Panel>
           <PanelLabel>{t('storageOptimisation.offenders.topSites')}</PanelLabel>
           <FacetBars
@@ -49,6 +52,8 @@ export function OffendersSection({ overview, growth, delay }: Props) {
             nameMask={overview.caveats.nameMask}
           />
         </Panel>
+        )}
+        {accountReportRead && (
         <Panel>
           <PanelLabel>{t('storageOptimisation.offenders.topDrives')}</PanelLabel>
           <FacetBars
@@ -58,9 +63,10 @@ export function OffendersSection({ overview, growth, delay }: Props) {
             nameMask={overview.caveats.nameMask}
           />
         </Panel>
+        )}
       </SplitGrid>
 
-      {retained.count > 0 && (
+      {retained !== null && retained.count > 0 && (
         <Panel>
           <PanelLabel>{t('storageOptimisation.offenders.retained')}</PanelLabel>
           <p className="tabular text-2xl font-bold text-p365-navy">{formatBytes(retained.bytes)}</p>

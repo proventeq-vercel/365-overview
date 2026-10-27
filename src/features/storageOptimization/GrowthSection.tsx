@@ -34,7 +34,9 @@ export function GrowthSection({ overview, delay }: Props) {
     ...(forecasting
       ? [
           { key: 'projectedUsedBytes', name: t('storageOptimisation.growth.forecast'), dashed: true },
-          { key: 'afterCleanUpBytes', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true },
+          ...(growth.afterCleanUp.applies
+            ? [{ key: 'afterCleanUpBytes', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true }]
+            : []),
         ]
       : []),
   ]
@@ -82,14 +84,18 @@ export function GrowthSection({ overview, delay }: Props) {
                 value={formatSignedBytes(growth.addedInWindowBytes)}
               />
             )}
-            <MiniStat
-              label={t('storageOptimisation.growth.sites')}
-              value={formatNumber(sharePoint.siteCount)}
-            />
-            <MiniStat
-              label={t('storageOptimisation.growth.drivesNearCap')}
-              value={formatNumber(oneDrive.drivesNearCap)}
-            />
+            {sharePoint.siteReportRead && (
+              <MiniStat
+                label={t('storageOptimisation.growth.sites')}
+                value={formatNumber(sharePoint.siteCount)}
+              />
+            )}
+            {oneDrive.accountReportRead && (
+              <MiniStat
+                label={t('storageOptimisation.growth.drivesNearCap')}
+                value={formatNumber(oneDrive.drivesNearCap)}
+              />
+            )}
             {oneDrive.overEntitlement !== null && oneDrive.overEntitlement.limit.basis !== 'driveLimit' && (
               <MiniStat
                 label={t('storageOptimisation.growth.drivesOverLicence')}
@@ -126,7 +132,7 @@ export function GrowthSection({ overview, delay }: Props) {
               />
             )}
           </MiniStatRow>
-          <CleanUpForecast overview={overview} />
+          {growth.afterCleanUp.applies && <CleanUpForecast overview={overview} />}
           {cost.applies && (
           <div className="mt-3 flex flex-col gap-1">
             <PanelLabel>{t('storageOptimisation.growth.costTitle')}</PanelLabel>

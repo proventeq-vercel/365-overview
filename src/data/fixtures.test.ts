@@ -2,28 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { createMockDataSource } from './fixtures'
 import { buildStorageOverview } from '../model/storageOverview'
 import { loadSettings } from '../lib/settings'
+import { readStorageInputs } from '../hooks/useStorageOverview'
 
 async function overviewFor(scenario: Parameters<typeof createMockDataSource>[0], hideNames = false) {
   const ds = createMockDataSource(scenario, { hideNames })
   const settings = loadSettings()
-  const [sites, drives, sharePointTrend, oneDriveTrend, skus, oneDriveLicences, reportRefreshDate] =
-    await Promise.all([
-      ds.getSites(),
-      ds.getDrives(),
-      ds.getSharePointTrend(),
-      ds.getOneDriveTrend(),
-      ds.getLicenses(),
-      ds.getOneDriveLicences(),
-      ds.getReportRefreshDate(),
-    ])
   return buildStorageOverview({
-    sites,
-    drives,
-    sharePointTrend,
-    oneDriveTrend,
-    skus,
-    oneDriveLicences,
-    reportRefreshDate,
+    ...(await readStorageInputs(ds)),
     ratePerGb: settings.ratePerGb,
     currency: settings.currency,
     entitlementOverrideBytes: settings.entitlementOverrideBytes,
@@ -109,12 +94,12 @@ describe('unlicensed OneDrives in every mock tenant', () => {
   it.each(['healthy', 'concealed'] as const)('finds the unlicensed owners in the %s tenant, names concealed or not', async (scenario) => {
     const { oneDrive, caveats } = await overviewFor(scenario)
     expect(caveats.nameMask).toBe(scenario === 'concealed' ? 'concealed' : null)
-    expect(oneDrive.attention.unlicensed?.count).toBe(21)
+    expect(oneDrive.attention?.unlicensed.count).toBe(21)
   })
 
   it('finds them when the app hides names too', async () => {
     const { oneDrive } = await overviewFor('healthy', true)
-    expect(oneDrive.attention.unlicensed?.count).toBe(21)
+    expect(oneDrive.attention?.unlicensed.count).toBe(21)
   })
 })
 
@@ -124,6 +109,7 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.caveats).toEqual({
       entitlementIsEstimated: true,
       nameMask: null,
+      unreadReports: [],
     })
     expect(overview.growth.rateSource).toBe('monthly')
     expect(overview.growth.forecastStatus).not.toBe('Unknown')
@@ -221,10 +207,52 @@ describe('mock scenarios reach every caveat state', () => {
     const ds = createMockDataSource('onedrive-gaps')
     expect(await ds.getOneDriveLicences()).toBeNull()
     const { oneDrive } = await overviewFor('onedrive-gaps')
-    expect(oneDrive.attention.unlicensed.basis).toBe('noActivity')
-    expect(oneDrive.attention.unlicensed.count).toBeGreaterThan(0)
+    expect(oneDrive.attention?.unlicensed.basis).toBe('noActivity')
+    expect(oneDrive.attention?.unlicensed.count).toBeGreaterThan(0)
     expect(oneDrive.pool.allocation?.withoutLimit.count).toBe(10)
     expect(oneDrive.overEntitlement?.limit.basis).toBe('licences')
+  })
+
+  it('no-site-report: the per-site figures are left out, used storage and the date come from the trend', async () => {
+    const overview = await overviewFor('no-site-report')
+    expect(overview.caveats.unreadReports).toEqual(['sites'])
+    expect(overview.reportRefreshDate).toBe('2026-08-31')
+    expect(overview.sharePoint).toMatchObject({ read: true, siteReportRead: false, usedFromSiteReport: false })
+    expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
+    expect(overview.archive.applies).toBe(false)
+    expect(overview.archive.savingApplies).toBe(false)
+    expect(overview.growth.afterCleanUp).toMatchObject({ applies: false, endBytes: null, staysUnderEntitlement: null })
+    expect(overview.growth.points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
+    expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual(['sharePoint', 'versions', 'free'])
+    expect(overview.offenders.retained).toBeNull()
+    expect(overview.oneDrive.attention).not.toBeNull()
+  })
+
+  it('no-onedrive-report: the per-drive figures are left out, OneDrive used comes from its trend', async () => {
+    const { oneDrive, offenders, caveats, sharePoint } = await overviewFor('no-onedrive-report')
+    expect(caveats.unreadReports).toEqual(['drives'])
+    expect(oneDrive).toMatchObject({ read: true, accountReportRead: false, usedFromAccountReport: false })
+    expect(oneDrive.usedBytes).toBeGreaterThan(0)
+    expect(oneDrive.overEntitlement).toBeNull()
+    expect(oneDrive.attention).toBeNull()
+    expect(offenders.retained).toBeNull()
+    expect(sharePoint.siteReportRead).toBe(true)
+  })
+
+  it('no-trends: used storage is the total of each usage report, with no forecast', async () => {
+    const { sharePoint, oneDrive, growth, caveats } = await overviewFor('no-trends')
+    expect(caveats.unreadReports).toEqual(['sharePointTrend', 'oneDriveTrend'])
+    expect(sharePoint).toMatchObject({ read: true, trendRead: false, usedFromSiteReport: true })
+    expect(oneDrive).toMatchObject({ read: true, trendRead: false, usedFromAccountReport: true })
+    expect(growth.rateSource).toBe('none')
+    expect(growth.afterCleanUp.applies).toBe(true)
+  })
+
+  it('no-sharepoint-reports: SharePoint is left out as a whole, OneDrive is measured', async () => {
+    const { sharePoint, oneDrive, caveats } = await overviewFor('no-sharepoint-reports')
+    expect(caveats.unreadReports).toEqual(['sites', 'sharePointTrend'])
+    expect(sharePoint.read).toBe(false)
+    expect(oneDrive).toMatchObject({ read: true, accountReportRead: true, trendRead: true })
   })
 
   it('only the concealed tenant conceals names', async () => {

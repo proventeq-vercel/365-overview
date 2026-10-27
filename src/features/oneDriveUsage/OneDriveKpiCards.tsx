@@ -7,20 +7,45 @@ import type { OverEntitlement, StorageOverview } from '@/types/storage'
 
 export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
-  const { usedBytes, usedFromAccountReport, driveCount, drivesNearCap, deletedButBilling, overEntitlement } =
-    overview.oneDrive
+  const {
+    accountReportRead,
+    trendRead,
+    usedBytes,
+    usedFromAccountReport,
+    driveCount,
+    drivesNearCap,
+    deletedButBilling,
+    overEntitlement,
+  } = overview.oneDrive
+  const used = (
+    <StatCard
+      label={t('oneDrive.kpi.used')}
+      value={formatBytes(usedBytes)}
+      color={P365.navy}
+      information={
+        !trendRead
+          ? t('oneDrive.kpi.usedTrendUnreadHint')
+          : usedFromAccountReport
+            ? t('oneDrive.kpi.usedFromAccountsHint')
+            : t('oneDrive.kpi.usedHint')
+      }
+    />
+  )
+
+  if (!accountReportRead) {
+    return (
+      <div className="enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" style={{ animationDelay: '40ms' }}>
+        {used}
+      </div>
+    )
+  }
 
   return (
     <div
       className={`enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${KPI_GRID_COLUMNS[overEntitlement === null ? 4 : 5]}`}
       style={{ animationDelay: '40ms' }}
     >
-      <StatCard
-        label={t('oneDrive.kpi.used')}
-        value={formatBytes(usedBytes)}
-        color={P365.navy}
-        information={usedFromAccountReport ? t('oneDrive.kpi.usedFromAccountsHint') : t('oneDrive.kpi.usedHint')}
-      />
+      {used}
       <StatCard
         label={t('oneDrive.kpi.drives')}
         value={formatNumber(driveCount)}

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { render } from '@/test/render'
 import { NameCaveats } from './NameCaveats'
 
-const caveats = { entitlementIsEstimated: false, nameMask: null }
+const caveats = { entitlementIsEstimated: false, nameMask: null, unreadReports: [] }
 
 describe('NameCaveats', () => {
   it('says names are hidden when this session hides them', () => {

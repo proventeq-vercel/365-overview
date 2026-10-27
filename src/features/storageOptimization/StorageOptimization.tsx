@@ -6,6 +6,7 @@ import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageGrowth } from '@/hooks/useStorageGrowth'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
+import { UnreadReports } from '@/components/UnreadReports'
 import { AccessFailure } from './AccessFailure'
 import { DistributionSection } from './DistributionSection'
 import { GrowthSection } from './GrowthSection'
@@ -28,12 +29,14 @@ export function StorageOptimization() {
         title={t('reports.storageOptimisation.title')}
         help={<HelpButton topic="storageOptimisation" />}
       >
-        {t('storageOptimisation.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
+        {t('storageOptimisation.description')}{' '}
+        {data.reportRefreshDate && <>{t('app.dataAsOf', { date: data.reportRefreshDate })} </>}
         {t('app.reportLagNote')}
       </PageHeader>
-      <KpiCards overview={data} delay={40} />
+      <UnreadReports reports={data.caveats.unreadReports} />
+      {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
       <DistributionSection overview={data} delay={120} />
-      <GrowthSection overview={data} delay={160} />
+      {data.sharePoint.read && <GrowthSection overview={data} delay={160} />}
       <OffendersSection overview={data} growth={growth} delay={240} />
     </div>
   )

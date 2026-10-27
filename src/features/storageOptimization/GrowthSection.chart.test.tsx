@@ -61,6 +61,19 @@ describe('GrowthSection trend chart', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
   })
 
+  it('draws no after-clean-up line when the site usage report did not come back', () => {
+    const unread = {
+      ...base,
+      growth: { ...base.growth, afterCleanUp: { ...base.growth.afterCleanUp, applies: false, endBytes: null } },
+    }
+    render(<GrowthSection overview={unread} />)
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Actual used:actualUsedBytes:solid',
+      'Linear forecast:projectedUsedBytes:dashed',
+    ])
+    expect(screen.queryByText('If inactive and deleted sites are cleaned up')).not.toBeInTheDocument()
+  })
+
   it('draws only the measured line when a single day has been reported', () => {
     render(<GrowthSection overview={firstDay} />)
     expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([

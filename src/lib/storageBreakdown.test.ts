@@ -8,6 +8,7 @@ const empty = {
   deletedSiteBytes: 0,
   deletedCount: 0,
   freeBytes: 0,
+  siteFiguresRead: true,
 }
 
 describe('storageBreakdown', () => {
@@ -34,6 +35,15 @@ describe('storageBreakdown', () => {
       'versions',
     ])
     expect(breakdown.totalBytes).toBe(100)
+  })
+
+  it('draws SharePoint storage as one part when the site usage report did not come back', () => {
+    const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100, freeBytes: 900, siteFiguresRead: false })
+    expect(breakdown.segments.map((segment) => [segment.key, segment.bytes])).toEqual([
+      ['sharePoint', 100],
+      ['versions', null],
+      ['free', 900],
+    ])
   })
 
   it('never measures versions', () => {

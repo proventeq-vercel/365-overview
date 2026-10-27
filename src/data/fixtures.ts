@@ -1,5 +1,5 @@
 import type { LicenseSku, OrgInfo, UsagePoint } from '../types/reports'
-import type { StorageRow } from '../types/storage'
+import type { CoreReport, StorageRow } from '../types/storage'
 import type { SiteDirectory } from '../reports/siteDirectory'
 import type { OneDriveLicences } from '../reports/activeUsers'
 import { hideRowNames } from '../lib/hiddenNames'
@@ -17,6 +17,10 @@ export type MockScenario =
   | 'first-day'
   | 'no-daily-reports'
   | 'onedrive-gaps'
+  | 'no-site-report'
+  | 'no-onedrive-report'
+  | 'no-trends'
+  | 'no-sharepoint-reports'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -309,6 +313,19 @@ function withHiddenNames(data: ScenarioData): ScenarioData {
   }
 }
 
+const UNREAD_REPORTS: Partial<Record<MockScenario, ReadonlySet<CoreReport>>> = {
+  'no-site-report': new Set(['sites']),
+  'no-onedrive-report': new Set(['drives']),
+  'no-trends': new Set(['sharePointTrend', 'oneDriveTrend']),
+  'no-sharepoint-reports': new Set(['sites', 'sharePointTrend']),
+}
+
+function report<T>(scenario: MockScenario, name: CoreReport, value: T): Promise<T> {
+  return UNREAD_REPORTS[scenario]?.has(name)
+    ? Promise.reject(new ApiError(503, 'Service unavailable', 'ServiceUnavailable'))
+    : Promise.resolve(value)
+}
+
 function dailyReport(scenario: MockScenario, rows: () => StorageRow[]): StorageRow[] {
   if (scenario === 'no-daily-reports') throw new ApiError(429, 'Too many requests', 'TooManyRequests')
   return rows()
@@ -321,7 +338,7 @@ export function createMockDataSource(
   const data = hideNames ? withHiddenNames(scenarioData(scenario)) : scenarioData(scenario)
   return {
     namesHidden: hideNames,
-    getSites: async () => data.sites,
+    getSites: () => report(scenario, 'sites', data.sites),
     getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, MOCK_CLOCK),
     getSitesOn: async (date) => dailyReport(scenario, () => activeEarlier(data.sites, date)),
     getSiteDetails: async (ids) => {
@@ -333,13 +350,13 @@ export function createMockDataSource(
       return found
     },
     getSiteDirectory: async () => data.directory,
-    getDrives: async () => data.drives,
+    getDrives: () => report(scenario, 'drives', data.drives),
     getDrivesOn: async (date) => dailyReport(scenario, () => activeEarlier(data.drives, date)),
-    getSharePointTrend: async () => data.sharePointTrend,
-    getOneDriveTrend: async () => data.oneDriveTrend,
+    getSharePointTrend: () => report(scenario, 'sharePointTrend', data.sharePointTrend),
+    getOneDriveTrend: () => report(scenario, 'oneDriveTrend', data.oneDriveTrend),
     getLicenses: async () => (scenario === 'no-licences' ? null : licenses),
     getOneDriveLicences: async () => (scenario === 'onedrive-gaps' ? null : oneDriveLicencesFor(data.drives)),
     getOrg: async () => org,
-    getReportRefreshDate: async () => MOCK_REFRESH_DATE,
+    getReportRefreshDate: () => report(scenario, 'sites', MOCK_REFRESH_DATE),
   }
 }

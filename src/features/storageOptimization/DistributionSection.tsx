@@ -28,9 +28,10 @@ export function DistributionSection({ overview, delay }: Props) {
       subtitle={t('storageOptimisation.distribution.subtitle')}
       help={<HelpButton topic="storageDistribution" />}
     >
-      <StorageUsagePanel overview={overview} />
-      <OneDrivePoolPanel overview={overview} />
+      {sharePoint.read && <StorageUsagePanel overview={overview} />}
+      {overview.oneDrive.read && <OneDrivePoolPanel overview={overview} />}
 
+      {sharePoint.siteReportRead && (
       <Panel>
         <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
         <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
@@ -51,6 +52,7 @@ export function DistributionSection({ overview, delay }: Props) {
           />
         </div>
       </Panel>
+      )}
     </Section>
   )
 }
