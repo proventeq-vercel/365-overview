@@ -124,8 +124,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   so one request per day; four days at a time, folded as they land) and takes
   each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
-  with `staleTime: Infinity`, `retry: false`; a day that fails is skipped (the
-  window starts on the first day read, `daysRead` / `daysAsked` say how many);
+  with `staleTime: Infinity`, `retry: false`; a day that fails with an
+  `ApiError` is skipped (the window starts on the first day read, `daysRead` /
+  `daysAsked` say how many, `someDaysMissing` is the model's flag for the note),
+  a throttled one (429/503/504, `ApiError.isThrottled`) also stops the loop
+  after its batch, and anything else fails the query; a failed name lookup
+  leaves the leaders unnamed rather than failing; on a masked tenant the dated
+  rows go through `hideRowNames` so their ids match the masked report rows;
   Refresh data re-reads it only if a day was missing or it failed, and the
   refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
   day; each load spends ~25 of the 100 report requests Graph allows per 10
@@ -135,11 +140,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   — pure, table-tested. The panel always charts something, picked in the model
   (`rankLeaders` → `ranking`): `growth` when a measured row grew (title
   *Fastest-growing sites & OneDrives*), else `shrink` (storage freed) when one
-  shrank, else `size` (*Largest sites & OneDrives*, storage used on `sizesOn`)
-  with `sizeRankingReason` `noDailyReports` (no day read, or a report date at or
-  before today − 26), `notMeasured` or `unchanged`. If the query itself fails,
-  the hook returns the size ranking built from the overview, so there is no
-  error panel; a skeleton shows only while pending. A row with no
+  shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
+  `sizesOn`, zero-byte rows left out) with `sizeRankingReason` `reportDateTooOld`
+  (no day asked: a report date at or before today − 26), `noDailyReports` (days
+  asked, none read), `notMeasured`, `unchanged` or `growthFailed`. If the query
+  itself fails, the hook returns that size ranking built from the overview
+  (`growthFailed`), also while Refresh data re-reads it, so there is no error
+  panel; a skeleton shows only on the first load. A row with no
   dated appearance has no daily figure, so it is left out of growth (never counted from
   0, which would rank the biggest sites as the fastest growers); deleted rows
   are out of every ranking.

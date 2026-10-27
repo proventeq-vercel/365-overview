@@ -1,3 +1,5 @@
+export const THROTTLED_STATUSES = new Set([429, 503, 504])
+
 export class ApiError extends Error {
   status: number
   code: string | null
@@ -9,6 +11,7 @@ export class ApiError extends Error {
   }
   get isAuth() { return this.status === 401 || this.status === 403 }
   get isForbidden() { return this.status === 403 }
+  get isThrottled() { return THROTTLED_STATUSES.has(this.status) }
 }
 
 const CONSENT_CODES = ['AADSTS65001', 'consent_required', 'interaction_required']

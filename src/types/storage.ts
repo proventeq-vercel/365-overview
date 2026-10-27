@@ -110,17 +110,18 @@ export interface StorageBreakdown {
 
 export type GrowthRanking = 'growth' | 'shrink' | 'size'
 
-export type SizeRankingReason = 'noDailyReports' | 'notMeasured' | 'unchanged'
+export type SizeRankingReason = 'growthFailed' | 'reportDateTooOld' | 'noDailyReports' | 'notMeasured' | 'unchanged'
 
 export interface StorageGrowth {
   ranking: GrowthRanking
   sizeRankingReason: SizeRankingReason | null
   baselineDate: string | null
-  reportRefreshDate: string
+  windowEndDate: string
   sizesOn: string
   windowDays: number
   daysRead: number
   daysAsked: number
+  someDaysMissing: boolean
   measuredRows: number
   leaders: Slice[]
 }

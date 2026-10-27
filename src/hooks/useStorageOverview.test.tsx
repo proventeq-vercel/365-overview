@@ -250,6 +250,43 @@ describe('useStorageOverview after access is refused', () => {
     expect(getSitesOn).toHaveBeenCalledTimes(2)
   })
 
+  it('reads a growth that missed a day again once access works again', async () => {
+    let refuse = false
+    const getSites = vi.fn(async () => {
+      if (refuse) throw REFUSED
+      return [site(FINANCE_ID, 900)]
+    })
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (date === '2026-09-19' && getSitesOn.mock.calls.length === 1) throw new ApiError(500, 'Graph is down')
+      return [site(FINANCE_ID, 400)]
+    })
+    function WithGrowth() {
+      const { data, error } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{error ? 'refused' : growth ? `read ${growth.daysRead}` : 'pending'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({ getSites, getSitesOn, getDrivesOn: async () => [], getDailyReportDates: () => ['2026-09-19', '2026-09-20'] }),
+    )
+    expect(await screen.findByText('read 1')).toBeInTheDocument()
+    refuse = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    expect(await screen.findByText('refused')).toBeInTheDocument()
+    refuse = false
+
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(await screen.findByText('read 2')).toBeInTheDocument()
+    expect(getSitesOn).toHaveBeenCalledTimes(4)
+  })
+
   it('does not keep asking after a failure access cannot fix', async () => {
     const getSites = refusedOnce(new ApiError(500, 'Graph is down'))
     renderAsTheApp(<Status />, sourceWith({ getSites }))

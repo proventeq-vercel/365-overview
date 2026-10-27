@@ -33,9 +33,9 @@ test('from a single reported day the trend chart still draws that day', async ({
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Cost of doing nothing' })).toHaveCount(0)
 })
 
-test('when no daily report comes back the growth panel charts the largest sites and OneDrives', async ({ page }) => {
+test('when no daily report comes back the growth panel charts the sites and OneDrives by storage used', async ({ page }) => {
   await page.goto('/?scenario=no-daily-reports')
-  const chart = page.getByRole('img', { name: 'Largest sites & OneDrives' })
+  const chart = page.getByRole('img', { name: 'Sites & OneDrives by storage used' })
   await expect(chart.locator('.recharts-bar-rectangle')).toHaveCount(10)
   await expect(page.getByText(/^Ranked by storage used on \d{4}-\d{2}-\d{2}\. Growth is measured from/)).toBeVisible()
 })

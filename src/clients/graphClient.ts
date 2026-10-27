@@ -1,4 +1,4 @@
-import { ApiError } from './apiError'
+import { ApiError, THROTTLED_STATUSES } from './apiError'
 
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
@@ -8,8 +8,6 @@ export const BATCH_LIMIT = 20
 export const MAX_THROTTLE_RETRIES = 3
 export const DEFAULT_RETRY_AFTER_MS = 2_000
 export const MAX_RETRY_AFTER_MS = 60_000
-
-const THROTTLED_STATUSES = new Set([429, 503, 504])
 
 export interface BatchResponse<T> {
   status: number

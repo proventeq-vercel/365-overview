@@ -17,20 +17,21 @@ function useRankingCopy(ranking: GrowthRanking) {
 
 function GrowthDescription({ growth }: { growth: StorageGrowth }) {
   const t = useTranslation()
-  const window = { from: growth.baselineDate, to: growth.reportRefreshDate, days: growth.windowDays }
-  const bySize = { ...window, date: growth.sizesOn }
+  const window = { from: growth.baselineDate, to: growth.windowEndDate, days: growth.windowDays }
+  const bySize = { ...window, date: growth.sizesOn, asked: growth.daysAsked }
   const description = {
+    growthFailed: () => t('storageOptimisation.offenders.largestGrowthFailed', bySize),
+    reportDateTooOld: () => t('storageOptimisation.offenders.largestReportDateTooOld', bySize),
     noDailyReports: () => t('storageOptimisation.offenders.largestNoDailyReports', bySize),
     notMeasured: () => t('storageOptimisation.offenders.largestNotMeasured', bySize),
     unchanged: () => t('storageOptimisation.offenders.largestUnchanged', bySize),
     growth: () => t('storageOptimisation.offenders.fastestSubtitle', window),
     shrink: () => t('storageOptimisation.offenders.shrinkingSubtitle', window),
   }[growth.sizeRankingReason ?? (growth.ranking === 'shrink' ? 'shrink' : 'growth')]()
-  const partial = growth.daysRead > 0 && growth.daysRead < growth.daysAsked
   return (
     <PanelDescription>
       {description}
-      {partial &&
+      {growth.someDaysMissing &&
         ` ${t('storageOptimisation.offenders.dailyReportsRead', { read: growth.daysRead, asked: growth.daysAsked })}`}
     </PanelDescription>
   )

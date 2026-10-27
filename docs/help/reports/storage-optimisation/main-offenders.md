@@ -14,8 +14,9 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
   only the sites and OneDrives that had activity on that day, with their size on that day.
   Microsoft offers those daily reports for the last 28 days, counting today. The report reads
-  every day from 26 days ago, keeping a day in hand, up to the report date. The description
-  under the title gives the first and last day and the number of days.
+  every day from 26 days ago, keeping a day in hand, up to the report date. When it ranks by
+  growth or by storage freed, the description under the title gives the first and last day and
+  the number of days.
 - **Storage added** is the size on the report date less the size on the first day in that window
   the site or OneDrive was active. Storage added on that first day itself is not counted, so a
   site that received everything in one day, or was created inside the window, can show less
@@ -25,18 +26,22 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   are those that shrank, stayed the same or were deleted.
 - If a daily report does not come back, the panel measures from the days that did. The window then
   starts on the first day that came back, and the description says how many of the daily reports
-  the growth was measured from.
+  the growth was measured from. If Microsoft starts limiting the requests, the panel stops asking
+  for more days and measures from the ones it already has, so it does not spend more of the
+  limit the rest of the report shares.
 - The panel always draws a chart, and its title says what it ranks:
   - **Sites & OneDrives that shrank the most**, by **Storage freed**, when none of the measured
     ones grew but some shrank.
-  - **Largest sites & OneDrives**, by **Storage used** on the report date, when no daily report came
-    back (or the report date is not at least two days inside the days Microsoft keeps), when no site
-    or OneDrive in the report was active in the daily reports, or when none of them changed size.
-    The description says which.
+  - **Sites & OneDrives by storage used**, by **Storage used** on the report date, when no daily
+    report came back, when the report date is not at least two days inside the days Microsoft
+    keeps, when no site or OneDrive in the report was active in the daily reports, when none of
+    them changed size, or when measuring did not finish. The description says which. It lists the
+    ten largest sites and OneDrives together, so it repeats the two lists below it.
 - The chart loads after the rest of the report, with a placeholder while it does.
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
-  not come back, **Refresh data** reads it again once the report itself reloads.
+  not come back, or measuring did not finish, **Refresh data** reads every day of the window again
+  once the report itself reloads.
 
 ## Largest sites and OneDrives
 

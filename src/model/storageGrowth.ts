@@ -36,8 +36,16 @@ function sizeChanges(current: StorageRow[], baseline: StorageRow[]): GrowthLeade
     })
 }
 
-const largestFirst = (leaders: GrowthLeader[], limit: number) =>
-  leaders.sort((a, b) => b.valueBytes - a.valueBytes).slice(0, limit)
+function largestFirst(leaders: GrowthLeader[], limit: number): GrowthLeader[] {
+  const top: GrowthLeader[] = []
+  for (const leader of leaders) {
+    if (top.length === limit && leader.valueBytes <= top[limit - 1].valueBytes) continue
+    const at = top.findIndex((kept) => leader.valueBytes > kept.valueBytes)
+    top.splice(at === -1 ? top.length : at, 0, leader)
+    if (top.length > limit) top.pop()
+  }
+  return top
+}
 
 export function rankLeaders(current: StorageRow[], baseline: StorageRow[], limit = TOP_GROWERS): RankedLeaders {
   const changes = sizeChanges(current, baseline)
@@ -47,7 +55,9 @@ export function rankLeaders(current: StorageRow[], baseline: StorageRow[], limit
     .filter((change) => change.valueBytes < 0)
     .map((change) => ({ row: change.row, valueBytes: -change.valueBytes }))
   if (shrunk.length > 0) return { ranking: 'shrink', leaders: largestFirst(shrunk, limit) }
-  const sizes = current.filter((row) => !row.isDeleted).map((row) => ({ row, valueBytes: row.storageUsedBytes }))
+  const sizes = current
+    .filter((row) => !row.isDeleted && row.storageUsedBytes > 0)
+    .map((row) => ({ row, valueBytes: row.storageUsedBytes }))
   return { ranking: 'size', leaders: largestFirst(sizes, limit) }
 }
 
@@ -55,31 +65,35 @@ export interface GrowthInputs {
   current: StorageRow[]
   baseline: StorageRow[]
   baselineDate: string | null
-  reportRefreshDate: string
+  windowEndDate: string
   sizesOn: string
   daysRead: number
   daysAsked: number
+  measurementFailed: boolean
 }
 
-function sizeRankingReason(daysRead: number, measuredRows: number): SizeRankingReason {
-  if (daysRead === 0) return 'noDailyReports'
+function sizeRankingReason(inputs: GrowthInputs, measuredRows: number): SizeRankingReason {
+  if (inputs.measurementFailed) return 'growthFailed'
+  if (inputs.daysAsked === 0) return 'reportDateTooOld'
+  if (inputs.daysRead === 0) return 'noDailyReports'
   return measuredRows === 0 ? 'notMeasured' : 'unchanged'
 }
 
 export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
-  const { current, baseline, baselineDate, reportRefreshDate, sizesOn, daysRead, daysAsked } = inputs
+  const { current, baseline, baselineDate, windowEndDate, sizesOn, daysRead, daysAsked } = inputs
   const measured = new Set(baseline.map(rowKey))
   const measuredRows = current.filter((row) => !row.isDeleted && measured.has(rowKey(row))).length
   const { ranking, leaders } = rankLeaders(current, baseline)
   return {
     ranking,
-    sizeRankingReason: ranking === 'size' ? sizeRankingReason(daysRead, measuredRows) : null,
+    sizeRankingReason: ranking === 'size' ? sizeRankingReason(inputs, measuredRows) : null,
     baselineDate,
-    reportRefreshDate,
+    windowEndDate,
     sizesOn,
-    windowDays: baselineDate === null ? 0 : daysBetween(baselineDate, reportRefreshDate),
+    windowDays: baselineDate === null ? 0 : daysBetween(baselineDate, windowEndDate),
     daysRead,
     daysAsked,
+    someDaysMissing: daysRead > 0 && daysRead < daysAsked,
     measuredRows,
     leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes })),
   }
