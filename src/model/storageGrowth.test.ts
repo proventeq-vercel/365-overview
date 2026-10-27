@@ -264,25 +264,30 @@ describe('betterGrowth', () => {
   const read = (sharePoint: number, oneDrive: number, over: string[] = dates) =>
     buildStorageGrowth({ ...window, dates: over, reportsRead: { sharePoint, oneDrive }, current: one, baseline: [] })
 
-  it('takes the new read when there is no earlier one, or the window moved', () => {
-    const next = read(1, 1, ['2026-10-01', '2026-10-02'])
-    expect([betterGrowth(undefined, next), betterGrowth(read(3, 3), next)]).toEqual([next, next])
+  it('takes the new read when there is no earlier one', () => {
+    const next = read(1, 1)
+    expect(betterGrowth(undefined, next)).toBe(next)
   })
 
-  it('keeps whichever read of the same window misses fewer reports', () => {
+  it('keeps whichever read came back with more reports', () => {
     const fuller = read(3, 2)
     const thinner = read(1, 2)
     expect([betterGrowth(fuller, thinner), betterGrowth(thinner, fuller)]).toEqual([fuller, fuller])
+  })
+
+  it('keeps the earlier read when the window moved a day at midnight and the new one read fewer reports', () => {
+    const earlier = read(3, 0)
+    const afterMidnight = read(0, 0, ['2026-10-01', '2026-10-02'])
+    const fullerAfterMidnight = read(2, 2, ['2026-10-01', '2026-10-02'])
+    expect([betterGrowth(earlier, afterMidnight), betterGrowth(earlier, fullerAfterMidnight)]).toEqual([earlier, fullerAfterMidnight])
   })
 
   it('on a tie keeps the earlier read when the new one loses reports of a pool, and takes it otherwise', () => {
     const sharePointOnly = read(3, 0)
     const oneDriveOnly = read(0, 3)
     const same = read(3, 0)
-    expect([betterGrowth(sharePointOnly, oneDriveOnly), betterGrowth(oneDriveOnly, sharePointOnly), betterGrowth(sharePointOnly, same)]).toEqual([
-      sharePointOnly,
-      oneDriveOnly,
-      same,
-    ])
+    expect(betterGrowth(sharePointOnly, oneDriveOnly)).toBe(sharePointOnly)
+    expect(betterGrowth(oneDriveOnly, sharePointOnly)).toBe(oneDriveOnly)
+    expect(betterGrowth(sharePointOnly, same)).toBe(same)
   })
 })

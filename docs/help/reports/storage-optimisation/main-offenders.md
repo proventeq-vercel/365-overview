@@ -22,8 +22,8 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   site that received everything in one day, or was created inside the window, can show less
   growth than it had. Each one is measured from its own first active day, so two rows can cover
   different spans of the window.
-- A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
-  are those that shrank, stayed the same or were deleted.
+- From the growth ranking, a site or OneDrive with no activity in the window has no daily figure,
+  so it is left out. So are those that shrank, stayed the same or were deleted.
 - Each day has two daily reports, one for SharePoint and one for OneDrive, and each is read on its
   own. If one does not come back, the panel measures from the ones that did. The window then
   starts on the first day a report came back, and the description says how many of each came
@@ -45,8 +45,10 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
   not come back, **Refresh data** reads every day of the window again once the report itself
-  reloads and ten minutes have passed since they were read, and keeps the earlier result if the
-  new one misses more reports. If measuring did not finish, it reads them again at once.
+  reloads and ten minutes have passed since they were read. It keeps the earlier result if the
+  new one brings back fewer reports, or as many but fewer of SharePoint's or of OneDrive's. If
+  measuring did not finish, it reads them again at once. When the report itself moves to a new
+  date, the chart shows its placeholder again while the new date's daily reports are read.
 
 ## Largest sites and OneDrives
 

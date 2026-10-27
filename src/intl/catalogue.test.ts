@@ -53,6 +53,12 @@ describe('en.json catalogue', () => {
     }
   })
 
+  it('never tells the reader that a figure of the main offenders is missing', () => {
+    const offenders = Object.entries(messages).filter(([key]) => key.startsWith('storageOptimisation.offenders.'))
+    expect(offenders.length).toBeGreaterThan(0)
+    for (const [key, message] of offenders) expect(message, key).not.toMatch(/unavailable|unknown|not enough history|could not be read|not an all-clear/i)
+  })
+
   it('has no empty or unbalanced messages', () => {
     for (const [key, message] of Object.entries(messages)) {
       expect(message.trim(), key).not.toBe('')

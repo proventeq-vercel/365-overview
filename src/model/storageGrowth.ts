@@ -111,8 +111,9 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
 }
 
 export function betterGrowth(previous: StorageGrowth | undefined, next: StorageGrowth): StorageGrowth {
-  if (previous === undefined || previous.windowFrom !== next.windowFrom || previous.windowTo !== next.windowTo) return next
-  if (previous.reportsMissing !== next.reportsMissing) return previous.reportsMissing < next.reportsMissing ? previous : next
+  if (previous === undefined) return next
+  const readOf = ({ reportsRead }: StorageGrowth) => reportsRead.sharePoint + reportsRead.oneDrive
+  if (readOf(previous) !== readOf(next)) return readOf(previous) > readOf(next) ? previous : next
   const losesAPool =
     next.reportsRead.sharePoint < previous.reportsRead.sharePoint || next.reportsRead.oneDrive < previous.reportsRead.oneDrive
   return losesAPool ? previous : next
