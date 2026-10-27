@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (nine mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (ten mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -195,11 +195,16 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   match): three disjoint groups, never one total — unlicensed (owner listed
   without a OneDrive licence, or not listed), inactive (licensed owner, no
   activity since the archive cutoff or none recorded; banded by years past the
-  cutoff), deleted (`deletedButBilling`). Unlicensed is `null` (Unknown) when
+  cutoff), deleted (`deletedButBilling`). `unlicensed` is never null: when
   the licence report failed or matches no live owner at all (a key mismatch is
   all-or-nothing; a guard on the share of owners listed would hide leaver-heavy
-  tenants); `notListed` counts the owners inferred from absence, and both the
-  card and the Storage-page line say it. Billing
+  tenants) it is `basis: 'noActivity'` — live drives with no activity in the 93
+  days before the report date (`UNLICENSED_ARCHIVE_DAYS`) but not inactive, so
+  the groups stay disjoint — and the card is *No activity for over 93 days*
+  (section *Inactive, deleted and quiet OneDrives*), saying
+  it stands in for the unlicensed ones; `basis: 'licences'` carries `notListed`,
+  the owners inferred from absence, and both the card and the Storage-page line
+  say it. Billing
   copy is Microsoft's "Manage unlicensed OneDrive user accounts" only ($0.05/GB
   a month once archived after 93 days with billing on); the report never
   prices it, because the reports do not say how long an owner has been
@@ -325,15 +330,22 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   Students carries `ONEDRIVESTANDARD`). Never flag against a flat 1 TB: an E3
   tenant's legally raised 5 TB drives would read as over licence.
   `SHAREPOINTENTERPRISE_MIDMARKET` counts as Plan 2: it is carried by E5 EEA
-  with Calling Minutes as well as the retired Midsize Business. No readable
-  licences, or none with a known allowance (`entitlementUnknownReason`
-  `licencesUnavailable` / `noSizedPlan`), and no override →
-  `entitlementPerUserBytes` and `overEntitlement` are `null` (shown
-  *Unknown*), never a guessed default.
-  `oneDrive.overEntitlement` lists live drives with `used > perUser`, largest
-  first, each row a copy carrying `overEntitlementBytes`; the setting
-  `oneDriveEntitlementOverrideBytes` (null or ≤ 0 = the estimate) replaces the
-  estimate. Never walk `/users` for per-user licences from here.
+  with Calling Minutes as well as the retired Midsize Business.
+  `oneDrive.overEntitlement.limit` says what the line is: `set`
+  (`oneDriveEntitlementOverrideBytes`, null or ≤ 0 = not set;
+  `oneDrive.limitWhenUnset` names what an empty setting measures against, for
+  the note and the settings dialog), else `licences`
+  (the estimate), else — no readable licences or none with a known allowance
+  (`licenceGap` `licencesUnavailable` / `noSizedPlan`) — `driveLimit`: the
+  commonest positive per-drive allocation among live drives (ties → the larger),
+  with `drivesReporting`, shown as *Over the usual OneDrive limit* (the copy
+  says "commonest", never "most": it is a plurality) with an *Over the limit by*
+  column (`overDriveLimit`), never a
+  guessed 1 TB. `overEntitlement` is `null` — card and section left out, never
+  *Unknown* — only when no live drive reports a limit either. It lists live
+  drives with `used > perUser`, largest first, each row a copy carrying
+  `overEntitlementBytes`; the Storage page's *Drives over their licence* stat
+  shows only for `set` / `licences`. Never walk `/users` for per-user licences from here.
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
   `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
   defect.** The cost figures are the exception and are never null: with an
@@ -448,8 +460,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   lists no day with storage) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
   part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
   storage in live drives against the sum of their own allocations, both from
-  the account rows; `allocation` is `null` (unknown, never partial) when any
-  live drive reports none. The Share column divides each row by its own pool
+  the account rows; `allocation` covers the live drives that report a limit
+  (its own `usedBytes` and `driveCount`) and counts the rest in `withoutLimit`,
+  named under the line; it is `null` only when no live drive reports one. The Share column divides each row by its own pool
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
   a trend lists no day with storage) and shows *Unknown* for a pool total of 0.
   **Versions is always `null`**: the usage reports count version history inside
@@ -499,7 +512,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage and OneDrive pages have no unavailable / unknown wording. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

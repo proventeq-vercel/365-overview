@@ -58,25 +58,52 @@ describe('oneDriveAttention', () => {
   it('puts a live OneDrive whose owner has no OneDrive licence in the unlicensed group, never also in inactive', () => {
     const licences = new Map([...allLicensed, ['ancient@c.com', false], ['leaver@c.com', false]])
     const { inactive, unlicensed } = at(licences)
-    expect(unlicensed).toEqual({ count: 2, bytes: 70 * GB, notListed: 0 })
+    expect(unlicensed).toEqual({ basis: 'licences', count: 2, bytes: 70 * GB, notListed: 0 })
     expect([inactive.count, inactive.bytes]).toEqual([3, 31 * GB])
   })
 
   it('counts an owner the licence report does not list as unlicensed, since it lists licensed users only', () => {
     const licences = new Map([...allLicensed].filter(([id]) => id !== 'leaver@c.com'))
-    expect(at(licences).unlicensed).toEqual({ count: 1, bytes: 40 * GB, notListed: 1 })
+    expect(at(licences).unlicensed).toEqual({ basis: 'licences', count: 1, bytes: 40 * GB, notListed: 1 })
   })
 
-  it('leaves the unlicensed group unknown, not empty, when the licence report could not be read', () => {
-    expect(at(null).unlicensed).toBeNull()
+  it('counts the OneDrives quiet for 93 days in place of the unlicensed group when the licence report is missing', () => {
+    const quiet = oneDriveAttention({
+      drives: [
+        drive('on-quiet-cutoff', '2026-05-29', 1),
+        drive('day-before-quiet-cutoff', '2026-05-28', 2),
+        drive('spring', '2026-03-01', 4),
+        drive('on-inactive-cutoff', '2023-08-30', 8),
+        drive('inactive', '2023-08-29', 16),
+        drive('never', null, 32),
+        drive('gone', '2026-01-01', 64, { isDeleted: true }),
+      ],
+      licences: null,
+      reportRefreshDate: '2026-08-30',
+      inactiveYears: 3,
+      now: new Date('2026-09-01T00:00:00Z'),
+    })
+    expect(quiet.unlicensed).toEqual({ basis: 'noActivity', count: 3, bytes: 14 * GB, days: 93, since: '2026-05-29' })
+    expect([quiet.inactive.count, quiet.inactive.bytes]).toEqual([2, 48 * GB])
+  })
+
+  it('counts the quiet days back from today when the report has no refresh date', () => {
+    const quiet = oneDriveAttention({
+      drives: [drive('spring', '2026-03-01', 4)],
+      licences: null,
+      reportRefreshDate: '',
+      inactiveYears: 3,
+      now: new Date('2026-09-01T00:00:00Z'),
+    })
+    expect(quiet.unlicensed).toMatchObject({ basis: 'noActivity', since: '2026-05-31', count: 1 })
   })
 
   it('keeps counting when most owners are leavers the licence report does not list', () => {
     const fewListed = new Map([...allLicensed].slice(0, 1))
-    expect(at(fewListed).unlicensed).toEqual({ count: 5, bytes: 101 * GB, notListed: 5 })
+    expect(at(fewListed).unlicensed).toEqual({ basis: 'licences', count: 5, bytes: 101 * GB, notListed: 5 })
   })
 
-  it('counts no unlicensed OneDrive, rather than an unknown, when there is no live OneDrive', () => {
+  it('counts no unlicensed OneDrive, rather than a stand-in, when there is no live OneDrive', () => {
     const empty = oneDriveAttention({
       drives: [drive('gone@c.com', null, 3, { isDeleted: true })],
       licences: new Map([['someone@c.com', true]]),
@@ -84,12 +111,12 @@ describe('oneDriveAttention', () => {
       inactiveYears: 3,
       now: new Date('2026-09-01T00:00:00Z'),
     })
-    expect(empty.unlicensed).toEqual({ count: 0, bytes: 0, notListed: 0 })
+    expect(empty.unlicensed).toEqual({ basis: 'licences', count: 0, bytes: 0, notListed: 0 })
   })
 
-  it('leaves the unlicensed group unknown, never all OneDrives, when no owner matches the licence report at all', () => {
+  it('falls back to the quiet OneDrives, never all OneDrives, when no owner matches the licence report at all', () => {
     const { unlicensed, inactive } = at(new Map([['someone-else@c.com', true]]))
-    expect(unlicensed).toBeNull()
+    expect(unlicensed).toEqual({ basis: 'noActivity', count: 0, bytes: 0, days: 93, since: '2026-05-29' })
     expect(inactive.count).toBe(4)
   })
 
@@ -118,6 +145,6 @@ describe('oneDriveAttention', () => {
       inactiveYears: 3,
       now: new Date('2026-09-01T00:00:00Z'),
     })
-    expect(shouting.unlicensed?.count).toBe(1)
+    expect(shouting.unlicensed.count).toBe(1)
   })
 })

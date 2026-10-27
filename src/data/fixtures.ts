@@ -16,6 +16,7 @@ export type MockScenario =
   | 'no-licences'
   | 'first-day'
   | 'no-daily-reports'
+  | 'onedrive-gaps'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -237,6 +238,14 @@ function splitDirectory(rows: StorageRow[]): Pick<ScenarioData, 'sites' | 'direc
   return { sites, directory }
 }
 
+const NO_LIMIT_DRIVE_EVERY = 40
+
+function withoutSomeLimits(drives: StorageRow[]): StorageRow[] {
+  return drives.map((drive, index) =>
+    index % NO_LIMIT_DRIVE_EVERY === NO_LIMIT_DRIVE_EVERY / 2 ? { ...drive, allocatedBytes: undefined } : drive,
+  )
+}
+
 function scenarioData(scenario: MockScenario): ScenarioData {
   const concealed = scenario === 'concealed'
   const tidy = scenario === 'nothing-to-clean'
@@ -244,7 +253,8 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   const { sites, directory } = splitDirectory(
     scenario === 'over-entitlement' ? scaled(baseSites, OVER_ENTITLEMENT_SCALE) : baseSites,
   )
-  const drives = generateDrives(400, concealed, scenario === 'onedrive-over-licence')
+  const generated = generateDrives(400, concealed, scenario === 'onedrive-over-licence')
+  const drives = scenario === 'onedrive-gaps' ? withoutSomeLimits(generated) : generated
   const sharePointCurve =
     scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
   const months = scenario === 'first-day' ? 1 : scenario === 'short-history' ? 2 : 6
@@ -328,7 +338,7 @@ export function createMockDataSource(
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
     getLicenses: async () => (scenario === 'no-licences' ? null : licenses),
-    getOneDriveLicences: async () => oneDriveLicencesFor(data.drives),
+    getOneDriveLicences: async () => (scenario === 'onedrive-gaps' ? null : oneDriveLicencesFor(data.drives)),
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,
   }

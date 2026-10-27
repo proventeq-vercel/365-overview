@@ -61,6 +61,7 @@ export function SettingsDialog({
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
+  const oneDriveLimitWhenUnset = data === undefined ? undefined : data.oneDrive.limitWhenUnset
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,12 +144,16 @@ export function SettingsDialog({
             id={oneDriveEntitlementId}
             label={t('settings.oneDriveEntitlement')}
             hint={
-              oneDriveEstimateBytes === null
-                ? t('settings.oneDriveEntitlementHintNoEstimate')
-                : t('settings.oneDriveEntitlementHint', {
-                    estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
-                    unit: t('settings.oneDriveEntitlementUnit'),
-                  })
+              oneDriveLimitWhenUnset === 'driveLimit'
+                ? t('settings.oneDriveEntitlementHintDriveLimit')
+                : oneDriveLimitWhenUnset === null
+                  ? t('settings.oneDriveEntitlementHintNoLimit')
+                  : oneDriveEstimateBytes === null
+                    ? t('settings.oneDriveEntitlementHintNoEstimate')
+                    : t('settings.oneDriveEntitlementHint', {
+                        estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
+                        unit: t('settings.oneDriveEntitlementUnit'),
+                      })
             }
           >
             <ByteOverrideInput
@@ -158,7 +163,13 @@ export function SettingsDialog({
               step="0.5"
               min="0.5"
               suffix={t('settings.oneDriveEntitlementUnit')}
-              placeholder={t('settings.oneDriveEntitlementPlaceholder')}
+              placeholder={
+                oneDriveLimitWhenUnset === 'licences'
+                  ? t('settings.oneDriveEntitlementPlaceholder')
+                  : oneDriveLimitWhenUnset === 'driveLimit'
+                    ? t('settings.oneDriveEntitlementPlaceholderDriveLimit')
+                    : t('settings.oneDriveEntitlementPlaceholderNone')
+              }
               onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}
             />
           </Field>

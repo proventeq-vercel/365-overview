@@ -30,10 +30,10 @@ Under the chart:
 | Live sites | SharePoint sites that are not deleted. |
 | Drives near their quota | OneDrives at 90% or more of their own storage quota, the per-drive limit in the usage report. An admin can set it above or below the licence. |
 ::: feature optimization.storage.report.onedrive
-| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). Left out when that storage per user is not known. |
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). Left out when neither the licences nor Report settings give that figure. |
 :::
 ::: unless-feature optimization.storage.report.onedrive
-| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user. Left out when that storage per user is not known. |
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user. Left out when neither the licences nor Report settings give that figure. |
 :::
 
 ## Growth impact

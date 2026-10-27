@@ -18,4 +18,11 @@ describe('OneDriveKpiCards', () => {
     render(<OneDriveKpiCards overview={base} />)
     expect(usedCard()).toHaveTextContent('Tenant-wide, as reported by Microsoft 365')
   })
+
+  it('leaves the over-licence card out, never Unknown, when nothing gives a limit to measure against', () => {
+    render(<OneDriveKpiCards overview={{ ...base, oneDrive: { ...base.oneDrive, overEntitlement: null } }} />)
+    expect(screen.queryByText(/^Over /)).not.toBeInTheDocument()
+    expect(document.querySelectorAll('[data-slot="stat-card"]')).toHaveLength(4)
+    expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
+  })
 })

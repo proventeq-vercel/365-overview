@@ -217,6 +217,16 @@ describe('mock scenarios reach every caveat state', () => {
     expect((await overviewFor('no-daily-reports')).sharePoint.sites.length).toBeGreaterThan(0)
   })
 
+  it('onedrive-gaps: the active-user report does not come back and some OneDrives report no limit', async () => {
+    const ds = createMockDataSource('onedrive-gaps')
+    expect(await ds.getOneDriveLicences()).toBeNull()
+    const { oneDrive } = await overviewFor('onedrive-gaps')
+    expect(oneDrive.attention.unlicensed.basis).toBe('noActivity')
+    expect(oneDrive.attention.unlicensed.count).toBeGreaterThan(0)
+    expect(oneDrive.pool.allocation?.withoutLimit.count).toBe(10)
+    expect(oneDrive.overEntitlement?.limit.basis).toBe('licences')
+  })
+
   it('only the concealed tenant conceals names', async () => {
     for (const scenario of ['healthy', 'over-entitlement', 'short-history'] as const) {
       const overview = await overviewFor(scenario)

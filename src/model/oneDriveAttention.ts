@@ -1,4 +1,4 @@
-import { inactiveSince } from '@/lib/archive'
+import { daysBefore, inactiveSince } from '@/lib/archive'
 import type { OneDriveLicences } from '@/reports/activeUsers'
 import {
   INACTIVE_DRIVE_BANDS,
@@ -23,6 +23,8 @@ const BAND_YEARS: Record<InactiveDriveBand, (years: number) => { fromYears: numb
   never: () => ({ fromYears: null, toYears: null }),
 }
 
+export const UNLICENSED_ARCHIVE_DAYS = 93
+
 const emptyGroup = (): DriveGroup => ({ count: 0, bytes: 0 })
 
 const add = (group: DriveGroup, drive: StorageRow) => {
@@ -45,6 +47,8 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
 
   const inactive = emptyGroup()
   const unlicensed = { ...emptyGroup(), notListed: 0 }
+  const quietSince = daysBefore(reportRefreshDate, UNLICENSED_ARCHIVE_DAYS, now)
+  const quiet = emptyGroup()
   const bands = new Map<InactiveDriveBand, DriveGroup>(INACTIVE_DRIVE_BANDS.map((band) => [band, emptyGroup()]))
 
   for (const drive of live) {
@@ -54,7 +58,10 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
       continue
     }
     const last = drive.lastActivityDate
-    if (last !== null && last >= since) continue
+    if (last !== null && last >= since) {
+      if (usableLicences === null && last < quietSince) add(quiet, drive)
+      continue
+    }
     add(inactive, drive)
     add(
       bands.get(last === null ? 'never' : last >= yearBefore ? 'firstYear' : last >= twoYearsBefore ? 'secondYear' : 'older')!,
@@ -69,6 +76,9 @@ export function oneDriveAttention(inputs: AttentionInputs): OneDriveAttention {
       ...inactive,
       bands: INACTIVE_DRIVE_BANDS.map((band) => ({ band, ...BAND_YEARS[band](inactiveYears), ...bands.get(band)! })),
     },
-    unlicensed: usableLicences === null ? null : unlicensed,
+    unlicensed:
+      usableLicences === null
+        ? { basis: 'noActivity', ...quiet, days: UNLICENSED_ARCHIVE_DAYS, since: quietSince }
+        : { basis: 'licences', ...unlicensed },
   }
 }

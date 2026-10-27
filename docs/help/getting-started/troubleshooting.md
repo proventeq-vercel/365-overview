@@ -84,12 +84,13 @@ The figures are still correct. Hover over or click a blurred name to see why:
 
 [Site names](../reference/site-names.md#blurred-names) explains both.
 
-## Figures show as Unknown
+## Figures are measured against a stand-in
 
-The OneDrive figures measured against the storage each user is licensed for show as **Unknown**
-when the report could not read your licences, usually because `Organization.Read.All` was not
-granted, or when none of your licences has a OneDrive allowance the report knows. Enter the
-OneDrive storage per user in [Report settings](../reference/settings.md).
+When the report cannot read your licences, usually because `Organization.Read.All` was not
+granted, or none of your licences has a OneDrive allowance the report knows, the OneDrive figures
+measured against the storage each user is licensed for use the commonest OneDrive limit instead,
+and say so (*Over the usual OneDrive limit*). Enter the OneDrive storage per user in
+[Report settings](../reference/settings.md) to measure against your licences.
 
 The SharePoint figures never show as Unknown: without the entitlement the report shows the
 monthly growth and the storage in use instead. Enter the SharePoint entitlement in Report settings

@@ -4,7 +4,7 @@ import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitive
 import { StatCard } from '@/design/StatCard'
 import { P365 } from '@/design/theme'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
-import { formatBytes, formatLongMonthYear } from '@/lib/format'
+import { formatBytes, formatLongDate, formatLongMonthYear } from '@/lib/format'
 import type { InactiveDriveBandTotal, OneDriveAttention, StorageOverview } from '@/types/storage'
 
 function bandLabel(band: InactiveDriveBandTotal, t: TranslateFn): string {
@@ -13,15 +13,21 @@ function bandLabel(band: InactiveDriveBandTotal, t: TranslateFn): string {
   return t('oneDrive.attention.band.years', { from: band.fromYears, to: band.toYears })
 }
 
-function UnlicensedCard({ unlicensed }: { unlicensed: OneDriveAttention['unlicensed'] }) {
+function UnlicensedCard({ attention }: { attention: OneDriveAttention }) {
   const t = useTranslation()
-  if (unlicensed === null) {
+  const { unlicensed } = attention
+  if (unlicensed.basis === 'noActivity') {
     return (
       <StatCard
-        label={t('oneDrive.attention.unlicensed')}
-        value={t('storageOptimisation.kpi.unknown')}
-        color={P365.grey400}
-        information={t('oneDrive.attention.unlicensedUnknown')}
+        label={t('oneDrive.attention.noActivity', { days: unlicensed.days })}
+        value={formatBytes(unlicensed.bytes)}
+        color={unlicensed.count > 0 ? P365.red : P365.grey400}
+        information={t('oneDrive.attention.noActivityHint', {
+          count: unlicensed.count,
+          since: formatLongDate(unlicensed.since),
+          years: attention.inactiveYears,
+          days: unlicensed.days,
+        })}
       />
     )
   }
@@ -40,11 +46,12 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
   const { attention, deletedButBilling } = overview.oneDrive
   const { inactive, inactiveYears, inactiveSince } = attention
   const inactiveValues = { count: inactive.count, date: formatLongMonthYear(inactiveSince) }
+  const quiet = attention.unlicensed.basis === 'noActivity'
 
   return (
     <Section
-      title={t('oneDrive.attention.title')}
-      subtitle={t('oneDrive.attention.subtitle')}
+      title={quiet ? t('oneDrive.attention.titleNoActivity') : t('oneDrive.attention.title')}
+      subtitle={quiet ? t('oneDrive.attention.subtitleNoActivity') : t('oneDrive.attention.subtitle')}
       help={<HelpButton topic="oneDriveInactive" />}
       delay={delay}
     >
@@ -54,8 +61,8 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           value={formatBytes(inactive.bytes)}
           color={inactive.count > 0 ? P365.blue : P365.grey400}
           information={
-            attention.unlicensed === null
-              ? t('oneDrive.attention.inactiveHintUnknown', inactiveValues)
+            quiet
+              ? t('oneDrive.attention.inactiveHintNoLicences', inactiveValues)
               : t('oneDrive.attention.inactiveHint', inactiveValues)
           }
         />
@@ -65,7 +72,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           color={deletedButBilling.count > 0 ? P365.yellow : P365.grey400}
           information={t('oneDrive.attention.deletedHint', { count: deletedButBilling.count })}
         />
-        <UnlicensedCard unlicensed={attention.unlicensed} />
+        <UnlicensedCard attention={attention} />
       </div>
       <Panel>
         <PanelLabel>{t('oneDrive.attention.bandsTitle')}</PanelLabel>

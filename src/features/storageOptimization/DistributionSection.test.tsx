@@ -107,13 +107,41 @@ describe('DistributionSection', () => {
     expect(await screen.findByRole('dialog', { name: 'Used' })).toHaveTextContent('Storage in live OneDrives')
   })
 
-  it('says the OneDrive allocation is unknown, with no bar, when a drive reports none', () => {
+  it('draws the allocation over the OneDrives that report a limit, and names the rest apart', () => {
+    const allocation = {
+      ...withTemplates.oneDrive.pool.allocation!,
+      driveCount: 38,
+      withoutLimit: { count: 2, bytes: 6 * GB },
+    }
+    render(
+      <DistributionSection
+        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 126 * GB, allocation } } }}
+      />,
+    )
+    expect(screen.getByText('of the 40 TB allocated to the 38 OneDrives that report a limit used (120 GB)')).toBeInTheDocument()
+    expect(screen.getByText('2 live OneDrives holding 6 GB report no limit and are left out of this line.')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Live OneDrive storage' })).toBeInTheDocument()
+  })
+
+  it('says one OneDrive reports a limit in the singular', () => {
+    const allocation = { ...withTemplates.oneDrive.pool.allocation!, driveCount: 1, withoutLimit: { count: 1, bytes: 6 * GB } }
+    render(
+      <DistributionSection
+        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 126 * GB, allocation } } }}
+      />,
+    )
+    expect(screen.getByText('of the 40 TB allocated to the 1 OneDrive that reports a limit used (120 GB)')).toBeInTheDocument()
+    expect(screen.getByText('1 live OneDrive holding 6 GB reports no limit and is left out of this line.')).toBeInTheDocument()
+  })
+
+  it('says no OneDrive reports a limit, with no bar, rather than an unknown allocation', () => {
     render(
       <DistributionSection
         overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 120 * GB, allocation: null } } }}
       />,
     )
-    expect(screen.getByText(/120 GB in live OneDrives\. Microsoft did not report an allocation/)).toBeInTheDocument()
+    expect(screen.getByText("120 GB in 40 live OneDrives. Microsoft's usage report gives no storage limit for them, so there is no allocation to draw them against.")).toBeInTheDocument()
+    expect(screen.queryByText(/report a limit used/)).not.toBeInTheDocument()
     expect(screen.getByText(/3 OneDrives are at 90% or more of their own limits/)).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Live OneDrive storage' })).not.toBeInTheDocument()
   })
@@ -188,11 +216,19 @@ describe('DistributionSection', () => {
       />,
     )
     expect(screen.getByText("No live OneDrive is in Microsoft's usage report.")).toBeInTheDocument()
-    expect(screen.queryByText(/did not report an allocation/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/gives no storage limit/)).not.toBeInTheDocument()
   })
 
   it('shows a used share too small to round as under 0.1%, not as nothing used', () => {
-    const allocation = { allocatedBytes: 10_000 * 1024 * GB, freeBytes: 9_998 * 1024 * GB, usedShare: 0.0002, freeShare: 0.9998 }
+    const allocation = {
+      allocatedBytes: 10_000 * 1024 * GB,
+      usedBytes: 2 * 1024 * GB,
+      driveCount: 40,
+      withoutLimit: { count: 0, bytes: 0 },
+      freeBytes: 9_998 * 1024 * GB,
+      usedShare: 0.0002,
+      freeShare: 0.9998,
+    }
     render(
       <DistributionSection
         overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 2 * 1024 * GB, allocation } } }}

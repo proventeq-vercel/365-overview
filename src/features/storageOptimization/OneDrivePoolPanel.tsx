@@ -4,7 +4,7 @@ import { FeatureFlags } from '@/config/featureFlags'
 import { REPORT_PATHS } from '@/features/reportPaths'
 import { formatBytes, formatShare } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
-import type { StorageOverview } from '@/types/storage'
+import type { OneDriveAllocation, StorageOverview } from '@/types/storage'
 import { SegmentedBar } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
@@ -14,13 +14,18 @@ function AttentionLine({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
   const { attention, deletedButBilling } = overview.oneDrive
   const figures = { inactive: formatBytes(attention.inactive.bytes), deleted: formatBytes(deletedButBilling.bytes) }
+  const { unlicensed } = attention
   const line =
-    attention.unlicensed === null
-      ? t('storageOptimisation.oneDrivePool.attentionUnknown', figures)
+    unlicensed.basis === 'noActivity'
+      ? t('storageOptimisation.oneDrivePool.attentionNoActivity', {
+          ...figures,
+          quiet: formatBytes(unlicensed.bytes),
+          days: unlicensed.days,
+        })
       : t('storageOptimisation.oneDrivePool.attention', {
           ...figures,
-          unlicensed: formatBytes(attention.unlicensed.bytes),
-          notListed: attention.unlicensed.notListed,
+          unlicensed: formatBytes(unlicensed.bytes),
+          notListed: unlicensed.notListed,
         })
   return (
     <PanelDescription>
@@ -34,11 +39,68 @@ function AttentionLine({ overview }: { overview: StorageOverview }) {
   )
 }
 
+function AllocationLine({ allocation }: { allocation: OneDriveAllocation }) {
+  const t = useTranslation()
+  const used = formatBytes(allocation.usedBytes)
+  const headline = {
+    used,
+    allocated: formatBytes(allocation.allocatedBytes),
+    count: allocation.driveCount,
+  }
+  const { withoutLimit } = allocation
+  return (
+    <>
+      <ShareHeadline share={formatShare(allocation.usedShare, 1)} color={WORKLOAD_COLOR.oneDrive}>
+        <span>
+          {withoutLimit.count === 0
+            ? t('storageOptimisation.oneDrivePool.headline', headline)
+            : t('storageOptimisation.oneDrivePool.headlinePartial', headline)}
+        </span>
+      </ShareHeadline>
+      <SegmentedBar
+        className="mt-1"
+        ariaLabel={t('storageOptimisation.oneDrivePool.title')}
+        segments={[
+          {
+            id: 'oneDriveUsed',
+            label: t('storageOptimisation.oneDrivePool.used'),
+            color: WORKLOAD_COLOR.oneDrive,
+            share: allocation.usedShare,
+            value: used,
+            shareLabel: t('storageOptimisation.oneDrivePool.share', {
+              percent: formatShare(allocation.usedShare, 1),
+            }),
+            description: t('storageOptimisation.oneDrivePool.usedDescription'),
+          },
+          {
+            id: 'oneDriveFree',
+            label: t('storageOptimisation.oneDrivePool.free'),
+            color: P365.grey100,
+            share: allocation.freeShare,
+            value: formatBytes(allocation.freeBytes),
+            shareLabel: t('storageOptimisation.oneDrivePool.share', {
+              percent: formatShare(allocation.freeShare, 1),
+            }),
+            description: t('storageOptimisation.oneDrivePool.freeDescription'),
+          },
+        ]}
+      />
+      {withoutLimit.count > 0 && (
+        <PanelDescription>
+          {t('storageOptimisation.oneDrivePool.withoutLimit', {
+            count: withoutLimit.count,
+            bytes: formatBytes(withoutLimit.bytes),
+          })}
+        </PanelDescription>
+      )}
+    </>
+  )
+}
+
 export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
   const { pool, driveCount, drivesNearCap } = overview.oneDrive
   const { allocation } = pool
-  const used = formatBytes(pool.usedBytes)
 
   return (
     <Panel>
@@ -48,48 +110,10 @@ export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
         <p className="text-sm text-p365-grey-700">{t('storageOptimisation.oneDrivePool.none')}</p>
       ) : allocation === null ? (
         <p className="text-sm text-p365-grey-700">
-          {t('storageOptimisation.oneDrivePool.headlineUnknown', { used })}
+          {t('storageOptimisation.oneDrivePool.noLimit', { used: formatBytes(pool.usedBytes), count: driveCount })}
         </p>
       ) : (
-        <>
-          <ShareHeadline share={formatShare(allocation.usedShare, 1)} color={WORKLOAD_COLOR.oneDrive}>
-            <span>
-              {t('storageOptimisation.oneDrivePool.headline', {
-                used,
-                allocated: formatBytes(allocation.allocatedBytes),
-                count: driveCount,
-              })}
-            </span>
-          </ShareHeadline>
-          <SegmentedBar
-            className="mt-1"
-            ariaLabel={t('storageOptimisation.oneDrivePool.title')}
-            segments={[
-              {
-                id: 'oneDriveUsed',
-                label: t('storageOptimisation.oneDrivePool.used'),
-                color: WORKLOAD_COLOR.oneDrive,
-                share: allocation.usedShare,
-                value: used,
-                shareLabel: t('storageOptimisation.oneDrivePool.share', {
-                  percent: formatShare(allocation.usedShare, 1),
-                }),
-                description: t('storageOptimisation.oneDrivePool.usedDescription'),
-              },
-              {
-                id: 'oneDriveFree',
-                label: t('storageOptimisation.oneDrivePool.free'),
-                color: P365.grey100,
-                share: allocation.freeShare,
-                value: formatBytes(allocation.freeBytes),
-                shareLabel: t('storageOptimisation.oneDrivePool.share', {
-                  percent: formatShare(allocation.freeShare, 1),
-                }),
-                description: t('storageOptimisation.oneDrivePool.freeDescription'),
-              },
-            ]}
-          />
-        </>
+        <AllocationLine allocation={allocation} />
       )}
       <AttentionLine overview={overview} />
       {drivesNearCap > 0 && (

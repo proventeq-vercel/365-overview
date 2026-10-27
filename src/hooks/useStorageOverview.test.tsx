@@ -66,7 +66,7 @@ function Unlicensed() {
   const { data } = useStorageOverview(DEFAULT_SETTINGS)
   if (!data) return <p>pending</p>
   const { unlicensed } = data.oneDrive.attention
-  return <p>{unlicensed === null ? 'licences unknown' : `unlicensed ${unlicensed.count}`}</p>
+  return <p>{`${unlicensed.basis} ${unlicensed.count}`}</p>
 }
 
 const ownerDrive = (id: string): StorageRow => ({ ...site(id, 50), pool: 'OneDrive', template: undefined, allocatedBytes: 100 })
@@ -80,12 +80,13 @@ describe('useStorageOverview', () => {
         getOneDriveLicences: async () => new Map([['ada@contoso.com', true], ['leaver@contoso.com', false]]),
       }),
     )
-    expect(await screen.findByText('unlicensed 1')).toBeInTheDocument()
+    expect(await screen.findByText('licences 1')).toBeInTheDocument()
   })
 
-  it('keeps the unlicensed OneDrives unknown when the licence report could not be read', async () => {
-    renderWithData(<Unlicensed />, sourceWith({ getDrives: async () => [ownerDrive('leaver@contoso.com')] }))
-    expect(await screen.findByText('licences unknown')).toBeInTheDocument()
+  it('counts the quiet OneDrives in place of the unlicensed ones when the licence report could not be read', async () => {
+    const quiet = { ...ownerDrive('leaver@contoso.com'), lastActivityDate: '2026-01-01' }
+    renderWithData(<Unlicensed />, sourceWith({ getDrives: async () => [quiet, ownerDrive('busy@contoso.com')] }))
+    expect(await screen.findByText('noActivity 1')).toBeInTheDocument()
   })
 
   it('names the report rows from the tenant directory', async () => {

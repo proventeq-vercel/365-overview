@@ -149,7 +149,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of nine fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of ten fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -164,6 +164,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
 | `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 | `no-daily-reports` | Every daily usage report is throttled (the report itself loads) — the growth panel stops asking after the first four days, ranks the sites and OneDrives by storage used and says none of the daily reports came back |
+| `onedrive-gaps` | Microsoft's active-user report does not come back and every fortieth OneDrive reports no storage limit — the OneDrives quiet for 93 days stand in for the unlicensed ones, and the OneDrive pool is drawn over the drives that report a limit |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -404,7 +405,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` / `onedrive-gaps` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
 | `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |

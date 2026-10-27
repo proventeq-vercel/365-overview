@@ -7,6 +7,8 @@ import { FeatureFlags } from '@/config/featureFlags'
 import { OneDrivePoolPanel } from './OneDrivePoolPanel'
 import { base } from './testFixtures'
 
+const GB = 1_073_741_824
+
 const features = vi.hoisted(() => ({ oneDrive: true }))
 
 vi.mock('@/config/env', async (importOriginal) => {
@@ -50,9 +52,13 @@ describe('OneDrivePoolPanel', () => {
     expect(screen.queryByRole('link', { name: 'See the OneDrive report' })).not.toBeInTheDocument()
   })
 
-  it('says the unlicensed storage is unknown when the licences could not be read', () => {
+  it('names the OneDrives quiet for 93 days in place of the unlicensed ones when the licence report is missing', () => {
     features.oneDrive = true
-    renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, unlicensed: null } } })
-    expect(screen.getByText(/Which owners lack a OneDrive licence is unknown\./)).toBeInTheDocument()
+    const unlicensed = { basis: 'noActivity', count: 5, bytes: 25 * GB, days: 93, since: '2026-05-29' } as const
+    renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, unlicensed } } })
+    expect(
+      screen.getByText(/and 25 GB sits in OneDrives with no activity for over 93 days\. Microsoft's active-user report did not come back or matched none of the owners, so the quiet ones stand in for the owners without a licence\./),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })
 })

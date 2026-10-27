@@ -49,7 +49,11 @@ export interface CleanUpForecast {
   staysUnderEntitlement: boolean | null
 }
 
-export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
+export type OneDriveLicenceGap = 'licencesUnavailable' | 'noSizedPlan'
+
+export type OneDriveLimit =
+  | { basis: 'set' | 'licences'; perUserBytes: number }
+  | { basis: 'driveLimit'; perUserBytes: number; drivesReporting: number }
 
 export const INACTIVE_DRIVE_BANDS = ['firstYear', 'secondYear', 'older', 'never'] as const
 
@@ -70,11 +74,18 @@ export interface OneDriveAttention {
   inactiveYears: number
   inactiveSince: string
   inactive: DriveGroup & { bands: InactiveDriveBandTotal[] }
-  unlicensed: (DriveGroup & { notListed: number }) | null
+  unlicensed: UnlicensedDrives
 }
+
+export type UnlicensedDrives =
+  | (DriveGroup & { basis: 'licences'; notListed: number })
+  | (DriveGroup & { basis: 'noActivity'; days: number; since: string })
 
 export interface OneDriveAllocation {
   allocatedBytes: number
+  usedBytes: number
+  driveCount: number
+  withoutLimit: DriveGroup
   freeBytes: number
   usedShare: number
   freeShare: number
@@ -132,6 +143,7 @@ export interface StorageGrowth {
 }
 
 export interface OverEntitlement {
+  limit: OneDriveLimit
   drives: StorageRow[]
   count: number
   excessBytes: number
@@ -165,10 +177,9 @@ export interface StorageOverview {
     driveCount: number
     drivesNearCap: number
     deletedButBilling: RetainedTotal
-    entitlementPerUserBytes: number | null
     licenceEstimatePerUserBytes: number | null
-    entitlementPerUserIsSet: boolean
-    entitlementUnknownReason: OneDriveEntitlementUnknown | null
+    licenceGap: OneDriveLicenceGap | null
+    limitWhenUnset: 'licences' | 'driveLimit' | null
     overEntitlement: OverEntitlement | null
     pool: OneDrivePool
     attention: OneDriveAttention

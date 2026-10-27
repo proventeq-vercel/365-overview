@@ -6,10 +6,20 @@ export const ARCHIVE_ATTENTION_SHARE = 0.5
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
-export function inactiveSince(asOf: string, years: number, today: Date): string {
+function referenceDate(asOf: string, today: Date): [number, number, number] {
   const reference = ISO_DATE.test(asOf) ? asOf : today.toISOString().slice(0, 10)
   const [year, month, day] = reference.split('-').map(Number)
+  return [year, month, day]
+}
+
+export function inactiveSince(asOf: string, years: number, today: Date): string {
+  const [year, month, day] = referenceDate(asOf, today)
   return new Date(Date.UTC(year - years, month - 1, day)).toISOString().slice(0, 10)
+}
+
+export function daysBefore(asOf: string, days: number, today: Date): string {
+  const [year, month, day] = referenceDate(asOf, today)
+  return new Date(Date.UTC(year, month - 1, day - days)).toISOString().slice(0, 10)
 }
 
 export function isInactiveSince(row: StorageRow, cutoff: string): boolean {

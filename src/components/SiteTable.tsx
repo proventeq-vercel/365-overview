@@ -28,6 +28,7 @@ export type ColumnKey =
   | 'template'
   | 'capacity'
   | 'overEntitlement'
+  | 'overDriveLimit'
 
 interface SiteTableProps {
   rows: StorageRow[]
@@ -121,6 +122,13 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
   overEntitlement: {
     label: 'table.column.overEntitlement',
     help: 'table.column.help.overEntitlement',
+    sortable: true,
+    width: '120px',
+    sortValue: (r) => r.overEntitlementBytes ?? 0,
+  },
+  overDriveLimit: {
+    label: 'table.column.overDriveLimit',
+    help: 'table.column.help.overDriveLimit',
     sortable: true,
     width: '120px',
     sortValue: (r) => r.overEntitlementBytes ?? 0,
@@ -283,6 +291,7 @@ export function SiteTable({
           </span>
         )
       case 'overEntitlement':
+      case 'overDriveLimit':
         return (
           <span role="cell" key={key} className="tabular font-semibold text-p365-navy">
             {row.overEntitlementBytes === undefined ? '' : formatBytes(row.overEntitlementBytes)}

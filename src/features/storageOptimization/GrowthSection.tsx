@@ -90,7 +90,7 @@ export function GrowthSection({ overview, delay }: Props) {
               label={t('storageOptimisation.growth.drivesNearCap')}
               value={formatNumber(oneDrive.drivesNearCap)}
             />
-            {oneDrive.overEntitlement !== null && (
+            {oneDrive.overEntitlement !== null && oneDrive.overEntitlement.limit.basis !== 'driveLimit' && (
               <MiniStat
                 label={t('storageOptimisation.growth.drivesOverLicence')}
                 value={formatNumber(oneDrive.overEntitlement.count)}
