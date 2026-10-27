@@ -257,7 +257,15 @@ describe('useStorageGrowth', () => {
     })
     const { result } = renderGrowth({ getSitesOn })
     await waitFor(() => expect(result.current.growth).toBeDefined())
-    expect(result.current.growth).toMatchObject({ ranking: 'size', explanation: 'growthFailed', sizesOn: '2026-10-24', leaders: bySize })
+    expect(result.current.growth).toMatchObject({
+      ranking: 'size',
+      explanation: 'growthFailed',
+      sizesOn: '2026-10-24',
+      windowFrom: '2026-09-30',
+      reportsMissing: 50,
+      complete: false,
+      leaders: bySize,
+    })
   })
 
   it('dates the stand-in size ranking by the last day of the window when the report carries no date', async () => {
@@ -269,10 +277,19 @@ describe('useStorageGrowth', () => {
     expect(result.current.growth).toMatchObject({ explanation: 'growthFailed', sizesOn: '2026-10-26' })
   })
 
-  it('measures a tenant that conceals names, matching the daily rows to the masked report rows', async () => {
-    const { result } = renderGrowth({}, '2026-10-24', undefined, undefined, overviewOn('2026-10-24', 'concealed'))
+  it('measures a tenant that conceals names, matching the daily rows to the masked report rows, and looks no name up', async () => {
+    const getSiteDetails = vi.fn(async () => new Map())
+    const { result } = renderGrowth({ getSiteDetails }, '2026-10-24', undefined, undefined, overviewOn('2026-10-24', 'concealed'))
     await waitFor(() => expect(result.current.growth).toBeDefined())
     expect(result.current.growth).toMatchObject({ ranking: 'growth', measuredRows: 2 })
+    expect(getSiteDetails).not.toHaveBeenCalled()
+  })
+
+  it('keeps the growth in the cache after the page unmounts, so leaving it does not reset the ten-minute rule', async () => {
+    const client = new QueryClient()
+    const { result } = renderGrowth({}, '2026-10-24', client)
+    await waitFor(() => expect(result.current.growth).toBeDefined())
+    expect(client.getQueryCache().findAll({ queryKey: ['storageGrowth'] })[0].options.gcTime).toBe(Infinity)
   })
 
   it('dates the sizes by the last day of the window when the report carries no date', async () => {
@@ -377,6 +394,24 @@ describe('useStorageGrowth', () => {
     act(() => void result.current.refresh())
     await act(() => new Promise((resolve) => setTimeout(resolve, 20)))
     expect(getSitesOn).toHaveBeenCalledTimes(29)
+  })
+
+  it('waits ten minutes again after a re-read that broke, while the earlier growth stays on screen', async () => {
+    let round = 1
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (round === 2) throw new TypeError('rows is not iterable')
+      if (date === '2026-10-10') throw unavailable()
+      return sitesOn(date)
+    })
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth?.reportsMissing).toBe(1))
+    round = 2
+    afterCooldown()
+    await act(() => result.current.refresh())
+    const calls = getSitesOn.mock.calls.length
+    await act(() => result.current.refresh())
+    expect(getSitesOn).toHaveBeenCalledTimes(calls)
+    expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsMissing: 1 })
   })
 
   it('reads the growth again on Refresh data straight after it failed outright', async () => {

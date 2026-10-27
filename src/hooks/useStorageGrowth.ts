@@ -4,7 +4,7 @@ import { ApiError } from '../clients/apiError'
 import type { DataSource } from '../data/fixtures'
 import { useDataSource } from '../data/useDataSource'
 import { hideRowNames } from '../lib/hiddenNames'
-import { buildStorageGrowth, earliestRows, rankLeaders, type ReportsRead } from '../model/storageGrowth'
+import { betterGrowth, buildStorageGrowth, earliestRows, rankLeaders, type ReportsRead } from '../model/storageGrowth'
 import { unresolvedSiteIds, withSiteDirectory, type SiteDirectory } from '../reports/siteDirectory'
 import type { StorageGrowth, StorageOverview, StorageRow } from '../types/storage'
 
@@ -18,10 +18,10 @@ export const isGrowth = (query: Query) => query.queryKey[0] === STORAGE_GROWTH_K
 
 export function canReadGrowthAgain(query: Query, now = Date.now()): boolean {
   if (!isGrowth(query) || query.state.fetchStatus === 'fetching') return false
-  if (query.state.status === 'error') return true
   const growth = query.state.data as StorageGrowth | undefined
-  if (growth === undefined || growth.complete) return false
-  return now - query.state.dataUpdatedAt >= REREAD_COOLDOWN_MS
+  if (growth === undefined) return query.state.status === 'error'
+  if (growth.complete) return false
+  return now - Math.max(query.state.dataUpdatedAt, query.state.errorUpdatedAt) >= REREAD_COOLDOWN_MS
 }
 
 type ReportRead = { rows: StorageRow[] } | { failure: ApiError }
@@ -100,6 +100,7 @@ export function useStorageGrowth(overview: StorageOverview | undefined): Storage
     queryKey: [STORAGE_GROWTH_KEY, overview?.reportRefreshDate, overview?.caveats.nameMask],
     enabled: overview !== undefined,
     staleTime: Infinity,
+    gcTime: Infinity,
     retry: false,
     queryFn: async ({ queryKey }) => {
       const { reportRefreshDate, caveats } = overview!
@@ -117,20 +118,20 @@ export function useStorageGrowth(overview: StorageOverview | undefined): Storage
         reportsRead,
         measurementFailed: false,
       })
-      const previous = queryClient.getQueryData<StorageGrowth>(queryKey)
-      return previous !== undefined && previous.reportsMissing < growth.reportsMissing ? previous : growth
+      return betterGrowth(queryClient.getQueryData<StorageGrowth>(queryKey), growth)
     },
   })
   const failed = query.data === undefined && query.errorUpdateCount > 0
   const bySize = useMemo(() => {
     if (!failed || !overview) return undefined
     const { reportRefreshDate } = overview
+    const dates = ds.getDailyReportDates(reportRefreshDate)
     return buildStorageGrowth({
       current: currentRows(overview),
       baseline: [],
       baselineDate: null,
-      sizesOn: sizesDateOf(ds.getDailyReportDates(reportRefreshDate), reportRefreshDate),
-      dates: [],
+      sizesOn: sizesDateOf(dates, reportRefreshDate),
+      dates,
       reportsRead: { sharePoint: 0, oneDrive: 0 },
       measurementFailed: true,
     })

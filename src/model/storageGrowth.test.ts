@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { StorageRow } from '@/types/storage'
-import { buildStorageGrowth, earliestRows, rankLeaders } from './storageGrowth'
+import { betterGrowth, buildStorageGrowth, earliestRows, rankLeaders } from './storageGrowth'
 
 const row = (pool: StorageRow['pool'], id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool,
@@ -257,5 +257,32 @@ describe('buildStorageGrowth', () => {
   it('explains a ranking by storage freed as shrinking', () => {
     const growth = buildStorageGrowth({ ...window, current: one, baseline: [row('SharePoint', 'a', 9)] })
     expect([growth.ranking, growth.explanation, growth.leaders]).toEqual(['shrink', 'shrink', [{ name: 'a', value: 4 }]])
+  })
+})
+
+describe('betterGrowth', () => {
+  const read = (sharePoint: number, oneDrive: number, over: string[] = dates) =>
+    buildStorageGrowth({ ...window, dates: over, reportsRead: { sharePoint, oneDrive }, current: one, baseline: [] })
+
+  it('takes the new read when there is no earlier one, or the window moved', () => {
+    const next = read(1, 1, ['2026-10-01', '2026-10-02'])
+    expect([betterGrowth(undefined, next), betterGrowth(read(3, 3), next)]).toEqual([next, next])
+  })
+
+  it('keeps whichever read of the same window misses fewer reports', () => {
+    const fuller = read(3, 2)
+    const thinner = read(1, 2)
+    expect([betterGrowth(fuller, thinner), betterGrowth(thinner, fuller)]).toEqual([fuller, fuller])
+  })
+
+  it('on a tie keeps the earlier read when the new one loses reports of a pool, and takes it otherwise', () => {
+    const sharePointOnly = read(3, 0)
+    const oneDriveOnly = read(0, 3)
+    const same = read(3, 0)
+    expect([betterGrowth(sharePointOnly, oneDriveOnly), betterGrowth(oneDriveOnly, sharePointOnly), betterGrowth(sharePointOnly, same)]).toEqual([
+      sharePointOnly,
+      oneDriveOnly,
+      same,
+    ])
   })
 })

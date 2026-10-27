@@ -11,7 +11,6 @@ export const MAX_RETRY_AFTER_MS = 60_000
 
 const THROTTLED_STATUSES = new Set([429, 503, 504])
 
-
 export interface BatchResponse<T> {
   status: number
   body?: T
@@ -41,6 +40,15 @@ export function retryAfterMs(header: string | null | undefined, now = Date.now()
   const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - now
   if (!Number.isFinite(ms) || ms <= 0) return DEFAULT_RETRY_AFTER_MS
   return Math.min(ms, MAX_RETRY_AFTER_MS)
+}
+
+function networkFailure(error: unknown): never {
+  throw new ApiError(0, error instanceof Error ? error.message : String(error), NETWORK_ERROR_CODE)
+}
+
+function bodyFailure(error: unknown): never {
+  if (error instanceof TypeError) networkFailure(error)
+  throw error
 }
 
 const headerOf = (headers: Record<string, string> | undefined, name: string) =>
@@ -75,10 +83,8 @@ export function createGraphClient(
       const res = await fetchImpl(url, {
         ...init,
         headers: { ...init.headers, Authorization: `Bearer ${token}` },
-      }).catch((error: unknown) => {
-        throw new ApiError(0, error instanceof Error ? error.message : String(error), NETWORK_ERROR_CODE)
-      })
-      if (res.ok) return (await res.json()) as T
+      }).catch(networkFailure)
+      if (res.ok) return (await res.json().catch(bodyFailure)) as T
       if (!THROTTLED_STATUSES.has(res.status) || attempt >= MAX_THROTTLE_RETRIES) {
         throw await apiError(res)
       }

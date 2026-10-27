@@ -27,7 +27,7 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - Each day has two daily reports, one for SharePoint and one for OneDrive, and each is read on its
   own. If one does not come back, the panel measures from the ones that did. The window then
   starts on the first day a report came back, and the description says how many of each came
-  back, out of the days it asked for.
+  back, out of the days in the window.
 - The panel asks four days at a time. It stops asking for one of the two reports once Microsoft
   limits the requests for it, or once a whole group of four days of it fails after the first
   group, and measures from what it already has, so it does not spend more of the limit the rest
@@ -44,10 +44,9 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - The chart loads after the rest of the report, with a placeholder while it does.
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
-  not come back, or measuring did not finish, **Refresh data** reads every day of the window again
-  once the report itself reloads and ten minutes have passed since they were read, and keeps the
-  earlier result if the new one misses more reports. If measuring did not finish, it reads them
-  again at once.
+  not come back, **Refresh data** reads every day of the window again once the report itself
+  reloads and ten minutes have passed since they were read, and keeps the earlier result if the
+  new one misses more reports. If measuring did not finish, it reads them again at once.
 
 ## Largest sites and OneDrives
 

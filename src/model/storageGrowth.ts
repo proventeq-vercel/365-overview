@@ -73,8 +73,6 @@ export interface GrowthInputs {
 
 export type ReportsRead = StorageGrowth['reportsRead']
 
-const DAILY_REPORTS_PER_DAY = 2
-
 function sizeRankingReason(inputs: GrowthInputs, measuredRows: number, read: number): SizeRankingReason {
   if (inputs.measurementFailed) return 'growthFailed'
   if (inputs.dates.length === 0) return 'reportDateTooOld'
@@ -92,7 +90,7 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
   const measuredRows = current.filter((row) => !row.isDeleted && measured.has(rowKey(row))).length
   const { ranking, leaders } = rankLeaders(current, baseline)
   const read = reportsRead.sharePoint + reportsRead.oneDrive
-  const reportsMissing = dates.length * DAILY_REPORTS_PER_DAY - read
+  const reportsMissing = dates.length * Object.keys(reportsRead).length - read
   const complete = !measurementFailed && reportsMissing === 0
   return {
     ranking,
@@ -110,4 +108,12 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
     measuredRows,
     leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes })),
   }
+}
+
+export function betterGrowth(previous: StorageGrowth | undefined, next: StorageGrowth): StorageGrowth {
+  if (previous === undefined || previous.windowFrom !== next.windowFrom || previous.windowTo !== next.windowTo) return next
+  if (previous.reportsMissing !== next.reportsMissing) return previous.reportsMissing < next.reportsMissing ? previous : next
+  const losesAPool =
+    next.reportsRead.sharePoint < previous.reportsRead.sharePoint || next.reportsRead.oneDrive < previous.reportsRead.oneDrive
+  return losesAPool ? previous : next
 }

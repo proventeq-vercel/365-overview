@@ -133,18 +133,22 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   429 only) or after a batch where every read of it failed, unless that was
   the first batch (a clock a few days behind fails only the oldest days).
   Anything that is not an `ApiError` fails the query. `graphClient` wraps a
-  request that never reached Graph in `ApiError` status 0 (`NetworkError`,
-  `isNetworkFailure`), so a network blip skips a report; the licence and
+  request that never reached Graph, or whose body did not arrive (a
+  `TypeError` from `res.json()`; a `SyntaxError` stays a bug), in `ApiError`
+  status 0 (`NetworkError`, `isNetworkFailure`), so a network blip skips a report; the licence and
   directory lookups in `live.ts` still fail on it instead of reading as
   unknown. A failed name lookup leaves the leaders unnamed; on a masked tenant
   the dated rows go through `hideRowNames` so their ids match the masked
-  report rows. A re-read that misses more reports keeps the earlier result.
+  report rows. `model/storageGrowth.betterGrowth` keeps the earlier result of
+  a re-read over the same window when the new one misses more reports, or as
+  many while losing reports of one pool.
   The copy never names a cause: it gives each pool's count over the window
   asked (`windowFrom` to `windowTo`).
   `canReadGrowthAgain` is the one rule for Refresh data and access recovery:
-  never while fetching, always after a failure, never once complete, and an
-  incomplete read only `REREAD_COOLDOWN_MS` (10 minutes, Graph's budget
-  window) after it was read; Refresh data also needs the refresh itself to have brought
+  never while fetching, at once after a failure with nothing on screen, never
+  once complete, and an incomplete read only `REREAD_COOLDOWN_MS` (10 minutes,
+  Graph's budget window) after it was read; the query keeps `gcTime:
+  Infinity` so leaving the page does not reset that; Refresh data also needs the refresh itself to have brought
   the report back for that date, and its busy state ignores growth (the daily
   reports change once a day; each load spends ~25 of the 100 report requests
   Graph allows per 10 minutes per report API),
@@ -251,7 +255,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
   UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
   fetching, not while only growth reads; re-reads growth only if it failed or
-  missed a day for the report date the refresh brings back), Report settings (opens `SettingsDialog`), and in live mode Switch
+  missed a report for the report date the refresh brings back, an incomplete
+  read only 10 minutes after it was read), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB and OneDrive storage per user in GB, each with its
