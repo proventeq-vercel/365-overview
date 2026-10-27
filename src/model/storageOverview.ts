@@ -133,17 +133,8 @@ function commonestDriveLimit(liveDrives: StorageRow[]): OneDriveLimit | null {
   return commonest === null ? null : { basis: 'driveLimit', perUserBytes: commonest[0], drivesReporting: commonest[1] }
 }
 
-function oneDriveLimit(
-  liveDrives: StorageRow[],
-  overrideBytes: number | null,
-  licenceBytes: number | null,
-): OneDriveLimit | null {
-  const driveLimit = licenceBytes === null ? commonestDriveLimit(liveDrives) : null
-  if (overrideBytes !== null) {
-    const whenCleared = licenceBytes !== null ? 'licences' : driveLimit === null ? null : 'driveLimit'
-    return { basis: 'set', perUserBytes: overrideBytes, whenCleared }
-  }
-  return licenceBytes !== null ? { basis: 'licences', perUserBytes: licenceBytes } : driveLimit
+function unsetDriveLimit(liveDrives: StorageRow[], licenceBytes: number | null): OneDriveLimit | null {
+  return licenceBytes !== null ? { basis: 'licences', perUserBytes: licenceBytes } : commonestDriveLimit(liveDrives)
 }
 
 function drivesOverEntitlement(liveDrives: StorageRow[], limit: OneDriveLimit): OverEntitlement {
@@ -232,7 +223,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
   const liveSites = sites.filter((site) => !site.isDeleted)
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
-  const driveLimit = oneDriveLimit(liveDrives, oneDriveOverrideBytes, oneDriveLicencePerUserBytes)
+  const limitWhenUnset = unsetDriveLimit(liveDrives, oneDriveLicencePerUserBytes)
+  const driveLimit: OneDriveLimit | null =
+    oneDriveOverrideBytes === null ? limitWhenUnset : { basis: 'set', perUserBytes: oneDriveOverrideBytes }
   const rows = [...sites, ...drives]
 
   const buckets = monthlyBuckets(
@@ -325,6 +318,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       deletedButBilling: deletedDrives,
       licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
       licenceGap: oneDriveLicencePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
+      limitWhenUnset: limitWhenUnset === null ? null : limitWhenUnset.basis === 'licences' ? 'licences' : 'driveLimit',
       overEntitlement: driveLimit === null ? null : drivesOverEntitlement(liveDrives, driveLimit),
       pool: oneDrivePool(liveDrives),
       attention: oneDriveAttention({

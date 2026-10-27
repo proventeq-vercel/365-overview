@@ -61,6 +61,7 @@ export function SettingsDialog({
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
+  const oneDriveFallsBackToDriveLimit = data?.oneDrive.limitWhenUnset === 'driveLimit'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,12 +144,14 @@ export function SettingsDialog({
             id={oneDriveEntitlementId}
             label={t('settings.oneDriveEntitlement')}
             hint={
-              oneDriveEstimateBytes === null
-                ? t('settings.oneDriveEntitlementHintNoEstimate')
-                : t('settings.oneDriveEntitlementHint', {
-                    estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
-                    unit: t('settings.oneDriveEntitlementUnit'),
-                  })
+              oneDriveFallsBackToDriveLimit
+                ? t('settings.oneDriveEntitlementHintDriveLimit')
+                : oneDriveEstimateBytes === null
+                  ? t('settings.oneDriveEntitlementHintNoEstimate')
+                  : t('settings.oneDriveEntitlementHint', {
+                      estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
+                      unit: t('settings.oneDriveEntitlementUnit'),
+                    })
             }
           >
             <ByteOverrideInput
@@ -159,8 +162,8 @@ export function SettingsDialog({
               min="0.5"
               suffix={t('settings.oneDriveEntitlementUnit')}
               placeholder={
-                oneDriveEstimateBytes === null
-                  ? t('settings.oneDriveEntitlementPlaceholderNoEstimate')
+                oneDriveFallsBackToDriveLimit
+                  ? t('settings.oneDriveEntitlementPlaceholderDriveLimit')
                   : t('settings.oneDriveEntitlementPlaceholder')
               }
               onChange={(bytes) => update({ oneDriveEntitlementOverrideBytes: bytes })}

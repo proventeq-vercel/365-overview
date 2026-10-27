@@ -46,11 +46,12 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
   const { attention, deletedButBilling } = overview.oneDrive
   const { inactive, inactiveYears, inactiveSince } = attention
   const inactiveValues = { count: inactive.count, date: formatLongMonthYear(inactiveSince) }
+  const quiet = attention.unlicensed.basis === 'noActivity'
 
   return (
     <Section
-      title={t('oneDrive.attention.title')}
-      subtitle={t('oneDrive.attention.subtitle')}
+      title={quiet ? t('oneDrive.attention.titleNoActivity') : t('oneDrive.attention.title')}
+      subtitle={quiet ? t('oneDrive.attention.subtitleNoActivity') : t('oneDrive.attention.subtitle')}
       help={<HelpButton topic="oneDriveInactive" />}
       delay={delay}
     >
@@ -60,7 +61,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           value={formatBytes(inactive.bytes)}
           color={inactive.count > 0 ? P365.blue : P365.grey400}
           information={
-            attention.unlicensed.basis === 'noActivity'
+            quiet
               ? t('oneDrive.attention.inactiveHintNoLicences', inactiveValues)
               : t('oneDrive.attention.inactiveHint', inactiveValues)
           }

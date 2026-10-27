@@ -38,7 +38,9 @@ The most generous allowance any licence in the tenant gives:
   Plan 2 licences,
 - otherwise **2 GB** with a frontline plan.
 
-Education, Project, Visio and Dynamics plans give no allowance here.
+Education, Project, Visio and Dynamics plans give no allowance here. With no allowance from the
+licences and none entered in Report settings, OneDrives are measured against the commonest
+storage limit among them, as the usage report gives it.
 
 ## Growth rate
 

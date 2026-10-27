@@ -52,8 +52,7 @@ export interface CleanUpForecast {
 export type OneDriveLicenceGap = 'licencesUnavailable' | 'noSizedPlan'
 
 export type OneDriveLimit =
-  | { basis: 'set'; perUserBytes: number; whenCleared: 'licences' | 'driveLimit' | null }
-  | { basis: 'licences'; perUserBytes: number }
+  | { basis: 'set' | 'licences'; perUserBytes: number }
   | { basis: 'driveLimit'; perUserBytes: number; drivesReporting: number }
 
 export const INACTIVE_DRIVE_BANDS = ['firstYear', 'secondYear', 'older', 'never'] as const
@@ -180,6 +179,7 @@ export interface StorageOverview {
     deletedButBilling: RetainedTotal
     licenceEstimatePerUserBytes: number | null
     licenceGap: OneDriveLicenceGap | null
+    limitWhenUnset: 'licences' | 'driveLimit' | null
     overEntitlement: OverEntitlement | null
     pool: OneDrivePool
     attention: OneDriveAttention

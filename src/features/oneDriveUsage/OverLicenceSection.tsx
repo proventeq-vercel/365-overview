@@ -22,22 +22,27 @@ function subtitle(limit: OneDriveLimit, driveCount: number, t: TranslateFn): str
     : t('oneDrive.overLicence.subtitle', { entitlement })
 }
 
-function note(limit: OneDriveLimit, licenceGap: OneDriveLicenceGap | null, t: TranslateFn): string {
+function note(
+  limit: OneDriveLimit,
+  licenceGap: OneDriveLicenceGap | null,
+  limitWhenUnset: StorageOverview['oneDrive']['limitWhenUnset'],
+  t: TranslateFn,
+): string {
   if (limit.basis === 'licences') return t('oneDrive.overLicence.note')
   if (limit.basis === 'driveLimit') {
     return licenceGap === 'noSizedPlan'
       ? t('oneDrive.overLicence.noteDriveLimitNoSizedPlan')
       : t('oneDrive.overLicence.noteDriveLimit')
   }
-  if (limit.whenCleared === 'licences') return t('oneDrive.overLicence.noteSet')
-  return limit.whenCleared === 'driveLimit'
+  if (limitWhenUnset === 'licences') return t('oneDrive.overLicence.noteSet')
+  return limitWhenUnset === 'driveLimit'
     ? t('oneDrive.overLicence.noteSetNoEstimate')
     : t('oneDrive.overLicence.noteSetNothing')
 }
 
 export function OverLicenceSection({ overview, delay }: { overview: StorageOverview; delay?: number }) {
   const t = useTranslation()
-  const { overEntitlement, licenceGap, driveCount } = overview.oneDrive
+  const { overEntitlement, licenceGap, limitWhenUnset, driveCount } = overview.oneDrive
   if (overEntitlement === null) return null
   const { limit } = overEntitlement
   const byDriveLimit = limit.basis === 'driveLimit'
@@ -65,7 +70,7 @@ export function OverLicenceSection({ overview, delay }: { overview: StorageOverv
         ) : (
           <EmptyBlock>{t('oneDrive.overLicence.empty', { entitlement: formatBytes(limit.perUserBytes) })}</EmptyBlock>
         )}
-        <PanelDescription>{note(limit, licenceGap, t)}</PanelDescription>
+        <PanelDescription>{note(limit, licenceGap, limitWhenUnset, t)}</PanelDescription>
       </Panel>
     </Section>
   )

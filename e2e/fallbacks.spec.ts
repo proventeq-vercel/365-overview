@@ -28,7 +28,7 @@ for (const scenario of SCENARIOS) {
   test(`the ${scenario} tenant's OneDrive report never says a figure is missing`, async ({ page }) => {
     await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=${scenario}`)
     await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByRole('heading', { name: /inactive, deleted and unlicensed onedrives/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^Inactive, deleted and (unlicensed|quiet) OneDrives$/ })).toBeVisible()
     expect(await page.getByRole('main').innerText()).not.toMatch(NOTHING_SHOWN)
   })
 }
@@ -43,7 +43,7 @@ test('without licences the OneDrive report measures against the commonest OneDri
 
 test('without the active-user report the quiet OneDrives stand in for the unlicensed ones, and the pool is drawn over the drives with a limit', async ({ page }) => {
   await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=onedrive-gaps`)
-  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'No activity for 93 days' })).toContainText(
+  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'No activity for over 93 days' })).toContainText(
     /live OneDrives have had no activity since 29 May 2026/,
   )
   await page.goto('/?scenario=onedrive-gaps')

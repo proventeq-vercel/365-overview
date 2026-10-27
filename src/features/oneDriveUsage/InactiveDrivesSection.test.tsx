@@ -61,12 +61,14 @@ describe('InactiveDrivesSection', () => {
         })}
       />,
     )
-    expect(card('No activity for 93 days')).toHaveTextContent('25 GB')
-    expect(card('No activity for 93 days')).toHaveTextContent(
+    expect(card('No activity for over 93 days')).toHaveTextContent('25 GB')
+    expect(card('No activity for over 93 days')).toHaveTextContent(
       '5 live OneDrives have had no activity since 29 May 2026, though they were active within the last 3 years (longer quiet ones count as inactive).',
     )
-    expect(card('No activity for 93 days')).toHaveTextContent('Microsoft archives it 93 days after the licence goes')
+    expect(card('No activity for over 93 days')).toHaveTextContent('Microsoft archives it 93 days after the licence goes')
     expect(screen.queryByText('Owner unlicensed')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Inactive, deleted and quiet OneDrives' })).toBeInTheDocument()
+    expect(screen.getByText(/and so can unlicensed ones, which the quiet group stands in for\.$/)).toBeInTheDocument()
     cleanup()
     render(
       <InactiveDrivesSection
@@ -76,11 +78,11 @@ describe('InactiveDrivesSection', () => {
         })}
       />,
     )
-    expect(card('No activity for 93 days')).toHaveTextContent(
+    expect(card('No activity for over 93 days')).toHaveTextContent(
       '1 live OneDrive has had no activity since 29 May 2026, though it was active within the last 1 year (longer quiet ones count as inactive).',
     )
     expect(card('Inactive OneDrives')).toHaveTextContent(
-      "Measured without Microsoft's active-user report, so some of these may belong to owners without a licence",
+      "Microsoft's active-user report did not come back or matched none of the owners, so some of these may belong to owners without a licence",
     )
   })
 

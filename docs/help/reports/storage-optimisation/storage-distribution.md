@@ -59,7 +59,7 @@ live OneDrive's own limit, as the OneDrive usage report gives it.
 - One line under it gives the storage of inactive OneDrives, of deleted ones under retention and
   of those whose owner has no OneDrive licence, never added together. When Microsoft's
   active-user report does not come back, the last figure is the OneDrives with no activity for
-  93 days, and the line says why.
+  over 93 days, and the line says why.
 - A small total does not mean no OneDrive is full: each has its own limit. The panel says how many
   are at 90% or more of theirs, whether or not every OneDrive reports a limit.
 

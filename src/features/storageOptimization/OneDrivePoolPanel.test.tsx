@@ -57,7 +57,7 @@ describe('OneDrivePoolPanel', () => {
     const unlicensed = { basis: 'noActivity', count: 5, bytes: 25 * GB, days: 93, since: '2026-05-29' } as const
     renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, unlicensed } } })
     expect(
-      screen.getByText(/and 25 GB sits in OneDrives with no activity for 93 days\. Microsoft's active-user report did not come back or matched none of the owners, so the quiet ones stand in for the owners without a licence\./),
+      screen.getByText(/and 25 GB sits in OneDrives with no activity for over 93 days\. Microsoft's active-user report did not come back or matched none of the owners, so the quiet ones stand in for the owners without a licence\./),
     ).toBeInTheDocument()
     expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })

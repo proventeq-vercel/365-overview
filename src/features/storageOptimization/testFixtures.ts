@@ -30,6 +30,7 @@ export const base: StorageOverview = {
     deletedButBilling: { bytes: 0, count: 0 },
     licenceEstimatePerUserBytes: 1024 * GB,
     licenceGap: null,
+    limitWhenUnset: 'licences',
     overEntitlement: {
       limit: { basis: 'licences', perUserBytes: 1024 * GB },
       drives: [],
@@ -154,11 +155,12 @@ export const unknownEntitlement: StorageOverview = {
     ...base.oneDrive,
     licenceEstimatePerUserBytes: null,
     licenceGap: 'licencesUnavailable',
+    limitWhenUnset: 'driveLimit',
     overEntitlement: {
       limit: { basis: 'driveLimit', perUserBytes: 1024 * GB, drivesReporting: 38 },
       drives: [],
-      count: 2,
-      excessBytes: 300 * GB,
+      count: 0,
+      excessBytes: 0,
     },
   },
   archive: { ...base.archive, savingApplies: true, savingBytes: 120 * GB, annualSaving: 28.8 },

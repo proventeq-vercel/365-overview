@@ -240,8 +240,8 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
   it('counts the OneDrives quiet for 93 days in place of the unlicensed ones when the active-user report does not come back', async () => {
     renderReport('healthy', { getOneDriveLicences: async () => null })
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(card('No activity for 93 days')).toHaveTextContent(/live OneDrives have had no activity since 29 May 2026, though they were active within the last 3 years \(longer quiet ones count as inactive\)\./)
-    expect(card('No activity for 93 days')).toHaveTextContent(/Shown in place of the owners without a licence/)
+    expect(card('No activity for over 93 days')).toHaveTextContent(/live OneDrives have had no activity since 29 May 2026, though they were active within the last 3 years \(longer quiet ones count as inactive\)\./)
+    expect(card('No activity for over 93 days')).toHaveTextContent(/Shown in place of the owners without a licence/)
     expect(screen.queryByText('Owner unlicensed')).not.toBeInTheDocument()
     expect(screen.queryByText(/unknown|unavailable/i)).not.toBeInTheDocument()
   })

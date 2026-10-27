@@ -200,7 +200,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   all-or-nothing; a guard on the share of owners listed would hide leaver-heavy
   tenants) it is `basis: 'noActivity'` — live drives with no activity in the 93
   days before the report date (`UNLICENSED_ARCHIVE_DAYS`) but not inactive, so
-  the groups stay disjoint — and the card is *No activity for 93 days*, saying
+  the groups stay disjoint — and the card is *No activity for over 93 days*
+  (section *Inactive, deleted and quiet OneDrives*), saying
   it stands in for the unlicensed ones; `basis: 'licences'` carries `notListed`,
   the owners inferred from absence, and both the card and the Storage-page line
   say it. Billing
@@ -331,8 +332,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `SHAREPOINTENTERPRISE_MIDMARKET` counts as Plan 2: it is carried by E5 EEA
   with Calling Minutes as well as the retired Midsize Business.
   `oneDrive.overEntitlement.limit` says what the line is: `set`
-  (`oneDriveEntitlementOverrideBytes`, null or ≤ 0 = not set; `whenCleared`
-  names what clearing it goes back to, for the note), else `licences`
+  (`oneDriveEntitlementOverrideBytes`, null or ≤ 0 = not set;
+  `oneDrive.limitWhenUnset` names what an empty setting measures against, for
+  the note and the settings dialog), else `licences`
   (the estimate), else — no readable licences or none with a known allowance
   (`licenceGap` `licencesUnavailable` / `noSizedPlan`) — `driveLimit`: the
   commonest positive per-drive allocation among live drives (ties → the larger),

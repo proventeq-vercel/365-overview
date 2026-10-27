@@ -417,20 +417,18 @@ describe('buildStorageOverview composition', () => {
 
     it('marks the figure as set when an override is in force, and keeps the gap in the licences for the note', () => {
       const overview = buildStorageOverview(inputs({ skus: null, oneDriveEntitlementOverrideBytes: 2 * GB }))
-      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB, whenCleared: 'driveLimit' })
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB })
+      expect(overview.oneDrive.limitWhenUnset).toBe('driveLimit')
       expect(overview.oneDrive.licenceGap).toBe('licencesUnavailable')
       expect(buildStorageOverview(inputs()).oneDrive.licenceGap).toBeNull()
     })
 
-    it('says what clearing a set figure goes back to: the licences, the commonest drive limit, or nothing', () => {
-      const set = (over: Partial<OverviewInputs>) =>
-        buildStorageOverview(inputs({ oneDriveEntitlementOverrideBytes: 2 * GB, ...over })).oneDrive.overEntitlement?.limit
-      expect(set({})).toEqual({ basis: 'set', perUserBytes: 2 * GB, whenCleared: 'licences' })
-      expect(set({ skus: null, drives: [drive({ allocatedBytes: 0 })] })).toEqual({
-        basis: 'set',
-        perUserBytes: 2 * GB,
-        whenCleared: null,
-      })
+    it('says what an empty setting measures against: the licences, the commonest drive limit, or nothing', () => {
+      const unset = (over: Partial<OverviewInputs>) =>
+        buildStorageOverview(inputs({ oneDriveEntitlementOverrideBytes: 2 * GB, ...over })).oneDrive.limitWhenUnset
+      expect(unset({})).toBe('licences')
+      expect(unset({ skus: null })).toBe('driveLimit')
+      expect(unset({ skus: null, drives: [drive({ allocatedBytes: 0 })] })).toBeNull()
     })
 
     it('measures against the per-user storage set in the report settings, even without licences', () => {
@@ -447,7 +445,7 @@ describe('buildStorageOverview composition', () => {
 
     it('keeps reporting the licence estimate beside an override, for the settings hint', () => {
       const overview = buildStorageOverview(inputs({ oneDriveEntitlementOverrideBytes: 2 * GB }))
-      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB, whenCleared: 'licences' })
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB })
       expect(overview.oneDrive.licenceEstimatePerUserBytes).toBe(5120 * GB)
     })
 
