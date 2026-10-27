@@ -111,7 +111,7 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
 }
 
 export function betterGrowth(previous: StorageGrowth | undefined, next: StorageGrowth): StorageGrowth {
-  if (previous === undefined) return next
+  if (previous === undefined || next.complete) return next
   const readOf = ({ reportsRead }: StorageGrowth) => reportsRead.sharePoint + reportsRead.oneDrive
   if (readOf(previous) !== readOf(next)) return readOf(previous) > readOf(next) ? previous : next
   const losesAPool =

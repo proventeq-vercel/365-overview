@@ -278,8 +278,17 @@ describe('betterGrowth', () => {
   it('keeps the earlier read when the window moved a day at midnight and the new one read fewer reports', () => {
     const earlier = read(3, 0)
     const afterMidnight = read(0, 0, ['2026-10-01', '2026-10-02'])
+    const thinnerButLessMissing = read(1, 1, ['2026-10-01', '2026-10-02'])
     const fullerAfterMidnight = read(2, 2, ['2026-10-01', '2026-10-02'])
-    expect([betterGrowth(earlier, afterMidnight), betterGrowth(earlier, fullerAfterMidnight)]).toEqual([earlier, fullerAfterMidnight])
+    expect(betterGrowth(earlier, afterMidnight)).toBe(earlier)
+    expect(betterGrowth(earlier, thinnerButLessMissing)).toBe(earlier)
+    expect(betterGrowth(earlier, fullerAfterMidnight)).toBe(fullerAfterMidnight)
+  })
+
+  it('takes a complete read after midnight over an earlier one that read more of a longer window but missed some', () => {
+    const earlier = read(3, 2)
+    const completeAfterMidnight = read(2, 2, ['2026-10-01', '2026-10-02'])
+    expect(betterGrowth(earlier, completeAfterMidnight)).toBe(completeAfterMidnight)
   })
 
   it('on a tie keeps the earlier read when the new one loses reports of a pool, and takes it otherwise', () => {

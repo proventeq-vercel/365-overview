@@ -138,6 +138,12 @@ describe('OffendersSection', () => {
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
+  const sizeStates: Record<'reportDateTooOld' | 'growthFailed' | 'notMeasured', Partial<StorageGrowth>> = {
+    reportDateTooOld: { daysInWindow: 0, windowFrom: null, windowTo: null, reportsMissing: 0, complete: true },
+    growthFailed: {},
+    notMeasured: { reportsRead: { sharePoint: 25, oneDrive: 25 }, reportsMissing: 0, complete: true },
+  }
+
   it.each([
     [
       'reportDateTooOld',
@@ -152,8 +158,17 @@ describe('OffendersSection', () => {
       'Ranked by storage used on 2026-08-30, because no live site or OneDrive in this report was active in the daily usage reports that came back.',
     ],
   ] as const)('explains a size ranking for the reason %s', (explanation, text) => {
-    renderOffenders(withSites, { ...bySize, explanation })
+    renderOffenders(withSites, { ...bySize, ...sizeStates[explanation], explanation })
     expect(screen.getByText(text)).toBeInTheDocument()
+  })
+
+  it('adds how many reports came back to a size ranking that measured nothing from the reports that did', () => {
+    renderOffenders(withSites, { ...bySize, explanation: 'notMeasured', reportsRead: { sharePoint: 20, oneDrive: 25 }, reportsMissing: 5, missingNote: true })
+    expect(
+      screen.getByText(
+        'Ranked by storage used on 2026-08-30, because no live site or OneDrive in this report was active in the daily usage reports that came back. 20 of the 25 SharePoint and 25 of the 25 OneDrive daily usage reports from 2026-08-06 to 2026-08-30 came back; Refresh data reads them again after ten minutes.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('says nothing measured changed size, naming the window, when that is why it ranks by size', () => {

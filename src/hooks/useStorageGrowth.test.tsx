@@ -349,7 +349,7 @@ describe('useStorageGrowth', () => {
     await waitFor(() => expect(result.current.growth?.complete).toBe(true))
   })
 
-  it('keeps the earlier growth when reading it again misses more reports', async () => {
+  it('keeps the earlier growth when reading it again brings back fewer reports', async () => {
     let round = 1
     const getSitesOn = vi.fn(async (date: string) => {
       if (round === 1 ? date === '2026-10-10' : date === '2026-10-10' || date === '2026-10-11') throw unavailable()
@@ -364,7 +364,7 @@ describe('useStorageGrowth', () => {
     expect(result.current.growth).toMatchObject({ ranking: 'growth', reportsMissing: 1 })
   })
 
-  it('takes the new read when it misses as many reports as the earlier one', async () => {
+  it('takes the new read when it brings back as many reports as the earlier one', async () => {
     let round = 1
     const getSitesOn = vi.fn(async (date: string) => {
       if (date === (round === 1 ? '2026-10-10' : '2026-10-02')) throw unavailable()
@@ -376,6 +376,20 @@ describe('useStorageGrowth', () => {
     afterCooldown()
     await act(() => result.current.refresh())
     await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 200 }))
+  })
+
+  it('takes a complete re-read after UTC midnight shortens the window, over a fuller read that missed a report', async () => {
+    let failing = true
+    const getSitesOn = vi.fn(async (date: string) => {
+      if (failing && date === '2026-10-10') throw unavailable()
+      return sitesOn(date)
+    })
+    const { result } = renderGrowth({ getSitesOn })
+    await waitFor(() => expect(result.current.growth).toMatchObject({ reportsRead: { sharePoint: 24, oneDrive: 25 }, complete: false }))
+    failing = false
+    vi.setSystemTime(new Date('2026-10-27T00:45:00Z'))
+    await act(() => result.current.refresh())
+    await waitFor(() => expect(result.current.growth).toMatchObject({ windowFrom: '2026-10-01', reportsRead: { sharePoint: 24, oneDrive: 24 }, complete: true }))
   })
 
   it('starts no second read of the days when Refresh data is pressed again while one is running', async () => {

@@ -140,9 +140,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   unknown. A failed name lookup leaves the leaders unnamed; on a masked tenant
   the dated rows go through `hideRowNames` so their ids match the masked
   report rows. `model/storageGrowth.betterGrowth` keeps the earlier result of
-  a re-read when the new one brings back fewer reports, or as many while
-  losing reports of one pool — even after UTC midnight moves the window, since
-  the key pins the report date.
+  a re-read when the new one is incomplete and brings back fewer reports, or as
+  many while losing reports of one pool — even after UTC midnight moves the
+  window, since the key pins the report date. A complete re-read always wins.
   The copy never names a cause: it gives each pool's count over the window
   asked (`windowFrom` to `windowTo`).
   `canReadGrowthAgain` is the one rule for Refresh data and access recovery:

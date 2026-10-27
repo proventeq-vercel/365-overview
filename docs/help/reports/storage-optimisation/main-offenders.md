@@ -45,8 +45,9 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
   not come back, **Refresh data** reads every day of the window again once the report itself
-  reloads and ten minutes have passed since they were read. It keeps the earlier result if the
-  new one brings back fewer reports, or as many but fewer of SharePoint's or of OneDrive's. If
+  reloads and ten minutes have passed since they were read. Unless the new result has every
+  report, it keeps the earlier one if the new one brings back fewer reports, or as many but fewer
+  of SharePoint's or of OneDrive's. If
   measuring did not finish, it reads them again at once. When the report itself moves to a new
   date, the chart shows its placeholder again while the new date's daily reports are read.
 
