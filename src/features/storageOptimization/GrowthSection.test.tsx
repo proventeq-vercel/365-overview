@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { GrowthSection } from './GrowthSection'
-import { base, shortHistory, unknownEntitlement } from './testFixtures'
+import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -47,10 +47,27 @@ describe('GrowthSection', () => {
     expect(callout).toHaveTextContent(/capacity needs no action today/)
   })
 
-  it('refuses a forecast on short history and says it is not an all-clear', () => {
-    render(<GrowthSection overview={{ ...shortHistory, growth: { ...shortHistory.growth, points } }} />)
-    expect(screen.getByText(/not an all-clear/i)).toBeInTheDocument()
-    expect(screen.queryByText(/January 2030/)).not.toBeInTheDocument()
+  it('forecasts from the daily series on short history, and labels the window in days', () => {
+    render(<GrowthSection overview={{ ...dailyRate, growth: { ...dailyRate.growth, points } }} />)
+    expect(screen.getByRole('status')).toHaveTextContent('Capacity exhausts around January 2030')
+    expect(screen.getByRole('status')).toHaveTextContent('Forecast from the last 40 days of storage')
+    expect(screen.getByText('Added last 40 days').nextElementSibling).toHaveTextContent('+50 GB')
+  })
+
+  it('projects used storage, never an unavailable forecast, without an entitlement', () => {
+    render(<GrowthSection overview={{ ...unknownEntitlement, growth: { ...unknownEntitlement.growth, points } }} />)
+    expect(screen.getByRole('status')).toHaveTextContent('Projection')
+    expect(screen.getByRole('status')).toHaveTextContent('SharePoint storage reaches 560 GB in 6 months')
+    expect(screen.queryByText(/unavailable|unknown/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Over entitlement today')).not.toBeInTheDocument()
+  })
+
+  it('shows the storage used today and no forecast figures from a single reported day', () => {
+    render(<GrowthSection overview={firstDay} />)
+    expect(screen.getByRole('status')).toHaveTextContent('500 GB of SharePoint storage in use today')
+    expect(screen.queryByText('Forecast (6 mo)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Forecast after clean-up (6 mo)')).not.toBeInTheDocument()
+    expect(screen.getByText(/could be removed today\. The forecast after clean-up starts once/)).toBeInTheDocument()
   })
 
   it('says the tenant is already over its entitlement when runway is zero', () => {
@@ -106,7 +123,6 @@ describe('GrowthSection', () => {
       />,
     )
     expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
-    expect(screen.getByText('Over entitlement today').nextElementSibling).toHaveTextContent('Unknown')
   })
 
   it('reports the mini-stats the model measured', () => {
@@ -142,33 +158,21 @@ describe('GrowthSection', () => {
       expect(row('Stays under the entitlement')).toHaveTextContent(/^No$/)
     })
 
-    it('cannot say whether it stays under an unknown entitlement', () => {
+    it('leaves out whether it stays under an unknown entitlement, rather than saying Unknown', () => {
       render(<GrowthSection overview={withCleanUp({ staysUnderEntitlement: null })} />)
-      expect(row('Stays under the entitlement')).toHaveTextContent(/^Unknown$/)
+      expect(screen.queryByText('Stays under the entitlement')).not.toBeInTheDocument()
+      expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
     })
 
-    it('says there is nothing to clean up instead of repeating the forecast', () => {
+    it('says there is nothing to clean up and draws the forecast itself as the line after clean-up', () => {
       render(
         <GrowthSection
-          overview={withCleanUp({
-            inactiveBytes: 0,
-            removableBytes: 0,
-            endBytes: null,
-            staysUnderEntitlement: null,
-            unavailableReason: 'nothingRemovable',
-          })}
+          overview={withCleanUp({ inactiveBytes: 0, removableBytes: 0, endBytes: 560 * GB, staysUnderEntitlement: true })}
         />,
       )
       expect(row('Removable today')).toHaveTextContent(/^0 B$/)
-      expect(screen.queryByText('Forecast after clean-up (6 mo)')).not.toBeInTheDocument()
-      expect(screen.getByText(/so a clean-up would not change the forecast/)).toBeInTheDocument()
-    })
-
-    it('shows the removable storage but no cleaned-up forecast on short history, and says why', () => {
-      render(<GrowthSection overview={{ ...shortHistory, growth: { ...shortHistory.growth, points } }} />)
-      expect(row('Removable today')).toHaveTextContent(/^120 GB$/)
-      expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^Unknown$/)
-      expect(screen.getByText(/too few months of history to forecast where storage goes after clean-up/)).toBeInTheDocument()
+      expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^560 GB$/)
+      expect(screen.getByText(/^Nothing to clean up: .* so the line after clean-up is the forecast itself\./)).toBeInTheDocument()
     })
   })
 

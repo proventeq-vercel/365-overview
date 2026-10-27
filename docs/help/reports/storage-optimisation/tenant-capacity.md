@@ -29,7 +29,7 @@ Only the cards that apply to your tenant are shown:
 | Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
 | Potential saving per year | follows *Inactive sites to archive* | | | — |
 | Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
-| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | Unknown: no entitlement, or under six months of history |
+| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | — |
 
 ## Inactive sites to archive
 
@@ -85,7 +85,15 @@ The description gives the entitlement, the monthly growth and the headroom left.
 | A month, for example *March 2028* | The headroom runs out then at the current rate. |
 | **Beyond 10 years** | The headroom outlasts the ten-year horizon. |
 | **No growth detected** | Storage has not grown over the measured months. |
-| **Not enough history** (grey) | Fewer than six months of storage history. This is not an all-clear. |
-| **Unknown** (grey) | The entitlement is unknown. Enter it in Report settings. |
+
+With under six months of storage history, the month comes from the daily storage reported so
+far, and the description says how many days it was measured over.
+
+Two cases show a different card in the same place, in navy:
+
+| Card | Because |
+| --- | --- |
+| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description gives the storage used and where to enter the entitlement. |
+| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

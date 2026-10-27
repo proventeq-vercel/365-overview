@@ -1,6 +1,5 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type {
-  CleanUpUnavailable,
   OneDrivePool,
   OverEntitlement,
   Slice,
@@ -29,11 +28,13 @@ import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
   FORECAST_CHART_MONTHS,
-  FORECAST_WINDOW_MONTHS,
   buildGrowthPoints,
+  dailyRateBytesPerMonth,
+  daysSpanned,
   exhaustionDateFor,
   forecastStatusFor,
   growthRateBytesPerMonth,
+  growthRateSourceFor,
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
@@ -190,11 +191,20 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const rows = [...sites, ...drives]
 
   const buckets = monthlyBuckets(sharePointTrend)
-  const rate = growthRateBytesPerMonth(buckets)
-  const historyTooShort = buckets.length < FORECAST_WINDOW_MONTHS
+  const rateSource = growthRateSourceFor(buckets, sharePointTrend)
+  const rate =
+    rateSource === 'monthly'
+      ? growthRateBytesPerMonth(buckets)
+      : rateSource === 'daily'
+        ? dailyRateBytesPerMonth(sharePointTrend)
+        : 0
+  const addedInWindowBytes =
+    rateSource === 'monthly'
+      ? (buckets.at(-1)?.bytes ?? 0) - (buckets[0]?.bytes ?? 0)
+      : (sharePointTrend.at(-1)?.value ?? 0) - (sharePointTrend[0]?.value ?? 0)
   const runway = exhausted
     ? 0
-    : historyTooShort
+    : rateSource === 'none'
       ? null
       : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
 
@@ -215,13 +225,11 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const deletedDrives = retainedTotal(drives)
 
   const removableBytes = archivableBytes + deletedSites.bytes
-  const cleanUpUnavailable: CleanUpUnavailable | null =
-    removableBytes <= 0 ? 'nothingRemovable' : historyTooShort ? 'historyTooShort' : null
   const points = buildGrowthPoints(
     buckets,
     rate,
-    FORECAST_CHART_MONTHS,
-    cleanUpUnavailable === null ? removableBytes : null,
+    rateSource === 'none' ? 0 : FORECAST_CHART_MONTHS,
+    removableBytes,
   )
 
   const growthGb = annualGrowthGb(rate)
@@ -302,13 +310,15 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     growth: {
       avgMonthlyGrowthBytes: rate,
-      addedInWindowBytes: (buckets.at(-1)?.bytes ?? 0) - (buckets[0]?.bytes ?? 0),
+      addedInWindowBytes,
       windowMonths: Math.max(0, buckets.length - 1),
-      seriesIsVolatile: isSeriesVolatile(buckets),
+      windowDays: daysSpanned(sharePointTrend),
+      rateSource,
+      seriesIsVolatile: rateSource === 'monthly' && isSeriesVolatile(buckets),
       points,
       forecastStatus: exhausted
         ? 'Critical'
-        : forecastStatusFor(runway, historyTooShort, entitledBytes !== null),
+        : forecastStatusFor(runway, rateSource, entitledBytes !== null),
       forecastExhaustionDate: exhausted ? null : exhaustionDateFor(runway, now),
       forecastMonthsToExhaustion: runway,
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
@@ -316,15 +326,14 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         inactiveBytes: archivableBytes,
         deletedBytes: deletedSites.bytes,
         removableBytes,
-        endBytes: points.at(-1)?.afterCleanUpBytes ?? null,
+        endBytes: rateSource === 'none' ? null : (points.at(-1)?.afterCleanUpBytes ?? null),
         staysUnderEntitlement:
-          cleanUpUnavailable === null
-            ? staysUnder(
+          rateSource === 'none'
+            ? null
+            : staysUnder(
                 points.map((point) => point.afterCleanUpBytes),
                 entitledBytes,
-              )
-            : null,
-        unavailableReason: cleanUpUnavailable,
+              ),
       },
     },
 
@@ -355,7 +364,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
       nameMask,
-      historyTooShort,
     },
   }
 }

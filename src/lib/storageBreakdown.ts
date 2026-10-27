@@ -32,7 +32,7 @@ export function storageBreakdown(inputs: StorageBreakdownInputs): StorageBreakdo
   }
   const totalBytes = STORAGE_SEGMENTS.reduce((total, key) => total + (bytes[key] ?? 0), 0)
   return {
-    segments: STORAGE_SEGMENTS.map((key) => {
+    segments: STORAGE_SEGMENTS.filter((key) => key !== 'free' || freeBytes !== null).map((key) => {
       const value = bytes[key]
       return { key, bytes: value, share: value === null || totalBytes === 0 ? 0 : value / totalBytes }
     }),

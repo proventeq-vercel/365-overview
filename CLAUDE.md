@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (six mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (seven mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -319,23 +319,40 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   on that triple.
 - `growth.windowMonths` counts the month-to-month deltas the rate was measured
   over (`buckets - 1`), which is what "Added last N mo" labels; the six-month
-  history gate still counts buckets.
+  gate still counts buckets. `growth.rateSource` says where the rate came
+  from: `monthly` (six or more buckets, median of the monthly changes),
+  `daily` (fewer: the least-squares slope of the daily trend,
+  `lib/forecast.dailyRateBytesPerMonth`, labelled with `windowDays`) or
+  `none` (a single reported day: no rate, status `Unknown`, no forecast
+  months, the cards and callout show the storage used).
 - SharePoint and OneDrive are two pools. Never put a OneDrive-inclusive numerator
   over a SharePoint-only denominator.
 - Growth is measured from the trend report, never reconstructed from site rows.
-  Under six months of history → no forecast, and the copy says that is not an
-  all-clear.
+  Under six months of history it is measured from the trend's daily points,
+  and the copy names the days ("Forecast from the last N days of storage").
+- **Nothing on the page says "unavailable", "unknown", "not enough history" or
+  "could not be read" (owner's decision, 2026-10-27).** The only can't-load
+  screen is the whole-app failure. A chart or card whose primary data is
+  missing shows the best other real Graph figure for the same question, in the
+  same place, and its copy names that source and window. With no entitlement
+  the forecast card becomes *SharePoint growth per month*, the callout projects
+  used storage (pill *Projection*), and figures measured against the
+  entitlement (Free, Over entitlement today, Stays under the entitlement) are
+  left out, never shown as Unknown. This copy is the app's own: P365 still has
+  its unavailable strings. The full list is
+  `agent-context/proventeq-365-lite/specs/fallbacks.md`.
 - **Forecast after clean-up** (`growth.afterCleanUp`, `GrowthPoint.afterCleanUpBytes`)
   is the forecast line shifted down by what the report already calls removable:
   `archive.bytes` (inactive live sites) + `sharePoint.deletedButBilling.bytes`.
   It starts at the last actual month, grows at the same rate, clamps at 0. Deleted
   OneDrives are the other pool and are never subtracted. Versions are not
   counted — the usage reports do not carry them, and measuring them needs a
-  SharePoint-audience token. `unavailableReason` is `nothingRemovable` (removable
-  0 → no line) or `historyTooShort` (no line, `endBytes` null); the removable
-  figure itself is always measured (the archive cutoff falls back to today
-  without a refresh date). `staysUnderEntitlement` is null without an
-  entitlement.
+  SharePoint-audience token. With nothing removable the line is the forecast
+  itself and the copy says there is nothing to clean up; with `rateSource`
+  `none` there is no line and `endBytes` is null. The removable figure itself
+  is always measured (the archive cutoff falls back to today without a refresh
+  date). `staysUnderEntitlement` is null without an entitlement, and the row is
+  then left out.
 - The entitlement estimate is P365's `TenantEntitlementCalculator`, ported to
   `lib/entitlement.ts`: a SKU contributes storage only by the **service plans**
   it carries (`SHAREPOINTSTANDARD`/`ENTERPRISE` family and Visio/Project
@@ -377,7 +394,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
   Teams site counts once, as inactive); Deleted holds deleted **sites** only;
   the SharePoint part is the trend total less Teams, Inactive and deleted
-  sites, clamped at 0; Free is `remainingBytes` (null when unknown — no Free
+  sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
   part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
   storage in live drives against the sum of their own allocations, both from
   the account rows; `allocation` is `null` (unknown, never partial) when any
@@ -431,7 +448,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`) for the other tenants. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`) for the other tenants. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

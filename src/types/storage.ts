@@ -39,7 +39,7 @@ export interface RetainedTotal {
   count: number
 }
 
-export type CleanUpUnavailable = 'nothingRemovable' | 'historyTooShort'
+export type GrowthRateSource = 'monthly' | 'daily' | 'none'
 
 export interface CleanUpForecast {
   inactiveBytes: number
@@ -47,7 +47,6 @@ export interface CleanUpForecast {
   removableBytes: number
   endBytes: number | null
   staysUnderEntitlement: boolean | null
-  unavailableReason: CleanUpUnavailable | null
 }
 
 export type OneDriveEntitlementUnknown = 'licencesUnavailable' | 'noSizedPlan'
@@ -172,6 +171,8 @@ export interface StorageOverview {
     avgMonthlyGrowthBytes: number
     addedInWindowBytes: number
     windowMonths: number
+    windowDays: number
+    rateSource: GrowthRateSource
     seriesIsVolatile: boolean
     points: GrowthPoint[]
     forecastStatus: ForecastStatus
@@ -204,6 +205,5 @@ export interface StorageOverview {
   caveats: {
     entitlementIsEstimated: boolean
     nameMask: NameMask | null
-    historyTooShort: boolean
   }
 }

@@ -48,6 +48,11 @@ Education, Project, Visio and Dynamics plans give no allowance here.
 3. The growth rate is the **median** of those changes. One unusual month cannot swing it the way
    it would swing an average.
 
+Under six months of history, the rate comes from the **daily** storage instead: the straight line
+that fits every reported day best (least squares), per average month. The forecast then says how
+many days it was measured over. From a single reported day there is no rate yet, and the report
+shows the storage used.
+
 When the median and the start-to-end average disagree by more than half, the series is
 **uneven**, and the report says the projection is only indicative.
 
@@ -56,11 +61,14 @@ When the median and the start-to-end average disagree by more than half, the ser
 - **Months to exhaustion** = headroom ÷ growth rate, rounded down.
 - At or over the entitlement, the forecast is **already exceeded**: zero months and no date.
 - No growth, or shrinking storage: no exhaustion.
-- Under six months of history: no forecast.
+- Under six months of history: forecast from the daily rate, labelled with its window.
+- A single reported day: no forecast; the storage used is shown.
+- No entitlement: the forecast projects used storage six months ahead, with no exhaustion date.
 - Status: **Critical** under 12 months, **At risk** under 36, otherwise **Healthy**.
 - **Forecast after clean-up** = forecast − (inactive live site storage + deleted site storage
   still billing), never below zero. It stays under the entitlement when every month from today
-  to the end of the forecast is below it. Deleted OneDrives and versions are not counted.
+  to the end of the forecast is below it. Deleted OneDrives and versions are not counted. With
+  nothing removable it is the forecast itself.
 
 ## Costs
 

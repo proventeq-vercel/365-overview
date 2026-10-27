@@ -5,9 +5,12 @@ import {
   HORIZON_MONTHS,
   WARNING_MONTHS,
   buildGrowthPoints,
+  dailyRateBytesPerMonth,
+  daysSpanned,
   exhaustionDateFor,
   forecastStatusFor,
   growthRateBytesPerMonth,
+  growthRateSourceFor,
   isSeriesVolatile,
   monthlyBuckets,
   monthsToExhaustion,
@@ -145,32 +148,100 @@ describe('monthsToExhaustion', () => {
 
 describe('forecastStatusFor', () => {
   it('is Unknown without an entitlement', () => {
-    expect(forecastStatusFor(5, false, false)).toBe('Unknown')
+    expect(forecastStatusFor(5, 'monthly', false)).toBe('Unknown')
   })
 
-  it('is Unknown when history is too short, even with a runway figure', () => {
-    expect(forecastStatusFor(5, true, true)).toBe('Unknown')
+  it('is Unknown with no rate at all, even with a runway figure', () => {
+    expect(forecastStatusFor(5, 'none', true)).toBe('Unknown')
+  })
+
+  it('grades a runway measured from the daily series like a monthly one', () => {
+    expect(forecastStatusFor(5, 'daily', true)).toBe('Critical')
   })
 
   it('is Critical inside a year', () => {
-    expect(forecastStatusFor(0, false, true)).toBe('Critical')
-    expect(forecastStatusFor(CRITICAL_MONTHS - 1, false, true)).toBe('Critical')
+    expect(forecastStatusFor(0, 'monthly', true)).toBe('Critical')
+    expect(forecastStatusFor(CRITICAL_MONTHS - 1, 'monthly', true)).toBe('Critical')
   })
 
   it('is Warning between one and three years', () => {
-    expect(forecastStatusFor(CRITICAL_MONTHS, false, true)).toBe('Warning')
-    expect(forecastStatusFor(WARNING_MONTHS - 1, false, true)).toBe('Warning')
+    expect(forecastStatusFor(CRITICAL_MONTHS, 'monthly', true)).toBe('Warning')
+    expect(forecastStatusFor(WARNING_MONTHS - 1, 'monthly', true)).toBe('Warning')
   })
 
   it('is Healthy beyond three years, and for a null runway with a known entitlement', () => {
-    expect(forecastStatusFor(WARNING_MONTHS, false, true)).toBe('Healthy')
-    expect(forecastStatusFor(null, false, true)).toBe('Healthy')
+    expect(forecastStatusFor(WARNING_MONTHS, 'monthly', true)).toBe('Healthy')
+    expect(forecastStatusFor(null, 'monthly', true)).toBe('Healthy')
   })
 
   it('grades on the thresholds ported from P365', () => {
     expect(CRITICAL_MONTHS).toBe(12)
     expect(WARNING_MONTHS).toBe(36)
     expect(HORIZON_MONTHS).toBe(120)
+  })
+})
+
+describe('dailyRateBytesPerMonth', () => {
+  it('is the least-squares slope of the daily series, per average month', () => {
+    const points = daily([
+      ['2026-08-01', 1000],
+      ['2026-08-02', 1010],
+      ['2026-08-03', 1020],
+      ['2026-08-04', 1030],
+    ])
+    expect(dailyRateBytesPerMonth(points)).toBeCloseTo(304.375, 9)
+  })
+
+  it('fits through a noisy day rather than taking the endpoints', () => {
+    const points = daily([
+      ['2026-08-01', 1000],
+      ['2026-08-02', 1100],
+      ['2026-08-03', 1000],
+    ])
+    expect(dailyRateBytesPerMonth(points)).toBe(0)
+  })
+
+  it('spaces the days by their dates, not by their position', () => {
+    const points = daily([
+      ['2026-08-01', 1000],
+      ['2026-08-11', 1100],
+    ])
+    expect(dailyRateBytesPerMonth(points)).toBeCloseTo(304.375, 9)
+  })
+
+  it('is zero with fewer than two days', () => {
+    expect(dailyRateBytesPerMonth(daily([['2026-08-01', 1000]]))).toBe(0)
+    expect(dailyRateBytesPerMonth([])).toBe(0)
+  })
+})
+
+describe('growthRateSourceFor', () => {
+  const buckets = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({ month: `2026-0${i + 1}`, bytes: 100 }))
+
+  it('measures by month from six monthly points on', () => {
+    expect(growthRateSourceFor(buckets(6), daily([['2026-01-31', 1], ['2026-06-30', 2]]))).toBe('monthly')
+  })
+
+  it('falls back to the daily series under six monthly points', () => {
+    expect(growthRateSourceFor(buckets(5), daily([['2026-01-31', 1], ['2026-05-30', 2]]))).toBe('daily')
+    expect(growthRateSourceFor(buckets(1), daily([['2026-08-01', 1], ['2026-08-02', 2]]))).toBe('daily')
+  })
+
+  it('has no rate from a single day', () => {
+    expect(growthRateSourceFor(buckets(1), daily([['2026-08-01', 1]]))).toBe('none')
+    expect(growthRateSourceFor([], [])).toBe('none')
+  })
+})
+
+describe('daysSpanned', () => {
+  it('counts the days between the first and the last reading', () => {
+    expect(daysSpanned(daily([['2026-08-30', 1], ['2026-07-01', 2]]))).toBe(60)
+  })
+
+  it('is zero for one reading or none', () => {
+    expect(daysSpanned(daily([['2026-08-30', 1]]))).toBe(0)
+    expect(daysSpanned([])).toBe(0)
   })
 })
 

@@ -489,7 +489,7 @@ describe('buildStorageOverview composition', () => {
 
     it('has no free part, rather than a zero, when the entitlement is unknown', () => {
       const overview = buildStorageOverview(unknownEntitlement({ sites: estate().sites, drives: estate().drives }))
-      expect(bytesOf(overview).free).toBeNull()
+      expect(bytesOf(overview).free).toBeUndefined()
       expect(overview.breakdown.totalBytes).toBe(150 * GB)
     })
 
@@ -571,19 +571,58 @@ describe('buildStorageOverview composition', () => {
 })
 
 describe('buildStorageOverview growth and cost', () => {
-  it('flags short history and refuses a forecast', () => {
+  it('forecasts from the daily series when there are fewer than six monthly points', () => {
     const overview = buildStorageOverview(
-      inputs({ sharePointTrend: monthly([100 * GB, 110 * GB]) }),
+      inputs({
+        sharePointTrend: [
+          { date: '2026-07-31', value: 100 * GB },
+          { date: '2026-08-10', value: 110 * GB },
+          { date: '2026-08-30', value: 130 * GB },
+        ],
+        entitlementOverrideBytes: 1000 * GB,
+      }),
     )
-    expect(overview.caveats.historyTooShort).toBe(true)
-    expect(overview.growth.windowMonths).toBe(1)
-    expect(overview.growth.forecastStatus).toBe('Unknown')
-    expect(overview.growth.forecastExhaustionDate).toBeNull()
-    expect(overview.growth.forecastMonthsToExhaustion).toBeNull()
+    expect(overview.growth.rateSource).toBe('daily')
+    expect(overview.growth.windowDays).toBe(30)
+    expect(overview.growth.avgMonthlyGrowthBytes).toBeCloseTo(30.4375 * GB, 0)
+    expect(overview.growth.addedInWindowBytes).toBe(30 * GB)
+    expect(overview.growth.forecastMonthsToExhaustion).toBe(28)
+    expect(overview.growth.forecastExhaustionDate).toBe('2029-01-02')
+    expect(overview.growth.forecastStatus).toBe('Warning')
+    expect(overview.growth.points.at(-1)?.projectedUsedBytes).toBeCloseTo(312.625 * GB, 0)
   })
 
-  it('does not flag short history on a full six-month window', () => {
-    expect(buildStorageOverview(inputs()).caveats.historyTooShort).toBe(false)
+  it('counts what the daily series added from its first reported day, not from its first month end', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sharePointTrend: [
+          { date: '2026-07-20', value: 100 * GB },
+          { date: '2026-07-31', value: 105 * GB },
+          { date: '2026-08-30', value: 130 * GB },
+        ],
+      }),
+    )
+    expect(overview.growth.addedInWindowBytes).toBe(30 * GB)
+    expect(overview.growth.windowDays).toBe(41)
+  })
+
+  it('measures by month, not by day, on a full six-month window', () => {
+    const overview = buildStorageOverview(inputs())
+    expect(overview.growth.rateSource).toBe('monthly')
+    expect(overview.growth.windowDays).toBe(151)
+  })
+
+  it('has no rate and no forecast from a single day of history', () => {
+    const overview = buildStorageOverview(
+      inputs({ sharePointTrend: [{ date: '2026-08-30', value: 150 * GB }], entitlementOverrideBytes: 1000 * GB }),
+    )
+    expect(overview.growth.rateSource).toBe('none')
+    expect(overview.growth.avgMonthlyGrowthBytes).toBe(0)
+    expect(overview.growth.forecastStatus).toBe('Unknown')
+    expect(overview.growth.forecastMonthsToExhaustion).toBeNull()
+    expect(overview.growth.points).toEqual([
+      { month: '2026-08', actualUsedBytes: 150 * GB, projectedUsedBytes: 150 * GB, afterCleanUpBytes: 150 * GB },
+    ])
   })
 
   it('reports zero runway and no exhaustion date for a tenant already over its entitlement', () => {
@@ -601,11 +640,11 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastExhaustionDate).toBeNull()
   })
 
-  it('still calls an over-entitlement tenant exhausted when the history is too short', () => {
+  it('still calls an over-entitlement tenant exhausted when the history is a single day', () => {
     const overview = buildStorageOverview(
-      inputs({ entitlementOverrideBytes: 10 * GB, sharePointTrend: monthly([140 * GB, 150 * GB]) }),
+      inputs({ entitlementOverrideBytes: 10 * GB, sharePointTrend: [{ date: '2026-08-30', value: 150 * GB }] }),
     )
-    expect(overview.caveats.historyTooShort).toBe(true)
+    expect(overview.growth.rateSource).toBe('none')
     expect(overview.growth.forecastStatus).toBe('Critical')
     expect(overview.growth.forecastMonthsToExhaustion).toBe(0)
     expect(overview.growth.forecastExhaustionDate).toBeNull()
@@ -877,7 +916,6 @@ describe('buildStorageOverview forecast after clean-up', () => {
     expect(afterCleanUp.inactiveBytes).toBe(50 * GB)
     expect(afterCleanUp.deletedBytes).toBe(30 * GB)
     expect(afterCleanUp.removableBytes).toBe(80 * GB)
-    expect(afterCleanUp.unavailableReason).toBeNull()
   })
 
   it('starts at used less removable today and grows at the forecast rate', () => {
@@ -923,7 +961,7 @@ describe('buildStorageOverview forecast after clean-up', () => {
     expect(overview.growth.afterCleanUp.endBytes).toBe(780 * GB)
   })
 
-  it('draws no line when nothing is removable', () => {
+  it('draws the line on the forecast itself when nothing is removable', () => {
     const overview = buildStorageOverview(
       tenant({
         sites: [site({ id: 'busy', storageUsedBytes: 800 * GB, lastActivityDate: '2026-08-20' })],
@@ -931,21 +969,34 @@ describe('buildStorageOverview forecast after clean-up', () => {
     )
     const { afterCleanUp, points } = overview.growth
     expect(afterCleanUp.removableBytes).toBe(0)
-    expect(afterCleanUp.unavailableReason).toBe('nothingRemovable')
-    expect(afterCleanUp.endBytes).toBeNull()
-    expect(afterCleanUp.staysUnderEntitlement).toBeNull()
-    expect(points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
+    expect(afterCleanUp.endBytes).toBe(860 * GB)
+    expect(afterCleanUp.staysUnderEntitlement).toBe(true)
+    expect(points.slice(5).map((point) => point.afterCleanUpBytes)).toEqual(
+      points.slice(5).map((point) => point.projectedUsedBytes),
+    )
   })
 
-  it('draws no line and says why when the history is too short to forecast', () => {
+  it('forecasts after clean-up from the daily series on a short history', () => {
     const overview = buildStorageOverview(
-      tenant({ sharePointTrend: monthly([790 * GB, 800 * GB]) }),
+      tenant({
+        sharePointTrend: [
+          { date: '2026-07-31', value: 790 * GB },
+          { date: '2026-08-30', value: 800 * GB },
+        ],
+      }),
     )
     const { afterCleanUp, points } = overview.growth
     expect(afterCleanUp.removableBytes).toBe(80 * GB)
-    expect(afterCleanUp.unavailableReason).toBe('historyTooShort')
+    expect(points.find((point) => point.month === '2026-08')?.afterCleanUpBytes).toBe(720 * GB)
+    expect(afterCleanUp.endBytes).toBeCloseTo((720 + 6 * (10 * 30.4375) / 30) * GB, 0)
+    expect(afterCleanUp.staysUnderEntitlement).toBe(true)
+  })
+
+  it('has no cleaned-up forecast from a single day, only what is removable today', () => {
+    const overview = buildStorageOverview(tenant({ sharePointTrend: [{ date: '2026-08-30', value: 800 * GB }] }))
+    const { afterCleanUp } = overview.growth
+    expect(afterCleanUp.removableBytes).toBe(80 * GB)
     expect(afterCleanUp.endBytes).toBeNull()
     expect(afterCleanUp.staysUnderEntitlement).toBeNull()
-    expect(points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
   })
 })

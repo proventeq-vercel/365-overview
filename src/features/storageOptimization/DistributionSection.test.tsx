@@ -135,11 +135,15 @@ describe('DistributionSection', () => {
     )
   })
 
-  it('marks the free part unknown, not zero, and says where to enter the entitlement', async () => {
+  it('leaves the free part out, never Unknown, and says where to enter the entitlement', async () => {
     render(<DistributionSection overview={{ ...unknownEntitlement, sharePoint: { ...unknownEntitlement.sharePoint, byTemplate: [] } }} />)
-    expect(part('Free')).toHaveTextContent(/^FreeUnknown$/)
-    expect(screen.getByText('500 GB of SharePoint storage used. The entitlement is unknown.')).toBeInTheDocument()
-    expect(screen.getAllByText(/Enter it under Options, Report settings/)).not.toHaveLength(0)
+    expect(parts().map((button) => button.textContent)).not.toContainEqual(expect.stringMatching(/^Free/))
+    expect(screen.getByText('500 GB of SharePoint storage in use')).toBeInTheDocument()
+    expect(screen.queryByText(/ending in what is left of your SharePoint entitlement/)).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Enter the tenant entitlement under Options, Report settings to see how much of it is left.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })
 
   it('says how far over the entitlement a tenant is, with nothing left free', async () => {

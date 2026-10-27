@@ -79,6 +79,8 @@ export const base: StorageOverview = {
     avgMonthlyGrowthBytes: 10 * GB,
     addedInWindowBytes: 50 * GB,
     windowMonths: 5,
+    windowDays: 153,
+    rateSource: 'monthly',
     seriesIsVolatile: false,
     points: [],
     forecastStatus: 'Healthy',
@@ -91,7 +93,6 @@ export const base: StorageOverview = {
       removableBytes: 120 * GB,
       endBytes: 440 * GB,
       staysUnderEntitlement: true,
-      unavailableReason: null,
     },
   },
   archive: {
@@ -115,7 +116,6 @@ export const base: StorageOverview = {
   caveats: {
     entitlementIsEstimated: true,
     nameMask: null,
-    historyTooShort: false,
   },
 }
 
@@ -139,30 +139,37 @@ export const unknownEntitlement: StorageOverview = {
   },
   breakdown: {
     ...base.breakdown,
-    segments: base.breakdown.segments.map((segment) =>
-      segment.key === 'free' ? { ...segment, bytes: null, share: 0 } : segment,
-    ),
+    segments: base.breakdown.segments.filter((segment) => segment.key !== 'free'),
   },
   archive: { ...base.archive, savingApplies: true, savingBytes: 120 * GB, annualSaving: 28.8 },
   caveats: { ...base.caveats, entitlementIsEstimated: false },
 }
 
-export const shortHistory: StorageOverview = {
+export const dailyRate: StorageOverview = {
   ...base,
   growth: {
     ...base.growth,
-    windowMonths: 2,
+    windowMonths: 1,
+    windowDays: 40,
+    rateSource: 'daily',
+  },
+}
+
+export const firstDay: StorageOverview = {
+  ...base,
+  growth: {
+    ...base.growth,
+    avgMonthlyGrowthBytes: 0,
+    addedInWindowBytes: 0,
+    windowMonths: 0,
+    windowDays: 0,
+    rateSource: 'none',
     forecastStatus: 'Unknown',
     forecastExhaustionDate: null,
     forecastMonthsToExhaustion: null,
-    afterCleanUp: {
-      ...base.growth.afterCleanUp,
-      endBytes: null,
-      staysUnderEntitlement: null,
-      unavailableReason: 'historyTooShort',
-    },
+    forecastEndBytes: 500 * GB,
+    afterCleanUp: { ...base.growth.afterCleanUp, endBytes: null, staysUnderEntitlement: null },
   },
-  caveats: { ...base.caveats, historyTooShort: true },
 }
 
 export const overEntitlement: StorageOverview = {

@@ -12,6 +12,7 @@ export type MockScenario =
   | 'short-history'
   | 'onedrive-over-licence'
   | 'nothing-to-clean'
+  | 'no-licences'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -318,7 +319,7 @@ export function createMockDataSource(
     getDrivesOn: async (date) => activeEarlier(data.drives, date),
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
-    getLicenses: async () => licenses,
+    getLicenses: async () => (scenario === 'no-licences' ? null : licenses),
     getOneDriveLicences: async () => oneDriveLicencesFor(data.drives),
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,

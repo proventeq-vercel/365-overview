@@ -1,5 +1,5 @@
 import type { UsagePoint } from '@/types/reports'
-import type { ForecastStatus, GrowthPoint } from '@/types/storage'
+import type { ForecastStatus, GrowthPoint, GrowthRateSource } from '@/types/storage'
 
 export const FORECAST_WINDOW_MONTHS = 6
 export const CRITICAL_MONTHS = 12
@@ -7,6 +7,9 @@ export const WARNING_MONTHS = 36
 export const HORIZON_MONTHS = 120
 export const FORECAST_CHART_MONTHS = 6
 export const VOLATILITY_DIVERGENCE = 0.5
+export const DAYS_PER_MONTH = 365.25 / 12
+
+const DAY_MS = 86_400_000
 
 export interface MonthBucket {
   month: string
@@ -47,6 +50,33 @@ export function growthRateBytesPerMonth(buckets: MonthBucket[]): number {
   return median(deltas)
 }
 
+const dayNumber = (isoDate: string): number => Date.parse(`${isoDate}T00:00:00Z`) / DAY_MS
+
+export function daysSpanned(daily: UsagePoint[]): number {
+  if (daily.length === 0) return 0
+  const days = daily.map((point) => dayNumber(point.date))
+  return Math.max(...days) - Math.min(...days)
+}
+
+export function dailyRateBytesPerMonth(daily: UsagePoint[]): number {
+  if (daily.length < 2) return 0
+  const days = daily.map((point) => dayNumber(point.date))
+  const meanDay = days.reduce((total, day) => total + day, 0) / days.length
+  const meanBytes = daily.reduce((total, point) => total + point.value, 0) / daily.length
+  let covariance = 0
+  let variance = 0
+  daily.forEach((point, i) => {
+    covariance += (days[i] - meanDay) * (point.value - meanBytes)
+    variance += (days[i] - meanDay) ** 2
+  })
+  return variance === 0 ? 0 : (covariance / variance) * DAYS_PER_MONTH
+}
+
+export function growthRateSourceFor(buckets: MonthBucket[], daily: UsagePoint[]): GrowthRateSource {
+  if (buckets.length >= FORECAST_WINDOW_MONTHS) return 'monthly'
+  return daysSpanned(daily) > 0 ? 'daily' : 'none'
+}
+
 export function isSeriesVolatile(buckets: MonthBucket[]): boolean {
   if (buckets.length < 2) return false
   const medianRate = growthRateBytesPerMonth(buckets)
@@ -70,10 +100,10 @@ export function monthsToExhaustion(
 
 export function forecastStatusFor(
   months: number | null,
-  historyTooShort: boolean,
+  rateSource: GrowthRateSource,
   hasEntitlement: boolean,
 ): ForecastStatus {
-  if (!hasEntitlement || historyTooShort) return 'Unknown'
+  if (!hasEntitlement || rateSource === 'none') return 'Unknown'
   if (months === null) return 'Healthy'
   if (months < CRITICAL_MONTHS) return 'Critical'
   if (months < WARNING_MONTHS) return 'Warning'

@@ -1,6 +1,6 @@
 import { formatBytes, formatLongMonthYear, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
-import { forecastHeadline, forecastHint } from './forecastCopy'
+import { forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
@@ -19,8 +19,8 @@ const GRID_COLUMNS: Record<number, string> = {
 
 export function KpiCards({ overview, delay = 0 }: Props) {
   const t = useTranslation()
-  const { sharePoint, growth, cost, archive } = overview
-  const quotaKnown = sharePoint.entitledBytes !== null
+  const { sharePoint, cost, archive } = overview
+  const forecast = forecastCard(overview, t)
   const rate = formatMoney(cost.ratePerGb, cost.currency)
   const inactivity = {
     years: archive.inactiveYears,
@@ -73,10 +73,10 @@ export function KpiCards({ overview, delay = 0 }: Props) {
     !sharePoint.exhausted && (
       <StatCard
         key="forecast"
-        label={t('storageOptimisation.kpi.forecast')}
-        value={forecastHeadline(overview, t)}
-        color={quotaKnown ? RISK_COLOR[growth.forecastStatus] : P365.grey400}
-        information={forecastHint(overview, t)}
+        label={forecast.label}
+        value={forecast.value}
+        color={forecast.status === null ? P365.navy : RISK_COLOR[forecast.status]}
+        information={forecast.hint}
       />
     ),
   ].filter(Boolean)

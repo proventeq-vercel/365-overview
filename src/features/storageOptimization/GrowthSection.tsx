@@ -29,12 +29,14 @@ export function GrowthSection({ overview, delay }: Props) {
   const t = useTranslation()
   const { growth, sharePoint, oneDrive, cost } = overview
   const callout = buildCallout(overview, t)
-  const quotaKnown = sharePoint.entitledBytes !== null
+  const forecasting = growth.rateSource !== 'none'
   const series: LineSeries[] = [
     { key: 'actualUsedBytes', name: t('storageOptimisation.growth.actual') },
-    { key: 'projectedUsedBytes', name: t('storageOptimisation.growth.forecast'), dashed: true },
-    ...(growth.afterCleanUp.unavailableReason === null
-      ? [{ key: 'afterCleanUpBytes', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true }]
+    ...(forecasting
+      ? [
+          { key: 'projectedUsedBytes', name: t('storageOptimisation.growth.forecast'), dashed: true },
+          { key: 'afterCleanUpBytes', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true },
+        ]
       : []),
   ]
 
@@ -70,7 +72,11 @@ export function GrowthSection({ overview, delay }: Props) {
               value={formatSignedBytes(growth.avgMonthlyGrowthBytes)}
             />
             <MiniStat
-              label={t('storageOptimisation.growth.addedInWindow', { months: growth.windowMonths })}
+              label={
+                growth.rateSource === 'monthly'
+                  ? t('storageOptimisation.growth.addedInWindow', { months: growth.windowMonths })
+                  : t('storageOptimisation.growth.addedInWindowDays', { days: growth.windowDays })
+              }
               value={formatSignedBytes(growth.addedInWindowBytes)}
             />
             <MiniStat
@@ -96,7 +102,7 @@ export function GrowthSection({ overview, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.growth.impactTitle')}</PanelLabel>
           <SoftCallout
             tone={callout.tone}
-            pill={quotaKnown ? RISK_LABEL[growth.forecastStatus] : RISK_LABEL.Unknown}
+            pill={RISK_LABEL[growth.forecastStatus]}
             pillLabel={callout.pillLabel}
             headline={callout.headline}
             note={callout.note}
@@ -106,18 +112,18 @@ export function GrowthSection({ overview, delay }: Props) {
               label={t('storageOptimisation.growth.usedToday')}
               value={formatBytes(sharePoint.usedBytes)}
             />
-            <MiniStat
-              label={t('storageOptimisation.growth.forecastEnd', { months: FORECAST_CHART_MONTHS })}
-              value={formatBytes(growth.forecastEndBytes)}
-            />
-            <MiniStat
-              label={t('storageOptimisation.growth.overEntitlement')}
-              value={
-                sharePoint.overageBytes === null
-                  ? t('storageOptimisation.kpi.unknown')
-                  : formatBytes(sharePoint.overageBytes)
-              }
-            />
+            {forecasting && (
+              <MiniStat
+                label={t('storageOptimisation.growth.forecastEnd', { months: FORECAST_CHART_MONTHS })}
+                value={formatBytes(growth.forecastEndBytes)}
+              />
+            )}
+            {sharePoint.overageBytes !== null && (
+              <MiniStat
+                label={t('storageOptimisation.growth.overEntitlement')}
+                value={formatBytes(sharePoint.overageBytes)}
+              />
+            )}
           </MiniStatRow>
           <CleanUpForecast overview={overview} />
           <div className="mt-3 flex flex-col gap-1">

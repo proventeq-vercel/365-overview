@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import type { StorageOverview } from '@/types/storage'
 import { translate as t } from '@/test/render'
-import { buildCallout, forecastHeadline, forecastHint } from './forecastCopy'
-import { base, shortHistory, unknownEntitlement } from './testFixtures'
+import { buildCallout, forecastCard } from './forecastCopy'
+import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 const withGrowth = (over: Partial<StorageOverview['growth']>): StorageOverview => ({
   ...base,
@@ -28,38 +28,53 @@ const beyondHorizon: StorageOverview = withGrowth({
   forecastMonthsToExhaustion: 150,
 })
 
-describe('forecastHeadline', () => {
+const headline = (overview: StorageOverview) => forecastCard(overview, t).value
+const hint = (overview: StorageOverview) => forecastCard(overview, t).hint
+
+describe('forecastCard value', () => {
   it('shows the exhaustion month when there is one', () => {
-    expect(forecastHeadline(base, t)).toBe('January 2030')
+    expect(headline(base)).toBe('January 2030')
+    expect(forecastCard(base, t).label).toBe('Forecast exhaustion')
+    expect(forecastCard(base, t).status).toBe('Healthy')
   })
 
-  it('says Unknown, never a date, without an entitlement', () => {
-    expect(forecastHeadline(unknownEntitlement, t)).toBe('Unknown')
+  it('shows the monthly growth, never Unknown, without an entitlement', () => {
+    const card = forecastCard(unknownEntitlement, t)
+    expect(card.label).toBe('SharePoint growth per month')
+    expect(card.value).toBe('+10 GB')
+    expect(card.status).toBeNull()
   })
 
   it('says the entitlement is already exceeded at zero runway', () => {
-    expect(forecastHeadline(overEntitlement, t)).toBe('Entitlement already exceeded')
+    expect(headline(overEntitlement)).toBe('Entitlement already exceeded')
   })
 
-  it('says there is not enough history on a short window', () => {
-    expect(forecastHeadline(shortHistory, t)).toBe('Not enough history')
+  it('forecasts a date from the daily series on a short history', () => {
+    expect(headline(dailyRate)).toBe('January 2030')
+  })
+
+  it('shows the storage used when only one day has been reported', () => {
+    const card = forecastCard(firstDay, t)
+    expect(card.label).toBe('SharePoint storage used')
+    expect(card.value).toBe('500 GB')
+    expect(card.status).toBeNull()
   })
 
   it('distinguishes beyond-horizon from no growth', () => {
-    expect(forecastHeadline(beyondHorizon, t)).toBe('Beyond 10 years')
-    expect(forecastHeadline(flat, t)).toBe('No growth detected')
+    expect(headline(beyondHorizon)).toBe('Beyond 10 years')
+    expect(headline(flat)).toBe('No growth detected')
   })
 })
 
-describe('forecastHint', () => {
-  it('asks for the entitlement, and says where to enter it, when it is unknown', () => {
-    expect(forecastHint(unknownEntitlement, t)).toBe(
-      'Needs the tenant entitlement. Enter it in Report settings to see when SharePoint storage runs out.',
+describe('forecastCard hint', () => {
+  it('gives the storage used and its growth, and where to enter the entitlement, when it is unknown', () => {
+    expect(hint(unknownEntitlement)).toBe(
+      '500 GB of SharePoint storage today, growing 10 GB a month over the last 5 months. Enter the tenant entitlement in Report settings to see when it runs out.',
     )
   })
 
   it('explains a date by the entitlement, the growth assumption and the headroom left', () => {
-    expect(forecastHint(base, t)).toBe(
+    expect(hint(base)).toBe(
       'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left.',
     )
   })
@@ -69,28 +84,44 @@ describe('forecastHint', () => {
       ...base,
       sharePoint: { ...base.sharePoint, usedBytes: 620 * 1_073_741_824, remainingBytes: 380 * 1_073_741_824 },
     }
-    expect(forecastHint(tighter, t)).toMatch(/380 GB of headroom is left\.$/)
+    expect(hint(tighter)).toMatch(/380 GB of headroom is left\.$/)
   })
 
   it('explains beyond-horizon by how long the headroom lasts', () => {
-    expect(forecastHint(beyondHorizon, t)).toBe(
+    expect(hint(beyondHorizon)).toBe(
       'At 10 GB a month, the 500 GB of headroom left under your 1000 GB entitlement lasts more than 10 years.',
     )
   })
 
   it('explains no forecast for a flat tenant by the window it did not grow over', () => {
-    expect(forecastHint(flat, t)).toBe(
+    expect(hint(flat)).toBe(
       'SharePoint storage has not grown over the last 5 months, so it is not on course to pass your 1000 GB entitlement.',
     )
   })
 
-  it('explains zero runway with the already-exhausted note', () => {
-    expect(forecastHint(overEntitlement, t)).toMatch(/already using more than its pooled entitlement/)
+  it('counts the days a flat daily series did not grow over', () => {
+    const flatDaily: StorageOverview = {
+      ...flat,
+      growth: { ...flat.growth, rateSource: 'daily', windowDays: 40 },
+    }
+    expect(hint(flatDaily)).toBe(
+      'SharePoint storage has not grown over the last 40 days, so it is not on course to pass your 1000 GB entitlement.',
+    )
   })
 
-  it('explains a short window', () => {
-    expect(forecastHint(shortHistory, t)).toBe(
-      'A forecast needs 6 months of measured storage history. This is not an all-clear — it appears once Microsoft 365 has reported enough.',
+  it('explains zero runway with the already-exhausted note', () => {
+    expect(hint(overEntitlement)).toMatch(/already using more than its pooled entitlement/)
+  })
+
+  it('names the days a short-history forecast was measured over', () => {
+    expect(hint(dailyRate)).toBe(
+      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of storage: Microsoft 365 has reported under six months so far, so treat it as indicative.',
+    )
+  })
+
+  it('says the forecast starts from the second reported day', () => {
+    expect(hint(firstDay)).toBe(
+      'Microsoft 365 has reported one day of SharePoint storage so far. The forecast starts from the second day it reports.',
     )
   })
 })
@@ -122,11 +153,14 @@ describe('buildCallout', () => {
     expect(buildCallout(base, t).note).not.toMatch(/one month dominates/)
   })
 
-  it('uses a grey Unknown pill and the unavailable headline without an entitlement', () => {
+  it('projects used storage under a Projection pill without an entitlement', () => {
     const callout = buildCallout(unknownEntitlement, t)
-    expect(callout.pillLabel).toBe('Unknown')
+    expect(callout.pillLabel).toBe('Projection')
     expect(callout.pillStatus).toBeNull()
-    expect(callout.headline).toBe('Capacity forecast unavailable without tenant entitlement')
+    expect(callout.headline).toBe('SharePoint storage reaches 560 GB in 6 months')
+    expect(callout.note).toBe(
+      'At +10 GB a month, the rate over the last 5 months. Enter the tenant entitlement in Options, Report settings to see when it runs out.',
+    )
     expect(callout.tone).toBe('info')
   })
 
@@ -137,11 +171,19 @@ describe('buildCallout', () => {
     expect(callout.pillLabel).toBe('Critical')
   })
 
-  it('states there is not enough history, and that this is not an all-clear', () => {
-    const callout = buildCallout(shortHistory, t)
-    expect(callout.headline).toBe('Not enough history to forecast capacity')
-    expect(callout.note).toMatch(/This is not an all-clear/)
-    expect(callout.pillLabel).toBe('Unknown')
+  it('forecasts from the daily series on a short history, and says over how many days', () => {
+    const callout = buildCallout(dailyRate, t)
+    expect(callout.headline).toBe('Capacity exhausts around January 2030')
+    expect(callout.pillLabel).toBe('Healthy')
+    expect(callout.note).toMatch(/Forecast from the last 40 days of storage: Microsoft 365 has reported under six months so far/)
+    expect(buildCallout(base, t).note).not.toMatch(/Forecast from the last/)
+  })
+
+  it('shows the storage used today when only one day has been reported', () => {
+    const callout = buildCallout(firstDay, t)
+    expect(callout.headline).toBe('500 GB of SharePoint storage in use today')
+    expect(callout.pillLabel).toBe('Today')
+    expect(callout.note).toMatch(/^Microsoft 365 has reported one day of SharePoint storage so far\./)
   })
 
   it('states no exhaustion within the horizon for a flat tenant', () => {

@@ -7,6 +7,7 @@ const SCENARIO_SET: Record<MockScenario, true> = {
   'short-history': true,
   'onedrive-over-licence': true,
   'nothing-to-clean': true,
+  'no-licences': true,
 }
 
 export const MOCK_SCENARIOS = Object.keys(SCENARIO_SET) as MockScenario[]

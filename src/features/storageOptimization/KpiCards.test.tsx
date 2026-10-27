@@ -47,10 +47,10 @@ describe('KpiCards', () => {
     expect(railOf(FORECAST)).toBe(rgb(P365.green))
   })
 
-  it('greys the forecast card, but not the cost, when the entitlement is unknown', () => {
+  it('rails the growth card that replaces the forecast in navy, and keeps the cost graded, when the entitlement is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
     expect(railOf(COST)).toBe(rgb(P365.orange))
-    expect(railOf(FORECAST)).toBe(rgb(P365.grey400))
+    expect(railOf('SharePoint growth per month')).toBe(rgb(P365.navy))
   })
 
   it.each([
