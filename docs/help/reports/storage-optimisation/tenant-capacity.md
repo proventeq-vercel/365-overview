@@ -16,7 +16,7 @@ Only the cards that apply to your tenant are shown:
 | --- | --- |
 | Within the entitlement | Inactive sites to archive · Cost of doing nothing · Forecast exhaustion |
 | At or over the entitlement | Inactive sites to archive · Potential saving per year · Cost of doing nothing |
-| Against an unknown entitlement | All four |
+| Against an unknown entitlement | All four, with *SharePoint growth per month* in place of *Forecast exhaustion* |
 
 - **Potential saving per year** appears only once you are over the entitlement. Below it, storage
   you archive was already paid for by your licences, so archiving saves nothing.
@@ -64,8 +64,9 @@ entitlement**, at the configured rate. It is **zero while growth stays within th
 - If the tenant is already over its entitlement, all of the year's growth is priced.
 - If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced.
 
-The growth rate is the typical month-to-month growth from the storage trend
-([how](../../reference/calculations.md#growth-rate)). The card turns red once the next 12 months'
+The growth rate is the typical month-to-month growth from the storage trend, or the daily rate
+under six months of history ([how](../../reference/calculations.md#growth-rate)). The card is left
+out when Microsoft 365 has reported a single day of storage: there is no growth to price yet. The card turns red once the next 12 months'
 billable growth is more than a tenth of the entitlement. That rule does not depend on the rate,
 so changing the currency or price does not change the colour, except a price of 0, which leaves
 nothing to pay and turns the card green. With an unknown entitlement there is nothing to compare

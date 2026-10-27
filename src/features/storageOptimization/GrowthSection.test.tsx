@@ -64,8 +64,12 @@ describe('GrowthSection', () => {
 
   it('shows the storage used today and no forecast figures from a single reported day', () => {
     render(<GrowthSection overview={firstDay} />)
-    expect(screen.getByRole('status')).toHaveTextContent('500 GB of SharePoint storage in use today')
+    expect(screen.getByRole('status')).toHaveTextContent('500 GB of SharePoint storage in use')
     expect(screen.queryByText('Forecast (6 mo)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Avg growth / mo')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Added last/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Projected cost if nothing changes')).not.toBeInTheDocument()
+    expect(screen.queryByText('Next 12 months')).not.toBeInTheDocument()
     expect(screen.queryByText('Forecast after clean-up (6 mo)')).not.toBeInTheDocument()
     expect(screen.getByText(/could be removed today\. The forecast after clean-up starts once/)).toBeInTheDocument()
   })
@@ -73,6 +77,7 @@ describe('GrowthSection', () => {
   it('says the tenant is already over its entitlement when runway is zero', () => {
     const over = {
       ...withGrowth,
+      sharePoint: { ...withGrowth.sharePoint, exhausted: true, remainingBytes: 0, overageBytes: 100 * GB },
       growth: {
         ...withGrowth.growth,
         forecastMonthsToExhaustion: 0,
@@ -176,7 +181,7 @@ describe('GrowthSection', () => {
     })
   })
 
-  it('shows drives over licence as unknown when the licences cannot be read', () => {
+  it('leaves drives over licence out, never Unknown, when the licences cannot be read', () => {
     render(
       <GrowthSection
         overview={{
@@ -185,6 +190,7 @@ describe('GrowthSection', () => {
         }}
       />,
     )
-    expect(screen.getByText('Drives over their licence').nextElementSibling).toHaveTextContent(/^Unknown$/)
+    expect(screen.queryByText('Drives over their licence')).not.toBeInTheDocument()
+    expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })
 })

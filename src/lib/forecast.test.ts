@@ -192,6 +192,26 @@ describe('dailyRateBytesPerMonth', () => {
     expect(dailyRateBytesPerMonth(points)).toBeCloseTo(304.375, 9)
   })
 
+  it('fits every day, unlike the endpoints or the median of daily changes', () => {
+    const points = daily([
+      ['2026-10-01', 600],
+      ['2026-10-02', 604],
+      ['2026-10-03', 566],
+      ['2026-10-04', 566],
+    ])
+    expect(dailyRateBytesPerMonth(points)).toBeCloseTo(-426.125, 9)
+  })
+
+  it('leaves out a zero-valued day, a gap in the report, when other days have storage', () => {
+    const points = daily([
+      ['2026-08-01', 1000],
+      ['2026-08-02', 1010],
+      ['2026-08-03', 0],
+      ['2026-08-04', 1030],
+    ])
+    expect(dailyRateBytesPerMonth(points)).toBeCloseTo(304.375, 9)
+  })
+
   it('fits through a noisy day rather than taking the endpoints', () => {
     const points = daily([
       ['2026-08-01', 1000],

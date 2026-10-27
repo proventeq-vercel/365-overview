@@ -141,7 +141,7 @@ describe('DistributionSection', () => {
     expect(screen.getByText('500 GB of SharePoint storage in use')).toBeInTheDocument()
     expect(screen.queryByText(/ending in what is left of your SharePoint entitlement/)).not.toBeInTheDocument()
     expect(
-      screen.getByText('Enter the tenant entitlement under Options, Report settings to see how much of it is left.'),
+      screen.getByText('Enter the tenant entitlement in Options, Report settings to see how much of it is left.'),
     ).toBeInTheDocument()
     expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })

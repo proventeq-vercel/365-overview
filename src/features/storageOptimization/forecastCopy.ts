@@ -1,17 +1,10 @@
 import { formatBytes, formatLongMonthYear, formatSignedBytes } from '@/lib/format'
 import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
-import type { HealthStatus } from '@/lib/thresholds'
 import type { ForecastStatus, StorageOverview } from '@/types/storage'
 import type { TranslateFn } from '@/hooks/useTranslation'
+import { RISK_LABEL, type LabelTone } from '@/design/theme'
 
 const FORECAST_HORIZON_YEARS = 10
-
-const RISK_TONE: Record<ForecastStatus, HealthStatus | undefined> = {
-  Healthy: 'healthy',
-  Warning: 'watch',
-  Critical: 'attention',
-  Unknown: undefined,
-}
 
 function forecastNeedsAction(status: ForecastStatus): boolean {
   return status === 'Critical' || status === 'Warning'
@@ -22,17 +15,23 @@ function exhaustionLabel(overview: StorageOverview): string | null {
   return date === null ? null : formatLongMonthYear(date)
 }
 
-export function rateWindow(overview: StorageOverview, t: TranslateFn): string {
+function rateWindow(overview: StorageOverview, t: TranslateFn): string {
   const { growth } = overview
   return growth.rateSource === 'monthly'
     ? t('storageOptimisation.growth.window.months', { months: growth.windowMonths })
     : t('storageOptimisation.growth.window.days', { days: growth.windowDays })
 }
 
-function dailyRateNote(overview: StorageOverview, t: TranslateFn): string | null {
+export function dailyRateNote(overview: StorageOverview, t: TranslateFn): string | null {
   return overview.growth.rateSource === 'daily'
     ? t('storageOptimisation.growth.dailyRateNote', { window: rateWindow(overview, t) })
     : null
+}
+
+function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
+  return overview.sharePoint.usedFromSiteReport
+    ? t('storageOptimisation.growth.noTrendNote')
+    : t('storageOptimisation.growth.firstDayNote')
 }
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
@@ -53,7 +52,7 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
       label: t('storageOptimisation.kpi.usedToday'),
       value: used,
       status: null,
-      hint: t('storageOptimisation.growth.firstDayNote'),
+      hint: firstDayNote(overview, t),
     }
   }
 
@@ -64,7 +63,7 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
       status: null,
       hint: t('storageOptimisation.kpi.growthPerMonthHint', {
         used,
-        growth: formatBytes(growth.avgMonthlyGrowthBytes),
+        growth: formatSignedBytes(growth.avgMonthlyGrowthBytes),
         window: rateWindow(overview, t),
       }),
     }
@@ -79,11 +78,13 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
     label: t('storageOptimisation.kpi.forecast'),
     value,
     status: growth.forecastStatus,
-    hint: joined(hint, dailyRateNote(overview, t)),
+    hint,
   })
 
   const date = exhaustionLabel(overview)
-  if (date !== null) return card(date, t('storageOptimisation.kpi.forecastHint', figures))
+  if (date !== null) {
+    return card(date, joined(t('storageOptimisation.kpi.forecastHint', figures), dailyRateNote(overview, t)))
+  }
   if (growth.forecastMonthsToExhaustion === 0) {
     return card(
       t('storageOptimisation.growth.alreadyExhausted'),
@@ -91,39 +92,43 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
     )
   }
   if (growth.forecastMonthsToExhaustion === null) {
-    return {
-      label: t('storageOptimisation.kpi.forecast'),
-      value: t('storageOptimisation.kpi.forecastNone'),
-      status: growth.forecastStatus,
-      hint:
-        growth.rateSource === 'monthly'
-          ? t('storageOptimisation.kpi.forecastNoGrowthHint', { ...figures, months: growth.windowMonths })
-          : t('storageOptimisation.kpi.forecastNoGrowthDailyHint', { ...figures, days: growth.windowDays }),
-    }
+    return card(
+      t('storageOptimisation.kpi.forecastNone'),
+      growth.rateSource === 'monthly'
+        ? t('storageOptimisation.kpi.forecastNoGrowthHint', { ...figures, months: growth.windowMonths })
+        : t('storageOptimisation.kpi.forecastNoGrowthDailyHint', { ...figures, days: growth.windowDays }),
+    )
   }
   return card(
     t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS }),
-    t('storageOptimisation.kpi.forecastBeyondHorizonHint', { ...figures, years: FORECAST_HORIZON_YEARS }),
+    joined(
+      t('storageOptimisation.kpi.forecastBeyondHorizonHint', { ...figures, years: FORECAST_HORIZON_YEARS }),
+      dailyRateNote(overview, t),
+    ),
   )
 }
 
 interface ForecastCallout {
   tone: 'info' | 'warn'
+  pill: LabelTone
   pillLabel: string
-  pillStatus: HealthStatus | null
   headline: string
   note: string
 }
 
-function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, string] {
+function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, string | null, string | null] {
   const { sharePoint, growth } = overview
   const status = growth.forecastStatus
   const date = exhaustionLabel(overview)
 
+  if (sharePoint.exhausted) {
+    return [t('storageOptimisation.growth.alreadyExhausted'), t('storageOptimisation.growth.alreadyExhaustedNote'), null]
+  }
   if (growth.rateSource === 'none') {
     return [
       t('storageOptimisation.growth.firstDay', { used: formatBytes(sharePoint.usedBytes) }),
-      t('storageOptimisation.growth.firstDayNote'),
+      firstDayNote(overview, t),
+      null,
     ]
   }
   if (sharePoint.entitledBytes === null) {
@@ -136,47 +141,47 @@ function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, st
         growth: formatSignedBytes(growth.avgMonthlyGrowthBytes),
         window: rateWindow(overview, t),
       }),
+      null,
     ]
   }
+  const dailyNote = dailyRateNote(overview, t)
   if (date !== null) {
     return [
       t('storageOptimisation.growth.exhaustsOn', { date }),
       forecastNeedsAction(status)
         ? t('storageOptimisation.growth.impactNote')
         : t('storageOptimisation.growth.impactNoteNoActionNeeded'),
+      dailyNote,
     ]
-  }
-  if (status === 'Critical') {
-    return [t('storageOptimisation.growth.alreadyExhausted'), t('storageOptimisation.growth.alreadyExhaustedNote')]
   }
   return [
     t('storageOptimisation.growth.noExhaustion', { years: FORECAST_HORIZON_YEARS }),
     t('storageOptimisation.growth.noExhaustionNote', { years: FORECAST_HORIZON_YEARS }),
+    dailyNote,
   ]
 }
 
 function pillLabel(overview: StorageOverview, t: TranslateFn): string {
-  const { growth, sharePoint } = overview
-  if (growth.rateSource === 'none') return t('storageOptimisation.growth.pill.today')
-  if (sharePoint.entitledBytes === null || growth.forecastStatus === 'Unknown') {
-    return t('storageOptimisation.growth.pill.projection')
-  }
-  return t(`storageOptimisation.growth.risk.${growth.forecastStatus}`)
+  const { forecastStatus, rateSource } = overview.growth
+  if (forecastStatus !== 'Unknown') return t(`storageOptimisation.growth.risk.${forecastStatus}`)
+  return rateSource === 'none'
+    ? t('storageOptimisation.growth.pill.latest')
+    : t('storageOptimisation.growth.pill.projection')
 }
 
 export function buildCallout(overview: StorageOverview, t: TranslateFn): ForecastCallout {
   const { growth, caveats } = overview
   const status = growth.forecastStatus
-  const [headline, note] = headlineAndNote(overview, t)
+  const [headline, note, dailyNote] = headlineAndNote(overview, t)
 
   return {
     tone: forecastNeedsAction(status) ? 'warn' : 'info',
+    pill: RISK_LABEL[status],
     pillLabel: pillLabel(overview, t),
-    pillStatus: RISK_TONE[status] ?? null,
     headline,
     note: joined(
       note,
-      dailyRateNote(overview, t),
+      dailyNote,
       caveats.entitlementIsEstimated ? t('storageOptimisation.growth.estimatedQuotaNote') : null,
       growth.seriesIsVolatile ? t('storageOptimisation.growth.volatileNote') : null,
     ),

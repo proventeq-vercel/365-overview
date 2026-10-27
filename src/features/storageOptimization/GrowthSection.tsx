@@ -18,7 +18,6 @@ import {
   SoftCallout,
   SplitGrid,
 } from '@/design/primitives'
-import { RISK_LABEL } from '@/design/theme'
 
 interface Props {
   overview: StorageOverview
@@ -67,18 +66,22 @@ export function GrowthSection({ overview, delay }: Props) {
             }
           />
           <MiniStatRow>
-            <MiniStat
-              label={t('storageOptimisation.growth.avgMonthlyGrowth')}
-              value={formatSignedBytes(growth.avgMonthlyGrowthBytes)}
-            />
-            <MiniStat
-              label={
-                growth.rateSource === 'monthly'
-                  ? t('storageOptimisation.growth.addedInWindow', { months: growth.windowMonths })
-                  : t('storageOptimisation.growth.addedInWindowDays', { days: growth.windowDays })
-              }
-              value={formatSignedBytes(growth.addedInWindowBytes)}
-            />
+            {forecasting && (
+              <MiniStat
+                label={t('storageOptimisation.growth.avgMonthlyGrowth')}
+                value={formatSignedBytes(growth.avgMonthlyGrowthBytes)}
+              />
+            )}
+            {forecasting && (
+              <MiniStat
+                label={
+                  growth.rateSource === 'monthly'
+                    ? t('storageOptimisation.growth.addedInWindow', { months: growth.windowMonths })
+                    : t('storageOptimisation.growth.addedInWindowDays', { days: growth.windowDays })
+                }
+                value={formatSignedBytes(growth.addedInWindowBytes)}
+              />
+            )}
             <MiniStat
               label={t('storageOptimisation.growth.sites')}
               value={formatNumber(sharePoint.siteCount)}
@@ -87,14 +90,12 @@ export function GrowthSection({ overview, delay }: Props) {
               label={t('storageOptimisation.growth.drivesNearCap')}
               value={formatNumber(oneDrive.drivesNearCap)}
             />
-            <MiniStat
-              label={t('storageOptimisation.growth.drivesOverLicence')}
-              value={
-                oneDrive.overEntitlement === null
-                  ? t('storageOptimisation.kpi.unknown')
-                  : formatNumber(oneDrive.overEntitlement.count)
-              }
-            />
+            {oneDrive.overEntitlement !== null && (
+              <MiniStat
+                label={t('storageOptimisation.growth.drivesOverLicence')}
+                value={formatNumber(oneDrive.overEntitlement.count)}
+              />
+            )}
           </MiniStatRow>
         </Panel>
 
@@ -102,7 +103,7 @@ export function GrowthSection({ overview, delay }: Props) {
           <PanelLabel>{t('storageOptimisation.growth.impactTitle')}</PanelLabel>
           <SoftCallout
             tone={callout.tone}
-            pill={RISK_LABEL[growth.forecastStatus]}
+            pill={callout.pill}
             pillLabel={callout.pillLabel}
             headline={callout.headline}
             note={callout.note}
@@ -126,6 +127,7 @@ export function GrowthSection({ overview, delay }: Props) {
             )}
           </MiniStatRow>
           <CleanUpForecast overview={overview} />
+          {cost.applies && (
           <div className="mt-3 flex flex-col gap-1">
             <PanelLabel>{t('storageOptimisation.growth.costTitle')}</PanelLabel>
             <dl className="divide-y divide-p365-grey-100">
@@ -140,6 +142,7 @@ export function GrowthSection({ overview, delay }: Props) {
             </dl>
             <PanelDescription>{t('storageOptimisation.growth.costSubtitle')}</PanelDescription>
           </div>
+          )}
         </Panel>
       </SplitGrid>
     </Section>

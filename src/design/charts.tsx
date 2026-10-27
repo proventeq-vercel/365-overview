@@ -88,6 +88,13 @@ export interface LineSeries {
 
 const LINE_DASH = { dashed: '8 4', dotted: '1 4' } as const
 
+const SINGLE_POINT_DOT = { r: 3, strokeWidth: 0, fill: P365.blue }
+
+export function lineDot(data: Record<string, unknown>[], key: string) {
+  const points = data.filter((row) => row[key] !== null && row[key] !== undefined).length
+  return points === 1 ? SINGLE_POINT_DOT : false
+}
+
 export function MonoLineChart({
   data,
   xKey,

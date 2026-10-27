@@ -80,6 +80,9 @@ const latest = (series: UsagePoint[]): number =>
 const sumBytes = (rows: StorageRow[]): number =>
   rows.reduce((total, row) => total + row.storageUsedBytes, 0)
 
+const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
+  trend.length === 0 ? sumBytes(rows) : latest(trend)
+
 const retainedTotal = (rows: StorageRow[]) => {
   const deleted = rows.filter((row) => row.isDeleted)
   return { bytes: sumBytes(deleted), count: deleted.length }
@@ -173,8 +176,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 
-  const sharePointUsed = latest(sharePointTrend)
-  const oneDriveUsed = latest(oneDriveTrend)
+  const sharePointUsed = usedFrom(sharePointTrend, sites)
+  const oneDriveUsed = usedFrom(oneDriveTrend, drives)
 
   const remainingBytes = entitledBytes === null ? null : Math.max(0, entitledBytes - sharePointUsed)
   const usedPercentage = entitledBytes === null ? null : sharePointUsed / entitledBytes
@@ -190,7 +193,11 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
   const rows = [...sites, ...drives]
 
-  const buckets = monthlyBuckets(sharePointTrend)
+  const buckets = monthlyBuckets(
+    sharePointTrend.length > 0
+      ? sharePointTrend
+      : [{ date: reportRefreshDate || now.toISOString().slice(0, 10), value: sharePointUsed }],
+  )
   const rateSource = growthRateSourceFor(buckets, sharePointTrend)
   const rate =
     rateSource === 'monthly'
@@ -241,6 +248,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     sharePoint: {
       usedBytes: sharePointUsed,
+      usedFromSiteReport: sharePointTrend.length === 0,
       entitledBytes,
       remainingBytes,
       usedPercentage,
@@ -350,6 +358,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     },
 
     cost: {
+      applies: rateSource !== 'none',
       ratePerGb,
       currency,
       growthAnnual,

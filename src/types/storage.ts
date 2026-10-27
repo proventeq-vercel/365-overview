@@ -127,6 +127,7 @@ export interface StorageOverview {
 
   sharePoint: {
     usedBytes: number
+    usedFromSiteReport: boolean
     entitledBytes: number | null
     remainingBytes: number | null
     usedPercentage: number | null
@@ -195,6 +196,7 @@ export interface StorageOverview {
   }
 
   cost: {
+    applies: boolean
     ratePerGb: number
     currency: string
     growthAnnual: number

@@ -103,11 +103,12 @@ describe('KpiCards', () => {
     render(<KpiCards overview={dailyRate} />)
     expect(card(FORECAST)).toHaveTextContent('January 2030')
     expect(card(FORECAST)).toHaveTextContent('Forecast from the last 40 days of storage')
+    expect(card(COST)).toHaveTextContent('Forecast from the last 40 days of storage')
   })
 
   it('shows the storage used, with no forecast, when only one day has been reported', () => {
     render(<KpiCards overview={firstDay} />)
-    expect(labels()).toEqual([ARCHIVE, COST, USED])
+    expect(labels()).toEqual([ARCHIVE, USED])
     expect(card(USED)).toHaveTextContent('500 GB')
     expect(card(USED)).toHaveTextContent('The forecast starts from the second day it reports.')
   })
@@ -152,7 +153,7 @@ describe('KpiCards', () => {
     render(<KpiCards overview={unknownEntitlement} />)
     expect(card(GROWTH)).toHaveTextContent('+10 GB')
     expect(card(GROWTH)).not.toHaveTextContent(/unknown/i)
-    expect(card(GROWTH)).toHaveTextContent('Enter the tenant entitlement in Report settings')
+    expect(card(GROWTH)).toHaveTextContent('Enter the tenant entitlement in Options, Report settings')
   })
 
   it('leaves the saving out while storage is within the entitlement, where archiving saves nothing', () => {

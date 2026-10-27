@@ -6,6 +6,7 @@ export const base: StorageOverview = {
   reportRefreshDate: '2026-08-30',
   sharePoint: {
     usedBytes: 500 * GB,
+    usedFromSiteReport: false,
     entitledBytes: 1000 * GB,
     remainingBytes: 500 * GB,
     usedPercentage: 0.5,
@@ -107,6 +108,7 @@ export const base: StorageOverview = {
     annualSaving: 0,
   },
   cost: {
+    applies: true,
     ratePerGb: 0.02,
     currency: 'GBP',
     growthAnnual: 288,
@@ -141,6 +143,13 @@ export const unknownEntitlement: StorageOverview = {
     ...base.breakdown,
     segments: base.breakdown.segments.filter((segment) => segment.key !== 'free'),
   },
+  oneDrive: {
+    ...base.oneDrive,
+    entitlementPerUserBytes: null,
+    licenceEstimatePerUserBytes: null,
+    entitlementUnknownReason: 'licencesUnavailable',
+    overEntitlement: null,
+  },
   archive: { ...base.archive, savingApplies: true, savingBytes: 120 * GB, annualSaving: 28.8 },
   caveats: { ...base.caveats, entitlementIsEstimated: false },
 }
@@ -170,6 +179,7 @@ export const firstDay: StorageOverview = {
     forecastEndBytes: 500 * GB,
     afterCleanUp: { ...base.growth.afterCleanUp, endBytes: null, staysUnderEntitlement: null },
   },
+  cost: { ...base.cost, applies: false, growthAnnual: 0, growthAnnualStatus: 'healthy', cumulativeYear3: 0 },
 }
 
 export const overEntitlement: StorageOverview = {

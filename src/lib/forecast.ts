@@ -1,15 +1,14 @@
 import type { UsagePoint } from '@/types/reports'
 import type { ForecastStatus, GrowthPoint, GrowthRateSource } from '@/types/storage'
+import { daysBetween } from './growthWindow'
 
-export const FORECAST_WINDOW_MONTHS = 6
+const FORECAST_WINDOW_MONTHS = 6
 export const CRITICAL_MONTHS = 12
 export const WARNING_MONTHS = 36
 export const HORIZON_MONTHS = 120
 export const FORECAST_CHART_MONTHS = 6
 export const VOLATILITY_DIVERGENCE = 0.5
-export const DAYS_PER_MONTH = 365.25 / 12
-
-const DAY_MS = 86_400_000
+const DAYS_PER_MONTH = 365.25 / 12
 
 export interface MonthBucket {
   month: string
@@ -50,17 +49,22 @@ export function growthRateBytesPerMonth(buckets: MonthBucket[]): number {
   return median(deltas)
 }
 
-const dayNumber = (isoDate: string): number => Date.parse(`${isoDate}T00:00:00Z`) / DAY_MS
+const dayOffsets = (daily: UsagePoint[]): number[] =>
+  daily.map((point) => daysBetween(daily[0].date, point.date))
 
 export function daysSpanned(daily: UsagePoint[]): number {
   if (daily.length === 0) return 0
-  const days = daily.map((point) => dayNumber(point.date))
+  const days = dayOffsets(daily)
   return Math.max(...days) - Math.min(...days)
 }
 
-export function dailyRateBytesPerMonth(daily: UsagePoint[]): number {
+const withoutGaps = (daily: UsagePoint[]): UsagePoint[] =>
+  daily.some((point) => point.value > 0) ? daily.filter((point) => point.value > 0) : daily
+
+export function dailyRateBytesPerMonth(series: UsagePoint[]): number {
+  const daily = withoutGaps(series)
   if (daily.length < 2) return 0
-  const days = daily.map((point) => dayNumber(point.date))
+  const days = dayOffsets(daily)
   const meanDay = days.reduce((total, day) => total + day, 0) / days.length
   const meanBytes = daily.reduce((total, point) => total + point.value, 0) / daily.length
   let covariance = 0

@@ -25,7 +25,7 @@ Under the chart:
 
 | Figure | Meaning |
 | --- | --- |
-| Avg growth / mo | The typical month-to-month growth: the median of the monthly changes ([how](../../reference/calculations.md#growth-rate)). |
+| Avg growth / mo | The typical month-to-month growth: the median of the monthly changes, or the daily rate under six months of history ([how](../../reference/calculations.md#growth-rate)). |
 | Added last N mo | Storage added between the first and last month of the trend. N counts the month-to-month steps it covers. With under six months of history it reads **Added last N days**, between the first and last reported day. |
 | Live sites | SharePoint sites that are not deleted. |
 | Drives near their quota | OneDrives at 90% or more of their own storage quota, the per-drive limit in the usage report. An admin can set it above or below the licence. |
@@ -77,11 +77,15 @@ Only SharePoint storage is counted. Deleted OneDrives are in the OneDrive pool, 
 lower the SharePoint forecast. **Versions are not counted**: Microsoft's usage reports do not
 carry version storage.
 
-When nothing is removable, the dotted line is the forecast itself, and the note under the
-figures says there is nothing to clean up. From a single reported day there is no forecast to
-shift yet: the figures give only what is removable today.
+When nothing is removable, the dotted line is the forecast itself and lies on the dashed one,
+and the note under the figures says there is nothing to clean up.
 
-A note can appear when the monthly figures are **uneven**, for example when one month dominates
+From a single reported day the chart shows that day's storage as one point, with no dashed or
+dotted line. *Avg growth / mo*, *Added last …*, *Forecast (6 mo)*, the forecast after clean-up and
+the projected cost are left out until a second day is reported. When Microsoft's storage trend
+lists no day at all, the point is the total of the site usage report, and the note says so.
+
+On the monthly path, a note can appear when the monthly figures are **uneven**, for example when one month dominates
 rather than a steady trend. A single average is then a weak guide, so treat the projection as
 indicative.
 

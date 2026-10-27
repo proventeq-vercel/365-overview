@@ -39,7 +39,7 @@ admin centre**. Clear the field to go back to the estimate.
 
 With no estimate and no figure entered, nothing is measured against a guessed entitlement: the
 storage usage line has no free part, the forecast projects used storage with no exhaustion date,
-and the *Forecast exhaustion* card shows the monthly growth instead.
+and the *Forecast exhaustion* card becomes *SharePoint growth per month*.
 
 ## OneDrive storage per user
 
