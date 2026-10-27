@@ -22,14 +22,21 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   growth than it had. Each one is measured from its own first active day, so two rows can cover
   different spans of the window.
 - A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
-  are those that shrank, stayed the same or were deleted. If none of the measured ones grew, the
-  panel says so instead of drawing an empty chart. If no site or OneDrive in the report has a daily
-  figure, it says there was nothing to measure, which is not the same as no growth.
-- The chart loads after the rest of the report, with a placeholder while it does. If Microsoft
-  does not return every daily report, or the report date is not at least two days inside the days
-  Microsoft keeps, the panel says growth is unavailable. It never shows zero growth in its place.
-- Microsoft limits how often its usage reports can be read, so once growth has loaded for a report
-  date, **Refresh data** does not read it again. If it failed, **Refresh data** tries again once the report itself reloads.
+  are those that shrank, stayed the same or were deleted.
+- If a daily report does not come back, the panel measures from the days that did. The window then
+  starts on the first day that came back, and the description says how many of the daily reports
+  the growth was measured from.
+- The panel always draws a chart, and its title says what it ranks:
+  - **Sites & OneDrives that shrank the most**, by **Storage freed**, when none of the measured
+    ones grew but some shrank.
+  - **Largest sites & OneDrives**, by **Storage used** on the report date, when no daily report came
+    back (or the report date is not at least two days inside the days Microsoft keeps), when no site
+    or OneDrive in the report was active in the daily reports, or when none of them changed size.
+    The description says which.
+- The chart loads after the rest of the report, with a placeholder while it does.
+- Microsoft limits how often its usage reports can be read, so once growth has loaded from every
+  daily report for a report date, **Refresh data** does not read it again. If some daily reports did
+  not come back, **Refresh data** reads it again once the report itself reloads.
 
 ## Largest sites and OneDrives
 

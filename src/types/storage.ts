@@ -108,12 +108,21 @@ export interface StorageBreakdown {
   deletedCount: number
 }
 
+export type GrowthRanking = 'growth' | 'shrink' | 'size'
+
+export type SizeRankingReason = 'noDailyReports' | 'notMeasured' | 'unchanged'
+
 export interface StorageGrowth {
-  baselineDate: string
+  ranking: GrowthRanking
+  sizeRankingReason: SizeRankingReason | null
+  baselineDate: string | null
   reportRefreshDate: string
+  sizesOn: string
   windowDays: number
+  daysRead: number
+  daysAsked: number
   measuredRows: number
-  topGrowers: Slice[]
+  leaders: Slice[]
 }
 
 export interface OverEntitlement {

@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (eight mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (nine mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -124,19 +124,25 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   so one request per day; four days at a time, folded as they land) and takes
   each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
-  with `staleTime: Infinity`, `retry: false`; Refresh data re-reads it only if
-  it failed and the refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
+  with `staleTime: Infinity`, `retry: false`; a day that fails is skipped (the
+  window starts on the first day read, `daysRead` / `daysAsked` say how many);
+  Refresh data re-reads it only if a day was missing or it failed, and the
+  refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
   day; each load spends ~25 of the 100 report requests Graph allows per 10
   minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
-  — pure, table-tested. *Fastest-growing sites & OneDrives* renders it with a
-  skeleton while pending and an "unavailable" panel on error (any failed day,
-  or a report date at or before today − 26, the window's first day), never zero. A row with no
-  dated appearance has no daily figure, so it is left out (never counted from
-  0, which would rank the biggest sites as the fastest growers); shrinking and
-  deleted rows are out; `measuredRows` 0 says nothing could be measured rather
-  than "nothing grew".
+  — pure, table-tested. The panel always charts something, picked in the model
+  (`rankLeaders` → `ranking`): `growth` when a measured row grew (title
+  *Fastest-growing sites & OneDrives*), else `shrink` (storage freed) when one
+  shrank, else `size` (*Largest sites & OneDrives*, storage used on `sizesOn`)
+  with `sizeRankingReason` `noDailyReports` (no day read, or a report date at or
+  before today − 26), `notMeasured` or `unchanged`. If the query itself fails,
+  the hook returns the size ranking built from the overview, so there is no
+  error panel; a skeleton shows only while pending. A row with no
+  dated appearance has no daily figure, so it is left out of growth (never counted from
+  0, which would rank the biggest sites as the fastest growers); deleted rows
+  are out of every ranking.
 - `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),
@@ -220,8 +226,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   from `useOrg` with skeleton / "Your tenant" fallback, `AccountChip` in live
   mode, `HeaderActions`), `HeaderActions` (the single `⋯` "Options" button: Base
   UI dropdown with `DescribedMenuItem`s — Refresh data (disabled + spinning while
-  fetching, not while only growth reads; re-reads growth only if it failed for
-  the report date the refresh brings back), Report settings (opens `SettingsDialog`), and in live mode Switch
+  fetching, not while only growth reads; re-reads growth only if it failed or
+  missed a day for the report date the refresh brings back), Report settings (opens `SettingsDialog`), and in live mode Switch
   account via `prompt: 'select_account'` and Sign out), `SettingsDialog`
   (controlled Base UI dialog: currency `Select`, cost per GB with symbol prefix,
   entitlement in TB and OneDrive storage per user in GB, each with its
@@ -463,7 +469,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

@@ -1,24 +1,38 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { screen, cleanup } from '@testing-library/react'
+import { screen, cleanup, within } from '@testing-library/react'
 import { renderWithData } from '@/test/render'
 import type { StorageGrowth, StorageOverview, StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
-import type { GrowthState } from './FastestGrowingPanel'
 import { base } from './testFixtures'
 
-const growthData: StorageGrowth = {
+const grown: StorageGrowth = {
+  ranking: 'growth',
+  sizeRankingReason: null,
   baselineDate: '2026-08-02',
   reportRefreshDate: '2026-08-30',
+  sizesOn: '2026-08-30',
   windowDays: 28,
+  daysRead: 25,
+  daysAsked: 25,
   measuredRows: 40,
-  topGrowers: [
+  leaders: [
     { name: 'gamma', value: 900 },
     { name: 'dana', value: 400 },
   ],
 }
-const grown: GrowthState = { data: growthData, isError: false }
+const bySize: StorageGrowth = {
+  ...grown,
+  ranking: 'size',
+  sizeRankingReason: 'noDailyReports',
+  baselineDate: null,
+  sizesOn: '2026-08-31',
+  windowDays: 0,
+  daysRead: 0,
+  measuredRows: 0,
+  leaders: [{ name: 'gamma', value: 5000 }],
+}
 
-function renderOffenders(overview: StorageOverview, growth: GrowthState = grown) {
+function renderOffenders(overview: StorageOverview, growth: StorageGrowth | undefined = grown) {
   return renderWithData(<OffendersSection overview={overview} growth={growth} />)
 }
 
@@ -81,27 +95,58 @@ describe('OffendersSection', () => {
   })
 
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
-    renderOffenders(withSites, { data: undefined, isError: false })
+    renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
     expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
-  it('says growth is unavailable, rather than zero, when a daily report fails', () => {
-    renderOffenders(withSites, { data: undefined, isError: true })
-    expect(screen.getByText(/Growth is unavailable/)).toBeInTheDocument()
-    expect(screen.queryByLabelText('Loading the fastest-growing sites and OneDrives')).not.toBeInTheDocument()
+  it('says how many daily reports the growth was measured from when some did not come back', () => {
+    renderOffenders(withSites, { ...grown, daysRead: 21 })
+    expect(
+      screen.getByText(/Measured from 21 of the 25 daily usage reports Microsoft keeps; Refresh data asks for the rest\.$/),
+    ).toBeInTheDocument()
   })
 
-  it('says nothing grew instead of drawing an empty chart', () => {
-    renderOffenders(withSites, { data: { ...growthData, topGrowers: [] }, isError: false })
-    expect(screen.getByText('No site or OneDrive active between 2026-08-02 and 2026-08-30 grew.')).toBeInTheDocument()
+  it('does not mention missing daily reports when every one came back', () => {
+    renderOffenders(withSites)
+    expect(screen.queryByText(/daily usage reports Microsoft keeps/)).not.toBeInTheDocument()
+  })
+
+  it('charts the sites that freed the most storage when nothing grew, and says so', () => {
+    renderOffenders(withSites, { ...grown, ranking: 'shrink' })
+    const chart = screen.getByRole('img', { name: 'Sites & OneDrives that shrank the most' })
+    expect(within(chart.parentElement!).getByText('Storage freed')).toBeInTheDocument()
+    expect(screen.getByText(/^No site or OneDrive grew between 2026-08-02 and 2026-08-30 \(28 days\)\. These freed the most storage/)).toBeInTheDocument()
+  })
+
+  it('charts the largest sites and OneDrives when no daily report came back, naming the day of the sizes', () => {
+    renderOffenders(withSites, bySize)
+    const chart = screen.getByRole('img', { name: 'Largest sites & OneDrives' })
+    expect(within(chart.parentElement!).getByText('Storage used')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Ranked by storage used on 2026-08-31. Growth is measured from Microsoft's daily usage reports, and none came back for the last four weeks.",
+      ),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
-  it('says nothing could be measured, not that nothing grew, when no daily report lists any activity', () => {
-    renderOffenders(withSites, { data: { ...growthData, measuredRows: 0, topGrowers: [] }, isError: false })
-    expect(screen.getByText(/has a figure in Microsoft's daily usage reports between 2026-08-02 and 2026-08-30, so there is nothing to measure growth from/)).toBeInTheDocument()
-    expect(screen.queryByText(/active between 2026-08-02 and 2026-08-30 grew/)).not.toBeInTheDocument()
+  it('says no site was active in the daily reports when that is why it ranks by size', () => {
+    renderOffenders(withSites, { ...bySize, sizeRankingReason: 'notMeasured', baselineDate: '2026-08-02', daysRead: 25 })
+    expect(
+      screen.getByText(
+        "Ranked by storage used on 2026-08-31, because no site or OneDrive in this report was active in Microsoft's daily usage reports between 2026-08-02 and 2026-08-30.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('says nothing changed size when that is why it ranks by size', () => {
+    renderOffenders(withSites, { ...bySize, sizeRankingReason: 'unchanged', baselineDate: '2026-08-02', daysRead: 25, measuredRows: 3 })
+    expect(
+      screen.getByText(
+        'Ranked by storage used on 2026-08-31, because no site or OneDrive active between 2026-08-02 and 2026-08-30 changed size.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {

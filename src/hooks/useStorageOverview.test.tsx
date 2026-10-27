@@ -228,7 +228,7 @@ describe('useStorageOverview after access is refused', () => {
       const { refresh } = useRefreshReport()
       return (
         <>
-          <p>{error ? 'refused' : growth.isSuccess ? 'grown' : 'pending'}</p>
+          <p>{error ? 'refused' : growth ? 'grown' : 'pending'}</p>
           <button type="button" onClick={() => void refresh()}>refresh</button>
         </>
       )
