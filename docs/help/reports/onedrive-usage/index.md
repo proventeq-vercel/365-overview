@@ -10,8 +10,9 @@ order: 0
 The OneDrive Usage report looks only at personal OneDrives. It uses the same data as the Storage
 Optimisation report, so switching between the two never reloads anything.
 
-When Microsoft's OneDrive usage report does not come back, the page shows the OneDrive storage
-from its storage trend and leaves the per-OneDrive cards and sections out: see
+When Microsoft's OneDrive usage report does not come back, the page leaves the per-OneDrive cards
+and sections out, and shows the OneDrive storage from its storage trend if the trend holds any:
+see
 [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
 
 OneDrive is a separate pool from SharePoint. Each drive has its own storage quota and its own

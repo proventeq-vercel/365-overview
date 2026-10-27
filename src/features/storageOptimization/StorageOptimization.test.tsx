@@ -278,6 +278,9 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText('The OneDrives driving the most storage')).toBeInTheDocument()
     expect(screen.getByText('All OneDrives')).toBeInTheDocument()
     expect(screen.getByText('Every OneDrive in the OneDrive usage report, sortable and searchable')).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search OneDrives' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /^Drive/ })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: /^Template/ })).not.toBeInTheDocument()
     expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(screen.getByText('Forecast exhaustion')).toBeInTheDocument()
     expect(screen.queryByText('Storage by site template')).not.toBeInTheDocument()
@@ -352,6 +355,23 @@ describe('Storage Optimisation app', () => {
       ),
     ).toBeInTheDocument()
     expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
+  })
+
+  it('says the page still shows the earlier load when a refresh fails a report on screen', async () => {
+    const user = userEvent.setup()
+    const healthy = createMockDataSource('healthy')
+    let down = false
+    renderApp('healthy', { getDrives: () => (down ? Promise.reject(new ApiError(500, 'Server exploded')) : healthy.getDrives()) })
+    await reportLoaded()
+    expect(screen.queryByText(/still shows the earlier load/)).not.toBeInTheDocument()
+
+    down = true
+    await chooseOption(user, /refresh data/i)
+
+    expect(
+      await screen.findByText('The last refresh did not bring every report back, so this page still shows the earlier load.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Top OneDrives by storage')).toBeInTheDocument()
   })
 
   it('asks for the missing report again from the note', async () => {

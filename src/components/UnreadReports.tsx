@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils'
 import type { CoreReport } from '@/types/storage'
 import { CaveatBanner } from './CaveatBanner'
 
-export function UnreadReports({ reports }: { reports: CoreReport[] }) {
+export function UnreadReports({ reports, refreshKept }: { reports: CoreReport[]; refreshKept: boolean }) {
   const t = useTranslation()
   const intl = useIntl()
   const { refresh, isRefreshing } = useRefreshReport()
-  if (reports.length === 0) return null
+  if (reports.length === 0 && !refreshKept) return null
   const names = reports.map((report) => t(`app.unreadReports.name.${report}`))
   return (
     <CaveatBanner
@@ -27,7 +27,10 @@ export function UnreadReports({ reports }: { reports: CoreReport[] }) {
         </Button>
       }
     >
-      {t('app.unreadReports.note', { reports: intl.formatList(names, { type: 'conjunction' }), count: reports.length })}
+      {reports.length > 0 &&
+        t('app.unreadReports.note', { reports: intl.formatList(names, { type: 'conjunction' }), count: reports.length })}
+      {reports.length > 0 && refreshKept && ' '}
+      {refreshKept && t('app.unreadReports.refreshKept')}
     </CaveatBanner>
   )
 }

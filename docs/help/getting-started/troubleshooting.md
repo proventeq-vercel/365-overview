@@ -111,15 +111,17 @@ report that did not come back, and the figures drawn from it are left out:
 - Without the **OneDrive usage report**, the per-OneDrive figures are left out: the OneDrive cards
   other than the storage, *Drives near their quota*, the top OneDrives, the over-licence and
   inactive sections and the table of OneDrives. The OneDrive storage comes from its storage trend.
-- Without either usage report, *Deleted but still billing* is left out, since it adds the two.
-  Without both, *Main offenders* is left out.
+- If one of the two usage reports is missing, *Deleted but still billing* is left out, since it
+  adds the two, and *Main offenders* lists the pool whose report came back. If both are missing,
+  *Main offenders* is left out.
 - Without a **storage trend**, storage used is the total of the matching usage report, and there
   is no forecast until the trend comes back.
 - When a pool's usage report is missing and its storage trend holds no storage, that pool is left
   out as a whole.
 
 **Refresh data** in the note asks for the missing report again. If a refresh fails to bring back
-a report that is on screen, the page stays as it was. The report stops with an error only when
+a report that is on screen, the page stays as it was and the note says it still shows the earlier
+load. The report stops with an error only when
 nothing usable comes back, or when Microsoft refuses access (see the sections above).
 
 ## The data looks a few days old

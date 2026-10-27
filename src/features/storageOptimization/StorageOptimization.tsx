@@ -17,7 +17,7 @@ import { OffendersSection } from './OffendersSection'
 export function StorageOptimization() {
   const t = useTranslation()
   const { settings } = useSettings()
-  const { data, error, isPending } = useStorageOverview(settings)
+  const { data, error, refreshKept, isPending } = useStorageOverview(settings)
   const { refresh } = useRefreshReport()
   const growth = useStorageGrowth(data)
 
@@ -32,7 +32,7 @@ export function StorageOptimization() {
       >
         {t('storageOptimisation.description')} <ReportDate date={data.reportRefreshDate} />
       </PageHeader>
-      <UnreadReports reports={data.caveats.unreadReports} />
+      <UnreadReports reports={data.caveats.unreadReports} refreshKept={refreshKept} />
       {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
       <DistributionSection overview={data} delay={120} />
       {data.sharePoint.read && <GrowthSection overview={data} delay={160} />}

@@ -129,11 +129,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (`sharePoint.siteReportRead` / `oneDrive.accountReportRead` / `trendRead`, a
   pool with neither report → `read` false) and `components/UnreadReports` names
   it with a Refresh data button. The hook returns an `error` (→ `AccessFailure`)
-  only for an access refusal on any read, or when all four core reports failed;
+  only for an access refusal on any read, or when nothing usable came back;
   a failed refresh keeps the page on screen, and so does a refresh that fails
-  to bring back a report on screen (`readStorageInputs(ds, onScreen)` returns
-  `onScreen` whole, so no figure mixes two loads). With neither usage report
-  read and no trend holding storage, the page is the failure screen.
+  to bring back a report on screen (`readStorageInputs(ds, onScreen)` throws
+  that report's error, so React Query keeps the earlier load whole and no
+  figure mixes two loads; the hook's `refreshKept` adds a line to the note,
+  and Refresh data re-reads no growth since no load landed). With neither
+  usage report read and no trend holding storage, the page is the failure
+  screen.
   A pool counts as read only when its usage report came back or its trend
   holds storage, so an empty trend never shows as 0 B. Growth waits for
   `offenders.read` and keys on the two usage reports' read flags.

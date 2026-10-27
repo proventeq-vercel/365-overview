@@ -64,9 +64,11 @@ export async function readStorageInputs(ds: DataSource, onScreen?: StorageInputs
   const refusal = refusalOf([...core, directory, skus, oneDriveLicences, reportRefreshDate])
   if (refusal !== undefined) throw refusal
   const unreadReports = CORE_REPORTS.filter((_, i) => core[i].status === 'rejected')
-  if (onScreen !== undefined && unreadReports.some((report) => !onScreen.unreadReports.includes(report))) {
-    return onScreen
-  }
+  const lostFromScreen = core.find(
+    (result, i): result is PromiseRejectedResult =>
+      result.status === 'rejected' && onScreen !== undefined && !onScreen.unreadReports.includes(CORE_REPORTS[i]),
+  )
+  if (lostFromScreen !== undefined) throw lostFromScreen.reason
   const rowsRead = rawSites.status === 'fulfilled' || drives.status === 'fulfilled'
   const trendsHoldStorage = [sharePointTrend, oneDriveTrend].some(
     (trend) => trend.status === 'fulfilled' && holdsStorage(trend.value),
@@ -154,7 +156,12 @@ export function useStorageOverview(settings: ReportSettings) {
     ],
   )
 
-  return { data, error: blocking ? query.error : null, isPending: query.isPending }
+  return {
+    data,
+    error: blocking ? query.error : null,
+    refreshKept: query.error !== null && !blocking,
+    isPending: query.isPending,
+  }
 }
 
 export function useOrg() {

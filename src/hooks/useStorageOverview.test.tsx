@@ -137,7 +137,7 @@ describe('useStorageOverview when a report does not come back', () => {
   const DOWN = new ApiError(500, 'Internal server error', 'InternalServerError')
 
   function Unread() {
-    const { data, error } = useStorageOverview(DEFAULT_SETTINGS)
+    const { data, error, refreshKept } = useStorageOverview(DEFAULT_SETTINGS)
     const { refresh, isRefreshing } = useRefreshReport()
     if (error) return <p>whole page failed</p>
     if (!data) return <p>pending</p>
@@ -146,6 +146,7 @@ describe('useStorageOverview when a report does not come back', () => {
         <p>{`unread: ${data.caveats.unreadReports.join(',') || 'none'}; sites ${data.sharePoint.siteCount}`}</p>
         <p>{`as of ${data.reportRefreshDate}; drives ${data.oneDrive.driveCount}`}</p>
         <p>{isRefreshing ? 'refreshing' : 'settled'}</p>
+        <p>{refreshKept ? 'earlier load kept' : 'current load'}</p>
         <button type="button" onClick={() => void refresh()}>
           refresh
         </button>
@@ -272,6 +273,33 @@ describe('useStorageOverview when a report does not come back', () => {
     expect(await screen.findByText('settled')).toBeInTheDocument()
     expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
     expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept')).toBeInTheDocument()
+  })
+
+  it('keeps the page when a refresh fails a report on screen while another is still missing', async () => {
+    let refreshed = false
+    const getDrives = vi.fn(async () => {
+      if (refreshed) throw DOWN
+      return [ownerDrive('ada@contoso.com')]
+    })
+    renderWithData(
+      <Unread />,
+      sourceWith({
+        getSites: async () => Promise.reject(DOWN),
+        getDrives,
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 900 }],
+      }),
+    )
+    expect(await screen.findByText('unread: sites; sites 0')).toBeInTheDocument()
+    expect(screen.getByText('current load')).toBeInTheDocument()
+
+    refreshed = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    await waitFor(() => expect(getDrives).toHaveBeenCalledTimes(3))
+    expect(await screen.findByText('settled')).toBeInTheDocument()
+    expect(screen.getByText('unread: sites; sites 0')).toBeInTheDocument()
+    expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept')).toBeInTheDocument()
   })
 
   it('reads each report at most twice when none came back, with the app query defaults', async () => {
@@ -571,6 +599,49 @@ describe('useStorageOverview after access is refused', () => {
     fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
 
     expect(await screen.findByText('measured 2')).toBeInTheDocument()
+  })
+
+  it('does not read the growth again when a refresh kept the earlier load', async () => {
+    let refreshed = false
+    const getDrives = async () => {
+      if (refreshed) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    }
+    const getDrivesOn = vi.fn(async (date: string) => {
+      if (date === '2026-09-19' && getDrivesOn.mock.calls.length === 1) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    })
+    function WithGrowth() {
+      const { data, refreshKept } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{growth ? `missing ${growth.reportsMissing}` : 'pending'}</p>
+          <p>{refreshKept ? 'kept' : 'fresh'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({
+        getDrives,
+        getSitesOn: async () => [],
+        getDrivesOn,
+        getDailyReportDates: () => ['2026-09-19', '2026-09-20'],
+      }),
+    )
+    expect(await screen.findByText('missing 1')).toBeInTheDocument()
+    vi.setSystemTime(Date.now() + REREAD_COOLDOWN_MS)
+    refreshed = true
+
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    expect(await screen.findByText('kept')).toBeInTheDocument()
+    await vi.advanceTimersByTimeAsync(1_000)
+    expect(getDrivesOn).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('missing 1')).toBeInTheDocument()
   })
 
   it('does not keep asking after a failure access cannot fix, once no report came back', async () => {
