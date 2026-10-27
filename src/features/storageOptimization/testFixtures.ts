@@ -22,6 +22,7 @@ export const base: StorageOverview = {
   reportRefreshDate: '2026-08-30',
   sharePoint: {
     read: true,
+    unreadReports: [],
     siteReportRead: true,
     trendRead: true,
     usedBytes: 500 * GB,
@@ -42,6 +43,7 @@ export const base: StorageOverview = {
   },
   oneDrive: {
     read: true,
+    unreadReports: [],
     accountReportRead: true,
     trendRead: true,
     usedBytes: 120 * GB,
@@ -86,6 +88,7 @@ export const base: StorageOverview = {
     deletedCount: 4,
   },
   offenders: {
+    read: true,
     rows: [],
     poolUsedBytes: { SharePoint: 500 * GB, OneDrive: 120 * GB },
     topSites: [],

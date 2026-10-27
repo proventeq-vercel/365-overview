@@ -112,8 +112,9 @@ the report that did not come back, and the figures drawn from it are left out:
 - Without a **storage trend**, storage used is the total of the matching usage report, and there
   is no forecast until the trend comes back.
 
-**Refresh data** in the note asks for the missing report again. The report stops with an error
-only when none of the four answers.
+**Refresh data** in the note asks for the missing report again. If a refresh brings a report
+back no better, the report keeps what it already showed. The report stops with an error only when
+none of the four answers, or when Microsoft refuses access (see the sections above).
 
 ## The data looks a few days old
 

@@ -1,5 +1,11 @@
 export const NETWORK_ERROR_CODE = 'NetworkError'
 
+export const THROTTLED_STATUSES: ReadonlySet<number> = new Set([429, 503, 504])
+
+export function wasThrottled(error: unknown): boolean {
+  return error instanceof ApiError && THROTTLED_STATUSES.has(error.status)
+}
+
 export class ApiError extends Error {
   status: number
   code: string | null

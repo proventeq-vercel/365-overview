@@ -166,6 +166,7 @@ export interface StorageOverview {
 
   sharePoint: {
     read: boolean
+    unreadReports: CoreReport[]
     siteReportRead: boolean
     trendRead: boolean
     usedBytes: number
@@ -187,6 +188,7 @@ export interface StorageOverview {
 
   oneDrive: {
     read: boolean
+    unreadReports: CoreReport[]
     accountReportRead: boolean
     trendRead: boolean
     usedBytes: number
@@ -206,6 +208,7 @@ export interface StorageOverview {
   breakdown: StorageBreakdown
 
   offenders: {
+    read: boolean
     rows: StorageRow[]
     poolUsedBytes: Record<StoragePool, number>
     topSites: Slice[]

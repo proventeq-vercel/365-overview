@@ -1,6 +1,7 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import {
   CORE_REPORTS,
+  REPORT_POOL,
   type CoreReport,
   type OneDriveLimit,
   type OneDrivePool,
@@ -90,6 +91,14 @@ const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
 
 const latestDay = (...trends: UsagePoint[][]): string =>
   trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
+
+export const reportDateOf = (
+  reportRefreshDate: string,
+  sharePointTrend: UsagePoint[],
+  oneDriveTrend: UsagePoint[],
+): string => reportRefreshDate || latestDay(sharePointTrend, oneDriveTrend)
+
+const holdsStorage = (trend: UsagePoint[]) => trend.some((point) => point.value > 0)
 
 function reportedDays(trend: UsagePoint[], rows: StorageRow[]): UsagePoint[] {
   const days = trendWithoutGaps(trend)
@@ -204,7 +213,10 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const unread = new Set(unreadReports)
   const siteReportRead = !unread.has('sites')
   const accountReportRead = !unread.has('drives')
-  const reportRefreshDate = reportedRefreshDate || latestDay(reportedSharePointTrend, reportedOneDriveTrend)
+  const reportRefreshDate = reportDateOf(reportedRefreshDate, reportedSharePointTrend, reportedOneDriveTrend)
+  const sharePointRead = siteReportRead || holdsStorage(reportedSharePointTrend)
+  const oneDriveRead = accountReportRead || holdsStorage(reportedOneDriveTrend)
+  const unreadOf = (pool: StoragePool) => CORE_REPORTS.filter((report) => unread.has(report) && REPORT_POOL[report] === pool)
 
   const sharePointTrend = reportedDays(reportedSharePointTrend, reportedSites)
   const oneDriveTrend = reportedDays(reportedOneDriveTrend, reportedDrives)
@@ -295,7 +307,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     reportRefreshDate,
 
     sharePoint: {
-      read: siteReportRead || !unread.has('sharePointTrend'),
+      read: sharePointRead,
+      unreadReports: unreadOf('SharePoint'),
       siteReportRead,
       trendRead: !unread.has('sharePointTrend'),
       usedBytes: sharePointUsed,
@@ -321,7 +334,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     },
 
     oneDrive: {
-      read: accountReportRead || !unread.has('oneDriveTrend'),
+      read: oneDriveRead,
+      unreadReports: unreadOf('OneDrive'),
       accountReportRead,
       trendRead: !unread.has('oneDriveTrend'),
       usedBytes: oneDriveUsed,
@@ -363,6 +377,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     }),
 
     offenders: {
+      read: siteReportRead || accountReportRead,
       rows,
       poolUsedBytes: { SharePoint: sharePointUsed, OneDrive: oneDriveUsed },
       topSites: topByPool(rows, 'SharePoint'),

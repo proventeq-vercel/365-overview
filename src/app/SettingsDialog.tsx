@@ -62,6 +62,7 @@ export function SettingsDialog({
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
   const oneDriveLimitWhenUnset = data === undefined ? undefined : data.oneDrive.limitWhenUnset
+  const oneDriveReportUnread = data?.oneDrive.accountReportRead === false
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,7 +148,9 @@ export function SettingsDialog({
               oneDriveLimitWhenUnset === 'driveLimit'
                 ? t('settings.oneDriveEntitlementHintDriveLimit')
                 : oneDriveLimitWhenUnset === null
-                  ? t('settings.oneDriveEntitlementHintNoLimit')
+                  ? oneDriveReportUnread
+                    ? t('settings.oneDriveEntitlementHintUnread')
+                    : t('settings.oneDriveEntitlementHintNoLimit')
                   : oneDriveEstimateBytes === null
                     ? t('settings.oneDriveEntitlementHintNoEstimate')
                     : t('settings.oneDriveEntitlementHint', {

@@ -34,6 +34,17 @@ const withCost = (growthAnnualStatus: StorageOverview['cost']['growthAnnualStatu
 })
 
 describe('KpiCards', () => {
+  it('renders no empty capacity section when no card applies', () => {
+    const none: StorageOverview = {
+      ...base,
+      sharePoint: { ...base.sharePoint, exhausted: true },
+      archive: { ...base.archive, applies: false, savingApplies: false },
+      cost: { ...base.cost, applies: false },
+    }
+    render(<KpiCards overview={none} />)
+    expect(screen.queryByRole('region', { name: 'Tenant capacity' })).not.toBeInTheDocument()
+  })
+
   it('rails the forecast card red on a critical forecast and green on a healthy one', () => {
     const critical: StorageOverview = {
       ...base,

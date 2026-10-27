@@ -60,7 +60,8 @@ The callout under the badge explains the headline. There are four special cases:
   [Report settings](../../reference/settings.md#sharepoint-entitlement) to see when it runs out.
 - **A single reported day.** The storage in use on that day. The forecast starts from the second
   day Microsoft 365 reports. When Microsoft's storage trend lists no day with storage, the figure is the
-  total of the site usage report, and the note says so. An exceeded entitlement always shows as
+  total of the site usage report, and the note says so. When the storage trend did not come back,
+  the note says that instead, and the forecast returns with the trend. An exceeded entitlement always shows as
   *Entitlement already exceeded*, however much history there is.
 
 **Used today**, **Forecast (6 mo)** and **Over entitlement today** show where storage is now, where the

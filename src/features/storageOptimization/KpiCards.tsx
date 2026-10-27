@@ -80,6 +80,8 @@ export function KpiCards({ overview, delay = 0 }: Props) {
     ),
   ].filter(Boolean)
 
+  if (cards.length === 0) return null
+
   return (
     <section
       aria-label={t('storageOptimisation.capacity.title')}

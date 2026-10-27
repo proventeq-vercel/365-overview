@@ -1,6 +1,7 @@
 import { HelpButton } from '@/app/help/HelpButton'
 import { PageHeader } from '@/design/primitives'
 import { useSettings } from '@/app/useSettings'
+import { ReportDate } from '@/app/ReportDate'
 import { ReportLoading } from '@/app/ReportLoading'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageGrowth } from '@/hooks/useStorageGrowth'
@@ -29,15 +30,13 @@ export function StorageOptimization() {
         title={t('reports.storageOptimisation.title')}
         help={<HelpButton topic="storageOptimisation" />}
       >
-        {t('storageOptimisation.description')}{' '}
-        {data.reportRefreshDate && <>{t('app.dataAsOf', { date: data.reportRefreshDate })} </>}
-        {t('app.reportLagNote')}
+        {t('storageOptimisation.description')} <ReportDate date={data.reportRefreshDate} />
       </PageHeader>
       <UnreadReports reports={data.caveats.unreadReports} />
       {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
       <DistributionSection overview={data} delay={120} />
       {data.sharePoint.read && <GrowthSection overview={data} delay={160} />}
-      <OffendersSection overview={data} growth={growth} delay={240} />
+      {data.offenders.read && <OffendersSection overview={data} growth={growth} delay={240} />}
     </div>
   )
 }

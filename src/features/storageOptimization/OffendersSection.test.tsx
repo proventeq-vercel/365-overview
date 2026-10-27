@@ -75,6 +75,7 @@ const rows = [site('alpha', 300), site('beta', 700), drive('dana', 500)]
 const withSites = {
   ...base,
   offenders: {
+    read: true,
     rows,
     poolUsedBytes: { SharePoint: 1000, OneDrive: 500 },
     topSites: [

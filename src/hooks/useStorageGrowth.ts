@@ -97,8 +97,14 @@ export function useStorageGrowth(overview: StorageOverview | undefined): Storage
   const ds = useDataSource()
   const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: [STORAGE_GROWTH_KEY, overview?.reportRefreshDate, overview?.caveats.nameMask],
-    enabled: overview !== undefined,
+    queryKey: [
+      STORAGE_GROWTH_KEY,
+      overview?.reportRefreshDate,
+      overview?.caveats.nameMask,
+      overview?.sharePoint.siteReportRead,
+      overview?.oneDrive.accountReportRead,
+    ],
+    enabled: overview?.offenders.read === true,
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,

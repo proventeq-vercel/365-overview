@@ -25,7 +25,11 @@ export function DistributionSection({ overview, delay }: Props) {
     <Section
       delay={delay}
       title={t('storageOptimisation.distribution.title')}
-      subtitle={t('storageOptimisation.distribution.subtitle')}
+      subtitle={
+        sharePoint.siteReportRead && overview.oneDrive.read
+          ? t('storageOptimisation.distribution.subtitle')
+          : t('storageOptimisation.distribution.subtitlePartial')
+      }
       help={<HelpButton topic="storageDistribution" />}
     >
       {sharePoint.read && <StorageUsagePanel overview={overview} />}

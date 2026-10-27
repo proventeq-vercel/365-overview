@@ -93,6 +93,17 @@ describe('DistributionSection', () => {
     expect(popover).toHaveTextContent('Counts against your SharePoint entitlement')
   })
 
+  it('says the SharePoint part holds all SharePoint storage when the site usage report did not come back', async () => {
+    const unread: StorageOverview = {
+      ...withTemplates,
+      sharePoint: { ...withTemplates.sharePoint, siteReportRead: false },
+    }
+    render(<DistributionSection overview={unread} />)
+    await userEvent.click(part('SharePoint'))
+    const popover = await screen.findByRole('dialog', { name: 'SharePoint' })
+    expect(popover).toHaveTextContent(/^.*All SharePoint storage in use, from the SharePoint storage trend, Teams, inactive and deleted sites included/)
+  })
+
   it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(screen.getByRole('heading', { name: 'Live OneDrive storage' })).toBeInTheDocument()

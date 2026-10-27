@@ -18,11 +18,11 @@ const mockHealthy: AdminEnv = {
 
 const ownedBy = (ownerDisplayName: string) => ({ ownerDisplayName }) as StorageRow
 
-function renderBar(env: AdminEnv = mockHealthy, open = true, sites?: StorageRow[]) {
+function renderBar(env: AdminEnv = mockHealthy, open = true, sites?: StorageRow[], drives: StorageRow[] = []) {
   const navigate = vi.fn()
   const setOpen = vi.fn()
   const queryClient = new QueryClient()
-  if (sites) queryClient.setQueryData(['storageInputs'], { sites })
+  if (sites) queryClient.setQueryData(['storageInputs'], { sites, drives })
   render(
     <QueryClientProvider client={queryClient}>
       <AdminBarContext value={{ available: true, open, setOpen }}>
@@ -89,6 +89,11 @@ describe('AdminBar', () => {
     expect(hideNames).toHaveAccessibleDescription(/Settings → Org settings → Reports/)
     expect(hideNames).not.toHaveAttribute('data-pending')
     expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+  })
+
+  it('locks Hide names on when only the OneDrive rows came back and Microsoft conceals them', () => {
+    renderBar(mockHealthy, true, [], [ownedBy('6B1F4F0C7B3A4E2D9F8E7A6B5C4D'), ownedBy('0A1B2C3D4E5F60718293A4B5C6D7')])
+    expect(screen.getByRole('button', { name: 'Hide names' })).toBeDisabled()
   })
 
   it('leaves Hide names free when the report shows real names', () => {

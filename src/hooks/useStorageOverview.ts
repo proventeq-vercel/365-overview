@@ -9,7 +9,10 @@ import { withSiteDirectory } from '../reports/siteDirectory'
 import { buildStorageOverview } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
 import type { SiteDirectory } from '../reports/siteDirectory'
-import { CORE_REPORTS, type StorageOverview, type StorageRow } from '../types/storage'
+import { CORE_REPORTS, type CoreReport, type StorageOverview, type StorageRow } from '../types/storage'
+import type { LicenseSku, UsagePoint } from '../types/reports'
+import type { OneDriveLicences } from '../reports/activeUsers'
+import { wasThrottled } from '../clients/apiError'
 import { accessRecheckInterval, isAccessFailure } from './accessRevalidation'
 import { canReadGrowthAgain, isGrowth } from './useStorageGrowth'
 
@@ -19,7 +22,7 @@ async function readTwice<T>(read: () => Promise<T>): Promise<T> {
   try {
     return await read()
   } catch (error) {
-    if (isAccessFailure(error)) throw error
+    if (isAccessFailure(error) || wasThrottled(error)) throw error
     return read()
   }
 }
@@ -34,7 +37,18 @@ function refusalOf(results: PromiseSettledResult<unknown>[]): unknown {
   return refused?.reason
 }
 
-export async function readStorageInputs(ds: DataSource) {
+export interface StorageInputs {
+  sites: StorageRow[]
+  drives: StorageRow[]
+  sharePointTrend: UsagePoint[]
+  oneDriveTrend: UsagePoint[]
+  skus: LicenseSku[] | null
+  oneDriveLicences: OneDriveLicences | null
+  reportRefreshDate: string
+  unreadReports: CoreReport[]
+}
+
+export async function readStorageInputs(ds: DataSource, onScreen?: StorageInputs): Promise<StorageInputs> {
   const [rawSites, drives, sharePointTrend, oneDriveTrend, directory, skus, oneDriveLicences, reportRefreshDate] =
     await Promise.allSettled([
       readTwice(() => ds.getSites()),
@@ -51,22 +65,37 @@ export async function readStorageInputs(ds: DataSource) {
   if (refusal !== undefined) throw refusal
   if (core.every((result) => result.status === 'rejected')) throw (rawSites as PromiseRejectedResult).reason
 
-  const siteRows = valueOr(rawSites, [])
-  const driveRows = valueOr(drives, [])
-  const directoryNamed = withSiteDirectory(siteRows, valueOr<SiteDirectory>(directory, new Map()))
-  const sites = namesAreConcealed([...siteRows, ...driveRows])
-    ? siteRows
-    : await nameTopSites(ds, directoryNamed).catch(() => directoryNamed)
+  const keptFromScreen = (report: CoreReport, result: PromiseSettledResult<unknown>) =>
+    result.status === 'rejected' && onScreen !== undefined && !onScreen.unreadReports.includes(report)
+  const kept = new Set(CORE_REPORTS.filter((report, i) => keptFromScreen(report, core[i])))
+  const unreadReports = CORE_REPORTS.filter((report, i) => core[i].status === 'rejected' && !kept.has(report))
+
+  const driveRows = kept.has('drives') ? onScreen!.drives : valueOr(drives, [])
+  const sites = kept.has('sites') ? onScreen!.sites : await namedSites(ds, valueOr(rawSites, []), driveRows, directory)
   return {
     sites,
     drives: driveRows,
-    sharePointTrend: valueOr(sharePointTrend, []),
-    oneDriveTrend: valueOr(oneDriveTrend, []),
+    sharePointTrend: kept.has('sharePointTrend') ? onScreen!.sharePointTrend : valueOr(sharePointTrend, []),
+    oneDriveTrend: kept.has('oneDriveTrend') ? onScreen!.oneDriveTrend : valueOr(oneDriveTrend, []),
     skus: valueOr(skus, null),
     oneDriveLicences: valueOr(oneDriveLicences, null),
-    reportRefreshDate: valueOr(reportRefreshDate, ''),
-    unreadReports: CORE_REPORTS.filter((_, i) => core[i].status === 'rejected'),
+    reportRefreshDate: valueOr(reportRefreshDate, kept.has('sites') ? onScreen!.reportRefreshDate : ''),
+    unreadReports,
   }
+}
+
+async function namedSites(
+  ds: DataSource,
+  siteRows: StorageRow[],
+  driveRows: StorageRow[],
+  directory: PromiseSettledResult<SiteDirectory>,
+): Promise<StorageRow[]> {
+  if (namesAreConcealed([...siteRows, ...driveRows])) return siteRows
+  const directoryNamed = withSiteDirectory(siteRows, valueOr<SiteDirectory>(directory, new Map()))
+  return nameTopSites(ds, directoryNamed).catch((error: unknown) => {
+    if (isAccessFailure(error)) throw error
+    return directoryNamed
+  })
 }
 
 function useRevalidateOnRecovery(error: unknown, recovered: boolean) {
@@ -89,11 +118,13 @@ function useRevalidateOnRecovery(error: unknown, recovered: boolean) {
 
 export function useStorageOverview(settings: ReportSettings) {
   const ds = useDataSource()
+  const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: [STORAGE_INPUTS_KEY],
     refetchInterval: (query) => accessRecheckInterval(query.state.error, consentRecentlyGranted(Date.now())),
     refetchOnWindowFocus: (query) => isAccessFailure(query.state.error),
-    queryFn: () => readStorageInputs(ds),
+    retry: false,
+    queryFn: () => readStorageInputs(ds, queryClient.getQueryData<StorageInputs>([STORAGE_INPUTS_KEY])),
   })
 
   const inputs = query.data
@@ -135,10 +166,10 @@ export function useOrg() {
 }
 
 export function useNamesConcealed(): boolean {
-  const { data } = useQuery<{ sites: StorageRow[] }, Error, boolean>({
+  const { data } = useQuery<StorageInputs, Error, boolean>({
     queryKey: [STORAGE_INPUTS_KEY],
     queryFn: skipToken,
-    select: (inputs) => namesAreConcealed(inputs.sites),
+    select: (inputs) => namesAreConcealed([...inputs.sites, ...inputs.drives]),
   })
   return data === true
 }

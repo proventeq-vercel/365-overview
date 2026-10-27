@@ -23,7 +23,8 @@ Only the cards that apply to your tenant are shown:
   you archive was already paid for by your licences, so archiving saves nothing.
 - **Forecast exhaustion** is left out once the entitlement is already exceeded. There is no
   future date to forecast.
-- **Inactive sites to archive** is always shown.
+- **Inactive sites to archive** is always shown while the SharePoint site usage report comes back.
+  Without it, the archive and saving cards are left out: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
 
 | Card | Green | Orange | Red | Grey |
 | --- | --- | --- | --- | --- |

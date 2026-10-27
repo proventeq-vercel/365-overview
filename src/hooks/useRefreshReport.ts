@@ -1,6 +1,6 @@
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
-import type { OverviewInputs } from '../model/storageOverview'
-import { STORAGE_INPUTS_KEY } from './useStorageOverview'
+import { reportDateOf } from '../model/storageOverview'
+import { STORAGE_INPUTS_KEY, type StorageInputs } from './useStorageOverview'
 import { canReadGrowthAgain, isGrowth } from './useStorageGrowth'
 
 export function useRefreshReport() {
@@ -10,11 +10,12 @@ export function useRefreshReport() {
     refresh: async () => {
       const loadedBefore = queryClient.getQueryState([STORAGE_INPUTS_KEY])?.dataUpdateCount
       await queryClient.invalidateQueries({ predicate: (query) => !isGrowth(query) })
-      const inputs = queryClient.getQueryState<Pick<OverviewInputs, 'reportRefreshDate'>>([STORAGE_INPUTS_KEY])
-      if (inputs === undefined || inputs.dataUpdateCount === loadedBefore) return
+      const inputs = queryClient.getQueryState<StorageInputs>([STORAGE_INPUTS_KEY])
+      if (inputs?.data === undefined || inputs.dataUpdateCount === loadedBefore) return
+      const { reportRefreshDate, sharePointTrend, oneDriveTrend } = inputs.data
+      const reportDate = reportDateOf(reportRefreshDate, sharePointTrend, oneDriveTrend)
       await queryClient.invalidateQueries({
-        predicate: (query) =>
-          canReadGrowthAgain(query) && query.queryKey[1] === inputs.data?.reportRefreshDate,
+        predicate: (query) => canReadGrowthAgain(query) && query.queryKey[1] === reportDate,
       })
     },
     isRefreshing: fetching > 0,

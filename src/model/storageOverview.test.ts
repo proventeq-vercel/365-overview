@@ -797,6 +797,30 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.points.map((point) => point.month)).toEqual(['2026-09'])
   })
 
+  it('leaves SharePoint out, never 0 B used, when the site usage report did not come back and the trend holds no storage', () => {
+    const zeroDays = [
+      { date: '2026-08-29', value: 0 },
+      { date: '2026-08-30', value: 0 },
+    ]
+    const overview = buildStorageOverview(inputs({ sites: [], sharePointTrend: zeroDays, unreadReports: ['sites'] }))
+    expect(overview.sharePoint.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], sharePointTrend: [], unreadReports: ['sites'] })).sharePoint.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], unreadReports: ['sites'] })).sharePoint.read).toBe(true)
+  })
+
+  it('leaves OneDrive out, never 0 B used, when the OneDrive usage report did not come back and its trend holds no storage', () => {
+    const overview = buildStorageOverview(inputs({ drives: [], oneDriveTrend: [], unreadReports: ['drives'] }))
+    expect(overview.oneDrive.read).toBe(false)
+    expect(overview.oneDrive.unreadReports).toEqual(['drives'])
+    expect(overview.sharePoint.unreadReports).toEqual([])
+  })
+
+  it('has no offenders to list when neither usage report came back', () => {
+    const overview = buildStorageOverview(inputs({ sites: [], drives: [], unreadReports: ['sites', 'drives'] }))
+    expect(overview.offenders.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], unreadReports: ['sites'] })).offenders.read).toBe(true)
+  })
+
   it('prices no archive saving when the site usage report did not come back, even without an entitlement', () => {
     const { archive } = buildStorageOverview(unknownEntitlement({ sites: [], unreadReports: ['sites'] }))
     expect(archive.applies).toBe(false)

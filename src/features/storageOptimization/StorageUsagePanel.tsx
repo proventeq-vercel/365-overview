@@ -35,6 +35,10 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
         })
       }
       return t('storageOptimisation.usage.describe.free', { entitled })
+    case 'sharePoint':
+      return sharePoint.siteReportRead
+        ? t('storageOptimisation.usage.describe.sharePoint')
+        : t('storageOptimisation.usage.sharePointAllDescription')
     default:
       return t(`storageOptimisation.usage.describe.${key}`)
   }
@@ -85,6 +89,15 @@ function Headline({ overview }: { overview: StorageOverview }) {
   )
 }
 
+function subtitle({ sharePoint, oneDrive }: StorageOverview, t: TranslateFn): string {
+  if (sharePoint.entitledBytes === null) {
+    return oneDrive.read
+      ? t('storageOptimisation.usage.subtitleNoEntitlement')
+      : t('storageOptimisation.usage.subtitleNoEntitlementAlone')
+  }
+  return oneDrive.read ? t('storageOptimisation.usage.subtitle') : t('storageOptimisation.usage.subtitleAlone')
+}
+
 export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
   const { sharePoint, breakdown } = overview
@@ -93,11 +106,7 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
   return (
     <Panel>
       <PanelLabel>{t('storageOptimisation.usage.title')}</PanelLabel>
-      <PanelDescription>
-        {sharePoint.entitledBytes === null
-          ? t('storageOptimisation.usage.subtitleNoEntitlement')
-          : t('storageOptimisation.usage.subtitle')}
-      </PanelDescription>
+      <PanelDescription>{subtitle(overview, t)}</PanelDescription>
       <Headline overview={overview} />
       <SegmentedBar
         className="mt-1"

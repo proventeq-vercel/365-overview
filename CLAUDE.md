@@ -53,7 +53,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
-  and is left to React Query's single retry.
+  and is left to React Query's single retry (the storage inputs query
+  instead has `retry: false` and re-reads each failed core report once
+  itself, never after a throttled status the client already retried).
 - `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (fourteen mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
   `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`,
@@ -127,7 +129,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   pool with neither report → `read` false) and `components/UnreadReports` names
   it with a Refresh data button. The hook returns an `error` (→ `AccessFailure`)
   only for an access refusal on any read, or when all four core reports failed;
-  a failed refresh keeps the page on screen.
+  a failed refresh keeps the page on screen, and a report a refresh fails to
+  bring back keeps its earlier value (`readStorageInputs(ds, onScreen)`).
+  A pool counts as read only when its usage report came back or its trend
+  holds storage, so an empty trend never shows as 0 B. Growth waits for
+  `offenders.read` and keys on the two usage reports' read flags.
   The ONLY data entry point for the page — except growth:
   `src/hooks/useStorageGrowth.ts` reads the detail reports for every day
   `DataSource.getDailyReportDates` lists (`lib/growthWindow`: today − 26 up to
@@ -459,7 +465,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
   them while the entitlement is unknown). `cost.applies` (a growth rate
   exists, `rateSource !== 'none'`) shows *Cost of doing nothing* and the
-  projected-cost block. *Inactive sites to archive* always shows. The grid's
+  projected-cost block. *Inactive sites to archive* shows whenever the site usage report came back. The grid's
   `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint

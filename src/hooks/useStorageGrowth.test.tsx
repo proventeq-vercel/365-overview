@@ -27,8 +27,9 @@ const overviewOn = (reportRefreshDate: string, nameMask: 'concealed' | null = nu
   const mask = (rows: StorageRow[]) => (nameMask === null ? rows : rows.map(hideRowNames))
   return {
     reportRefreshDate,
-    sharePoint: { sites: mask([row('SharePoint', 'busy', 900), row('SharePoint', 'quiet', 5000)]) },
-    oneDrive: { drives: mask([row('OneDrive', 'dana', 2000)]) },
+    sharePoint: { siteReportRead: true, sites: mask([row('SharePoint', 'busy', 900), row('SharePoint', 'quiet', 5000)]) },
+    oneDrive: { accountReportRead: true, drives: mask([row('OneDrive', 'dana', 2000)]) },
+    offenders: { read: true },
     caveats: { nameMask },
   } as unknown as StorageOverview
 }

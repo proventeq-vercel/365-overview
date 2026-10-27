@@ -274,6 +274,7 @@ describe('Storage Optimisation app', () => {
     await reportLoaded()
     expect(screen.getByText(/^Microsoft's SharePoint site usage report did not come back this time/)).toBeInTheDocument()
     expect(screen.getByText(/Data as of 2026-08-31\./)).toBeInTheDocument()
+    expect(screen.getByText('Where storage sits today, from the Microsoft reports that came back')).toBeInTheDocument()
     expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(screen.getByText('Forecast exhaustion')).toBeInTheDocument()
     expect(screen.queryByText('Storage by site template')).not.toBeInTheDocument()
@@ -309,6 +310,22 @@ describe('Storage Optimisation app', () => {
     await reportLoaded()
     expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
     expect(screen.getByText('Storage usage')).toBeInTheDocument()
+    expect(screen.getByText(/OneDrive is a separate pool\. Hover or select/)).toBeInTheDocument()
+  })
+
+  it('lists no offenders and reads no daily report when neither usage report comes back', async () => {
+    const down = () => Promise.reject(new ApiError(500, 'Server exploded'))
+    const getSitesOn = vi.fn(async () => [])
+    renderApp('healthy', { getSites: down, getReportRefreshDate: down, getDrives: down, getSitesOn })
+    expect(await screen.findByRole('heading', { name: /Future state & growth impact/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /main offenders/i })).not.toBeInTheDocument()
+    expect(getSitesOn).not.toHaveBeenCalled()
+  })
+
+  it('says the clean-up forecast waits for the storage trend when the trend did not come back', async () => {
+    renderApp('no-trends')
+    await reportLoaded()
+    expect(screen.getByText(/The forecast after clean-up returns when Refresh data brings the SharePoint storage trend back\.$/)).toBeInTheDocument()
   })
 
   it('leaves SharePoint out as a whole when neither of its reports comes back', async () => {
