@@ -266,7 +266,7 @@ describe('useStorageOverview after access is refused', () => {
       const { refresh } = useRefreshReport()
       return (
         <>
-          <p>{error ? 'refused' : growth ? `read ${growth.daysRead}` : 'pending'}</p>
+          <p>{error ? 'refused' : growth ? `read ${growth.reportsRead}` : 'pending'}</p>
           <button type="button" onClick={() => void refresh()}>refresh</button>
         </>
       )
@@ -275,7 +275,7 @@ describe('useStorageOverview after access is refused', () => {
       <WithGrowth />,
       sourceWith({ getSites, getSitesOn, getDrivesOn: async () => [], getDailyReportDates: () => ['2026-09-19', '2026-09-20'] }),
     )
-    expect(await screen.findByText('read 1')).toBeInTheDocument()
+    expect(await screen.findByText('read 3')).toBeInTheDocument()
     refuse = true
     fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
     expect(await screen.findByText('refused')).toBeInTheDocument()
@@ -283,7 +283,7 @@ describe('useStorageOverview after access is refused', () => {
 
     await vi.advanceTimersByTimeAsync(30_000)
 
-    expect(await screen.findByText('read 2')).toBeInTheDocument()
+    expect(await screen.findByText('read 4')).toBeInTheDocument()
     expect(getSitesOn).toHaveBeenCalledTimes(4)
   })
 

@@ -209,7 +209,7 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
   })
 
-  it('no-daily-reports: every dated report is refused, while the report itself loads', async () => {
+  it('no-daily-reports: every dated report is throttled, while the report itself loads', async () => {
     const ds = createMockDataSource('no-daily-reports')
     const [date] = ds.getDailyReportDates(await ds.getReportRefreshDate())
     await expect(ds.getSitesOn(date)).rejects.toMatchObject({ status: 429 })

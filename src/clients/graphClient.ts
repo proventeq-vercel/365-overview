@@ -1,4 +1,4 @@
-import { ApiError, THROTTLED_STATUSES } from './apiError'
+import { ApiError } from './apiError'
 
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
@@ -8,6 +8,10 @@ export const BATCH_LIMIT = 20
 export const MAX_THROTTLE_RETRIES = 3
 export const DEFAULT_RETRY_AFTER_MS = 2_000
 export const MAX_RETRY_AFTER_MS = 60_000
+
+const THROTTLED_STATUSES = new Set([429, 503, 504])
+
+export const NETWORK_ERROR_CODE = 'NetworkError'
 
 export interface BatchResponse<T> {
   status: number
@@ -72,6 +76,8 @@ export function createGraphClient(
       const res = await fetchImpl(url, {
         ...init,
         headers: { ...init.headers, Authorization: `Bearer ${token}` },
+      }).catch((error: unknown) => {
+        throw new ApiError(0, error instanceof Error ? error.message : String(error), NETWORK_ERROR_CODE)
       })
       if (res.ok) return (await res.json()) as T
       if (!THROTTLED_STATUSES.has(res.status) || attempt >= MAX_THROTTLE_RETRIES) {

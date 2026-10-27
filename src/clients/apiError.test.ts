@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError, isConsentRequired, isForbidden, isUserNotAssigned, PROXY_CONSENT_CODE } from './apiError'
 
+describe('ApiError.isThrottled', () => {
+  it('counts only a 429 as Graph limiting the requests, not a 503 or 504 outage', () => {
+    expect([429, 503, 504, 500].map((status) => new ApiError(status, 'x').isThrottled)).toEqual([true, false, false, false])
+  })
+})
+
 describe('isUserNotAssigned', () => {
   it('recognises AADSTS50105 in the message or the MSAL error code', () => {
     expect(isUserNotAssigned(new Error('AADSTS50105: The signed in user is not assigned'))).toBe(true)

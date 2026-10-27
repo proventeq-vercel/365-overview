@@ -37,5 +37,5 @@ test('when no daily report comes back the growth panel charts the sites and OneD
   await page.goto('/?scenario=no-daily-reports')
   const chart = page.getByRole('img', { name: 'Sites & OneDrives by storage used' })
   await expect(chart.locator('.recharts-bar-rectangle')).toHaveCount(10)
-  await expect(page.getByText(/^Ranked by storage used on \d{4}-\d{2}-\d{2}\. Growth is measured from/)).toBeVisible()
+  await expect(page.getByText(/^Ranked by storage used on \d{4}-\d{2}-\d{2}\. Growth is measured from Microsoft's daily usage reports, and Microsoft limited the requests before any came back/)).toBeVisible()
 })

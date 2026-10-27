@@ -24,24 +24,30 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   different spans of the window.
 - A site or OneDrive with no activity in the window has no daily figure, so it is left out. So
   are those that shrank, stayed the same or were deleted.
-- If a daily report does not come back, the panel measures from the days that did. The window then
-  starts on the first day that came back, and the description says how many of the daily reports
-  the growth was measured from. If Microsoft starts limiting the requests, the panel stops asking
-  for more days and measures from the ones it already has, so it does not spend more of the
-  limit the rest of the report shares.
+- Each day has two daily reports, one for SharePoint and one for OneDrive, and each is read on its
+  own. If one does not come back, the panel measures from the ones that did. The window then
+  starts on the first day a report came back, and the description says how many of the daily
+  reports in the window came back.
+- If Microsoft starts limiting the requests for one of the two, the panel stops asking for that one
+  and measures from what it already has, so it does not spend more of the limit the rest of the
+  report shares. The other one is still read. If Microsoft refuses a report outright for four days
+  in a row, the panel stops asking for it too, and says so.
 - The panel always draws a chart, and its title says what it ranks:
   - **Sites & OneDrives that shrank the most**, by **Storage freed**, when none of the measured
     ones grew but some shrank.
   - **Sites & OneDrives by storage used**, by **Storage used** on the report date, when no daily
-    report came back, when the report date is not at least two days inside the days Microsoft
-    keeps, when no site or OneDrive in the report was active in the daily reports, when none of
-    them changed size, or when measuring did not finish. The description says which. It lists the
+    report came back (because Microsoft limited or refused the requests, or returned none), when
+    the report date is not at least two days inside the days Microsoft keeps, when no site or
+    OneDrive in the report was active in the reports that came back, when none of them changed
+    size, or when measuring did not finish. The description says which. It lists the
     ten largest sites and OneDrives together, so it repeats the two lists below it.
 - The chart loads after the rest of the report, with a placeholder while it does.
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
   not come back, or measuring did not finish, **Refresh data** reads every day of the window again
-  once the report itself reloads.
+  once the report itself reloads, and keeps the earlier result if the new one brings back fewer
+  reports. After Microsoft limited the requests it waits ten minutes first, and a report Microsoft
+  refused is not asked for again.
 
 ## Largest sites and OneDrives
 

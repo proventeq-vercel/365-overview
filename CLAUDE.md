@@ -124,26 +124,39 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   so one request per day; four days at a time, folded as they land) and takes
   each row's earliest appearance as its baseline
   (`model/storageGrowth.earliestRows`) under `['storageGrowth', date, nameMask]`
-  with `staleTime: Infinity`, `retry: false`; a day that fails with an
-  `ApiError` is skipped (the window starts on the first day read, `daysRead` /
-  `daysAsked` say how many, `someDaysMissing` is the model's flag for the note),
-  a throttled one (429/503/504, `ApiError.isThrottled`) also stops the loop
-  after its batch, and anything else fails the query; a failed name lookup
-  leaves the leaders unnamed rather than failing; on a masked tenant the dated
-  rows go through `hideRowNames` so their ids match the masked report rows;
-  Refresh data re-reads it only if a day was missing or it failed, and the
-  refresh itself brought the report back for that date, and its busy state ignores it (the daily reports change once a
-  day; each load spends ~25 of the 100 report requests Graph allows per 10
-  minutes per report API),
+  with `staleTime: Infinity`, `retry: false`. Each day's SharePoint and
+  OneDrive reports are read separately (their budgets are separate): one that
+  fails with an `ApiError` is skipped (the window starts on the first day a
+  report came back; `reportsRead` / `reportsInWindow` count reports, two a
+  day; `missingReports` says why some are missing and `missingNote` is the
+  model's note), a 429 (`ApiError.isThrottled`, 429 only) stops asking that
+  report after its batch (`throttled`), a batch of nothing but other 4xx stops
+  it too (`refused`), and anything else fails the query. `graphClient` wraps a
+  request that never reached Graph in `ApiError` status 0 (`NetworkError`),
+  so a network blip skips a report rather than looking like a bug. A failed
+  name lookup leaves the leaders unnamed; on a masked tenant the dated rows go
+  through `hideRowNames` so their ids match the masked report rows. A re-read
+  that brings back fewer reports keeps the earlier result.
+  `canReadGrowthAgain` is the one rule for Refresh data and access recovery:
+  never while fetching, always after a failure, never once complete or
+  `refused`, and not within `THROTTLE_COOLDOWN_MS` (10 minutes) of a
+  `throttled` read; Refresh data also needs the refresh itself to have brought
+  the report back for that date, and its busy state ignores growth (the daily
+  reports change once a day; each load spends ~25 of the 100 report requests
+  Graph allows per 10 minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
   — pure, table-tested. The panel always charts something, picked in the model
   (`rankLeaders` → `ranking`): `growth` when a measured row grew (title
   *Fastest-growing sites & OneDrives*), else `shrink` (storage freed) when one
   shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
-  `sizesOn`, zero-byte rows left out) with `sizeRankingReason` `reportDateTooOld`
-  (no day asked: a report date at or before today − 26), `noDailyReports` (days
-  asked, none read), `notMeasured`, `unchanged` or `growthFailed`. If the query
+  `sizesOn`, zero-byte rows left out). `explanation` names the description:
+  `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
+  window: a report date at or before today − 26), `throttled` / `refused` /
+  `noDailyReports` (no report read), `notMeasured`, `unchanged` or
+  `growthFailed`; the panel reads it as `offenders.explain.<explanation>` and
+  the note as `offenders.missing.<missingNote>`. The window runs from
+  `baselineDate` to `sizesOn`, the day of the sizes growth is measured to. If the query
   itself fails, the hook returns that size ranking built from the overview
   (`growthFailed`), also while Refresh data re-reads it, so there is no error
   panel; a skeleton shows only on the first load. A row with no
