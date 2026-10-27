@@ -72,7 +72,7 @@
   "settings.oneDriveEntitlementHint": "From licences: {estimate} {unit} — the most generous plan in the tenant (5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline). Enter a figure to replace it; clear it to go back to the estimate.",
   "settings.oneDriveEntitlementHintNoEstimate": "What each user licence includes: 5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline.",
   "settings.oneDriveEntitlementHintDriveLimit": "What each user licence includes: 5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline. Left empty, drives are measured against the commonest OneDrive limit.",
-  "settings.oneDriveEntitlementHintNoLimit": "What each user licence includes: 5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline. Left empty, the over-licence section is left out: neither the licences nor the OneDrives give a limit.",
+  "settings.oneDriveEntitlementHintNoLimit": "What each user licence includes: 5 TB on E3, E5, G3 and G5 with five or more licences, 1 TB on Business plans, 2 GB on frontline. Left empty, no OneDrive is measured against a limit: neither the licences nor the OneDrives give one.",
   "settings.oneDriveEntitlementPlaceholder": "From licences",
   "settings.oneDriveEntitlementPlaceholderDriveLimit": "Commonest OneDrive limit",
   "settings.oneDriveEntitlementPlaceholderNone": "Not set",

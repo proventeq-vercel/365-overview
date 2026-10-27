@@ -121,7 +121,7 @@ describe('SettingsDialog', () => {
   it('says an empty OneDrive storage per user leaves the section out when neither licences nor OneDrives give a limit', async () => {
     const drives = (await createMockDataSource().getDrives()).map((drive) => ({ ...drive, allocatedBytes: undefined }))
     renderDialog(undefined, true, 'no-licences', { getDrives: async () => drives })
-    expect(await screen.findByText(/Left empty, the over-licence section is left out/)).toBeInTheDocument()
+    expect(await screen.findByText(/Left empty, no OneDrive is measured against a limit: neither the licences nor the OneDrives give one\.$/)).toBeInTheDocument()
     expect(screen.getByLabelText('OneDrive storage per user')).toHaveAttribute('placeholder', 'Not set')
   })
 
