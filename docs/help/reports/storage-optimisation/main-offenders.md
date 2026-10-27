@@ -6,6 +6,10 @@ feature: optimization.storage.report.overview
 order: 40
 ---
 
+When the SharePoint site usage report or the OneDrive usage report does not come back, this
+section lists the pool whose report did, and *Deleted but still billing* is left out. Without
+both, the section is left out: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
+
 ## Fastest-growing sites & OneDrives
 
 The ten sites and OneDrives together that added the most storage over about the last four weeks,

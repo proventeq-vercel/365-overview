@@ -811,6 +811,8 @@ describe('buildStorageOverview growth and cost', () => {
   it('leaves OneDrive out, never 0 B used, when the OneDrive usage report did not come back and its trend holds no storage', () => {
     const overview = buildStorageOverview(inputs({ drives: [], oneDriveTrend: [], unreadReports: ['drives'] }))
     expect(overview.oneDrive.read).toBe(false)
+    const zeroDays = [{ date: '2026-08-30', value: 0 }]
+    expect(buildStorageOverview(inputs({ drives: [], oneDriveTrend: zeroDays, unreadReports: ['drives'] })).oneDrive.read).toBe(false)
     expect(overview.oneDrive.unreadReports).toEqual(['drives'])
     expect(overview.sharePoint.unreadReports).toEqual([])
   })
@@ -826,6 +828,20 @@ describe('buildStorageOverview growth and cost', () => {
     expect(archive.applies).toBe(false)
     expect(archive.savingApplies).toBe(false)
     expect(buildStorageOverview(unknownEntitlement()).archive.savingApplies).toBe(true)
+  })
+
+  it('dates the report by the latest trend day that holds storage, skipping a day reported as 0', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sharePointTrend: [
+          { date: '2026-08-29', value: 150 * GB },
+          { date: '2026-08-30', value: 0 },
+        ],
+        oneDriveTrend: [],
+        reportRefreshDate: '',
+      }),
+    )
+    expect(overview.reportRefreshDate).toBe('2026-08-29')
   })
 
   it('dates the report by the latest trend day when the site report gives no date', () => {

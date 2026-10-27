@@ -6,7 +6,7 @@ import { useDataSource } from '../data/useDataSource'
 import { nameTopSites } from '../data/namedSites'
 import { namesAreConcealed } from '../lib/concealment'
 import { withSiteDirectory } from '../reports/siteDirectory'
-import { buildStorageOverview } from '../model/storageOverview'
+import { buildStorageOverview, holdsStorage } from '../model/storageOverview'
 import type { ReportSettings } from '../lib/settings'
 import type { SiteDirectory } from '../reports/siteDirectory'
 import { CORE_REPORTS, type CoreReport, type StorageOverview, type StorageRow } from '../types/storage'
@@ -63,23 +63,26 @@ export async function readStorageInputs(ds: DataSource, onScreen?: StorageInputs
   const core = [rawSites, drives, sharePointTrend, oneDriveTrend]
   const refusal = refusalOf([...core, directory, skus, oneDriveLicences, reportRefreshDate])
   if (refusal !== undefined) throw refusal
-  if (core.every((result) => result.status === 'rejected')) throw (rawSites as PromiseRejectedResult).reason
+  const unreadReports = CORE_REPORTS.filter((_, i) => core[i].status === 'rejected')
+  if (onScreen !== undefined && unreadReports.some((report) => !onScreen.unreadReports.includes(report))) {
+    return onScreen
+  }
+  const rowsRead = rawSites.status === 'fulfilled' || drives.status === 'fulfilled'
+  const trendsHoldStorage = [sharePointTrend, oneDriveTrend].some(
+    (trend) => trend.status === 'fulfilled' && holdsStorage(trend.value),
+  )
+  const firstFailure = core.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+  if (firstFailure !== undefined && !rowsRead && !trendsHoldStorage) throw firstFailure.reason
 
-  const keptFromScreen = (report: CoreReport, result: PromiseSettledResult<unknown>) =>
-    result.status === 'rejected' && onScreen !== undefined && !onScreen.unreadReports.includes(report)
-  const kept = new Set(CORE_REPORTS.filter((report, i) => keptFromScreen(report, core[i])))
-  const unreadReports = CORE_REPORTS.filter((report, i) => core[i].status === 'rejected' && !kept.has(report))
-
-  const driveRows = kept.has('drives') ? onScreen!.drives : valueOr(drives, [])
-  const sites = kept.has('sites') ? onScreen!.sites : await namedSites(ds, valueOr(rawSites, []), driveRows, directory)
+  const driveRows = valueOr(drives, [])
   return {
-    sites,
+    sites: await namedSites(ds, valueOr(rawSites, []), driveRows, directory),
     drives: driveRows,
-    sharePointTrend: kept.has('sharePointTrend') ? onScreen!.sharePointTrend : valueOr(sharePointTrend, []),
-    oneDriveTrend: kept.has('oneDriveTrend') ? onScreen!.oneDriveTrend : valueOr(oneDriveTrend, []),
+    sharePointTrend: valueOr(sharePointTrend, []),
+    oneDriveTrend: valueOr(oneDriveTrend, []),
     skus: valueOr(skus, null),
     oneDriveLicences: valueOr(oneDriveLicences, null),
-    reportRefreshDate: valueOr(reportRefreshDate, kept.has('sites') ? onScreen!.reportRefreshDate : ''),
+    reportRefreshDate: valueOr(reportRefreshDate, ''),
     unreadReports,
   }
 }
@@ -92,10 +95,7 @@ async function namedSites(
 ): Promise<StorageRow[]> {
   if (namesAreConcealed([...siteRows, ...driveRows])) return siteRows
   const directoryNamed = withSiteDirectory(siteRows, valueOr<SiteDirectory>(directory, new Map()))
-  return nameTopSites(ds, directoryNamed).catch((error: unknown) => {
-    if (isAccessFailure(error)) throw error
-    return directoryNamed
-  })
+  return nameTopSites(ds, directoryNamed).catch(() => directoryNamed)
 }
 
 function useRevalidateOnRecovery(error: unknown, recovered: boolean) {

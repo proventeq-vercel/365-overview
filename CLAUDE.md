@@ -123,14 +123,17 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
   **Each report loads on its own** (`readStorageInputs`): every read is settled
   separately, and a failed core report (site usage, OneDrive usage, either
-  storage trend) or the report date is read once more and then left out, listed
+  storage trend) or the report date is read once more (not after a throttled
+  status, which the client already waited out) and then left out, listed
   in `caveats.unreadReports`. The model leaves out only the figures that need it
   (`sharePoint.siteReportRead` / `oneDrive.accountReportRead` / `trendRead`, a
   pool with neither report → `read` false) and `components/UnreadReports` names
   it with a Refresh data button. The hook returns an `error` (→ `AccessFailure`)
   only for an access refusal on any read, or when all four core reports failed;
-  a failed refresh keeps the page on screen, and a report a refresh fails to
-  bring back keeps its earlier value (`readStorageInputs(ds, onScreen)`).
+  a failed refresh keeps the page on screen, and so does a refresh that fails
+  to bring back a report on screen (`readStorageInputs(ds, onScreen)` returns
+  `onScreen` whole, so no figure mixes two loads). With neither usage report
+  read and no trend holding storage, the page is the failure screen.
   A pool counts as read only when its usage report came back or its trend
   holds storage, so an empty trend never shows as 0 B. Growth waits for
   `offenders.read` and keys on the two usage reports' read flags.

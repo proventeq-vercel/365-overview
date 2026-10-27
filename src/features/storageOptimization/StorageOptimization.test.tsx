@@ -275,6 +275,9 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText(/^Microsoft's SharePoint site usage report did not come back this time/)).toBeInTheDocument()
     expect(screen.getByText(/Data as of 2026-08-31\./)).toBeInTheDocument()
     expect(screen.getByText('Where storage sits today, from the Microsoft reports that came back')).toBeInTheDocument()
+    expect(screen.getByText('The OneDrives driving the most storage')).toBeInTheDocument()
+    expect(screen.getByText('All OneDrives')).toBeInTheDocument()
+    expect(screen.getByText('Every OneDrive in the OneDrive usage report, sortable and searchable')).toBeInTheDocument()
     expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(screen.getByText('Forecast exhaustion')).toBeInTheDocument()
     expect(screen.queryByText('Storage by site template')).not.toBeInTheDocument()
@@ -292,6 +295,9 @@ describe('Storage Optimisation app', () => {
     renderApp('no-onedrive-report')
     await reportLoaded()
     expect(screen.getByText(/^Microsoft's OneDrive usage report did not come back this time/)).toBeInTheDocument()
+    expect(screen.getByText('The sites driving the most storage')).toBeInTheDocument()
+    expect(screen.getByText('All sites')).toBeInTheDocument()
+    expect(screen.getByText('Every site in the SharePoint site usage report, sortable and searchable')).toBeInTheDocument()
     expect(screen.queryByText('Top OneDrives by storage')).not.toBeInTheDocument()
     expect(screen.queryByText('Drives near their quota')).not.toBeInTheDocument()
     expect(screen.getByText('Live sites')).toBeInTheDocument()
@@ -311,6 +317,11 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
     expect(screen.getByText('Storage usage')).toBeInTheDocument()
     expect(screen.getByText(/OneDrive is a separate pool\. Hover or select/)).toBeInTheDocument()
+
+    cleanup()
+    renderApp('no-licences', { getDrives: down, getOneDriveTrend: down })
+    await reportLoaded()
+    expect(screen.getByText('Every SharePoint workload on one line. OneDrive is a separate pool. Hover or select a part for details.')).toBeInTheDocument()
   })
 
   it('lists no offenders and reads no daily report when neither usage report comes back', async () => {

@@ -99,22 +99,28 @@ to see the headroom and when it runs out.
 ## A Microsoft report did not come back
 
 The report reads four Microsoft 365 usage reports: the SharePoint site usage report, the OneDrive
-usage report and the SharePoint and OneDrive storage trends. When one of them does not answer, even
-after the report asks a second time, the page still loads from the others. A note at the top names
-the report that did not come back, and the figures drawn from it are left out:
+usage report and the SharePoint and OneDrive storage trends. When one of them does not answer,
+the page still loads from the others. The report asks for a failed one a second time, unless
+Microsoft said it was busy, which the report has already waited out. A note at the top names the
+report that did not come back, and the figures drawn from it are left out:
 
 - Without the **SharePoint site usage report**, the per-site figures are left out: inactive sites,
-  the saving, the template chart, the top sites, the line after clean-up and the Teams, Deleted
-  and Inactive parts of the storage usage line. Storage used and the forecast come from the
-  storage trend.
-- Without the **OneDrive usage report**, the per-OneDrive figures are left out, and the OneDrive
-  storage comes from its storage trend.
+  the saving, the template chart, *Live sites*, the top sites, the line after clean-up and the
+  Teams, Deleted and Inactive parts of the storage usage line. Storage used and the forecast come
+  from the storage trend.
+- Without the **OneDrive usage report**, the per-OneDrive figures are left out: the OneDrive cards
+  other than the storage, *Drives near their quota*, the top OneDrives, the over-licence and
+  inactive sections and the table of OneDrives. The OneDrive storage comes from its storage trend.
+- Without either usage report, *Deleted but still billing* is left out, since it adds the two.
+  Without both, *Main offenders* is left out.
 - Without a **storage trend**, storage used is the total of the matching usage report, and there
   is no forecast until the trend comes back.
+- When a pool's usage report is missing and its storage trend holds no storage, that pool is left
+  out as a whole.
 
-**Refresh data** in the note asks for the missing report again. If a refresh brings a report
-back no better, the report keeps what it already showed. The report stops with an error only when
-none of the four answers, or when Microsoft refuses access (see the sections above).
+**Refresh data** in the note asks for the missing report again. If a refresh fails to bring back
+a report that is on screen, the page stays as it was. The report stops with an error only when
+nothing usable comes back, or when Microsoft refuses access (see the sections above).
 
 ## The data looks a few days old
 

@@ -30,18 +30,25 @@ export function OffendersSection({ overview, growth, delay }: Props) {
   const { rows, poolUsedBytes, topSites, topDrives, retained } = overview.offenders
   const { siteReportRead } = overview.sharePoint
   const { accountReportRead } = overview.oneDrive
+  const both = siteReportRead && accountReportRead
 
   return (
     <Section
       delay={delay}
       title={t('storageOptimisation.offenders.title')}
-      subtitle={t('storageOptimisation.offenders.subtitle')}
+      subtitle={
+        both
+          ? t('storageOptimisation.offenders.subtitle')
+          : siteReportRead
+            ? t('storageOptimisation.offenders.subtitleSites')
+            : t('storageOptimisation.offenders.subtitleDrives')
+      }
       help={<HelpButton topic="mainOffenders" />}
     >
       <NameCaveats caveats={overview.caveats} />
       <FastestGrowingPanel growth={growth} nameMask={overview.caveats.nameMask} />
 
-      <SplitGrid className={siteReportRead && accountReportRead ? 'lg:grid-cols-2' : ''}>
+      <SplitGrid className={both ? 'lg:grid-cols-2' : ''}>
         {siteReportRead && (
         <Panel>
           <PanelLabel>{t('storageOptimisation.offenders.topSites')}</PanelLabel>
@@ -77,8 +84,20 @@ export function OffendersSection({ overview, growth, delay }: Props) {
       )}
 
       <Panel>
-        <PanelLabel>{t('storageOptimisation.offenders.all')}</PanelLabel>
-        <PanelDescription>{t('storageOptimisation.offenders.allSubtitle')}</PanelDescription>
+        <PanelLabel>
+          {both
+            ? t('storageOptimisation.offenders.all')
+            : siteReportRead
+              ? t('storageOptimisation.offenders.allSites')
+              : t('storageOptimisation.offenders.allDrives')}
+        </PanelLabel>
+        <PanelDescription>
+          {both
+            ? t('storageOptimisation.offenders.allSubtitle')
+            : siteReportRead
+              ? t('storageOptimisation.offenders.allSitesSubtitle')
+              : t('storageOptimisation.offenders.allDrivesSubtitle')}
+        </PanelDescription>
         <SiteTable
           rows={rows}
           poolUsedBytes={poolUsedBytes}

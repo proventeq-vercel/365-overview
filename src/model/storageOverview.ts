@@ -92,13 +92,15 @@ const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
 const latestDay = (...trends: UsagePoint[][]): string =>
   trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
 
+export const holdsStorage = (trend: UsagePoint[]) => trend.some((point) => point.value > 0)
+
+const daysHoldingStorage = (trend: UsagePoint[]) => trend.filter((point) => point.value > 0)
+
 export const reportDateOf = (
   reportRefreshDate: string,
   sharePointTrend: UsagePoint[],
   oneDriveTrend: UsagePoint[],
-): string => reportRefreshDate || latestDay(sharePointTrend, oneDriveTrend)
-
-const holdsStorage = (trend: UsagePoint[]) => trend.some((point) => point.value > 0)
+): string => reportRefreshDate || latestDay(daysHoldingStorage(sharePointTrend), daysHoldingStorage(oneDriveTrend))
 
 function reportedDays(trend: UsagePoint[], rows: StorageRow[]): UsagePoint[] {
   const days = trendWithoutGaps(trend)
