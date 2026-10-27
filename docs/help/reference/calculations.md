@@ -56,7 +56,9 @@ shows the storage used.
 When the median and the start-to-end average disagree by more than half, the series is
 **uneven**, and the report says the projection is only indicative. This applies to the monthly
 rate; a daily rate is always labelled indicative. A day reported as zero while other days have
-storage is a gap in the report and is left out of the daily rate.
+storage is a gap in the report: it is left out everywhere, so it never reads as storage falling to
+zero (the storage used, the chart, the rate and the window all skip it). When a storage trend lists
+no day at all, the storage used is the total of the matching usage report's rows.
 
 ## Forecast
 

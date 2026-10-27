@@ -58,11 +58,10 @@ export function daysSpanned(daily: UsagePoint[]): number {
   return Math.max(...days) - Math.min(...days)
 }
 
-const withoutGaps = (daily: UsagePoint[]): UsagePoint[] =>
+export const trendWithoutGaps = (daily: UsagePoint[]): UsagePoint[] =>
   daily.some((point) => point.value > 0) ? daily.filter((point) => point.value > 0) : daily
 
-export function dailyRateBytesPerMonth(series: UsagePoint[]): number {
-  const daily = withoutGaps(series)
+export function dailyRateBytesPerMonth(daily: UsagePoint[]): number {
   if (daily.length < 2) return 0
   const days = dayOffsets(daily)
   const meanDay = days.reduce((total, day) => total + day, 0) / days.length

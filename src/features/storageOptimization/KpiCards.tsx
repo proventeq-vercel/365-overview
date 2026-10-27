@@ -1,6 +1,6 @@
 import { formatBytes, formatLongMonthYear, formatNumber, formatPercent } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
-import { dailyRateNote, forecastCard } from './forecastCopy'
+import { costHint, forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
@@ -69,9 +69,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
         label={t('storageOptimisation.kpi.costOfNothing')}
         value={formatMoney(cost.growthAnnual, cost.currency)}
         color={HEALTH_COLOR[cost.growthAnnualStatus]}
-        information={[t('storageOptimisation.kpi.costOfNothingHint', { rate }), dailyRateNote(overview, t)]
-          .filter((part) => part !== null)
-          .join(' ')}
+        information={costHint(overview, rate, t)}
       />
     ),
     !sharePoint.exhausted && (

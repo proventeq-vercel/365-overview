@@ -36,6 +36,7 @@ import {
   growthRateBytesPerMonth,
   growthRateSourceFor,
   isSeriesVolatile,
+  trendWithoutGaps,
   monthlyBuckets,
   monthsToExhaustion,
   staysUnder,
@@ -149,8 +150,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const {
     sites: reportedSites,
     drives: reportedDrives,
-    sharePointTrend,
-    oneDriveTrend,
+    sharePointTrend: reportedSharePointTrend,
+    oneDriveTrend: reportedOneDriveTrend,
     skus,
     reportRefreshDate,
     ratePerGb,
@@ -163,6 +164,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     forceUnknownEntitlement = false,
     namesHidden = false,
   } = inputs
+
+  const sharePointTrend = trendWithoutGaps(reportedSharePointTrend)
+  const oneDriveTrend = trendWithoutGaps(reportedOneDriveTrend)
 
   const nameMask = nameMaskOf([...reportedSites, ...reportedDrives], namesHidden)
   const sites = nameMask === null ? reportedSites : reportedSites.map(hideRowNames)
@@ -271,6 +275,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     oneDrive: {
       usedBytes: oneDriveUsed,
+      usedFromAccountReport: oneDriveTrend.length === 0,
       drives,
       driveCount: liveDrives.length,
       drivesNearCap: liveDrives.filter(

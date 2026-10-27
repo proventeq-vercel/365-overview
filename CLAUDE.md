@@ -54,9 +54,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
   and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (seven mock
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (eight mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -324,12 +324,22 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `daily` (fewer: the least-squares slope of the daily trend,
   `lib/forecast.dailyRateBytesPerMonth`, labelled with `windowDays`) or
   `none` (a single reported day: no rate, status `Unknown`, no forecast
-  months, the cards and callout show the storage used).
+  months, the cards and callout show the storage used under a *Latest* pill;
+  *Avg growth / mo*, *Added last …*, *Forecast (6 mo)* and the cost figures
+  are left out, `cost.applies` false). An exceeded entitlement wins over all
+  of this in the copy: *Entitlement already exceeded*, Critical. Zero-valued
+  days are gaps in the report: `lib/forecast.trendWithoutGaps` drops them from
+  both trends before anything reads them (used, buckets, rate, window).
 - SharePoint and OneDrive are two pools. Never put a OneDrive-inclusive numerator
   over a SharePoint-only denominator.
 - Growth is measured from the trend report, never reconstructed from site rows.
   Under six months of history it is measured from the trend's daily points,
   and the copy names the days ("Forecast from the last N days of storage").
+  The one exception is the storage *used* when a trend lists no day at all:
+  it is the total of that pool's usage-report rows (`sharePoint.usedFromSiteReport`,
+  `oneDrive.usedFromAccountReport`), drawn as a single point with no rate, and
+  the copy names the report. A shrinking
+  rate reads "changing by -X a month", never "growing".
 - **Nothing on the page says "unavailable", "unknown", "not enough history" or
   "could not be read" (owner's decision, 2026-10-27).** The only can't-load
   screen is the whole-app failure. A chart or card whose primary data is
@@ -385,22 +395,24 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   shows *Potential saving per year* only when archiving can save money: by the
   rule above, storage inside the entitlement is free, so the saving prices
   `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
-  them while the entitlement is unknown). *Inactive sites to archive* always
-  shows. The grid's `xl` column count follows the number of cards.
+  them while the entitlement is unknown). `cost.applies` (a growth rate
+  exists, `rateSource !== 'none'`) shows *Cost of doing nothing* and the
+  projected-cost block. *Inactive sites to archive* always shows. The grid's
+  `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
   for each licensed user"). Six parts in this order: SharePoint · Teams ·
   Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
   Teams site counts once, as inactive); Deleted holds deleted **sites** only;
-  the SharePoint part is the trend total less Teams, Inactive and deleted
-  sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
+  the SharePoint part is the trend total (the site rows' total when the trend
+  lists no day) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
   part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
   storage in live drives against the sum of their own allocations, both from
   the account rows; `allocation` is `null` (unknown, never partial) when any
   live drive reports none. The Share column divides each row by its own pool
-  (`offenders.poolUsedBytes`, the two trend totals) and shows *Unknown* for a
-  pool total of 0.
+  (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
+  a trend lists no day) and shows *Unknown* for a pool total of 0.
   **Versions is always `null`**: the usage reports count version history inside
   each site's storage and never split it out, so it is shown *Not measured*,
   never as a size or a guess. Workload colours are
@@ -448,7 +460,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`) for the other tenants. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage page has no unavailable / unknown wording. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

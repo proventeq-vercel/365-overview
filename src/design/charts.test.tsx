@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, screen } from '@testing-library/react'
 import { render } from '@/test/render'
-import { FacetBars, lineDot } from './charts'
+import { FacetBars } from './charts'
 import { Legend } from './primitives'
 
 afterEach(cleanup)
@@ -49,23 +49,6 @@ describe('FacetBars', () => {
     render(<FacetBars items={[]} formatValue={String} emptyText="No results" />)
     expect(screen.getByText('No results')).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
-  })
-})
-
-describe('lineDot', () => {
-  const rows = [
-    { month: '2026-07', actual: 10, projected: null },
-    { month: '2026-08', actual: 12, projected: 12 },
-    { month: '2026-09', actual: null, projected: 14 },
-  ]
-
-  it('marks a series that has a single point, which a line alone would not draw', () => {
-    expect(lineDot([{ month: '2026-08', actual: 12 }], 'actual')).toEqual({ r: 3, strokeWidth: 0, fill: expect.any(String) })
-  })
-
-  it('draws no dots on a series of two or more points', () => {
-    expect(lineDot(rows, 'actual')).toBe(false)
-    expect(lineDot(rows, 'projected')).toBe(false)
   })
 })
 

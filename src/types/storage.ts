@@ -145,6 +145,7 @@ export interface StorageOverview {
 
   oneDrive: {
     usedBytes: number
+    usedFromAccountReport: boolean
     drives: StorageRow[]
     driveCount: number
     drivesNearCap: number

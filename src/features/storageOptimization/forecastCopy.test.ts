@@ -221,6 +221,23 @@ describe('buildCallout', () => {
     expect(callout.pill).toBe(LABEL_TONES.red)
   })
 
+  it('says an exceeded entitlement is measured from the site report total when the trend lists no day', () => {
+    const exhaustedNoTrend: StorageOverview = {
+      ...firstDay,
+      sharePoint: {
+        ...firstDay.sharePoint,
+        usedFromSiteReport: true,
+        exhausted: true,
+        remainingBytes: 0,
+        overageBytes: 100 * 1_073_741_824,
+      },
+      growth: { ...firstDay.growth, forecastStatus: 'Critical', forecastMonthsToExhaustion: 0 },
+    }
+    const callout = buildCallout(exhaustedNoTrend, t)
+    expect(callout.headline).toBe('Entitlement already exceeded')
+    expect(callout.note).toMatch(/so this is the total of its site usage report/)
+  })
+
   it('keeps the daily note off a callout that forecasts nothing', () => {
     const exhaustedDaily: StorageOverview = {
       ...dailyRate,

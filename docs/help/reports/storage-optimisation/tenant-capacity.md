@@ -17,6 +17,7 @@ Only the cards that apply to your tenant are shown:
 | Within the entitlement | Inactive sites to archive · Cost of doing nothing · Forecast exhaustion |
 | At or over the entitlement | Inactive sites to archive · Potential saving per year · Cost of doing nothing |
 | Against an unknown entitlement | All four, with *SharePoint growth per month* in place of *Forecast exhaustion* |
+| With a single reported day of storage | Inactive sites to archive · *SharePoint storage used* in place of the forecast, plus Potential saving per year against an unknown entitlement. *Cost of doing nothing* is left out: there is no growth rate to price yet. An exceeded entitlement shows its usual cards without the forecast. |
 
 - **Potential saving per year** appears only once you are over the entitlement. Below it, storage
   you archive was already paid for by your licences, so archiving saves nothing.
@@ -95,6 +96,6 @@ Two cases show a different card in the same place, in navy:
 | Card | Because |
 | --- | --- |
 | **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description gives the storage used and where to enter the entitlement. |
-| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. |
+| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day at all, the value is the total of the site usage report, and the description says so. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

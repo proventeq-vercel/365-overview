@@ -13,6 +13,7 @@ import {
   growthRateSourceFor,
   isSeriesVolatile,
   monthlyBuckets,
+  trendWithoutGaps,
   monthsToExhaustion,
   staysUnder,
 } from './forecast'
@@ -202,16 +203,6 @@ describe('dailyRateBytesPerMonth', () => {
     expect(dailyRateBytesPerMonth(points)).toBeCloseTo(-426.125, 9)
   })
 
-  it('leaves out a zero-valued day, a gap in the report, when other days have storage', () => {
-    const points = daily([
-      ['2026-08-01', 1000],
-      ['2026-08-02', 1010],
-      ['2026-08-03', 0],
-      ['2026-08-04', 1030],
-    ])
-    expect(dailyRateBytesPerMonth(points)).toBeCloseTo(304.375, 9)
-  })
-
   it('fits through a noisy day rather than taking the endpoints', () => {
     const points = daily([
       ['2026-08-01', 1000],
@@ -232,6 +223,22 @@ describe('dailyRateBytesPerMonth', () => {
   it('is zero with fewer than two days', () => {
     expect(dailyRateBytesPerMonth(daily([['2026-08-01', 1000]]))).toBe(0)
     expect(dailyRateBytesPerMonth([])).toBe(0)
+  })
+})
+
+describe('trendWithoutGaps', () => {
+  it('leaves out zero-valued days, gaps in the report, when other days have storage', () => {
+    const points = daily([
+      ['2026-08-01', 1000],
+      ['2026-08-02', 0],
+      ['2026-08-03', 1020],
+    ])
+    expect(trendWithoutGaps(points)).toEqual(daily([['2026-08-01', 1000], ['2026-08-03', 1020]]))
+  })
+
+  it('keeps an all-zero series, an empty tenant, as it is', () => {
+    const points = daily([['2026-08-01', 0], ['2026-08-02', 0]])
+    expect(trendWithoutGaps(points)).toEqual(points)
   })
 })
 

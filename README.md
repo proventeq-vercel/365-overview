@@ -149,7 +149,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of seven fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of eight fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -162,6 +162,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
 | `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so the *Forecast after clean-up* line is the forecast itself |
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
+| `first-day` | A single reported day of storage — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -402,7 +403,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
 | `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |
@@ -458,7 +459,7 @@ any licence in the tenant includes per user — 5 TB where the tenant has five o
 licences (SharePoint or OneDrive Plan 2), 1 TB on Business plans, 2 GB on frontline. Microsoft
 does not report which licence each user holds, so the most generous plan present sets the line
 and only drives no licence could cover are listed; with the licences unreadable, or none of them
-carrying a known OneDrive allowance (education, developer and add-on plans), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
+carrying a known OneDrive allowance (education, developer and add-on plans), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*, and leaves that figure out when it is not known.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
 picked from a list), the SharePoint entitlement in TB and the OneDrive storage per user in GB —

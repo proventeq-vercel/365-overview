@@ -644,6 +644,42 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.points.map((point) => [point.month, point.actualUsedBytes])).toEqual([['2026-08', 35 * GB]])
   })
 
+  it('has no rate, not a zero one, when the only other day in the trend is a zero-valued gap', () => {
+    const overview = buildStorageOverview(
+      inputs({ sharePointTrend: [{ date: '2026-08-29', value: 0 }, { date: '2026-08-30', value: 150 * GB }] }),
+    )
+    expect(overview.growth.rateSource).toBe('none')
+    expect(overview.cost.applies).toBe(false)
+    expect(overview.sharePoint.usedBytes).toBe(150 * GB)
+  })
+
+  it('takes the used storage and the window from the reported days, skipping zero-valued gaps at either end', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sharePointTrend: [
+          { date: '2026-07-01', value: 0 },
+          { date: '2026-08-20', value: 100 * GB },
+          { date: '2026-08-29', value: 109 * GB },
+          { date: '2026-08-30', value: 0 },
+        ],
+      }),
+    )
+    expect(overview.sharePoint.usedBytes).toBe(109 * GB)
+    expect(overview.growth.windowDays).toBe(9)
+    expect(overview.growth.addedInWindowBytes).toBe(9 * GB)
+    expect(overview.growth.points[0].actualUsedBytes).toBe(109 * GB)
+  })
+
+  it('places the one point at the current month when the site report gives no report date', () => {
+    const overview = buildStorageOverview(inputs({ sharePointTrend: [], reportRefreshDate: '' }))
+    expect(overview.growth.points.map((point) => point.month)).toEqual(['2026-09'])
+  })
+
+  it('says OneDrive storage came from the account rows only when its trend lists no day', () => {
+    expect(buildStorageOverview(inputs({ oneDriveTrend: [] })).oneDrive.usedFromAccountReport).toBe(true)
+    expect(buildStorageOverview(inputs()).oneDrive.usedFromAccountReport).toBe(false)
+  })
+
   it('reads the storage used from the trend, not the rows, whenever the trend has a day', () => {
     const overview = buildStorageOverview(inputs())
     expect(overview.sharePoint.usedBytes).toBe(150 * GB)

@@ -201,6 +201,14 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.breakdown.segments.map((segment) => segment.key)).not.toContain('free')
   })
 
+  it('first-day: one reported day, so the storage used and no rate, no forecast and no cost', async () => {
+    const overview = await overviewFor('first-day')
+    expect(overview.growth.rateSource).toBe('none')
+    expect(overview.growth.points).toHaveLength(1)
+    expect(overview.cost.applies).toBe(false)
+    expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
+  })
+
   it('only the concealed tenant conceals names', async () => {
     for (const scenario of ['healthy', 'over-entitlement', 'short-history'] as const) {
       const overview = await overviewFor(scenario)

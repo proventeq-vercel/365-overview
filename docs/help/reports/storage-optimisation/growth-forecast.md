@@ -30,10 +30,10 @@ Under the chart:
 | Live sites | SharePoint sites that are not deleted. |
 | Drives near their quota | OneDrives at 90% or more of their own storage quota, the per-drive limit in the usage report. An admin can set it above or below the licence. |
 ::: feature optimization.storage.report.onedrive
-| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). |
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user ([OneDrives over licence](../onedrive-usage/over-licence.md)). Left out when that storage per user is not known. |
 :::
 ::: unless-feature optimization.storage.report.onedrive
-| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user. |
+| Drives over their licence | OneDrives holding more than the storage their licence includes, the OneDrive storage per user. Left out when that storage per user is not known. |
 :::
 
 ## Growth impact
@@ -46,7 +46,7 @@ A status badge and a headline about the entitlement:
 | **At risk** | Under 36 months of headroom. |
 | **Healthy** | 36 months or more, or storage is not growing. |
 | **Projection** | No entitlement: the headline gives where SharePoint storage is in six months. |
-| **Today** | Microsoft 365 has reported a single day of storage: the headline gives the storage used. |
+| **Latest** | Microsoft 365 has reported a single day of storage: the headline gives the storage used. An exceeded entitlement still shows **Critical**. |
 
 The callout under the badge explains the headline. There are four special cases:
 
@@ -58,8 +58,10 @@ The callout under the badge explains the headline. There are four special cases:
 - **No entitlement.** *SharePoint storage reaches … in 6 months*: the forecast of used storage,
   with no exhaustion date. Enter the entitlement in
   [Report settings](../../reference/settings.md#sharepoint-entitlement) to see when it runs out.
-- **A single reported day.** The storage in use today. The forecast starts from the second day
-  Microsoft 365 reports.
+- **A single reported day.** The storage in use on that day. The forecast starts from the second
+  day Microsoft 365 reports. When Microsoft's storage trend lists no day at all, the figure is the
+  total of the site usage report, and the note says so. An exceeded entitlement always shows as
+  *Entitlement already exceeded*, however much history there is.
 
 **Used today**, **Forecast (6 mo)** and **Over entitlement today** show where storage is now, where the
 forecast ends, and how far past the entitlement the tenant already is. **Over entitlement today**

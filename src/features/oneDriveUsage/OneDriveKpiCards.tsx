@@ -8,6 +8,7 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
   const {
     usedBytes,
+    usedFromAccountReport,
     driveCount,
     drivesNearCap,
     deletedButBilling,
@@ -22,7 +23,7 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
         label={t('oneDrive.kpi.used')}
         value={formatBytes(usedBytes)}
         color={P365.navy}
-        information={t('oneDrive.kpi.usedHint')}
+        information={usedFromAccountReport ? t('oneDrive.kpi.usedFromAccountsHint') : t('oneDrive.kpi.usedHint')}
       />
       <StatCard
         label={t('oneDrive.kpi.drives')}

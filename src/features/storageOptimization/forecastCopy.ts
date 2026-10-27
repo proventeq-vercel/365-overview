@@ -22,7 +22,7 @@ function rateWindow(overview: StorageOverview, t: TranslateFn): string {
     : t('storageOptimisation.growth.window.days', { days: growth.windowDays })
 }
 
-export function dailyRateNote(overview: StorageOverview, t: TranslateFn): string | null {
+function dailyRateNote(overview: StorageOverview, t: TranslateFn): string | null {
   return overview.growth.rateSource === 'daily'
     ? t('storageOptimisation.growth.dailyRateNote', { window: rateWindow(overview, t) })
     : null
@@ -35,6 +35,10 @@ function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
 }
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
+
+export function costHint(overview: StorageOverview, rate: string, t: TranslateFn): string {
+  return joined(t('storageOptimisation.kpi.costOfNothingHint', { rate }), dailyRateNote(overview, t))
+}
 
 export interface ForecastCard {
   label: string
@@ -122,7 +126,11 @@ function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, st
   const date = exhaustionLabel(overview)
 
   if (sharePoint.exhausted) {
-    return [t('storageOptimisation.growth.alreadyExhausted'), t('storageOptimisation.growth.alreadyExhaustedNote'), null]
+    return [
+      t('storageOptimisation.growth.alreadyExhausted'),
+      t('storageOptimisation.growth.alreadyExhaustedNote'),
+      sharePoint.usedFromSiteReport ? t('storageOptimisation.growth.noTrendNote') : null,
+    ]
   }
   if (growth.rateSource === 'none') {
     return [
