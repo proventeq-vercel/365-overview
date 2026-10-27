@@ -10,24 +10,14 @@ interface Props {
 
 export function CleanUpForecast({ overview }: Props) {
   const t = useTranslation()
-  const { afterCleanUp } = overview.growth
+  const { afterCleanUp, rateSource } = overview.growth
   const { inactiveYears } = overview.archive
-  const reason = afterCleanUp.unavailableReason
-
-  const staysUnder =
-    afterCleanUp.staysUnderEntitlement === null
-      ? t('storageOptimisation.kpi.unknown')
-      : afterCleanUp.staysUnderEntitlement
-        ? t('storageOptimisation.growth.cleanUp.yes')
-        : t('storageOptimisation.growth.cleanUp.no')
 
   const hint =
-    reason === 'nothingRemovable'
-      ? t('storageOptimisation.growth.cleanUp.nothingRemovable', { years: inactiveYears })
-      : reason === 'historyTooShort'
-        ? t('storageOptimisation.growth.cleanUp.historyTooShort', {
-            removable: formatBytes(afterCleanUp.removableBytes),
-          })
+    rateSource === 'none'
+      ? t('storageOptimisation.growth.cleanUp.firstDay', { removable: formatBytes(afterCleanUp.removableBytes) })
+      : afterCleanUp.removableBytes === 0
+        ? t('storageOptimisation.growth.cleanUp.nothingRemovable', { years: inactiveYears })
         : t('storageOptimisation.growth.cleanUp.counted', {
             inactive: formatBytes(afterCleanUp.inactiveBytes),
             deleted: formatBytes(afterCleanUp.deletedBytes),
@@ -42,18 +32,21 @@ export function CleanUpForecast({ overview }: Props) {
           label={t('storageOptimisation.growth.cleanUp.removable')}
           value={formatBytes(afterCleanUp.removableBytes)}
         />
-        {reason !== 'nothingRemovable' && (
-          <>
-            <KvRow
-              label={t('storageOptimisation.growth.cleanUp.end', { months: FORECAST_CHART_MONTHS })}
-              value={
-                afterCleanUp.endBytes === null
-                  ? t('storageOptimisation.kpi.unknown')
-                  : formatBytes(afterCleanUp.endBytes)
-              }
-            />
-            <KvRow label={t('storageOptimisation.growth.cleanUp.staysUnder')} value={staysUnder} />
-          </>
+        {afterCleanUp.endBytes !== null && (
+          <KvRow
+            label={t('storageOptimisation.growth.cleanUp.end', { months: FORECAST_CHART_MONTHS })}
+            value={formatBytes(afterCleanUp.endBytes)}
+          />
+        )}
+        {afterCleanUp.staysUnderEntitlement !== null && (
+          <KvRow
+            label={t('storageOptimisation.growth.cleanUp.staysUnder')}
+            value={
+              afterCleanUp.staysUnderEntitlement
+                ? t('storageOptimisation.growth.cleanUp.yes')
+                : t('storageOptimisation.growth.cleanUp.no')
+            }
+          />
         )}
       </dl>
       <PanelDescription>{hint}</PanelDescription>

@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { GrowthSection } from './GrowthSection'
-import { base, shortHistory, unknownEntitlement } from './testFixtures'
+import { base, firstDay, unknownEntitlement } from './testFixtures'
 
 vi.mock('@/design/charts', () => ({
   MonoLineChart: ({
@@ -49,28 +49,22 @@ describe('GrowthSection trend chart', () => {
     ])
   })
 
-  it('draws no after-clean-up line when nothing is removable', () => {
+  it('still draws the after-clean-up line when nothing is removable, on the forecast itself', () => {
     const nothing = {
       ...base,
       growth: {
         ...base.growth,
-        afterCleanUp: {
-          ...base.growth.afterCleanUp,
-          inactiveBytes: 0,
-          removableBytes: 0,
-          endBytes: null,
-          staysUnderEntitlement: null,
-          unavailableReason: 'nothingRemovable' as const,
-        },
+        afterCleanUp: { ...base.growth.afterCleanUp, inactiveBytes: 0, removableBytes: 0, endBytes: 560 * 1_073_741_824 },
       },
     }
     render(<GrowthSection overview={nothing} />)
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
-    expect(screen.queryByText(/Forecast after clean-up:/)).not.toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
   })
 
-  it('draws no after-clean-up line when the history is too short to forecast', () => {
-    render(<GrowthSection overview={shortHistory} />)
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  it('draws only the measured line when a single day has been reported', () => {
+    render(<GrowthSection overview={firstDay} />)
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Actual used:actualUsedBytes:solid',
+    ])
   })
 })

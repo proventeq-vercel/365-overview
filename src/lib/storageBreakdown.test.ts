@@ -24,6 +24,18 @@ describe('storageBreakdown', () => {
     expect(breakdown.totalBytes).toBe(1000)
   })
 
+  it('leaves the free part out, never an unknown one, when the entitlement is unknown', () => {
+    const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100, freeBytes: null })
+    expect(breakdown.segments.map((segment) => segment.key)).toEqual([
+      'sharePoint',
+      'teams',
+      'deleted',
+      'inactive',
+      'versions',
+    ])
+    expect(breakdown.totalBytes).toBe(100)
+  })
+
   it('never measures versions', () => {
     const breakdown = storageBreakdown({ ...empty, sharePointUsedBytes: 100 })
     expect(breakdown.segments.find((segment) => segment.key === 'versions')).toEqual({

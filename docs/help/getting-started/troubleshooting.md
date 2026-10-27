@@ -86,9 +86,14 @@ The figures are still correct. Hover over or click a blurred name to see why:
 
 ## Figures show as Unknown
 
-The report could not read your licences, usually because `Organization.Read.All` was not
-granted. Or none of your licences has a storage allowance the report knows. Enter the SharePoint
-entitlement and the OneDrive storage per user in [Report settings](../reference/settings.md).
+The OneDrive figures measured against the storage each user is licensed for show as **Unknown**
+when the report could not read your licences, usually because `Organization.Read.All` was not
+granted, or when none of your licences has a OneDrive allowance the report knows. Enter the
+OneDrive storage per user in [Report settings](../reference/settings.md).
+
+The SharePoint figures never show as Unknown: without the entitlement the report shows the
+monthly growth and the storage in use instead. Enter the SharePoint entitlement in Report settings
+to see the headroom and when it runs out.
 
 ## The data looks a few days old
 

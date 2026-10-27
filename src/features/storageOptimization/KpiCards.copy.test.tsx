@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { KpiCards } from './KpiCards'
-import { base, overEntitlement, shortHistory, unknownEntitlement } from './testFixtures'
+import { base, dailyRate, firstDay, overEntitlement, unknownEntitlement } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
 
 afterEach(cleanup)
@@ -13,6 +13,8 @@ const ARCHIVE = 'Inactive sites to archive'
 const SAVING = 'Potential saving per year'
 const COST = 'Cost of doing nothing, next 12 months'
 const FORECAST = 'Forecast exhaustion'
+const GROWTH = 'SharePoint growth per month'
+const USED = 'SharePoint storage used'
 
 const nothingToArchive: StorageOverview = {
   ...unknownEntitlement,
@@ -97,11 +99,18 @@ describe('KpiCards', () => {
     expect(card(COST)).toHaveTextContent('£0.02/GB per month')
   })
 
-  it('does not present a forecast when history is too short, and says that is no all-clear', () => {
-    render(<KpiCards overview={shortHistory} />)
-    expect(card(FORECAST)).toHaveTextContent(/not enough history/i)
-    expect(card(FORECAST)).toHaveTextContent('A forecast needs 6 months of measured storage history.')
-    expect(card(FORECAST)).toHaveTextContent('not an all-clear')
+  it('forecasts from the daily series on a short history, and says over how many days', () => {
+    render(<KpiCards overview={dailyRate} />)
+    expect(card(FORECAST)).toHaveTextContent('January 2030')
+    expect(card(FORECAST)).toHaveTextContent('Forecast from the last 40 days of storage')
+    expect(card(COST)).toHaveTextContent('Forecast from the last 40 days of storage')
+  })
+
+  it('shows the storage used, with no forecast, when only one day has been reported', () => {
+    render(<KpiCards overview={firstDay} />)
+    expect(labels()).toEqual([ARCHIVE, USED])
+    expect(card(USED)).toHaveTextContent('500 GB')
+    expect(card(USED)).toHaveTextContent('The forecast starts from the second day it reports.')
   })
 
   it('explains the exhaustion month by the entitlement, the growth rate and the headroom left', () => {
@@ -140,10 +149,11 @@ describe('KpiCards', () => {
     expect(card(FORECAST)).toHaveTextContent('has not grown over the last 5 months')
   })
 
-  it('says the forecast needs the entitlement, and where to enter it, when it is unknown', () => {
+  it('shows the monthly growth in place of a runway, and where to enter the entitlement, when it is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card(FORECAST)).toHaveTextContent('Unknown')
-    expect(card(FORECAST)).toHaveTextContent('Enter it in Report settings')
+    expect(card(GROWTH)).toHaveTextContent('+10 GB')
+    expect(card(GROWTH)).not.toHaveTextContent(/unknown/i)
+    expect(card(GROWTH)).toHaveTextContent('Enter the tenant entitlement in Options, Report settings')
   })
 
   it('leaves the saving out while storage is within the entitlement, where archiving saves nothing', () => {
@@ -158,7 +168,7 @@ describe('KpiCards', () => {
 
   it('shows all four cards when the entitlement is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(labels()).toEqual([ARCHIVE, SAVING, COST, FORECAST])
+    expect(labels()).toEqual([ARCHIVE, SAVING, COST, GROWTH])
   })
 
   it('fills the row with however many cards it shows', () => {

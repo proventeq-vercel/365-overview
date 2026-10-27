@@ -37,8 +37,9 @@ The tenant's pooled SharePoint storage, in TB. By default it is
 that estimate as a hint. To replace it, enter the tenant's total storage from the **SharePoint
 admin centre**. Clear the field to go back to the estimate.
 
-With no estimate and no figure entered, everything measured against the entitlement shows as
-**Unknown**: the free part of the storage usage line, the forecast and the headroom. Nothing is filled in with a guess.
+With no estimate and no figure entered, nothing is measured against a guessed entitlement: the
+storage usage line has no free part, the forecast projects used storage with no exhaustion date,
+and the *Forecast exhaustion* card becomes *SharePoint growth per month*.
 
 ## OneDrive storage per user
 

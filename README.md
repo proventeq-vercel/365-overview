@@ -30,14 +30,16 @@ Each site also serves `/help` — the help centre for every report and for enabl
 |---|---|
 | **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
 | **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover; live OneDrive storage as its own pool against the drives' own allocations; and SharePoint split by site template |
-| **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth, the projected exhaustion date and the cost of doing nothing |
+| **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth (from the daily figures under six months of history), the projected exhaustion date, or the projected storage without an entitlement, and the cost of doing nothing |
 | **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
 **Tenant capacity** sits straight under the report title with no section heading, as up to four
 cards, each railed green, orange or red by its state. Within the entitlement the saving card is
 left out (archiving storage your licences already cover saves nothing); once the entitlement is
 exceeded the forecast card is left out (there is no date left to forecast); with an unknown
-entitlement all four show:
+entitlement all four show, the forecast card becoming **SharePoint growth per month** (navy, the
+monthly growth with no runway). From a single reported day of storage there is no rate: the
+forecast card becomes **SharePoint storage used** and the cost card is left out:
 
 | Card | Value | Green · orange · red |
 |---|---|---|
@@ -147,7 +149,7 @@ e2e. See `.env.example`.
 
 ### Mock scenario — `VITE_MOCK_SCENARIO`
 
-Mock mode serves one of six fixture tenants so every caveat state can be seen and demoed
+Mock mode serves one of eight fixture tenants so every caveat state can be seen and demoed
 without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised value falls back to
 `healthy`.
 
@@ -156,9 +158,11 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `healthy` (default) | Estimated entitlement, steady growth, ~2,500 sites |
 | `over-entitlement` | Already using more than the estimated entitlement — no exhaustion date to project |
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
-| `short-history` | Fewer than six months of trend data — no forecast, explicitly not an all-clear |
+| `short-history` | Fewer than six months of trend data — the forecast comes from the daily series and names its window |
 | `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
-| `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so no *Forecast after clean-up* line |
+| `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so the *Forecast after clean-up* line is the forecast itself |
+| `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
+| `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 
 ### Feature flags — `VITE_FEATURES`
 
@@ -399,7 +403,7 @@ browser tab with a search param:
 |---|---|---|
 | `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
-| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` | `/?mock=true&scenario=concealed` |
+| `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
 | `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |
@@ -455,7 +459,7 @@ any licence in the tenant includes per user — 5 TB where the tenant has five o
 licences (SharePoint or OneDrive Plan 2), 1 TB on Business plans, 2 GB on frontline. Microsoft
 does not report which licence each user holds, so the most generous plan present sets the line
 and only drives no licence could cover are listed; with the licences unreadable, or none of them
-carrying a known OneDrive allowance (education, developer and add-on plans), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*.
+carrying a known OneDrive allowance (education, developer and add-on plans), the figure is *Unknown*, never a guessed 1 TB. The storage report shows the same count as *Drives over licence*, and leaves that figure out when it is not known.
 
 **Report settings** opens a dialog with the cost per GB per month (with the currency
 picked from a list), the SharePoint entitlement in TB and the OneDrive storage per user in GB —

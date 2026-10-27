@@ -1,6 +1,5 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type {
-  CleanUpUnavailable,
   OneDrivePool,
   OverEntitlement,
   Slice,
@@ -29,12 +28,15 @@ import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
   FORECAST_CHART_MONTHS,
-  FORECAST_WINDOW_MONTHS,
   buildGrowthPoints,
+  dailyRateBytesPerMonth,
+  daysSpanned,
   exhaustionDateFor,
   forecastStatusFor,
   growthRateBytesPerMonth,
+  growthRateSourceFor,
   isSeriesVolatile,
+  trendWithoutGaps,
   monthlyBuckets,
   monthsToExhaustion,
   staysUnder,
@@ -78,6 +80,14 @@ const latest = (series: UsagePoint[]): number =>
 
 const sumBytes = (rows: StorageRow[]): number =>
   rows.reduce((total, row) => total + row.storageUsedBytes, 0)
+
+const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
+  trend.length === 0 ? sumBytes(rows) : latest(trend)
+
+function reportedDays(trend: UsagePoint[], rows: StorageRow[]): UsagePoint[] {
+  const days = trendWithoutGaps(trend)
+  return days.every((point) => point.value === 0) && sumBytes(rows) > 0 ? [] : days
+}
 
 const retainedTotal = (rows: StorageRow[]) => {
   const deleted = rows.filter((row) => row.isDeleted)
@@ -145,8 +155,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const {
     sites: reportedSites,
     drives: reportedDrives,
-    sharePointTrend,
-    oneDriveTrend,
+    sharePointTrend: reportedSharePointTrend,
+    oneDriveTrend: reportedOneDriveTrend,
     skus,
     reportRefreshDate,
     ratePerGb,
@@ -160,6 +170,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     namesHidden = false,
   } = inputs
 
+  const sharePointTrend = reportedDays(reportedSharePointTrend, reportedSites)
+  const oneDriveTrend = reportedDays(reportedOneDriveTrend, reportedDrives)
+
   const nameMask = nameMaskOf([...reportedSites, ...reportedDrives], namesHidden)
   const sites = nameMask === null ? reportedSites : reportedSites.map(hideRowNames)
   const drives = nameMask === null ? reportedDrives : reportedDrives.map(hideRowNames)
@@ -172,8 +185,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
 
-  const sharePointUsed = latest(sharePointTrend)
-  const oneDriveUsed = latest(oneDriveTrend)
+  const sharePointUsed = usedFrom(sharePointTrend, sites)
+  const oneDriveUsed = usedFrom(oneDriveTrend, drives)
 
   const remainingBytes = entitledBytes === null ? null : Math.max(0, entitledBytes - sharePointUsed)
   const usedPercentage = entitledBytes === null ? null : sharePointUsed / entitledBytes
@@ -189,12 +202,25 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
   const rows = [...sites, ...drives]
 
-  const buckets = monthlyBuckets(sharePointTrend)
-  const rate = growthRateBytesPerMonth(buckets)
-  const historyTooShort = buckets.length < FORECAST_WINDOW_MONTHS
+  const buckets = monthlyBuckets(
+    sharePointTrend.length > 0
+      ? sharePointTrend
+      : [{ date: reportRefreshDate || now.toISOString().slice(0, 10), value: sharePointUsed }],
+  )
+  const rateSource = growthRateSourceFor(buckets, sharePointTrend)
+  const rate =
+    rateSource === 'monthly'
+      ? growthRateBytesPerMonth(buckets)
+      : rateSource === 'daily'
+        ? dailyRateBytesPerMonth(sharePointTrend)
+        : 0
+  const addedInWindowBytes =
+    rateSource === 'monthly'
+      ? (buckets.at(-1)?.bytes ?? 0) - (buckets[0]?.bytes ?? 0)
+      : (sharePointTrend.at(-1)?.value ?? 0) - (sharePointTrend[0]?.value ?? 0)
   const runway = exhausted
     ? 0
-    : historyTooShort
+    : rateSource === 'none'
       ? null
       : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
 
@@ -215,13 +241,11 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const deletedDrives = retainedTotal(drives)
 
   const removableBytes = archivableBytes + deletedSites.bytes
-  const cleanUpUnavailable: CleanUpUnavailable | null =
-    removableBytes <= 0 ? 'nothingRemovable' : historyTooShort ? 'historyTooShort' : null
   const points = buildGrowthPoints(
     buckets,
     rate,
-    FORECAST_CHART_MONTHS,
-    cleanUpUnavailable === null ? removableBytes : null,
+    rateSource === 'none' ? 0 : FORECAST_CHART_MONTHS,
+    removableBytes,
   )
 
   const growthGb = annualGrowthGb(rate)
@@ -233,6 +257,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     sharePoint: {
       usedBytes: sharePointUsed,
+      usedFromSiteReport: sharePointTrend.length === 0,
       entitledBytes,
       remainingBytes,
       usedPercentage,
@@ -255,6 +280,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     oneDrive: {
       usedBytes: oneDriveUsed,
+      usedFromAccountReport: oneDriveTrend.length === 0,
       drives,
       driveCount: liveDrives.length,
       drivesNearCap: liveDrives.filter(
@@ -302,13 +328,15 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
     growth: {
       avgMonthlyGrowthBytes: rate,
-      addedInWindowBytes: (buckets.at(-1)?.bytes ?? 0) - (buckets[0]?.bytes ?? 0),
+      addedInWindowBytes,
       windowMonths: Math.max(0, buckets.length - 1),
-      seriesIsVolatile: isSeriesVolatile(buckets),
+      windowDays: daysSpanned(sharePointTrend),
+      rateSource,
+      seriesIsVolatile: rateSource === 'monthly' && isSeriesVolatile(buckets),
       points,
       forecastStatus: exhausted
         ? 'Critical'
-        : forecastStatusFor(runway, historyTooShort, entitledBytes !== null),
+        : forecastStatusFor(runway, rateSource, entitledBytes !== null),
       forecastExhaustionDate: exhausted ? null : exhaustionDateFor(runway, now),
       forecastMonthsToExhaustion: runway,
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
@@ -316,15 +344,14 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         inactiveBytes: archivableBytes,
         deletedBytes: deletedSites.bytes,
         removableBytes,
-        endBytes: points.at(-1)?.afterCleanUpBytes ?? null,
+        endBytes: rateSource === 'none' ? null : (points.at(-1)?.afterCleanUpBytes ?? null),
         staysUnderEntitlement:
-          cleanUpUnavailable === null
-            ? staysUnder(
+          rateSource === 'none'
+            ? null
+            : staysUnder(
                 points.map((point) => point.afterCleanUpBytes),
                 entitledBytes,
-              )
-            : null,
-        unavailableReason: cleanUpUnavailable,
+              ),
       },
     },
 
@@ -341,6 +368,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     },
 
     cost: {
+      applies: rateSource !== 'none',
       ratePerGb,
       currency,
       growthAnnual,
@@ -355,7 +383,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     caveats: {
       entitlementIsEstimated: entitledBytes !== null && !entitlementIsMeasured,
       nameMask,
-      historyTooShort,
     },
   }
 }

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
 import type { StorageOverview } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
-import { base, overEntitlement, unknownEntitlement } from './testFixtures'
+import { base, firstDay, overEntitlement, unknownEntitlement } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -135,11 +135,15 @@ describe('DistributionSection', () => {
     )
   })
 
-  it('marks the free part unknown, not zero, and says where to enter the entitlement', async () => {
+  it('leaves the free part out, never Unknown, and says where to enter the entitlement', async () => {
     render(<DistributionSection overview={{ ...unknownEntitlement, sharePoint: { ...unknownEntitlement.sharePoint, byTemplate: [] } }} />)
-    expect(part('Free')).toHaveTextContent(/^FreeUnknown$/)
-    expect(screen.getByText('500 GB of SharePoint storage used. The entitlement is unknown.')).toBeInTheDocument()
-    expect(screen.getAllByText(/Enter it under Options, Report settings/)).not.toHaveLength(0)
+    expect(parts().map((button) => button.textContent)).not.toContainEqual(expect.stringMatching(/^Free/))
+    expect(screen.getByText('500 GB of SharePoint storage in use')).toBeInTheDocument()
+    expect(screen.queryByText(/ending in what is left of your SharePoint entitlement/)).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Enter the tenant entitlement in Options, Report settings to see how much of it is left.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument()
   })
 
   it('says how far over the entitlement a tenant is, with nothing left free', async () => {
@@ -162,6 +166,11 @@ describe('DistributionSection', () => {
     }
     render(<DistributionSection overview={measured} />)
     expect(screen.queryByText(/estimated from licence counts/i)).not.toBeInTheDocument()
+  })
+
+  it('calls only the headroom approximate under the line when nothing on the page is priced', () => {
+    render(<DistributionSection overview={firstDay} />)
+    expect(screen.getByText(/estimated from licence counts/)).toHaveTextContent(/so the headroom is approximate\.$/)
   })
 
   it('says the template grouping will not match the admin centre', () => {

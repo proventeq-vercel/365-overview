@@ -16,7 +16,8 @@ Only the cards that apply to your tenant are shown:
 | --- | --- |
 | Within the entitlement | Inactive sites to archive · Cost of doing nothing · Forecast exhaustion |
 | At or over the entitlement | Inactive sites to archive · Potential saving per year · Cost of doing nothing |
-| Against an unknown entitlement | All four |
+| Against an unknown entitlement | All four, with *SharePoint growth per month* in place of *Forecast exhaustion* |
+| With a single reported day of storage | Inactive sites to archive · *SharePoint storage used* in place of the forecast, plus Potential saving per year against an unknown entitlement. *Cost of doing nothing* is left out: there is no growth rate to price yet. An exceeded entitlement shows Inactive sites to archive and Potential saving per year. |
 
 - **Potential saving per year** appears only once you are over the entitlement. Below it, storage
   you archive was already paid for by your licences, so archiving saves nothing.
@@ -29,7 +30,7 @@ Only the cards that apply to your tenant are shown:
 | Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
 | Potential saving per year | follows *Inactive sites to archive* | | | — |
 | Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
-| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | Unknown: no entitlement, or under six months of history |
+| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | — |
 
 ## Inactive sites to archive
 
@@ -64,8 +65,9 @@ entitlement**, at the configured rate. It is **zero while growth stays within th
 - If the tenant is already over its entitlement, all of the year's growth is priced.
 - If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced.
 
-The growth rate is the typical month-to-month growth from the storage trend
-([how](../../reference/calculations.md#growth-rate)). The card turns red once the next 12 months'
+The growth rate is the typical month-to-month growth from the storage trend, or the daily rate
+under six months of history ([how](../../reference/calculations.md#growth-rate)). The card is left
+out when Microsoft 365 has reported a single day of storage: there is no growth to price yet. The card turns red once the next 12 months'
 billable growth is more than a tenth of the entitlement. That rule does not depend on the rate,
 so changing the currency or price does not change the colour, except a price of 0, which leaves
 nothing to pay and turns the card green. With an unknown entitlement there is nothing to compare
@@ -85,7 +87,15 @@ The description gives the entitlement, the monthly growth and the headroom left.
 | A month, for example *March 2028* | The headroom runs out then at the current rate. |
 | **Beyond 10 years** | The headroom outlasts the ten-year horizon. |
 | **No growth detected** | Storage has not grown over the measured months. |
-| **Not enough history** (grey) | Fewer than six months of storage history. This is not an all-clear. |
-| **Unknown** (grey) | The entitlement is unknown. Enter it in Report settings. |
+
+With under six months of storage history, the month comes from the daily storage reported so
+far, and the description says how many days it was measured over.
+
+Two cases show a different card in the same place, in navy:
+
+| Card | Because |
+| --- | --- |
+| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description gives the storage used and where to enter the entitlement. |
+| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day with storage, the value is the total of the site usage report, and the description says so. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

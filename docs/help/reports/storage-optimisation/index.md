@@ -25,8 +25,9 @@ from today's position to the actions that would change it:
 
 - **Data as of** under the title is the day Microsoft's usage report was produced. Microsoft
   publishes it two to three days behind.
-- **Colours carry a state.** Green means healthy. Orange means watch it. Red means act. Grey
-  means the figure is unknown. Each card's page says what moves it between them.
+- **Colours carry a state.** Green means healthy. Orange means watch it. Red means act. Navy
+  marks a card that shows a measured figure without grading it, for example the monthly growth
+  when the entitlement is unknown. Each card's page says what moves it between them.
 - **SharePoint and OneDrive are two pools.** The SharePoint entitlement is shared by the whole
   tenant. Each OneDrive has its own per-user allowance. The report never mixes the two in one
   percentage.
@@ -38,6 +39,10 @@ from today's position to the actions that would change it:
 
 - **Your storage quota was estimated from licence counts.** The entitlement is
   [worked out from your licences](../../reference/calculations.md#sharepoint-entitlement), so
-  headroom and cost figures are approximate. Enter the real figure from the SharePoint admin
-  centre in Report settings to remove the note.
+  headroom and cost figures are approximate (only the headroom, when nothing on the page is
+  priced yet). Enter the real figure from the SharePoint admin centre in Report settings to
+  remove the note.
+- **Forecast from the last N days of storage.** There are fewer than six monthly storage
+  figures, so the growth rate comes from the daily figures reported so far
+  ([how](../../reference/calculations.md#growth-rate)). Treat the forecast as indicative.
 - **Concealed or hidden names.** See [Site names](../../reference/site-names.md).

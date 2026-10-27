@@ -12,6 +12,8 @@ export type MockScenario =
   | 'short-history'
   | 'onedrive-over-licence'
   | 'nothing-to-clean'
+  | 'no-licences'
+  | 'first-day'
 
 export interface DataSource {
   readonly namesHidden: boolean
@@ -243,7 +245,7 @@ function scenarioData(scenario: MockScenario): ScenarioData {
   const drives = generateDrives(400, concealed, scenario === 'onedrive-over-licence')
   const sharePointCurve =
     scenario === 'over-entitlement' ? OVER_ENTITLEMENT_CURVE : HEALTHY_SHAREPOINT_CURVE
-  const months = scenario === 'short-history' ? 2 : 6
+  const months = scenario === 'first-day' ? 1 : scenario === 'short-history' ? 2 : 6
 
   return {
     sites,
@@ -318,7 +320,7 @@ export function createMockDataSource(
     getDrivesOn: async (date) => activeEarlier(data.drives, date),
     getSharePointTrend: async () => data.sharePointTrend,
     getOneDriveTrend: async () => data.oneDriveTrend,
-    getLicenses: async () => licenses,
+    getLicenses: async () => (scenario === 'no-licences' ? null : licenses),
     getOneDriveLicences: async () => oneDriveLicencesFor(data.drives),
     getOrg: async () => org,
     getReportRefreshDate: async () => MOCK_REFRESH_DATE,

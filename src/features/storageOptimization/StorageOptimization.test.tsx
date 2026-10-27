@@ -180,9 +180,9 @@ describe('Storage Optimisation app', () => {
     })
   })
 
-  it('refuses a forecast on the short-history tenant', async () => {
+  it('forecasts the short-history tenant from its daily storage', async () => {
     renderApp('short-history')
-    expect((await screen.findAllByText(/not an all-clear/i)).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText(/Forecast from the last 31 days of storage/)).length).toBeGreaterThan(0)
   })
 
   it('recalculates against an admin override and clears the estimate caveat', SETTINGS_ROUND_TRIP, async () => {

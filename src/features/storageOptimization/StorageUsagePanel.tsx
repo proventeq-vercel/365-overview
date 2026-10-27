@@ -1,5 +1,6 @@
 import { formatBytes, formatLongMonthYear, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
+import { estimatedQuotaNote } from './forecastCopy'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
 import { SegmentedBar, type BarSegment } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
@@ -27,7 +28,6 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
         date: formatLongMonthYear(archive.inactiveSince),
       })
     case 'free':
-      if (sharePoint.entitledBytes === null) return t('storageOptimisation.usage.describe.freeUnknown')
       if (sharePoint.exhausted && sharePoint.overageBytes !== null) {
         return t('storageOptimisation.usage.describe.freeOver', {
           entitled,
@@ -41,12 +41,7 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
 }
 
 function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: TranslateFn): BarSegment {
-  const value =
-    segment.bytes !== null
-      ? formatBytes(segment.bytes)
-      : segment.key === 'versions'
-        ? t('storageOptimisation.usage.notMeasured')
-        : t('storageOptimisation.kpi.unknown')
+  const value = segment.bytes === null ? t('storageOptimisation.usage.notMeasured') : formatBytes(segment.bytes)
   return {
     id: segment.key,
     label: t(`storageOptimisation.usage.segment.${segment.key}`),
@@ -68,7 +63,7 @@ function Headline({ overview }: { overview: StorageOverview }) {
   if (sharePoint.entitledBytes === null || sharePoint.usedPercentage === null) {
     return (
       <p className="text-sm text-p365-grey-700">
-        {t('storageOptimisation.usage.headlineUnknown', { used: formatBytes(sharePoint.usedBytes) })}
+        {t('storageOptimisation.usage.headlineNoEntitlement', { used: formatBytes(sharePoint.usedBytes) })}
       </p>
     )
   }
@@ -92,12 +87,17 @@ function Headline({ overview }: { overview: StorageOverview }) {
 
 export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
-  const { sharePoint, breakdown, caveats } = overview
+  const { sharePoint, breakdown } = overview
+  const quotaNote = estimatedQuotaNote(overview, t)
 
   return (
     <Panel>
       <PanelLabel>{t('storageOptimisation.usage.title')}</PanelLabel>
-      <PanelDescription>{t('storageOptimisation.usage.subtitle')}</PanelDescription>
+      <PanelDescription>
+        {sharePoint.entitledBytes === null
+          ? t('storageOptimisation.usage.subtitleNoEntitlement')
+          : t('storageOptimisation.usage.subtitle')}
+      </PanelDescription>
       <Headline overview={overview} />
       <SegmentedBar
         className="mt-1"
@@ -105,11 +105,9 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
         segments={breakdown.segments.map((segment) => toBarSegment(segment, overview, t))}
       />
       {sharePoint.entitledBytes === null && (
-        <PanelDescription>{t('storageOptimisation.usage.describe.freeUnknown')}</PanelDescription>
+        <PanelDescription>{t('storageOptimisation.usage.enterEntitlement')}</PanelDescription>
       )}
-      {caveats.entitlementIsEstimated && sharePoint.entitledBytes !== null && (
-        <PanelDescription>{t('storageOptimisation.growth.estimatedQuotaNote')}</PanelDescription>
-      )}
+      {quotaNote !== null && <PanelDescription>{quotaNote}</PanelDescription>}
       <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
     </Panel>
   )

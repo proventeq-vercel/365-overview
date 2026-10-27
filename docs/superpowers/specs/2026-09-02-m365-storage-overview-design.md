@@ -5,6 +5,12 @@
 **Branch:** `feat/m365-storage-overview` (off `feat/sharepoint-scale`, which is unmerged and is a hard dependency — see [Dependency on `feat/sharepoint-scale`](#dependency-on-featsharepoint-scale))
 **ADO:** Feature 96763 — "Storage optimisation marketing app" (org `proventeq`, project `CS`, area `CS\PCSCore\New Development`)
 
+> **Superseded in part (2026-10-27).** The report no longer refuses a forecast or shows
+> *unavailable* / *Unknown* states for SharePoint growth: under six months of history it forecasts
+> from the daily storage, and without an entitlement it projects used storage. `historyTooShort`
+> and `forecastIndeterminateNote` below are history. The current rule is in the repo `CLAUDE.md`
+> ("Nothing on the page says unavailable").
+
 ---
 
 ## Why

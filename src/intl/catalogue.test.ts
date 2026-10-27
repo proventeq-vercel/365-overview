@@ -8,14 +8,14 @@ const SOURCES = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
 })
 const KEY_USE = /(?:\bt\(|titleKey: |label: |help: )'([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g
 const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
-  'storageOptimisation.growth.risk.': 4,
+  'storageOptimisation.growth.risk.': 3,
   'pagination.jump.': 4,
   'table.pool.': 2,
   'loading.': 18,
   'help.audience.': 2,
   'storageOptimisation.usage.segment.': 6,
-  'storageOptimisation.usage.describe.': 8,
-  'admin.source.': 7,
+  'storageOptimisation.usage.describe.': 7,
+  'admin.source.': 9,
 }
 const DYNAMIC_PREFIXES = Object.keys(DYNAMIC_PREFIX_SIZES)
 

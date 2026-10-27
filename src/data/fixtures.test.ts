@@ -79,6 +79,7 @@ describe('mock data source', () => {
     'short-history',
     'onedrive-over-licence',
     'nothing-to-clean',
+    'no-licences',
   ] as const)(
     '%s: each pool trend ends at the sum of its own rows',
     async (scenario) => {
@@ -123,8 +124,8 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.caveats).toEqual({
       entitlementIsEstimated: true,
       nameMask: null,
-      historyTooShort: false,
     })
+    expect(overview.growth.rateSource).toBe('monthly')
     expect(overview.growth.forecastStatus).not.toBe('Unknown')
     expect(overview.sharePoint.remainingBytes).toBeGreaterThan(0)
   })
@@ -164,32 +165,48 @@ describe('mock scenarios reach every caveat state', () => {
     expect(hidden.sharePoint.usedBytes).toBe(shown.sharePoint.usedBytes)
   })
 
-  it('short-history: no forecast at all', async () => {
+  it('short-history: forecast from the daily series, still graded', async () => {
     const overview = await overviewFor('short-history')
-    expect(overview.caveats.historyTooShort).toBe(true)
-    expect(overview.growth.windowMonths).toBeLessThan(6)
-    expect(overview.growth.forecastStatus).toBe('Unknown')
-    expect(overview.growth.forecastExhaustionDate).toBeNull()
+    expect(overview.growth.rateSource).toBe('daily')
+    expect(overview.growth.windowDays).toBe(31)
+    expect(overview.growth.forecastStatus).not.toBe('Unknown')
+    expect(overview.growth.avgMonthlyGrowthBytes).toBeGreaterThan(0)
   })
 
   it('healthy: inactive and deleted sites to clean up, so an after-clean-up forecast', async () => {
     const { afterCleanUp } = (await overviewFor('healthy')).growth
     expect(afterCleanUp.inactiveBytes).toBeGreaterThan(0)
     expect(afterCleanUp.deletedBytes).toBeGreaterThan(0)
-    expect(afterCleanUp.unavailableReason).toBeNull()
+    expect(afterCleanUp.endBytes).toBeLessThan((await overviewFor('healthy')).growth.forecastEndBytes)
   })
 
-  it('short-history: something to clean up, but no after-clean-up forecast', async () => {
+  it('short-history: something to clean up, with an after-clean-up forecast from the daily series', async () => {
     const { afterCleanUp } = (await overviewFor('short-history')).growth
     expect(afterCleanUp.removableBytes).toBeGreaterThan(0)
-    expect(afterCleanUp.unavailableReason).toBe('historyTooShort')
+    expect(afterCleanUp.endBytes).not.toBeNull()
   })
 
-  it('nothing-to-clean: no inactive or deleted site, so no after-clean-up line', async () => {
+  it('nothing-to-clean: no inactive or deleted site, so the after-clean-up line is the forecast', async () => {
     const overview = await overviewFor('nothing-to-clean')
     expect(overview.growth.afterCleanUp.removableBytes).toBe(0)
-    expect(overview.growth.afterCleanUp.unavailableReason).toBe('nothingRemovable')
+    expect(overview.growth.afterCleanUp.endBytes).toBe(overview.growth.forecastEndBytes)
     expect(overview.growth.forecastStatus).not.toBe('Unknown')
+  })
+
+  it('no-licences: no entitlement, so a projection of used storage and no free part', async () => {
+    const overview = await overviewFor('no-licences')
+    expect(overview.sharePoint.entitledBytes).toBeNull()
+    expect(overview.growth.rateSource).toBe('monthly')
+    expect(overview.growth.forecastEndBytes).toBeGreaterThan(overview.sharePoint.usedBytes)
+    expect(overview.breakdown.segments.map((segment) => segment.key)).not.toContain('free')
+  })
+
+  it('first-day: one reported day, so the storage used and no rate, no forecast and no cost', async () => {
+    const overview = await overviewFor('first-day')
+    expect(overview.growth.rateSource).toBe('none')
+    expect(overview.growth.points).toHaveLength(1)
+    expect(overview.cost.applies).toBe(false)
+    expect(overview.sharePoint.usedBytes).toBeGreaterThan(0)
   })
 
   it('only the concealed tenant conceals names', async () => {
