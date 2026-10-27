@@ -39,9 +39,10 @@ from today's position to the actions that would change it:
 
 - **Your storage quota was estimated from licence counts.** The entitlement is
   [worked out from your licences](../../reference/calculations.md#sharepoint-entitlement), so
-  headroom and cost figures are approximate. Enter the real figure from the SharePoint admin
-  centre in Report settings to remove the note.
-- **Forecast from the last N days of daily storage.** There are fewer than six monthly storage
+  headroom and cost figures are approximate (only the headroom, when nothing on the page is
+  priced yet). Enter the real figure from the SharePoint admin centre in Report settings to
+  remove the note.
+- **Forecast from the last N days of storage.** There are fewer than six monthly storage
   figures, so the growth rate comes from the daily figures reported so far
   ([how](../../reference/calculations.md#growth-rate)). Treat the forecast as indicative.
 - **Concealed or hidden names.** See [Site names](../../reference/site-names.md).

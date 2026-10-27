@@ -338,7 +338,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - Growth is measured from the trend report, never reconstructed from site rows.
   Under six months of history it is measured from the trend's daily points,
   and the copy names the days ("Forecast from the last N days of storage").
-  The one exception is the storage *used* when a trend lists no day at all:
+  The one exception is the storage *used* when a trend lists no day with storage:
   it is the total of that pool's usage-report rows (`sharePoint.usedFromSiteReport`,
   `oneDrive.usedFromAccountReport`), drawn as a single point with no rate, and
   the copy names the report. A shrinking
@@ -409,13 +409,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
   Teams site counts once, as inactive); Deleted holds deleted **sites** only;
   the SharePoint part is the trend total (the site rows' total when the trend
-  lists no day) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
+  lists no day with storage) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
   part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
   storage in live drives against the sum of their own allocations, both from
   the account rows; `allocation` is `null` (unknown, never partial) when any
   live drive reports none. The Share column divides each row by its own pool
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
-  a trend lists no day) and shows *Unknown* for a pool total of 0.
+  a trend lists no day with storage) and shows *Unknown* for a pool total of 0.
   **Versions is always `null`**: the usage reports count version history inside
   each site's storage and never split it out, so it is shown *Not measured*,
   never as a size or a guess. Workload colours are

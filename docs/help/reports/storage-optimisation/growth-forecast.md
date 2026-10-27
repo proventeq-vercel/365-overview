@@ -59,7 +59,7 @@ The callout under the badge explains the headline. There are four special cases:
   with no exhaustion date. Enter the entitlement in
   [Report settings](../../reference/settings.md#sharepoint-entitlement) to see when it runs out.
 - **A single reported day.** The storage in use on that day. The forecast starts from the second
-  day Microsoft 365 reports. When Microsoft's storage trend lists no day at all, the figure is the
+  day Microsoft 365 reports. When Microsoft's storage trend lists no day with storage, the figure is the
   total of the site usage report, and the note says so. An exceeded entitlement always shows as
   *Entitlement already exceeded*, however much history there is.
 
@@ -85,7 +85,7 @@ and the note under the figures says there is nothing to clean up.
 From a single reported day the chart shows that day's storage as one point, with no dashed or
 dotted line. *Avg growth / mo*, *Added last …*, *Forecast (6 mo)*, the forecast after clean-up and
 the projected cost are left out until a second day is reported. When Microsoft's storage trend
-lists no day at all, the point is the total of the site usage report, and the note says so.
+lists no day with storage, the point is the total of the site usage report, and the note says so.
 
 On the monthly path, a note can appear when the monthly figures are **uneven**, for example when one month dominates
 rather than a steady trend. A single average is then a weak guide, so treat the projection as

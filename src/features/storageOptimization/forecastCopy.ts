@@ -36,6 +36,13 @@ function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
 
+export function estimatedQuotaNote(overview: StorageOverview, t: TranslateFn): string | null {
+  if (!overview.caveats.entitlementIsEstimated) return null
+  return overview.cost.applies || overview.archive.savingApplies
+    ? t('storageOptimisation.growth.estimatedQuotaNote')
+    : t('storageOptimisation.growth.estimatedQuotaHeadroomNote')
+}
+
 export function costHint(overview: StorageOverview, rate: string, t: TranslateFn): string {
   return joined(t('storageOptimisation.kpi.costOfNothingHint', { rate }), dailyRateNote(overview, t))
 }
@@ -178,7 +185,7 @@ function pillLabel(overview: StorageOverview, t: TranslateFn): string {
 }
 
 export function buildCallout(overview: StorageOverview, t: TranslateFn): ForecastCallout {
-  const { growth, caveats } = overview
+  const { growth } = overview
   const status = growth.forecastStatus
   const [headline, note, dailyNote] = headlineAndNote(overview, t)
 
@@ -190,11 +197,7 @@ export function buildCallout(overview: StorageOverview, t: TranslateFn): Forecas
     note: joined(
       note,
       dailyNote,
-      caveats.entitlementIsEstimated
-        ? overview.cost.applies
-          ? t('storageOptimisation.growth.estimatedQuotaNote')
-          : t('storageOptimisation.growth.estimatedQuotaHeadroomNote')
-        : null,
+      estimatedQuotaNote(overview, t),
       growth.seriesIsVolatile ? t('storageOptimisation.growth.volatileNote') : null,
     ),
   }

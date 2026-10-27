@@ -96,6 +96,6 @@ Two cases show a different card in the same place, in navy:
 | Card | Because |
 | --- | --- |
 | **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description gives the storage used and where to enter the entitlement. |
-| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day at all, the value is the total of the site usage report, and the description says so. |
+| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day with storage, the value is the total of the site usage report, and the description says so. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

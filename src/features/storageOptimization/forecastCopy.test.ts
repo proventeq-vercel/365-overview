@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { StorageOverview } from '@/types/storage'
 import { translate as t } from '@/test/render'
 import { LABEL_TONES } from '@/design/theme'
-import { buildCallout, forecastCard } from './forecastCopy'
+import { buildCallout, estimatedQuotaNote, forecastCard } from './forecastCopy'
 import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 const withGrowth = (over: Partial<StorageOverview['growth']>): StorageOverview => ({
@@ -91,7 +91,7 @@ describe('forecastCard hint', () => {
   it('says the figure is the site report total when the storage trend has no day at all', () => {
     const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
     expect(hint(noTrend)).toBe(
-      "Microsoft 365's storage trend lists no day for this tenant yet, so this is the total of its site usage report. The forecast starts once the trend has two days.",
+      "Microsoft 365's storage trend lists no day with storage for this tenant yet, so this is the total of its site usage report. The forecast starts once the trend has two days.",
     )
     expect(buildCallout(noTrend, t).note).toMatch(/^Microsoft 365's storage trend lists no day/)
   })
@@ -138,7 +138,7 @@ describe('forecastCard hint', () => {
 
   it('names the days a short-history forecast was measured over', () => {
     expect(hint(dailyRate)).toBe(
-      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of daily storage, as there are fewer than six monthly figures, so treat it as indicative.',
+      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
     )
   })
 
@@ -198,7 +198,7 @@ describe('buildCallout', () => {
     const callout = buildCallout(dailyRate, t)
     expect(callout.headline).toBe('Capacity exhausts around January 2030')
     expect(callout.pillLabel).toBe('Healthy')
-    expect(callout.note).toMatch(/Forecast from the last 40 days of daily storage, as there are fewer than six monthly figures/)
+    expect(callout.note).toMatch(/Forecast from the last 40 days of storage: there are fewer than six monthly figures/)
     expect(buildCallout(base, t).note).not.toMatch(/Forecast from the last/)
   })
 
@@ -235,13 +235,20 @@ describe('buildCallout', () => {
     }
     const callout = buildCallout(exhaustedNoTrend, t)
     expect(callout.headline).toBe('Entitlement already exceeded')
-    expect(callout.note).toMatch(/This is the total of its site usage report: Microsoft 365's storage trend lists no day yet\./)
+    expect(callout.note).toMatch(/This is the total of its site usage report: Microsoft 365's storage trend lists no day with storage yet\./)
     expect(callout.note).not.toMatch(/The forecast starts/)
   })
 
   it('calls only the headroom approximate when no cost is priced', () => {
     expect(buildCallout(firstDay, t).note).toMatch(/so the headroom is approximate\.$/)
     expect(buildCallout(base, t).note).toMatch(/so the headroom and cost figures are approximate\./)
+  })
+
+  it('keeps the cost wording when a saving is still priced against the estimate on a single day', () => {
+    const pricedSaving: StorageOverview = { ...firstDay, archive: { ...firstDay.archive, savingApplies: true } }
+    expect(estimatedQuotaNote(pricedSaving, t)).toMatch(/so the headroom and cost figures are approximate\./)
+    expect(estimatedQuotaNote(firstDay, t)).toMatch(/so the headroom is approximate\.$/)
+    expect(estimatedQuotaNote(unknownEntitlement, t)).toBeNull()
   })
 
   it('keeps the daily note off a callout that forecasts nothing', () => {

@@ -50,7 +50,7 @@ describe('GrowthSection', () => {
   it('forecasts from the daily series on short history, and labels the window in days', () => {
     render(<GrowthSection overview={{ ...dailyRate, growth: { ...dailyRate.growth, points } }} />)
     expect(screen.getByRole('status')).toHaveTextContent('Capacity exhausts around January 2030')
-    expect(screen.getByRole('status')).toHaveTextContent('Forecast from the last 40 days of daily storage')
+    expect(screen.getByRole('status')).toHaveTextContent('Forecast from the last 40 days of storage')
     expect(screen.getByText('Added last 40 days').nextElementSibling).toHaveTextContent('+50 GB')
   })
 

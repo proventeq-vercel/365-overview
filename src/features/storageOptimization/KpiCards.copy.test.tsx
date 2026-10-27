@@ -102,8 +102,8 @@ describe('KpiCards', () => {
   it('forecasts from the daily series on a short history, and says over how many days', () => {
     render(<KpiCards overview={dailyRate} />)
     expect(card(FORECAST)).toHaveTextContent('January 2030')
-    expect(card(FORECAST)).toHaveTextContent('Forecast from the last 40 days of daily storage')
-    expect(card(COST)).toHaveTextContent('Forecast from the last 40 days of daily storage')
+    expect(card(FORECAST)).toHaveTextContent('Forecast from the last 40 days of storage')
+    expect(card(COST)).toHaveTextContent('Forecast from the last 40 days of storage')
   })
 
   it('shows the storage used, with no forecast, when only one day has been reported', () => {

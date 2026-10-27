@@ -1,5 +1,6 @@
 import { formatBytes, formatLongMonthYear, formatShare } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
+import { estimatedQuotaNote } from './forecastCopy'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
 import { SegmentedBar, type BarSegment } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
@@ -86,7 +87,8 @@ function Headline({ overview }: { overview: StorageOverview }) {
 
 export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
-  const { sharePoint, breakdown, caveats } = overview
+  const { sharePoint, breakdown } = overview
+  const quotaNote = estimatedQuotaNote(overview, t)
 
   return (
     <Panel>
@@ -105,9 +107,7 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
       {sharePoint.entitledBytes === null && (
         <PanelDescription>{t('storageOptimisation.usage.enterEntitlement')}</PanelDescription>
       )}
-      {caveats.entitlementIsEstimated && sharePoint.entitledBytes !== null && (
-        <PanelDescription>{t('storageOptimisation.growth.estimatedQuotaNote')}</PanelDescription>
-      )}
+      {quotaNote !== null && <PanelDescription>{quotaNote}</PanelDescription>}
       <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
     </Panel>
   )

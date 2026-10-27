@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
 import type { StorageOverview } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
-import { base, overEntitlement, unknownEntitlement } from './testFixtures'
+import { base, firstDay, overEntitlement, unknownEntitlement } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -166,6 +166,11 @@ describe('DistributionSection', () => {
     }
     render(<DistributionSection overview={measured} />)
     expect(screen.queryByText(/estimated from licence counts/i)).not.toBeInTheDocument()
+  })
+
+  it('calls only the headroom approximate under the line when nothing on the page is priced', () => {
+    render(<DistributionSection overview={firstDay} />)
+    expect(screen.getByText(/estimated from licence counts/)).toHaveTextContent(/so the headroom is approximate\.$/)
   })
 
   it('says the template grouping will not match the admin centre', () => {
