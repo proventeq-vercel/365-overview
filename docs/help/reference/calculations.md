@@ -58,7 +58,8 @@ When the median and the start-to-end average disagree by more than half, the ser
 rate; a daily rate is always labelled indicative. A day reported as zero while other days have
 storage is a gap in the report: it is left out everywhere, so it never reads as storage falling to
 zero (the storage used, the chart, the rate and the window all skip it). When a storage trend lists
-no day at all, the storage used is the total of the matching usage report's rows.
+no day at all, or only zeros while the usage report's rows hold storage, the storage used is the
+total of the matching usage report's rows.
 
 ## Forecast
 

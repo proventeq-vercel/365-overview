@@ -670,6 +670,38 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.points[0].actualUsedBytes).toBe(109 * GB)
   })
 
+  it('reads an all-zero trend as listing no day when the usage report rows hold storage', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: [site({ storageUsedBytes: 40 * GB })],
+        drives: [drive({ storageUsedBytes: 6 * GB })],
+        sharePointTrend: monthly([0, 0, 0, 0, 0, 0]),
+        oneDriveTrend: monthly([0, 0, 0, 0, 0, 0]),
+      }),
+    )
+    expect(overview.sharePoint.usedBytes).toBe(40 * GB)
+    expect(overview.sharePoint.usedFromSiteReport).toBe(true)
+    expect(overview.oneDrive.usedBytes).toBe(6 * GB)
+    expect(overview.growth.rateSource).toBe('none')
+    expect(overview.cost.applies).toBe(false)
+  })
+
+  it('keeps an all-zero trend for an empty tenant, whose rows hold nothing either', () => {
+    const overview = buildStorageOverview(
+      inputs({ sites: [site({ storageUsedBytes: 0 })], sharePointTrend: monthly([0, 0, 0, 0, 0, 0]) }),
+    )
+    expect(overview.sharePoint.usedFromSiteReport).toBe(false)
+    expect(overview.growth.rateSource).toBe('monthly')
+  })
+
+  it('skips a zero-valued last day in the OneDrive trend too', () => {
+    const overview = buildStorageOverview(
+      inputs({ oneDriveTrend: [...monthly([50 * GB, 52 * GB, 54 * GB, 56 * GB, 58 * GB, 60 * GB]), { date: '2026-07-30', value: 0 }] }),
+    )
+    expect(overview.oneDrive.usedBytes).toBe(60 * GB)
+    expect(overview.offenders.poolUsedBytes.OneDrive).toBe(60 * GB)
+  })
+
   it('places the one point at the current month when the site report gives no report date', () => {
     const overview = buildStorageOverview(inputs({ sharePointTrend: [], reportRefreshDate: '' }))
     expect(overview.growth.points.map((point) => point.month)).toEqual(['2026-09'])

@@ -84,6 +84,11 @@ const sumBytes = (rows: StorageRow[]): number =>
 const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
   trend.length === 0 ? sumBytes(rows) : latest(trend)
 
+function reportedDays(trend: UsagePoint[], rows: StorageRow[]): UsagePoint[] {
+  const days = trendWithoutGaps(trend)
+  return days.every((point) => point.value === 0) && sumBytes(rows) > 0 ? [] : days
+}
+
 const retainedTotal = (rows: StorageRow[]) => {
   const deleted = rows.filter((row) => row.isDeleted)
   return { bytes: sumBytes(deleted), count: deleted.length }
@@ -165,8 +170,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
     namesHidden = false,
   } = inputs
 
-  const sharePointTrend = trendWithoutGaps(reportedSharePointTrend)
-  const oneDriveTrend = trendWithoutGaps(reportedOneDriveTrend)
+  const sharePointTrend = reportedDays(reportedSharePointTrend, reportedSites)
+  const oneDriveTrend = reportedDays(reportedOneDriveTrend, reportedDrives)
 
   const nameMask = nameMaskOf([...reportedSites, ...reportedDrives], namesHidden)
   const sites = nameMask === null ? reportedSites : reportedSites.map(hideRowNames)

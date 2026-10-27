@@ -329,7 +329,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   are left out, `cost.applies` false). An exceeded entitlement wins over all
   of this in the copy: *Entitlement already exceeded*, Critical. Zero-valued
   days are gaps in the report: `lib/forecast.trendWithoutGaps` drops them from
-  both trends before anything reads them (used, buckets, rate, window).
+  both trends before anything reads them (used, buckets, rate, window), and a
+  trend of only zeros while the rows hold storage counts as listing no day.
+  A series with one measured point is drawn with a dot (`design/charts.lineDot`):
+  Recharts draws an isolated point by itself only when the chart has one row.
 - SharePoint and OneDrive are two pools. Never put a OneDrive-inclusive numerator
   over a SharePoint-only denominator.
 - Growth is measured from the trend report, never reconstructed from site rows.

@@ -138,7 +138,7 @@ describe('forecastCard hint', () => {
 
   it('names the days a short-history forecast was measured over', () => {
     expect(hint(dailyRate)).toBe(
-      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of storage: Microsoft 365 has reported under six months so far, so treat it as indicative.',
+      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of daily storage, as there are fewer than six monthly figures, so treat it as indicative.',
     )
   })
 
@@ -198,7 +198,7 @@ describe('buildCallout', () => {
     const callout = buildCallout(dailyRate, t)
     expect(callout.headline).toBe('Capacity exhausts around January 2030')
     expect(callout.pillLabel).toBe('Healthy')
-    expect(callout.note).toMatch(/Forecast from the last 40 days of storage: Microsoft 365 has reported under six months so far/)
+    expect(callout.note).toMatch(/Forecast from the last 40 days of daily storage, as there are fewer than six monthly figures/)
     expect(buildCallout(base, t).note).not.toMatch(/Forecast from the last/)
   })
 
@@ -235,7 +235,13 @@ describe('buildCallout', () => {
     }
     const callout = buildCallout(exhaustedNoTrend, t)
     expect(callout.headline).toBe('Entitlement already exceeded')
-    expect(callout.note).toMatch(/so this is the total of its site usage report/)
+    expect(callout.note).toMatch(/This is the total of its site usage report: Microsoft 365's storage trend lists no day yet\./)
+    expect(callout.note).not.toMatch(/The forecast starts/)
+  })
+
+  it('calls only the headroom approximate when no cost is priced', () => {
+    expect(buildCallout(firstDay, t).note).toMatch(/so the headroom is approximate\.$/)
+    expect(buildCallout(base, t).note).toMatch(/so the headroom and cost figures are approximate\./)
   })
 
   it('keeps the daily note off a callout that forecasts nothing', () => {

@@ -129,7 +129,7 @@ function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, st
     return [
       t('storageOptimisation.growth.alreadyExhausted'),
       t('storageOptimisation.growth.alreadyExhaustedNote'),
-      sharePoint.usedFromSiteReport ? t('storageOptimisation.growth.noTrendNote') : null,
+      sharePoint.usedFromSiteReport ? t('storageOptimisation.growth.siteReportSource') : null,
     ]
   }
   if (growth.rateSource === 'none') {
@@ -190,7 +190,11 @@ export function buildCallout(overview: StorageOverview, t: TranslateFn): Forecas
     note: joined(
       note,
       dailyNote,
-      caveats.entitlementIsEstimated ? t('storageOptimisation.growth.estimatedQuotaNote') : null,
+      caveats.entitlementIsEstimated
+        ? overview.cost.applies
+          ? t('storageOptimisation.growth.estimatedQuotaNote')
+          : t('storageOptimisation.growth.estimatedQuotaHeadroomNote')
+        : null,
       growth.seriesIsVolatile ? t('storageOptimisation.growth.volatileNote') : null,
     ),
   }

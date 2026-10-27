@@ -14,7 +14,7 @@ for (const scenario of ['healthy', 'short-history', 'no-licences', 'first-day', 
 test('a short history is forecast from its daily storage, and says over how many days', async ({ page }) => {
   await page.goto('/?scenario=short-history')
   const forecast = page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })
-  await expect(forecast).toContainText('Forecast from the last 31 days of storage')
+  await expect(forecast).toContainText('Forecast from the last 31 days of daily storage')
   await expect(page.getByRole('main').getByText('Added last 31 days')).toBeVisible()
 })
 

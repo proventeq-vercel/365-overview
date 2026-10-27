@@ -162,7 +162,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
 | `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so the *Forecast after clean-up* line is the forecast itself |
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
-| `first-day` | A single reported day of storage — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
+| `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 
 ### Feature flags — `VITE_FEATURES`
 
