@@ -168,14 +168,17 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(await screen.findByText(/identities below are blurred/i)).toBeInTheDocument()
   })
 
-  it('says the over-licence figure is unknown, not zero, when the licences cannot be read', async () => {
+  it('measures against the limit most OneDrives report, and says so, when the licences cannot be read', async () => {
     renderReport('onedrive-over-licence', { getLicenses: async () => null })
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(card('Over licensed storage')).toHaveTextContent(/^UnknownOver licensed storage/)
-    expect(screen.queryByRole('table', { name: 'OneDrives over licensed storage' })).not.toBeInTheDocument()
-    expect(screen.getByText(/licences could not be read \(the Organization\.Read\.All permission/)).toBeInTheDocument()
-    expect(card('Over licensed storage')).toHaveTextContent(/Licences unavailable/)
-    expect(screen.queryByText(/^Measured against/)).not.toBeInTheDocument()
+    expect(card('Over the usual OneDrive limit')).toHaveTextContent(
+      /^4Over the usual OneDrive limit17\.1 TB beyond 1 TB, the limit most OneDrives report$/,
+    )
+    const table = screen.getByRole('table', { name: 'OneDrives over the usual limit' })
+    expect(within(table).getAllByRole('row')).toHaveLength(5)
+    expect(screen.getByText('Accounts holding more than 1 TB, the storage limit 394 of the 398 live OneDrives report')).toBeInTheDocument()
+    expect(screen.getByText(/^The report has no access to the tenant's licences \(the Organization\.Read\.All permission/)).toBeInTheDocument()
+    expect(screen.queryByText(/unknown|unavailable/i)).not.toBeInTheDocument()
   })
 
   it('does not promise an estimate to go back to when an override is set and the licences cannot be read', async () => {
@@ -185,7 +188,7 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     )
     renderReport('onedrive-over-licence', { getLicenses: async () => null })
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(screen.getByText(/clearing it leaves the figure unknown\.$/)).toBeInTheDocument()
+    expect(screen.getByText(/clearing it measures against the storage limit most OneDrives report\.$/)).toBeInTheDocument()
     expect(screen.queryByText(/go back to the estimate from licences/)).not.toBeInTheDocument()
   })
 
@@ -203,11 +206,27 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
       ],
     })
     await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
-    expect(card('Over licensed storage')).toHaveTextContent(
-      /^UnknownOver licensed storageNo licence with a known OneDrive allowance/,
-    )
-    expect(screen.getByText(/education allowances vary by agreement; developer and add-on plans are not sized here/)).toBeInTheDocument()
-    expect(screen.queryByText(/could not be read/)).not.toBeInTheDocument()
+    expect(card('Over the usual OneDrive limit')).toHaveTextContent(/^4Over the usual OneDrive limit/)
+    expect(screen.getByText(/education allowances vary by agreement; developer and add-on plans are not sized here\), so this measures against the storage limit most OneDrives report/)).toBeInTheDocument()
+    expect(screen.queryByText(/no access to the tenant's licences/)).not.toBeInTheDocument()
+  })
+
+  it('leaves the over-licence card and section out, never Unknown, when no licence, setting or drive gives a limit', async () => {
+    const drives = (await createMockDataSource().getDrives()).map((drive) => ({ ...drive, allocatedBytes: undefined }))
+    renderReport('healthy', { getLicenses: async () => null, getDrives: async () => drives })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(screen.queryByRole('heading', { name: /^OneDrives over/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Over /, { selector: '[data-slot="stat-card"] p' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unknown|unavailable/i)).not.toBeInTheDocument()
+  })
+
+  it('counts the OneDrives quiet for 93 days in place of the unlicensed ones when the active-user report does not come back', async () => {
+    renderReport('healthy', { getOneDriveLicences: async () => null })
+    await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })
+    expect(card('No activity for 93 days')).toHaveTextContent(/live OneDrives have had no activity since 2026-05-29, though some within 3 years\./)
+    expect(card('No activity for 93 days')).toHaveTextContent(/Shown in place of the owners without a licence/)
+    expect(screen.queryByText('Owner unlicensed')).not.toBeInTheDocument()
+    expect(screen.queryByText(/unknown|unavailable/i)).not.toBeInTheDocument()
   })
 
   it('explains hidden names before the first table that shows them', async () => {

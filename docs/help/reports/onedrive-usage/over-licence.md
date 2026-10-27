@@ -27,8 +27,16 @@ against the **most generous plan the tenant holds**. A listed drive is then one 
 in your tenant could cover.
 
 Some licences get no allowance here, so they never set the figure: Project, Visio and Dynamics
-plans, and education plans (their allowances vary by agreement). If no licence has a known
-allowance, the figure is **Unknown** and the list is not shown.
+plans, and education plans (their allowances vary by agreement).
+
+## Without a licence figure
+
+If the licences cannot be read (the Organization.Read.All permission was not granted), or none
+has a known allowance, and no figure is set, the section becomes **OneDrives over the usual
+OneDrive limit**. It measures against the storage limit most live OneDrives report, which is
+usually the tenant's default, and its subtitle says how many report it. A drive listed then is
+one whose limit was raised above the default and that holds more than the default. If no live
+OneDrive reports a limit, the section is left out.
 
 To measure against a different figure, set **OneDrive storage per user** in
 [Report settings](../../reference/settings.md#onedrive-storage-per-user). Clear it to go back to

@@ -1,5 +1,6 @@
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type {
+  OneDriveLimit,
   OneDrivePool,
   OverEntitlement,
   Slice,
@@ -117,12 +118,38 @@ function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
   )
 }
 
-function drivesOverEntitlement(liveDrives: StorageRow[], perUserBytes: number): OverEntitlement {
+function commonestDriveLimit(liveDrives: StorageRow[]): OneDriveLimit | null {
+  const counts = new Map<number, number>()
+  for (const drive of liveDrives) {
+    const limit = drive.allocatedBytes ?? 0
+    if (limit > 0) counts.set(limit, (counts.get(limit) ?? 0) + 1)
+  }
+  let commonest: [number, number] | null = null
+  for (const entry of counts) {
+    if (commonest === null || entry[1] > commonest[1] || (entry[1] === commonest[1] && entry[0] > commonest[0])) {
+      commonest = entry
+    }
+  }
+  return commonest === null ? null : { basis: 'driveLimit', perUserBytes: commonest[0], drivesReporting: commonest[1] }
+}
+
+function oneDriveLimit(
+  liveDrives: StorageRow[],
+  overrideBytes: number | null,
+  licenceBytes: number | null,
+): OneDriveLimit | null {
+  if (overrideBytes !== null) return { basis: 'set', perUserBytes: overrideBytes }
+  if (licenceBytes !== null) return { basis: 'licences', perUserBytes: licenceBytes }
+  return commonestDriveLimit(liveDrives)
+}
+
+function drivesOverEntitlement(liveDrives: StorageRow[], limit: OneDriveLimit): OverEntitlement {
   const over = liveDrives
-    .filter((drive) => drive.storageUsedBytes > perUserBytes)
+    .filter((drive) => drive.storageUsedBytes > limit.perUserBytes)
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
-    .map((drive) => ({ ...drive, overEntitlementBytes: drive.storageUsedBytes - perUserBytes }))
+    .map((drive) => ({ ...drive, overEntitlementBytes: drive.storageUsedBytes - limit.perUserBytes }))
   return {
+    limit,
     drives: over,
     count: over.length,
     excessBytes: over.reduce((total, drive) => total + drive.overEntitlementBytes, 0),
@@ -131,17 +158,20 @@ function drivesOverEntitlement(liveDrives: StorageRow[], perUserBytes: number): 
 
 function oneDrivePool(liveDrives: StorageRow[]): OneDrivePool {
   const usedBytes = sumBytes(liveDrives)
-  const allocations = liveDrives.map((drive) => drive.allocatedBytes ?? 0)
-  if (allocations.length === 0 || allocations.some((bytes) => bytes <= 0)) {
-    return { usedBytes, allocation: null }
-  }
-  const allocatedBytes = allocations.reduce((total, bytes) => total + bytes, 0)
-  const usedShare = Math.min(1, usedBytes / allocatedBytes)
+  const limited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) > 0)
+  if (limited.length === 0) return { usedBytes, allocation: null }
+  const unlimited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) <= 0)
+  const limitedUsedBytes = sumBytes(limited)
+  const allocatedBytes = limited.reduce((total, drive) => total + (drive.allocatedBytes ?? 0), 0)
+  const usedShare = Math.min(1, limitedUsedBytes / allocatedBytes)
   return {
     usedBytes,
     allocation: {
       allocatedBytes,
-      freeBytes: Math.max(0, allocatedBytes - usedBytes),
+      usedBytes: limitedUsedBytes,
+      driveCount: limited.length,
+      withoutLimit: { count: unlimited.length, bytes: sumBytes(unlimited) },
+      freeBytes: Math.max(0, allocatedBytes - limitedUsedBytes),
       usedShare,
       freeShare: 1 - usedShare,
     },
@@ -180,7 +210,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const override = positiveOrNull(entitlementOverrideBytes)
   const oneDriveLicencePerUserBytes = skus === null ? null : oneDriveBytesPerUser(skus)
   const oneDriveOverrideBytes = positiveOrNull(oneDriveEntitlementOverrideBytes)
-  const oneDrivePerUserBytes = oneDriveOverrideBytes ?? oneDriveLicencePerUserBytes
   const licenceEstimateBytes = skus === null ? null : estimateEntitlementBytes(skus)
   const entitledBytes = forceUnknownEntitlement ? null : (override ?? licenceEstimateBytes)
   const entitlementIsMeasured = entitledBytes !== null && override !== null
@@ -200,6 +229,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
 
   const liveSites = sites.filter((site) => !site.isDeleted)
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
+  const driveLimit = oneDriveLimit(liveDrives, oneDriveOverrideBytes, oneDriveLicencePerUserBytes)
   const rows = [...sites, ...drives]
 
   const buckets = monthlyBuckets(
@@ -290,15 +320,9 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
           drive.storageUsedBytes / drive.allocatedBytes >= NEAR_CAP_RATIO,
       ).length,
       deletedButBilling: deletedDrives,
-      entitlementPerUserBytes: oneDrivePerUserBytes,
       licenceEstimatePerUserBytes: oneDriveLicencePerUserBytes,
-      entitlementPerUserIsSet: oneDriveOverrideBytes !== null,
-      entitlementUnknownReason:
-        oneDrivePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
-      overEntitlement:
-        oneDrivePerUserBytes === null
-          ? null
-          : drivesOverEntitlement(liveDrives, oneDrivePerUserBytes),
+      licenceGap: oneDriveLicencePerUserBytes !== null ? null : skus === null ? 'licencesUnavailable' : 'noSizedPlan',
+      overEntitlement: driveLimit === null ? null : drivesOverEntitlement(liveDrives, driveLimit),
       pool: oneDrivePool(liveDrives),
       attention: oneDriveAttention({
         drives: reportedDrives,

@@ -13,15 +13,21 @@ function bandLabel(band: InactiveDriveBandTotal, t: TranslateFn): string {
   return t('oneDrive.attention.band.years', { from: band.fromYears, to: band.toYears })
 }
 
-function UnlicensedCard({ unlicensed }: { unlicensed: OneDriveAttention['unlicensed'] }) {
+function UnlicensedCard({ attention }: { attention: OneDriveAttention }) {
   const t = useTranslation()
-  if (unlicensed === null) {
+  const { unlicensed } = attention
+  if (unlicensed.basis === 'noActivity') {
     return (
       <StatCard
-        label={t('oneDrive.attention.unlicensed')}
-        value={t('storageOptimisation.kpi.unknown')}
-        color={P365.grey400}
-        information={t('oneDrive.attention.unlicensedUnknown')}
+        label={t('oneDrive.attention.noActivity', { days: unlicensed.days })}
+        value={formatBytes(unlicensed.bytes)}
+        color={unlicensed.count > 0 ? P365.red : P365.grey400}
+        information={t('oneDrive.attention.noActivityHint', {
+          count: unlicensed.count,
+          since: unlicensed.since,
+          years: attention.inactiveYears,
+          days: unlicensed.days,
+        })}
       />
     )
   }
@@ -54,8 +60,8 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           value={formatBytes(inactive.bytes)}
           color={inactive.count > 0 ? P365.blue : P365.grey400}
           information={
-            attention.unlicensed === null
-              ? t('oneDrive.attention.inactiveHintUnknown', inactiveValues)
+            attention.unlicensed.basis === 'noActivity'
+              ? t('oneDrive.attention.inactiveHintNoLicences', inactiveValues)
               : t('oneDrive.attention.inactiveHint', inactiveValues)
           }
         />
@@ -65,7 +71,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
           color={deletedButBilling.count > 0 ? P365.yellow : P365.grey400}
           information={t('oneDrive.attention.deletedHint', { count: deletedButBilling.count })}
         />
-        <UnlicensedCard unlicensed={attention.unlicensed} />
+        <UnlicensedCard attention={attention} />
       </div>
       <Panel>
         <PanelLabel>{t('oneDrive.attention.bandsTitle')}</PanelLabel>

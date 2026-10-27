@@ -53,13 +53,15 @@ live OneDrive's own limit, as the OneDrive usage report gives it.
 | Used | OneDrive blue | The storage in live OneDrives, as the OneDrive usage report lists them. Deleted OneDrives are listed under [Deleted but still billing](main-offenders.md#deleted-but-still-billing). |
 | Unused allocation | Light grey | The allocation less the storage used, never below zero. |
 
-- If Microsoft does not report an allocation for every live OneDrive, the total allocation is
-  unknown: the panel gives the storage used and says so, with no line. With no live OneDrive at
-  all, it says so.
+- If some live OneDrives report no limit, the line covers the ones that do, the headline says
+  how many, and a note under the line gives the count and storage of the rest. If none reports a
+  limit, the panel gives the storage used with no line. With no live OneDrive at all, it says so.
 - One line under it gives the storage of inactive OneDrives, of deleted ones under retention and
-  of those whose owner has no OneDrive licence, never added together.
+  of those whose owner has no OneDrive licence, never added together. When Microsoft's
+  active-user report does not come back, the last figure is the OneDrives with no activity for
+  93 days, and the line says why.
 - A small total does not mean no OneDrive is full: each has its own limit. The panel says how many
-  are at 90% or more of theirs, whether or not the total allocation is known.
+  are at 90% or more of theirs, whether or not every OneDrive reports a limit.
 
 ::: feature optimization.storage.report.onedrive
 The line links to the [OneDrive report](../onedrive-usage/inactive.md), which breaks the three

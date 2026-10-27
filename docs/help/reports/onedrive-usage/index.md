@@ -21,12 +21,14 @@ a SharePoint site's allocation does not.
 | OneDrive storage | Tenant-wide OneDrive storage, as Microsoft 365 reports it: its storage trend's latest day, or, when that trend lists no day with storage, the total of the OneDrive usage report, and the description says so. | Navy |
 | OneDrives | Live drives in the usage report. | Blue |
 | Drives near their quota | Drives at 90% or more of their own storage quota. | Orange when any, green when none |
-| Over licensed storage | Drives holding more than the OneDrive storage per user, and by how much in total. | Orange when any, green when none, grey when unknown |
+| Over licensed storage | Drives holding more than the OneDrive storage per user, and by how much in total. | Orange when any, green when none |
 | Deleted but still billing | Deleted drives still using quota under retention. | Yellow when any, grey when none |
 
-**Over licensed storage** shows **Unknown** when the tenant's licences could not be read, or
-when none of them has a OneDrive allowance the report knows. Set the figure in
-[Report settings](../../reference/settings.md#onedrive-storage-per-user).
+When the tenant's licences give no OneDrive storage per user (they cannot be read, or none has
+an allowance the report knows) and none is set, the card becomes **Over the usual OneDrive limit**:
+the same count against the storage limit most live OneDrives report, usually the tenant's default.
+Set the licensed figure in [Report settings](../../reference/settings.md#onedrive-storage-per-user).
+If no live OneDrive reports a limit either, the card is left out.
 
 ## Sections
 

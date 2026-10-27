@@ -8,6 +8,8 @@ import { base } from '@/features/storageOptimization/testFixtures'
 import { P365 } from '@/design/theme'
 import { InactiveDrivesSection } from './InactiveDrivesSection'
 
+const GB = 1_073_741_824
+
 vi.mock('@/config/env', async (importOriginal) => {
   const actual = await importOriginal<typeof EnvModule>()
   return {
@@ -51,11 +53,23 @@ describe('InactiveDrivesSection', () => {
     )
   })
 
-  it('shows the unlicensed group as unknown, not zero, when the licence report could not be read', () => {
-    render(<InactiveDrivesSection overview={withAttention({ unlicensed: null })} />)
-    expect(card('Owner unlicensed')).toHaveTextContent('Unknown')
-    expect(card('Owner unlicensed')).toHaveTextContent('not known which owners have a OneDrive licence')
-    expect(card('Inactive OneDrives')).toHaveTextContent('some of these may belong to owners without a licence')
+  it('shows the OneDrives quiet for 93 days in place of the unlicensed group when the licence report is missing', () => {
+    render(
+      <InactiveDrivesSection
+        overview={withAttention({
+          unlicensed: { basis: 'noActivity', count: 5, bytes: 25 * GB, days: 93, since: '2026-05-29' },
+        })}
+      />,
+    )
+    expect(card('No activity for 93 days')).toHaveTextContent('25 GB')
+    expect(card('No activity for 93 days')).toHaveTextContent(
+      '5 live OneDrives have had no activity since 2026-05-29, though some within 3 years.',
+    )
+    expect(card('No activity for 93 days')).toHaveTextContent('Microsoft archives it 93 days after the licence goes')
+    expect(screen.queryByText('Owner unlicensed')).not.toBeInTheDocument()
+    expect(card('Inactive OneDrives')).toHaveTextContent(
+      "Measured without Microsoft's active-user report, so some of these may belong to owners without a licence",
+    )
   })
 
   it('bands the inactive OneDrives by years past the window, leaving out empty bands', () => {

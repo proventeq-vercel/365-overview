@@ -301,8 +301,8 @@ describe('buildStorageOverview composition', () => {
           ],
         }),
       )
-      const { overEntitlement, entitlementPerUserBytes, licenceEstimatePerUserBytes } = overview.oneDrive
-      expect(entitlementPerUserBytes).toBe(5120 * GB)
+      const { overEntitlement, licenceEstimatePerUserBytes } = overview.oneDrive
+      expect(overEntitlement?.limit).toEqual({ basis: 'licences', perUserBytes: 5120 * GB })
       expect(licenceEstimatePerUserBytes).toBe(5120 * GB)
       expect(overEntitlement?.count).toBe(2)
       expect(overEntitlement?.drives.map((row) => row.id)).toEqual(['big-over', 'small-over'])
@@ -324,7 +324,7 @@ describe('buildStorageOverview composition', () => {
           drives: [drive({ storageUsedBytes: 1200 * GB, allocatedBytes: 1300 * GB })],
         }),
       )
-      expect(overview.oneDrive.entitlementPerUserBytes).toBe(1024 * GB)
+      expect(overview.oneDrive.overEntitlement?.limit.perUserBytes).toBe(1024 * GB)
       expect(overview.oneDrive.overEntitlement?.drives[0].overEntitlementBytes).toBe(176 * GB)
     })
 
@@ -343,29 +343,83 @@ describe('buildStorageOverview composition', () => {
       expect(overview.oneDrive.overEntitlement?.count).toBe(0)
     })
 
-    it('is unknown, not a guessed 1 TB, when the licences cannot be read', () => {
+    it('measures against the limit most live drives report, not a guessed 1 TB, when the licences cannot be read', () => {
       const overview = buildStorageOverview(
-        inputs({ skus: null, drives: [drive({ storageUsedBytes: 9000 * GB })] }),
+        inputs({
+          skus: null,
+          drives: [
+            drive({ id: 'default-a', storageUsedBytes: 300 * GB, allocatedBytes: 1024 * GB }),
+            drive({ id: 'default-b', storageUsedBytes: 700 * GB, allocatedBytes: 1024 * GB }),
+            drive({ id: 'raised', storageUsedBytes: 1500 * GB, allocatedBytes: 5120 * GB }),
+            drive({ id: 'gone', storageUsedBytes: 9000 * GB, allocatedBytes: 5120 * GB, isDeleted: true }),
+            drive({ id: 'gone-too', storageUsedBytes: 9000 * GB, allocatedBytes: 5120 * GB, isDeleted: true }),
+          ],
+        }),
       )
-      expect(overview.oneDrive.entitlementPerUserBytes).toBeNull()
       expect(overview.oneDrive.licenceEstimatePerUserBytes).toBeNull()
+      expect(overview.oneDrive.licenceGap).toBe('licencesUnavailable')
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({
+        basis: 'driveLimit',
+        perUserBytes: 1024 * GB,
+        drivesReporting: 2,
+      })
+      expect(overview.oneDrive.overEntitlement?.drives.map((row) => row.id)).toEqual(['raised'])
+      expect(overview.oneDrive.overEntitlement?.excessBytes).toBe(476 * GB)
+    })
+
+    it('breaks a tie between two drive limits towards the larger, so fewer drives read as over', () => {
+      const overview = buildStorageOverview(
+        inputs({
+          skus: null,
+          drives: [
+            drive({ id: 'small', storageUsedBytes: 2000 * GB, allocatedBytes: 1024 * GB }),
+            drive({ id: 'large', storageUsedBytes: 2000 * GB, allocatedBytes: 5120 * GB }),
+          ],
+        }),
+      )
+      expect(overview.oneDrive.overEntitlement?.limit.perUserBytes).toBe(5120 * GB)
+      expect(overview.oneDrive.overEntitlement?.count).toBe(0)
+    })
+
+    it('ignores drives that report no limit when picking the commonest one', () => {
+      const overview = buildStorageOverview(
+        inputs({
+          skus: null,
+          drives: [
+            drive({ id: 'bare-a', allocatedBytes: undefined }),
+            drive({ id: 'bare-b', allocatedBytes: 0 }),
+            drive({ id: 'bare-c', allocatedBytes: 0 }),
+            drive({ id: 'capped', allocatedBytes: 1024 * GB }),
+          ],
+        }),
+      )
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({
+        basis: 'driveLimit',
+        perUserBytes: 1024 * GB,
+        drivesReporting: 1,
+      })
+    })
+
+    it('leaves the figure out when no licence, setting or live drive limit gives one to measure against', () => {
+      const overview = buildStorageOverview(
+        inputs({ skus: null, drives: [drive({ storageUsedBytes: 9000 * GB, allocatedBytes: 0 })] }),
+      )
       expect(overview.oneDrive.overEntitlement).toBeNull()
-      expect(overview.oneDrive.entitlementUnknownReason).toBe('licencesUnavailable')
     })
 
     it('says no plan is sized, rather than that licences were unreadable, when they were read', () => {
       const overview = buildStorageOverview(
         inputs({ skus: [planSku('EXCHANGE_S_STANDARD', 40)], drives: [drive({ storageUsedBytes: 9000 * GB })] }),
       )
-      expect(overview.oneDrive.overEntitlement).toBeNull()
-      expect(overview.oneDrive.entitlementUnknownReason).toBe('noSizedPlan')
+      expect(overview.oneDrive.overEntitlement?.limit.basis).toBe('driveLimit')
+      expect(overview.oneDrive.licenceGap).toBe('noSizedPlan')
     })
 
-    it('has no unknown reason and marks the figure as set when an override is in force', () => {
+    it('marks the figure as set when an override is in force, and keeps the gap in the licences for the note', () => {
       const overview = buildStorageOverview(inputs({ skus: null, oneDriveEntitlementOverrideBytes: 2 * GB }))
-      expect(overview.oneDrive.entitlementUnknownReason).toBeNull()
-      expect(overview.oneDrive.entitlementPerUserIsSet).toBe(true)
-      expect(buildStorageOverview(inputs()).oneDrive.entitlementPerUserIsSet).toBe(false)
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB })
+      expect(overview.oneDrive.licenceGap).toBe('licencesUnavailable')
+      expect(buildStorageOverview(inputs()).oneDrive.licenceGap).toBeNull()
     })
 
     it('measures against the per-user storage set in the report settings, even without licences', () => {
@@ -376,13 +430,13 @@ describe('buildStorageOverview composition', () => {
           drives: [drive({ id: 'frontline', storageUsedBytes: 5 * GB })],
         }),
       )
-      expect(overview.oneDrive.entitlementPerUserBytes).toBe(2 * GB)
+      expect(overview.oneDrive.overEntitlement?.limit.perUserBytes).toBe(2 * GB)
       expect(overview.oneDrive.overEntitlement?.drives[0].overEntitlementBytes).toBe(3 * GB)
     })
 
     it('keeps reporting the licence estimate beside an override, for the settings hint', () => {
       const overview = buildStorageOverview(inputs({ oneDriveEntitlementOverrideBytes: 2 * GB }))
-      expect(overview.oneDrive.entitlementPerUserBytes).toBe(2 * GB)
+      expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'set', perUserBytes: 2 * GB })
       expect(overview.oneDrive.licenceEstimatePerUserBytes).toBe(5120 * GB)
     })
 
@@ -394,7 +448,7 @@ describe('buildStorageOverview composition', () => {
             drives: [drive({ storageUsedBytes: 5 * GB })],
           }),
         )
-        expect(overview.oneDrive.entitlementPerUserBytes).toBe(5120 * GB)
+        expect(overview.oneDrive.overEntitlement?.limit).toEqual({ basis: 'licences', perUserBytes: 5120 * GB })
         expect(overview.oneDrive.overEntitlement?.count).toBe(0)
       }
     })
@@ -448,15 +502,40 @@ describe('buildStorageOverview composition', () => {
       const { oneDrive } = buildStorageOverview(estate())
       expect(oneDrive.pool).toEqual({
         usedBytes: 5 * GB,
-        allocation: { allocatedBytes: 1024 * GB, freeBytes: 1019 * GB, usedShare: 5 / 1024, freeShare: 1019 / 1024 },
+        allocation: {
+          allocatedBytes: 1024 * GB,
+          usedBytes: 5 * GB,
+          driveCount: 1,
+          withoutLimit: { count: 0, bytes: 0 },
+          freeBytes: 1019 * GB,
+          usedShare: 5 / 1024,
+          freeShare: 1019 / 1024,
+        },
       })
     })
 
-    it('leaves the OneDrive allocation unknown, not partial, when a live drive reports none', () => {
+    it('measures the allocation over the live drives that report a limit, and counts the rest apart', () => {
       const { oneDrive } = buildStorageOverview(
-        estate({ drives: [drive(), drive({ id: 'no-cap', allocatedBytes: 0 })] }),
+        estate({
+          drives: [
+            drive({ storageUsedBytes: 6 * GB, allocatedBytes: 24 * GB }),
+            drive({ id: 'no-cap', storageUsedBytes: 3 * GB, allocatedBytes: 0 }),
+            drive({ id: 'bare', storageUsedBytes: 1 * GB, allocatedBytes: undefined }),
+          ],
+        }),
       )
-      expect(oneDrive.pool).toEqual({ usedBytes: 10 * GB, allocation: null })
+      expect(oneDrive.pool).toEqual({
+        usedBytes: 10 * GB,
+        allocation: {
+          allocatedBytes: 24 * GB,
+          usedBytes: 6 * GB,
+          driveCount: 1,
+          withoutLimit: { count: 2, bytes: 4 * GB },
+          freeBytes: 18 * GB,
+          usedShare: 0.25,
+          freeShare: 0.75,
+        },
+      })
     })
 
     it('keeps the OneDrive pool off the trend, so a missing OneDrive trend never reads as nothing used', () => {
@@ -464,9 +543,11 @@ describe('buildStorageOverview composition', () => {
       expect(oneDrive.pool.usedBytes).toBe(5 * GB)
     })
 
-    it('leaves the OneDrive allocation unknown when a drive carries no allocation field at all', () => {
-      const { oneDrive } = buildStorageOverview(estate({ drives: [drive(), drive({ id: 'bare', allocatedBytes: undefined })] }))
-      expect(oneDrive.pool.allocation).toBeNull()
+    it('has no OneDrive allocation when no live drive reports a limit', () => {
+      const { oneDrive } = buildStorageOverview(
+        estate({ drives: [drive({ allocatedBytes: undefined }), drive({ id: 'b', allocatedBytes: 0 })] }),
+      )
+      expect(oneDrive.pool).toEqual({ usedBytes: 10 * GB, allocation: null })
     })
 
     it('has no OneDrive allocation, rather than a zero one, when there is no live drive', () => {
@@ -476,7 +557,7 @@ describe('buildStorageOverview composition', () => {
 
     it('never shows more than the whole allocation used', () => {
       const { oneDrive } = buildStorageOverview(estate({ drives: [drive({ storageUsedBytes: 20 * GB, allocatedBytes: 10 * GB })] }))
-      expect(oneDrive.pool.allocation).toEqual({ allocatedBytes: 10 * GB, freeBytes: 0, usedShare: 1, freeShare: 0 })
+      expect(oneDrive.pool.allocation).toMatchObject({ allocatedBytes: 10 * GB, freeBytes: 0, usedShare: 1, freeShare: 0 })
     })
 
     it('gives each part its share of the line, and an unmeasured part none', () => {

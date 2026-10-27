@@ -181,12 +181,18 @@ describe('GrowthSection', () => {
     })
   })
 
-  it('leaves drives over licence out, never Unknown, when the licences cannot be read', () => {
+  it('leaves drives over licence out, never Unknown, when the line is only the limit most OneDrives report', () => {
     render(
       <GrowthSection
         overview={{
           ...withGrowth,
-          oneDrive: { ...withGrowth.oneDrive, entitlementPerUserBytes: null, overEntitlement: null },
+          oneDrive: {
+            ...withGrowth.oneDrive,
+            overEntitlement: {
+              ...withGrowth.oneDrive.overEntitlement!,
+              limit: { basis: 'driveLimit', perUserBytes: 1024 * GB, drivesReporting: 38 },
+            },
+          },
         }}
       />,
     )

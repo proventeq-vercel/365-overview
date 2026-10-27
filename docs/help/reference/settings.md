@@ -46,7 +46,8 @@ and the *Forecast exhaustion* card becomes *SharePoint growth per month*.
 What each user's licence includes, in GB. By default it is the
 [most generous plan in the tenant](calculations.md#onedrive-storage-per-user). Enter a figure to
 replace it, for example when you have raised every drive to a set quota. Clear it to go back to
-the estimate. It decides which drives count as over licensed storage.
+the estimate. It decides which drives count as over licensed storage. With no estimate and no
+figure entered, drives are measured against the storage limit most of them report.
 
 ::: feature optimization.storage.report.onedrive
 The [OneDrives over licence](../reports/onedrive-usage/over-licence.md) page lists them.
