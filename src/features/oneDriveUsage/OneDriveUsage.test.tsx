@@ -309,6 +309,20 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(screen.getByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
   })
 
+  it('names no SharePoint report when a reload lost only SharePoint figures', async () => {
+    const user = userEvent.setup()
+    const source = createMockDataSource('no-trends')
+    let reloaded = false
+    renderReport('no-trends', {
+      getSites: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getSites()),
+    })
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    reloaded = true
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: 'Refresh data' }))
+    const note = await screen.findByText(/^The last reload of Microsoft's reports did not bring every report back/)
+    expect(note).not.toHaveTextContent(/SharePoint/)
+  })
+
   it('names only the OneDrive reports that did not come back', async () => {
     renderReport('no-site-report')
     expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()

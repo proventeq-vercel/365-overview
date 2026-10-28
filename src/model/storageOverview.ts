@@ -92,6 +92,9 @@ const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
 const latestDay = (...trends: UsagePoint[][]): string =>
   trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
 
+export const reportsOfPool = (reports: CoreReport[], pool: StoragePool): CoreReport[] =>
+  reports.filter((report) => REPORT_POOL[report] === pool)
+
 export const holdsStorage = (trend: UsagePoint[]) => trend.some((point) => point.value > 0)
 
 const daysHoldingStorage = (trend: UsagePoint[]) => trend.filter((point) => point.value > 0)
@@ -218,7 +221,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const reportRefreshDate = reportDateOf(reportedRefreshDate, reportedSharePointTrend, reportedOneDriveTrend)
   const sharePointRead = siteReportRead || holdsStorage(reportedSharePointTrend)
   const oneDriveRead = accountReportRead || holdsStorage(reportedOneDriveTrend)
-  const unreadOf = (pool: StoragePool) => CORE_REPORTS.filter((report) => unread.has(report) && REPORT_POOL[report] === pool)
+  const unreadOf = (pool: StoragePool) => reportsOfPool(CORE_REPORTS.filter((report) => unread.has(report)), pool)
 
   const sharePointTrend = reportedDays(reportedSharePointTrend, reportedSites)
   const oneDriveTrend = reportedDays(reportedOneDriveTrend, reportedDrives)

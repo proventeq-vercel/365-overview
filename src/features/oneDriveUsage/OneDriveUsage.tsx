@@ -6,6 +6,7 @@ import { FacetBars } from '@/design/charts'
 import { HelpButton } from '@/app/help/HelpButton'
 import { PageHeader, Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { ReportDate } from '@/app/ReportDate'
+import { reportsOfPool } from '@/model/storageOverview'
 import { ReportLoading } from '@/app/ReportLoading'
 import { AccessFailure } from '@/features/storageOptimization/AccessFailure'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
@@ -35,7 +36,10 @@ export function OneDriveUsage() {
       <PageHeader title={t('reports.oneDriveUsage.title')} help={<HelpButton topic="oneDriveUsage" />}>
         {t('oneDrive.description')} <ReportDate date={data.reportRefreshDate} />
       </PageHeader>
-      <UnreadReports reports={oneDrive.unreadReports} notReloaded={notReloaded} />
+      <UnreadReports
+        reports={oneDrive.unreadReports}
+        notReloaded={notReloaded === null ? null : reportsOfPool(notReloaded, 'OneDrive')}
+      />
       {oneDrive.read && <OneDriveKpiCards overview={data} />}
       {oneDrive.accountReportRead && <DriveSections overview={data} />}
     </div>

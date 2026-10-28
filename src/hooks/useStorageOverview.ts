@@ -169,7 +169,7 @@ export function useStorageOverview(settings: ReportSettings) {
   return {
     data,
     error: blocking ? query.error : null,
-    notReloaded: query.error === null || blocking ? null : notReloadedOf(query.error),
+    notReloaded: query.error === null ? null : notReloadedOf(query.error),
     isPending: query.isPending,
   }
 }
