@@ -24,22 +24,22 @@ export function KpiCards({ overview, delay = 0 }: Props) {
 
   const cards = [
     archive.applies && (
-    <StatCard
-      key="archivable"
-      label={t('storageOptimisation.kpi.archivable')}
-      value={formatBytes(archive.bytes)}
-      color={HEALTH_COLOR[archive.status]}
-      information={
-        archive.siteCount === 0
-          ? t('storageOptimisation.kpi.archivableNoneHint', inactivity)
-          : t('storageOptimisation.kpi.archivableHint', {
-              ...inactivity,
-              percent: formatPercent(archive.shareOfSharePoint, 1),
-              count: archive.siteCount,
-              sites: formatNumber(archive.siteCount),
-            })
-      }
-    />
+      <StatCard
+        key="archivable"
+        label={t('storageOptimisation.kpi.archivable')}
+        value={formatBytes(archive.bytes)}
+        color={HEALTH_COLOR[archive.status]}
+        information={
+          archive.siteCount === 0
+            ? t('storageOptimisation.kpi.archivableNoneHint', inactivity)
+            : t('storageOptimisation.kpi.archivableHint', {
+                ...inactivity,
+                percent: formatPercent(archive.shareOfSharePoint, 1),
+                count: archive.siteCount,
+                sites: formatNumber(archive.siteCount),
+              })
+        }
+      />
     ),
     archive.savingApplies && (
       <StatCard

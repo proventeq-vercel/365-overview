@@ -36,26 +36,26 @@ export function DistributionSection({ overview, delay }: Props) {
       {overview.oneDrive.read && <OneDrivePoolPanel overview={overview} />}
 
       {sharePoint.siteReportRead && (
-      <Panel>
-        <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
-        <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
-        <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
-          <MonoDoughnut
-            slices={shaded(sharePoint.byTemplate)}
-            formatValue={formatBytes}
-            ariaLabel={t('storageOptimisation.template.title')}
-          />
-          <Legend
-            className="max-w-3xl"
-            columns={3}
-            items={shaded(sharePoint.byTemplate).map((slice) => ({
-              name: slice.name,
-              color: slice.color,
-              detail: formatBytes(slice.value),
-            }))}
-          />
-        </div>
-      </Panel>
+        <Panel>
+          <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
+          <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
+          <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
+            <MonoDoughnut
+              slices={shaded(sharePoint.byTemplate)}
+              formatValue={formatBytes}
+              ariaLabel={t('storageOptimisation.template.title')}
+            />
+            <Legend
+              className="max-w-3xl"
+              columns={3}
+              items={shaded(sharePoint.byTemplate).map((slice) => ({
+                name: slice.name,
+                color: slice.color,
+                detail: formatBytes(slice.value),
+              }))}
+            />
+          </div>
+        </Panel>
       )}
     </Section>
   )

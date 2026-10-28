@@ -180,6 +180,16 @@ describe('useStorageOverview when a report does not come back', () => {
     expect(getDrives).toHaveBeenCalledTimes(1)
   })
 
+  it('reports no kept load while the access screen shows', async () => {
+    const refused = new ApiError(403, 'Forbidden', 'Forbidden')
+    function Kept() {
+      const { error, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
+      return <p>{`${error ? 'blocked' : 'open'}; kept ${notReloaded === null ? 'none' : notReloaded.join(',') || 'any'}`}</p>
+    }
+    renderWithData(<Kept />, sourceWith({ getDrives: async () => Promise.reject(refused) }))
+    expect(await screen.findByText('blocked; kept none')).toBeInTheDocument()
+  })
+
   it('does not ask a refused report again, and shows the access screen', async () => {
     const refused = new ApiError(403, 'Forbidden', 'Forbidden')
     const getOneDriveTrend = vi.fn(async (): Promise<never> => {
