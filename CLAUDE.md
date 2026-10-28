@@ -195,7 +195,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   dated appearance has no daily figure, so it is left out of growth (never counted from
   0, which would rank the biggest sites as the fastest growers); deleted rows
   are out of every ranking.
-- `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`.
+- `src/types/storage.ts` — `StorageOverview`, `StorageRow`, `Slice`, `GrowthPoint`,
+  `TemplateSlice` (a template's storage and its `group`: `named`, `notReported`
+  or `other`, decided in the model; the template chart labels the last two from
+  the catalogue, never from the slice name). `lib/reportedTemplate` is the one
+  rule for "no template", shared by the model and `SiteTable`'s Template cell.
 - `src/config/featureFlags.ts` — `FeatureFlags` (dotted keys mirroring P365's
   `routing/featureFlags.ts`, e.g. `optimization.storage.report.overview`),
   `readFeatures(VITE_FEATURES)` (comma list, unknown flags dropped, unset =

@@ -28,6 +28,7 @@ import type { OneDriveLicences } from '@/reports/activeUsers'
 import { oneDriveAttention } from './oneDriveAttention'
 import { nameMaskOf } from '@/lib/concealment'
 import { hideRowNames } from '@/lib/hiddenNames'
+import { reportedTemplate } from '@/lib/reportedTemplate'
 import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
@@ -92,10 +93,11 @@ const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
 
 function templateSlices(liveSites: StorageRow[]): TemplateSlice[] {
   const slices = topNWithOther(
-    totalsBy(liveSites, (site) => site.template?.trim() ?? ''),
+    totalsBy(liveSites, reportedTemplate),
     TOP_TEMPLATE_SLICES,
     ([, value]) => value,
     ([name]) => name,
+    '',
   )
   return slices.map((slice, index) => ({
     ...slice,

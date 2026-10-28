@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { reportedTemplate } from '@/lib/reportedTemplate'
 import { rowName } from '@/lib/rowName'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
@@ -279,9 +280,9 @@ export function SiteTable({
       case 'template':
         return (
           <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.pool === 'SharePoint' && !row.template?.trim()
+            {row.pool === 'SharePoint' && reportedTemplate(row) === ''
               ? t('storageOptimisation.template.notReported')
-              : row.template}
+              : reportedTemplate(row)}
           </span>
         )
       case 'capacity':
