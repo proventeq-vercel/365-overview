@@ -15,8 +15,8 @@ const withTemplates: StorageOverview = {
   sharePoint: {
     ...base.sharePoint,
     byTemplate: [
-      { name: 'STS#3', value: 300 * GB },
-      { name: 'TEAMCHANNEL#0', value: 200 * GB },
+      { name: 'STS#3', value: 300 * GB, group: 'named' },
+      { name: 'TEAMCHANNEL#0', value: 200 * GB, group: 'named' },
     ],
   },
 }
@@ -217,15 +217,22 @@ describe('DistributionSection', () => {
     expect(screen.getByText(/will not match the SharePoint admin centre/i)).toBeInTheDocument()
   })
 
-  it('names the sites the report gives no template for, with their storage, never as Unknown', () => {
-    const noTemplate = {
+  it('labels the not-reported and other template slices from the catalogue, with their storage', () => {
+    const grouped: StorageOverview = {
       ...base,
-      sharePoint: { ...base.sharePoint, byTemplate: [{ name: 'STS#3', value: 300 * GB }, { name: '', value: 4 * GB }] },
+      sharePoint: {
+        ...base.sharePoint,
+        byTemplate: [
+          { name: 'STS#3', value: 300 * GB, group: 'named' },
+          { name: '', value: 4 * GB, group: 'notReported' },
+          { name: '', value: 2 * GB, group: 'other' },
+        ],
+      },
     }
-    render(<DistributionSection overview={noTemplate} />)
-    const legend = screen.getByText('Template not reported').closest('li')!
-    expect(legend).toHaveTextContent('4 GB')
-    expect(screen.queryByText('Unknown')).toBeNull()
+    render(<DistributionSection overview={grouped} />)
+    const legend = screen.getAllByRole('listitem').map((item) => item.textContent)
+    expect(legend).toContain('Template not reported · 4 GB')
+    expect(legend).toContain('Other · 2 GB')
   })
 
   it('says there is no live OneDrive, not that an allocation is missing, when the report lists none', () => {

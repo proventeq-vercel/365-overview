@@ -109,6 +109,18 @@ describe('SiteTable', () => {
     expect(screen.getByText('TEAMCHANNEL#0')).toBeInTheDocument()
   })
 
+  it('says a site has no template reported, and leaves a OneDrive template empty', () => {
+    render(
+      <SiteTable
+        rows={[{ ...rows[0], template: ' ' }, drive]}
+        poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }}
+        columns={['name', 'template']}
+      />,
+    )
+    const templates = screen.getAllByRole('row').slice(1).map((row) => [row.textContent?.includes('alpha'), within(row).getAllByRole('cell')[1].textContent])
+    expect(templates).toEqual([[false, ''], [true, 'Template not reported']])
+  })
+
   it('sorts by storage used descending by default', () => {
     render(<SiteTable rows={rows} poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }} columns={['name', 'used']} />)
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('beta')

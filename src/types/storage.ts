@@ -25,6 +25,12 @@ export interface Slice {
   value: number
 }
 
+export type TemplateGroup = 'named' | 'notReported' | 'other'
+
+export interface TemplateSlice extends Slice {
+  group: TemplateGroup
+}
+
 export interface GrowthPoint {
   month: string
   actualUsedBytes: number | null
@@ -180,7 +186,7 @@ export interface StorageOverview {
     utilization: HealthStatus | null
     entitlementIsMeasured: boolean
     licenceEstimateBytes: number | null
-    byTemplate: Slice[]
+    byTemplate: TemplateSlice[]
     sites: StorageRow[]
     siteCount: number
     deletedButBilling: RetainedTotal

@@ -279,7 +279,9 @@ export function SiteTable({
       case 'template':
         return (
           <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.template ?? ''}
+            {row.pool === 'SharePoint' && !row.template?.trim()
+              ? t('storageOptimisation.template.notReported')
+              : row.template}
           </span>
         )
       case 'capacity':

@@ -609,16 +609,42 @@ describe('buildStorageOverview composition', () => {
       }),
     )
     expect(overview.sharePoint.byTemplate).toEqual([
-      { name: 'STS#3', value: 50 * GB },
-      { name: 'GROUP#0', value: 10 * GB },
+      { name: 'STS#3', value: 50 * GB, group: 'named' },
+      { name: 'GROUP#0', value: 10 * GB, group: 'named' },
     ])
   })
 
-  it('labels a site with no template rather than dropping it', () => {
+  it('groups the sites with no template, or a blank one, as not reported rather than dropping them', () => {
     const overview = buildStorageOverview(
-      inputs({ sites: [site({ template: undefined, storageUsedBytes: 4 * GB })] }),
+      inputs({
+        sites: [
+          site({ id: 'a', template: undefined, storageUsedBytes: 4 * GB }),
+          site({ id: 'b', template: ' ', storageUsedBytes: 1 * GB }),
+        ],
+      }),
     )
-    expect(overview.sharePoint.byTemplate).toEqual([{ name: '', value: 4 * GB }])
+    expect(overview.sharePoint.byTemplate).toEqual([{ name: '', value: 5 * GB, group: 'notReported' }])
+  })
+
+  it('adds every template past the eighth largest into one slice grouped as other', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: Array.from({ length: 10 }, (_, index) =>
+          site({ id: `s${index}`, template: `T${index}`, storageUsedBytes: (20 - index) * GB }),
+        ),
+      }),
+    )
+    expect(overview.sharePoint.byTemplate.map((slice) => [slice.group, slice.value / GB])).toEqual([
+      ['named', 20],
+      ['named', 19],
+      ['named', 18],
+      ['named', 17],
+      ['named', 16],
+      ['named', 15],
+      ['named', 14],
+      ['named', 13],
+      ['other', 23],
+    ])
   })
 
   it('carries the report refresh date through untouched', () => {

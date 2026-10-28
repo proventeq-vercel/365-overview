@@ -196,7 +196,7 @@
   "table.column.help.used": "Storage consumed, as Microsoft's usage report measures it, as of the report date.",
   "table.column.help.share": "This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is drawn to the same scale. A pool that holds no storage at all gives each of its rows 0.0%; shares that would round to 0.0% or 100.0% read <0.1% and >99.9%.",
   "table.column.help.lastActivity": "The most recent day with file activity in the 180-day reporting period. Never means no activity was recorded in that period.",
-  "table.column.help.template": "The SharePoint template the site was created from. Team Channel and Group templates count as Teams in the workload split; everything else counts as SharePoint.",
+  "table.column.help.template": "The SharePoint template the site was created from, or Template not reported when Microsoft's usage report gives none. Team Channel and Group templates count as Teams in the workload split; everything else counts as SharePoint.",
   "table.column.help.capacity": "How much of the drive's own storage quota is used \u2014 the limit a OneDrive actually stops at. Blank for sites, whose allocation is the 25 TB site-collection maximum rather than a quota, and for a OneDrive that reports no limit.",
   "table.column.help.overEntitlement": "How much more the drive holds than the OneDrive storage per user this report measures against.",
   "table.column.help.overDriveLimit": "How much more the drive holds than the commonest OneDrive limit, which this report measures against when no licence or setting gives the storage per user.",
@@ -287,6 +287,7 @@
   "storageOptimisation.template.title": "Storage by site template",
   "storageOptimisation.template.subtitle": "SharePoint storage grouped by the template each site was created from",
   "storageOptimisation.template.notReported": "Template not reported",
+  "storageOptimisation.template.other": "Other",
 
   "storageOptimisation.growth.sectionTitle": "Future state & growth impact",
   "storageOptimisation.growth.sectionSubtitle": "Where storage is heading at the current growth rate — and what it costs if nothing changes",

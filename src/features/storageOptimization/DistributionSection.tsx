@@ -1,11 +1,10 @@
 import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
-import type { Slice, StorageOverview } from '@/types/storage'
+import type { StorageOverview, TemplateSlice } from '@/types/storage'
 import { MonoDoughnut } from '@/design/charts'
 import { Legend, PanelDescription, PanelLabel, Panel, Section } from '@/design/primitives'
 import { monoColor } from '@/design/theme'
-import { NO_TEMPLATE } from '@/model/storageOverview'
 import { OneDrivePoolPanel } from './OneDrivePoolPanel'
 import { StorageUsagePanel } from './StorageUsagePanel'
 
@@ -14,9 +13,9 @@ interface Props {
   delay?: number
 }
 
-function shaded(slices: Slice[], noTemplateLabel: string) {
+function shaded(slices: TemplateSlice[], label: (slice: TemplateSlice) => string) {
   return slices.map((slice, index) => ({
-    name: slice.name === NO_TEMPLATE ? noTemplateLabel : slice.name,
+    name: label(slice),
     value: slice.value,
     color: monoColor(index, slices.length),
   }))
@@ -25,7 +24,13 @@ function shaded(slices: Slice[], noTemplateLabel: string) {
 export function DistributionSection({ overview, delay }: Props) {
   const t = useTranslation()
   const { sharePoint } = overview
-  const templates = shaded(sharePoint.byTemplate, t('storageOptimisation.template.notReported'))
+  const templates = shaded(sharePoint.byTemplate, (slice) =>
+    slice.group === 'other'
+      ? t('storageOptimisation.template.other')
+      : slice.group === 'notReported'
+        ? t('storageOptimisation.template.notReported')
+        : slice.name,
+  )
 
   return (
     <Section

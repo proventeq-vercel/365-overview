@@ -88,7 +88,7 @@ Every site and drive in the usage reports, in one table.
 | Files | Files stored as of the report date. |
 | Active files | Files created, edited or otherwise active in the 180-day period. |
 | Last activity | The most recent day with file activity. **Never** means none in the 180 days. |
-| Template | The template the site was created from. |
+| Template | The template the site was created from, or **Template not reported** when Microsoft's usage report gives none. Empty for OneDrives. |
 
 Hover over or focus a column header to see its explanation in the table itself.
 
