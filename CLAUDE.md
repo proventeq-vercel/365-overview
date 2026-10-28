@@ -113,7 +113,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
   derivation of every figure on screen. Pure, table-tested.
 - `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,
-  `topNWithOther`, `format`, `thresholds`, `rowSearch` (the table's search and
+  `topNWithOther`, `format`, `thresholds`, `reportedTemplate`, `rowSearch` (the table's search and
   sort, sized for millions of rows: one lower-cased key per row built once per
   data load, an index permutation per sort change, one `includes` per row per
   keystroke — `SiteTable` feeds it a `useDeferredValue` query so typing never

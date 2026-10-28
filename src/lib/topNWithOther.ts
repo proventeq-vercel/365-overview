@@ -5,7 +5,7 @@ export function topNWithOther<T>(
   n: number,
   value: (item: T) => number,
   label: (item: T) => string,
-  otherLabel = 'Other',
+  otherLabel: string,
 ): Slice[] {
   const sorted = [...items].sort((a, b) => value(b) - value(a))
   const head = sorted.slice(0, n).map((item) => ({ name: label(item), value: value(item) }))

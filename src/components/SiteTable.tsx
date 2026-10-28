@@ -277,14 +277,17 @@ export function SiteTable({
             {row.lastActivityDate ?? t('table.never')}
           </span>
         )
-      case 'template':
+      case 'template': {
+        const template =
+          row.pool === 'SharePoint' && reportedTemplate(row) === ''
+            ? t('storageOptimisation.template.notReported')
+            : reportedTemplate(row)
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.pool === 'SharePoint' && reportedTemplate(row) === ''
-              ? t('storageOptimisation.template.notReported')
-              : reportedTemplate(row)}
+          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600" title={template || undefined}>
+            {template}
           </span>
         )
+      }
       case 'capacity':
         return (
           <span role="cell" key={key} className="tabular text-p365-grey-600">
