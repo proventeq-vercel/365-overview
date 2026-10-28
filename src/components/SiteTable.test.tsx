@@ -207,10 +207,16 @@ describe('SiteTable', () => {
     expect(cell).toHaveTextContent('<0.1%')
   })
 
-  it('shows an unknown share, not 0%, when its pool total is not known', () => {
-    render(<SiteTable rows={[drive]} poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }} columns={['name', 'share']} />)
+  it('shows 0.0%, never Unknown, for a row of a pool that holds no storage', () => {
+    render(
+      <SiteTable
+        rows={[{ ...drive, storageUsedBytes: 0 }]}
+        poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }}
+        columns={['name', 'share']}
+      />,
+    )
     const [cell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell').slice(1)
-    expect(cell).toHaveTextContent('Unknown')
+    expect(cell).toHaveTextContent(/^0\.0%$/)
   })
 
   it('shows the resolved display name over a link to the site that opens in a new tab', () => {

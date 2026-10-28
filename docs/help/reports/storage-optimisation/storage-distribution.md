@@ -77,8 +77,8 @@ entitlement still shows its real percentage, above 100%.
 ## Storage by site template
 
 SharePoint storage grouped by the template each live site was created from. The eight largest
-templates are shown by name, and the rest are added together as **Other**. Sites without a
-template are grouped as **Unknown**.
+templates are shown by name, and the rest are added together as **Other**. Sites the usage report
+gives no template for are grouped as **Template not reported**.
 
 Use it to see which kind of site holds the volume, for example team sites, communication sites
 or Teams channel sites.

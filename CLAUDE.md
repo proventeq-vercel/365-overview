@@ -487,7 +487,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (its own `usedBytes` and `driveCount`) and counts the rest in `withoutLimit`,
   named under the line; it is `null` only when no live drive reports one. The Share column divides each row by its own pool
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
-  a trend lists no day with storage) and shows *Unknown* for a pool total of 0.
+  a trend lists no day with storage). A pool total of 0 therefore means every
+  row in it is 0 B, and the Share reads 0.0%, never *Unknown*.
   **Versions is always `null`**: the usage reports count version history inside
   each site's storage and never split it out, so it is shown *Not measured*,
   never as a size or a guess. Workload colours are

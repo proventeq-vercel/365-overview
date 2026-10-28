@@ -89,6 +89,8 @@ const sumBytes = (rows: StorageRow[]): number =>
 const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
   trend.length === 0 ? sumBytes(rows) : latest(trend)
 
+export const NO_TEMPLATE = ''
+
 const latestDay = (...trends: UsagePoint[][]): string =>
   trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
 
@@ -328,7 +330,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       entitlementIsMeasured,
       licenceEstimateBytes,
       byTemplate: topNWithOther(
-        totalsBy(liveSites, (site) => site.template || 'Unknown'),
+        totalsBy(liveSites, (site) => site.template || NO_TEMPLATE),
         TOP_TEMPLATE_SLICES,
         ([, value]) => value,
         ([name]) => name,

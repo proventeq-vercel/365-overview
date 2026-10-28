@@ -618,7 +618,7 @@ describe('buildStorageOverview composition', () => {
     const overview = buildStorageOverview(
       inputs({ sites: [site({ template: undefined, storageUsedBytes: 4 * GB })] }),
     )
-    expect(overview.sharePoint.byTemplate).toEqual([{ name: 'Unknown', value: 4 * GB }])
+    expect(overview.sharePoint.byTemplate).toEqual([{ name: '', value: 4 * GB }])
   })
 
   it('carries the report refresh date through untouched', () => {
@@ -715,6 +715,18 @@ describe('buildStorageOverview growth and cost', () => {
     )
     expect(overview.growth.rateSource).toBe('monthly')
     expect(overview.growth.addedInWindowBytes).toBe(50 * GB)
+  })
+
+  it('totals each pool from its rows when the trend lists only days with no storage', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sites: [site({ storageUsedBytes: 30 * GB }), site({ id: 's2', storageUsedBytes: 5 * GB })],
+        drives: [drive({ storageUsedBytes: 7 * GB })],
+        sharePointTrend: monthly([0, 0]),
+        oneDriveTrend: monthly([0, 0]),
+      }),
+    )
+    expect(overview.offenders.poolUsedBytes).toEqual({ SharePoint: 35 * GB, OneDrive: 7 * GB })
   })
 
   it('takes the storage used from the usage report rows, and draws that one point, when the trend lists no day', () => {

@@ -217,6 +217,17 @@ describe('DistributionSection', () => {
     expect(screen.getByText(/will not match the SharePoint admin centre/i)).toBeInTheDocument()
   })
 
+  it('names the sites the report gives no template for, with their storage, never as Unknown', () => {
+    const noTemplate = {
+      ...base,
+      sharePoint: { ...base.sharePoint, byTemplate: [{ name: 'STS#3', value: 300 * GB }, { name: '', value: 4 * GB }] },
+    }
+    render(<DistributionSection overview={noTemplate} />)
+    const legend = screen.getByText('Template not reported').closest('li')!
+    expect(legend).toHaveTextContent('4 GB')
+    expect(screen.queryByText('Unknown')).toBeNull()
+  })
+
   it('says there is no live OneDrive, not that an allocation is missing, when the report lists none', () => {
     render(
       <DistributionSection

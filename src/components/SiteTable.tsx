@@ -48,9 +48,9 @@ interface ColumnSpec {
   sortValue?: (row: StorageRow, poolUsedBytes: Record<StoragePool, number>) => number
 }
 
-function shareOfPool(row: StorageRow, poolUsedBytes: Record<StoragePool, number>): number | null {
+function shareOfPool(row: StorageRow, poolUsedBytes: Record<StoragePool, number>): number {
   const poolBytes = poolUsedBytes[row.pool]
-  return poolBytes > 0 ? row.storageUsedBytes / poolBytes : null
+  return poolBytes > 0 ? row.storageUsedBytes / poolBytes : 0
 }
 
 const capacityRatio = (row: StorageRow): number =>
@@ -97,7 +97,7 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
     help: 'table.column.help.share',
     sortable: true,
     width: 'minmax(120px,1.4fr)',
-    sortValue: (r, poolUsedBytes) => shareOfPool(r, poolUsedBytes) ?? -1,
+    sortValue: shareOfPool,
   },
   lastActivity: {
     label: 'table.column.lastActivity',
@@ -299,13 +299,6 @@ export function SiteTable({
         )
       case 'share': {
         const share = shareOfPool(row, poolUsedBytes)
-        if (share === null) {
-          return (
-            <span role="cell" key={key} className="tabular text-p365-grey-500">
-              {t('table.shareUnknown')}
-            </span>
-          )
-        }
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
             <span className="tabular w-12 text-p365-grey-600">{formatShare(share, 1)}</span>
