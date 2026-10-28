@@ -283,8 +283,10 @@ export function SiteTable({
             ? t('storageOptimisation.template.notReported')
             : reportedTemplate(row)
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600" title={template || undefined}>
-            {template}
+          <span role="cell" key={key} className="min-w-0 text-p365-grey-600">
+            <span className="block truncate" title={template || undefined}>
+              {template}
+            </span>
           </span>
         )
       }

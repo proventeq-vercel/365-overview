@@ -119,7 +119,9 @@ describe('SiteTable', () => {
     )
     const templates = screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].textContent)
     expect(templates).toEqual(['STS#3', '', 'Template not reported'])
-    expect(screen.getByRole('cell', { name: 'Template not reported' })).toHaveAttribute('title', 'Template not reported')
+    const cell = screen.getByRole('cell', { name: 'Template not reported' })
+    expect(within(cell).getByTitle('Template not reported')).toHaveTextContent('Template not reported')
+    expect(cell).not.toHaveAttribute('title')
   })
 
   it('sorts by storage used descending by default', () => {
