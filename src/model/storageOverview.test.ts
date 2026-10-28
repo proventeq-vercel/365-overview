@@ -792,9 +792,64 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.offenders.poolUsedBytes.OneDrive).toBe(60 * GB)
   })
 
-  it('places the one point at the current month when the site report gives no report date', () => {
-    const overview = buildStorageOverview(inputs({ sharePointTrend: [], reportRefreshDate: '' }))
+  it('places the one point at the current month when no report gives a date', () => {
+    const overview = buildStorageOverview(inputs({ sharePointTrend: [], oneDriveTrend: [], reportRefreshDate: '' }))
     expect(overview.growth.points.map((point) => point.month)).toEqual(['2026-09'])
+  })
+
+  it('leaves SharePoint out, never 0 B used, when the site usage report did not come back and the trend holds no storage', () => {
+    const zeroDays = [
+      { date: '2026-08-29', value: 0 },
+      { date: '2026-08-30', value: 0 },
+    ]
+    const overview = buildStorageOverview(inputs({ sites: [], sharePointTrend: zeroDays, unreadReports: ['sites'] }))
+    expect(overview.sharePoint.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], sharePointTrend: [], unreadReports: ['sites'] })).sharePoint.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], unreadReports: ['sites'] })).sharePoint.read).toBe(true)
+  })
+
+  it('leaves OneDrive out, never 0 B used, when the OneDrive usage report did not come back and its trend holds no storage', () => {
+    const overview = buildStorageOverview(inputs({ drives: [], oneDriveTrend: [], unreadReports: ['drives'] }))
+    expect(overview.oneDrive.read).toBe(false)
+    const zeroDays = [{ date: '2026-08-30', value: 0 }]
+    expect(buildStorageOverview(inputs({ drives: [], oneDriveTrend: zeroDays, unreadReports: ['drives'] })).oneDrive.read).toBe(false)
+    expect(overview.oneDrive.unreadReports).toEqual(['drives'])
+    expect(overview.sharePoint.unreadReports).toEqual([])
+  })
+
+  it('has no offenders to list when neither usage report came back', () => {
+    const overview = buildStorageOverview(inputs({ sites: [], drives: [], unreadReports: ['sites', 'drives'] }))
+    expect(overview.offenders.read).toBe(false)
+    expect(buildStorageOverview(inputs({ sites: [], unreadReports: ['sites'] })).offenders.read).toBe(true)
+  })
+
+  it('prices no archive saving when the site usage report did not come back, even without an entitlement', () => {
+    const { archive } = buildStorageOverview(unknownEntitlement({ sites: [], unreadReports: ['sites'] }))
+    expect(archive.applies).toBe(false)
+    expect(archive.savingApplies).toBe(false)
+    expect(buildStorageOverview(unknownEntitlement()).archive.savingApplies).toBe(true)
+  })
+
+  it('dates the report by the latest trend day that holds storage, skipping a day reported as 0', () => {
+    const overview = buildStorageOverview(
+      inputs({
+        sharePointTrend: [
+          { date: '2026-08-29', value: 150 * GB },
+          { date: '2026-08-30', value: 0 },
+        ],
+        oneDriveTrend: [],
+        reportRefreshDate: '',
+      }),
+    )
+    expect(overview.reportRefreshDate).toBe('2026-08-29')
+  })
+
+  it('dates the report by the latest trend day when the site report gives no date', () => {
+    const overview = buildStorageOverview(
+      inputs({ oneDriveTrend: [{ date: '2026-07-03', value: 60 * GB }], reportRefreshDate: '' }),
+    )
+    expect(overview.reportRefreshDate).toBe('2026-07-03')
+    expect(overview.archive.inactiveSince).toBe('2023-07-03')
   })
 
   it('says OneDrive storage came from the account rows only when its trend lists no day', () => {
@@ -1085,7 +1140,7 @@ describe('buildStorageOverview inactive sites', () => {
   })
 
   it('measures inactivity from today, instead of crashing, when the report carries no refresh date', () => {
-    const { archive } = buildStorageOverview({ ...tenant(), reportRefreshDate: '' })
+    const { archive } = buildStorageOverview({ ...tenant(), reportRefreshDate: '', sharePointTrend: [], oneDriveTrend: [] })
     expect(archive.inactiveSince).toBe('2023-09-02')
     expect(archive.siteCount).toBe(2)
   })

@@ -42,6 +42,7 @@ export interface RetainedTotal {
 export type GrowthRateSource = 'monthly' | 'daily' | 'none'
 
 export interface CleanUpForecast {
+  applies: boolean
   inactiveBytes: number
   deletedBytes: number
   removableBytes: number
@@ -149,10 +150,25 @@ export interface OverEntitlement {
   excessBytes: number
 }
 
+export const CORE_REPORTS = ['sites', 'drives', 'sharePointTrend', 'oneDriveTrend'] as const
+
+export type CoreReport = (typeof CORE_REPORTS)[number]
+
+export const REPORT_POOL: Record<CoreReport, StoragePool> = {
+  sites: 'SharePoint',
+  drives: 'OneDrive',
+  sharePointTrend: 'SharePoint',
+  oneDriveTrend: 'OneDrive',
+}
+
 export interface StorageOverview {
   reportRefreshDate: string
 
   sharePoint: {
+    read: boolean
+    unreadReports: CoreReport[]
+    siteReportRead: boolean
+    trendRead: boolean
     usedBytes: number
     usedFromSiteReport: boolean
     entitledBytes: number | null
@@ -171,6 +187,10 @@ export interface StorageOverview {
   }
 
   oneDrive: {
+    read: boolean
+    unreadReports: CoreReport[]
+    accountReportRead: boolean
+    trendRead: boolean
     usedBytes: number
     usedFromAccountReport: boolean
     drives: StorageRow[]
@@ -182,17 +202,18 @@ export interface StorageOverview {
     limitWhenUnset: 'licences' | 'driveLimit' | null
     overEntitlement: OverEntitlement | null
     pool: OneDrivePool
-    attention: OneDriveAttention
+    attention: OneDriveAttention | null
   }
 
   breakdown: StorageBreakdown
 
   offenders: {
+    read: boolean
     rows: StorageRow[]
     poolUsedBytes: Record<StoragePool, number>
     topSites: Slice[]
     topDrives: Slice[]
-    retained: RetainedTotal
+    retained: RetainedTotal | null
   }
 
   growth: {
@@ -211,6 +232,7 @@ export interface StorageOverview {
   }
 
   archive: {
+    applies: boolean
     inactiveYears: number
     inactiveSince: string
     siteCount: number
@@ -234,5 +256,6 @@ export interface StorageOverview {
   caveats: {
     entitlementIsEstimated: boolean
     nameMask: NameMask | null
+    unreadReports: CoreReport[]
   }
 }

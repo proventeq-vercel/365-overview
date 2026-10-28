@@ -13,9 +13,12 @@ export function CleanUpForecast({ overview }: Props) {
   const { afterCleanUp, rateSource } = overview.growth
   const { inactiveYears } = overview.archive
 
+  const removable = formatBytes(afterCleanUp.removableBytes)
   const hint =
     rateSource === 'none'
-      ? t('storageOptimisation.growth.cleanUp.firstDay', { removable: formatBytes(afterCleanUp.removableBytes) })
+      ? overview.sharePoint.trendRead
+        ? t('storageOptimisation.growth.cleanUp.firstDay', { removable })
+        : t('storageOptimisation.growth.cleanUp.trendUnread', { removable })
       : afterCleanUp.removableBytes === 0
         ? t('storageOptimisation.growth.cleanUp.nothingRemovable', { years: inactiveYears })
         : t('storageOptimisation.growth.cleanUp.counted', {

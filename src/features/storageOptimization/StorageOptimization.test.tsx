@@ -269,18 +269,144 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByRole('heading', { name: /main offenders/i })).not.toBeInTheDocument()
   })
 
+  it('leaves out only the figures of the site usage report when it does not come back', async () => {
+    renderApp('no-site-report')
+    await reportLoaded()
+    expect(screen.getByText(/^Microsoft's SharePoint site usage report did not come back this time/)).toBeInTheDocument()
+    expect(screen.getByText(/Data as of 2026-08-31\./)).toBeInTheDocument()
+    expect(screen.getByText('Where storage sits today, from the Microsoft reports that came back')).toBeInTheDocument()
+    expect(screen.getByText('The OneDrives driving the most storage')).toBeInTheDocument()
+    expect(screen.getByText('All OneDrives')).toBeInTheDocument()
+    expect(screen.getByText('Every OneDrive in the OneDrive usage report, sortable and searchable')).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search OneDrives' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /^Drive/ })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: /^Template/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
+    expect(screen.getByText('Forecast exhaustion')).toBeInTheDocument()
+    expect(screen.queryByText('Storage by site template')).not.toBeInTheDocument()
+    expect(screen.queryByText('If inactive and deleted sites are cleaned up')).not.toBeInTheDocument()
+    expect(screen.queryByText('Deleted but still billing')).not.toBeInTheDocument()
+    expect(screen.queryByText('Top SharePoint sites by storage')).not.toBeInTheDocument()
+    expect(screen.queryByText('Forecast after clean-up')).not.toBeInTheDocument()
+    expect(screen.queryByText('Live sites')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Grouped by site template/)).not.toBeInTheDocument()
+    expect(screen.getByText('Drives near their quota')).toBeInTheDocument()
+    expect(screen.getByText('Top OneDrives by storage')).toBeInTheDocument()
+  })
+
+  it('leaves out only the per-drive figures when the OneDrive usage report does not come back', async () => {
+    renderApp('no-onedrive-report')
+    await reportLoaded()
+    expect(screen.getByText(/^Microsoft's OneDrive usage report did not come back this time/)).toBeInTheDocument()
+    expect(screen.getByText('The sites driving the most storage')).toBeInTheDocument()
+    expect(screen.getByText('All sites')).toBeInTheDocument()
+    expect(screen.getByText('Every site in the SharePoint site usage report, sortable and searchable')).toBeInTheDocument()
+    expect(screen.queryByText('Top OneDrives by storage')).not.toBeInTheDocument()
+    expect(screen.queryByText('Drives near their quota')).not.toBeInTheDocument()
+    expect(screen.getByText('Live sites')).toBeInTheDocument()
+    expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
+  })
+
+  it('leaves OneDrive out as a whole, and gives no date it does not have, when only the OneDrive usage report came back', async () => {
+    const down = () => Promise.reject(new ApiError(503, 'Service unavailable'))
+    renderApp('healthy', { getSites: down, getReportRefreshDate: down, getSharePointTrend: down, getOneDriveTrend: down })
+    await reportLoaded()
+    expect(screen.queryByText(/Data as of/)).not.toBeInTheDocument()
+    expect(screen.getByText('Top OneDrives by storage')).toBeInTheDocument()
+
+    cleanup()
+    renderApp('healthy', { getDrives: down, getOneDriveTrend: down })
+    await reportLoaded()
+    expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
+    expect(screen.getByText('Storage usage')).toBeInTheDocument()
+    expect(screen.getByText(/OneDrive is a separate pool\. Hover or select/)).toBeInTheDocument()
+
+    cleanup()
+    renderApp('no-licences', { getDrives: down, getOneDriveTrend: down })
+    await reportLoaded()
+    expect(screen.getByText('Every SharePoint workload on one line. OneDrive is a separate pool. Hover or select a part for details.')).toBeInTheDocument()
+  })
+
+  it('lists no offenders and reads no daily report when neither usage report comes back', async () => {
+    const down = () => Promise.reject(new ApiError(500, 'Server exploded'))
+    const getSitesOn = vi.fn(async () => [])
+    renderApp('healthy', { getSites: down, getReportRefreshDate: down, getDrives: down, getSitesOn })
+    expect(await screen.findByRole('heading', { name: /Future state & growth impact/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /main offenders/i })).not.toBeInTheDocument()
+    expect(getSitesOn).not.toHaveBeenCalled()
+  })
+
+  it('says the clean-up forecast waits for the storage trend when the trend did not come back', async () => {
+    renderApp('no-trends')
+    await reportLoaded()
+    expect(screen.getByText(/The forecast after clean-up returns when Refresh data brings the SharePoint storage trend back\.$/)).toBeInTheDocument()
+  })
+
+  it('leaves SharePoint out as a whole when neither of its reports comes back', async () => {
+    renderApp('no-sharepoint-reports')
+    await reportLoaded()
+    expect(screen.getByText(/^Microsoft's SharePoint site usage report and SharePoint storage trend did not come back/)).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Tenant capacity' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Future state & growth impact/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Storage usage')).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "A separate pool: each user's OneDrive has its own allowance from their licence, so it does not use the SharePoint entitlement.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
+  })
+
+  it('names the report the last reload lost, and that the page still shows the earlier load', async () => {
+    const user = userEvent.setup()
+    const source = createMockDataSource('no-site-report')
+    const healthy = createMockDataSource('healthy')
+    let reloaded = false
+    renderApp('no-site-report', {
+      getSites: () => (reloaded ? healthy.getSites() : source.getSites()),
+      getReportRefreshDate: () => (reloaded ? healthy.getReportRefreshDate() : source.getReportRefreshDate()),
+      getDrives: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getDrives()),
+    })
+    await reportLoaded()
+    expect(screen.queryByText(/still shows the earlier load/)).not.toBeInTheDocument()
+
+    reloaded = true
+    await chooseOption(user, /refresh data/i)
+
+    expect(
+      await screen.findByText(
+        "The last reload of Microsoft's reports did not bring back the OneDrive usage report, so this page still shows the earlier load. In that earlier load, Microsoft's SharePoint site usage report did not come back, so the figures drawn from it are left out of this page.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Top OneDrives by storage')).toBeInTheDocument()
+  })
+
+  it('asks for the missing report again from the note', async () => {
+    const user = userEvent.setup()
+    const { ds } = renderApp('no-site-report')
+    await reportLoaded()
+    const reads = ds.getSites.mock.calls.length
+    await user.click(within(screen.getByText(/did not come back this time/).closest('[role="status"]') as HTMLElement).getByRole('button', { name: 'Refresh data' }))
+    await waitFor(() => expect(ds.getSites.mock.calls.length).toBeGreaterThan(reads))
+  })
+
   it('offers a retry on an unexplained failure and recovers when it succeeds', async () => {
     const user = userEvent.setup()
     const healthy = createMockDataSource('healthy')
-    let attempts = 0
+    let down = true
+    const failing =
+      <T,>(read: () => Promise<T>) =>
+      () =>
+        down ? Promise.reject(new ApiError(500, 'Server exploded')) : read()
     renderApp('healthy', {
-      getSites: () => {
-        attempts += 1
-        return attempts === 1 ? Promise.reject(new ApiError(500, 'Server exploded')) : healthy.getSites()
-      },
+      getSites: failing(healthy.getSites),
+      getDrives: failing(healthy.getDrives),
+      getSharePointTrend: failing(healthy.getSharePointTrend),
+      getOneDriveTrend: failing(healthy.getOneDriveTrend),
     })
     expect(await screen.findByRole('alert')).toHaveTextContent('Server exploded')
 
+    down = false
     await user.click(screen.getByRole('button', { name: 'Try again' }))
     await reportLoaded()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

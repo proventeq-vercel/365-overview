@@ -4,15 +4,15 @@ import { FeatureFlags } from '@/config/featureFlags'
 import { REPORT_PATHS } from '@/features/reportPaths'
 import { formatBytes, formatShare } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
-import type { OneDriveAllocation, StorageOverview } from '@/types/storage'
+import type { OneDriveAllocation, OneDriveAttention, StorageOverview } from '@/types/storage'
 import { SegmentedBar } from '@/design/SegmentedBar'
 import { ShareHeadline } from '@/design/ShareHeadline'
 import { Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { P365, WORKLOAD_COLOR } from '@/design/theme'
 
-function AttentionLine({ overview }: { overview: StorageOverview }) {
+function AttentionLine({ attention, overview }: { attention: OneDriveAttention; overview: StorageOverview }) {
   const t = useTranslation()
-  const { attention, deletedButBilling } = overview.oneDrive
+  const { deletedButBilling } = overview.oneDrive
   const figures = { inactive: formatBytes(attention.inactive.bytes), deleted: formatBytes(deletedButBilling.bytes) }
   const { unlicensed } = attention
   const line =
@@ -99,14 +99,22 @@ function AllocationLine({ allocation }: { allocation: OneDriveAllocation }) {
 
 export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
   const t = useTranslation()
-  const { pool, driveCount, drivesNearCap } = overview.oneDrive
+  const { pool, driveCount, drivesNearCap, accountReportRead, usedBytes, attention } = overview.oneDrive
   const { allocation } = pool
 
   return (
     <Panel>
       <PanelLabel>{t('storageOptimisation.oneDrivePool.title')}</PanelLabel>
-      <PanelDescription>{t('storageOptimisation.oneDrivePool.subtitle')}</PanelDescription>
-      {driveCount === 0 ? (
+      <PanelDescription>
+        {overview.sharePoint.read
+          ? t('storageOptimisation.oneDrivePool.subtitle')
+          : t('storageOptimisation.oneDrivePool.subtitleAlone')}
+      </PanelDescription>
+      {!accountReportRead ? (
+        <p className="text-sm text-p365-grey-700">
+          {t('storageOptimisation.oneDrivePool.trendOnly', { used: formatBytes(usedBytes) })}
+        </p>
+      ) : driveCount === 0 ? (
         <p className="text-sm text-p365-grey-700">{t('storageOptimisation.oneDrivePool.none')}</p>
       ) : allocation === null ? (
         <p className="text-sm text-p365-grey-700">
@@ -115,7 +123,7 @@ export function OneDrivePoolPanel({ overview }: { overview: StorageOverview }) {
       ) : (
         <AllocationLine allocation={allocation} />
       )}
-      <AttentionLine overview={overview} />
+      {attention !== null && <AttentionLine attention={attention} overview={overview} />}
       {drivesNearCap > 0 && (
         <PanelDescription>{t('storageOptimisation.oneDrivePool.nearCap', { count: drivesNearCap })}</PanelDescription>
       )}

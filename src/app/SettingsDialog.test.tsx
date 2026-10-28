@@ -122,6 +122,20 @@ describe('SettingsDialog', () => {
     const drives = (await createMockDataSource().getDrives()).map((drive) => ({ ...drive, allocatedBytes: undefined }))
     renderDialog(undefined, true, 'no-licences', { getDrives: async () => drives })
     expect(await screen.findByText(/Left empty, no OneDrive is measured against a limit: neither the licences nor the OneDrives give one\.$/)).toBeInTheDocument()
+  })
+
+  it('says the OneDrives are not measured while their usage report is missing, even with licences read', async () => {
+    renderDialog(undefined, true, 'no-onedrive-report')
+    expect(
+      await screen.findByText(/The OneDrive usage report did not come back this time, so no OneDrive is measured until it does\.$/),
+    ).toBeInTheDocument()
+  })
+
+  it('says the OneDrives were not read, not that they give no limit, when the OneDrive usage report did not come back', async () => {
+    renderDialog(undefined, true, 'no-onedrive-report', { getLicenses: async () => null })
+    expect(
+      await screen.findByText(/The OneDrive usage report did not come back this time, so no OneDrive is measured until it does\.$/),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('OneDrive storage per user')).toHaveAttribute('placeholder', 'Not set')
   })
 

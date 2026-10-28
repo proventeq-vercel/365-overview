@@ -15,6 +15,10 @@ const SCENARIOS = [
   'onedrive-over-licence',
   'no-daily-reports',
   'onedrive-gaps',
+  'no-site-report',
+  'no-onedrive-report',
+  'no-trends',
+  'no-sharepoint-reports',
 ]
 
 for (const scenario of SCENARIOS) {
@@ -28,7 +32,12 @@ for (const scenario of SCENARIOS) {
   test(`the ${scenario} tenant's OneDrive report never says a figure is missing`, async ({ page }) => {
     await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=${scenario}`)
     await expect(page.getByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByRole('heading', { name: /^Inactive, deleted and (unlicensed|quiet) OneDrives$/ })).toBeVisible()
+    await expect(
+      page
+        .getByRole('heading', { name: /^Inactive, deleted and (unlicensed|quiet) OneDrives$/ })
+        .or(page.getByRole('status').filter({ hasText: /did not come back this time/ }))
+        .first(),
+    ).toBeVisible()
     expect(await page.getByRole('main').innerText()).not.toMatch(NOTHING_SHOWN)
   })
 }
@@ -49,6 +58,17 @@ test('without the active-user report the quiet OneDrives stand in for the unlice
   await page.goto('/?scenario=onedrive-gaps')
   await expect(page.getByText(/^of the .+ allocated to the 388 OneDrives that report a limit used/)).toBeVisible()
   await expect(page.getByText(/^10 live OneDrives holding .+ report no limit and are left out of this line\.$/)).toBeVisible()
+})
+
+test('a report that does not come back leaves out only its own figures, and Refresh data asks for it again', async ({ page }) => {
+  await page.goto('/?scenario=no-site-report')
+  const note = page.getByRole('status').filter({ hasText: 'did not come back this time' })
+  await expect(note).toHaveText(/^Microsoft's SharePoint site usage report did not come back this time/)
+  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })).toBeVisible()
+  await expect(page.getByText('Inactive sites to archive')).toHaveCount(0)
+  await expect(page.getByText('Top OneDrives by storage')).toBeVisible()
+  await note.getByRole('button', { name: 'Refresh data' }).click()
+  await expect(note).toBeVisible()
 })
 
 test('a short history is forecast from its daily storage, and says over how many days', async ({ page }) => {

@@ -3,8 +3,8 @@ import { cleanup, screen } from '@testing-library/react'
 import { render } from '@/test/render'
 import type * as EnvModule from '@/config/env'
 import { FeatureFlags } from '@/config/featureFlags'
-import type { StorageOverview } from '@/types/storage'
-import { base } from '@/features/storageOptimization/testFixtures'
+import type { OneDriveAttention, StorageOverview } from '@/types/storage'
+import { base, baseAttention } from '@/features/storageOptimization/testFixtures'
 import { P365 } from '@/design/theme'
 import { InactiveDrivesSection } from './InactiveDrivesSection'
 
@@ -30,12 +30,19 @@ function rgb(hex: string): string {
 
 const card = (label: string) => screen.getByText(label).closest('[data-slot="stat-card"]')!
 
-const withAttention = (attention: Partial<StorageOverview['oneDrive']['attention']>): StorageOverview => ({
+const withAttention = (attention: Partial<OneDriveAttention>): StorageOverview => ({
   ...base,
-  oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, ...attention } },
+  oneDrive: { ...base.oneDrive, attention: { ...baseAttention, ...attention } },
 })
 
 describe('InactiveDrivesSection', () => {
+  it('renders nothing without the OneDrive usage report', () => {
+    const { container } = render(
+      <InactiveDrivesSection overview={{ ...base, oneDrive: { ...base.oneDrive, attention: null } }} />,
+    )
+    expect(container).toBeEmptyDOMElement()
+  })
+
   it('shows inactive, deleted and unlicensed OneDrives as three cards, never one total', () => {
     render(<InactiveDrivesSection overview={base} />)
     expect(card('Inactive OneDrives')).toHaveTextContent('30 GB')
@@ -87,8 +94,8 @@ describe('InactiveDrivesSection', () => {
   })
 
   it('bands the inactive OneDrives by years past the window, leaving out empty bands', () => {
-    const bands = base.oneDrive.attention.inactive.bands.map((band) => (band.band === 'never' ? { ...band, count: 0, bytes: 0 } : band))
-    render(<InactiveDrivesSection overview={withAttention({ inactive: { ...base.oneDrive.attention.inactive, bands } })} />)
+    const bands = baseAttention.inactive.bands.map((band) => (band.band === 'never' ? { ...band, count: 0, bytes: 0 } : band))
+    render(<InactiveDrivesSection overview={withAttention({ inactive: { ...baseAttention.inactive, bands } })} />)
     expect(screen.getByText('3–4 years')).toBeInTheDocument()
     expect(screen.getByText('4–5 years')).toBeInTheDocument()
     expect(screen.getByText('More than 5 years')).toBeInTheDocument()
@@ -97,7 +104,7 @@ describe('InactiveDrivesSection', () => {
   })
 
   it('says no OneDrive is inactive instead of drawing empty bars', () => {
-    const bands = base.oneDrive.attention.inactive.bands.map((band) => ({ ...band, count: 0, bytes: 0 }))
+    const bands = baseAttention.inactive.bands.map((band) => ({ ...band, count: 0, bytes: 0 }))
     render(<InactiveDrivesSection overview={withAttention({ inactive: { count: 0, bytes: 0, bands } })} />)
     expect(screen.getByText('No live OneDrive has gone 3 years without activity.')).toBeInTheDocument()
   })

@@ -5,7 +5,7 @@ import { render } from '@/test/render'
 import type * as EnvModule from '@/config/env'
 import { FeatureFlags } from '@/config/featureFlags'
 import { OneDrivePoolPanel } from './OneDrivePoolPanel'
-import { base } from './testFixtures'
+import { base, baseAttention } from './testFixtures'
 
 const GB = 1_073_741_824
 
@@ -52,10 +52,24 @@ describe('OneDrivePoolPanel', () => {
     expect(screen.queryByRole('link', { name: 'See the OneDrive report' })).not.toBeInTheDocument()
   })
 
+  it('shows the OneDrive storage from its trend, and no per-drive line, when the usage report did not come back', () => {
+    renderPanel({
+      ...base,
+      oneDrive: { ...base.oneDrive, accountReportRead: false, driveCount: 0, drivesNearCap: 0, attention: null },
+    })
+    expect(
+      screen.getByText(
+        "120 GB stored in OneDrive on the latest day of Microsoft 365's OneDrive storage trend. The line against each OneDrive's limit comes from the OneDrive usage report.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/No live OneDrive/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/inactive OneDrives hold/)).not.toBeInTheDocument()
+  })
+
   it('names the OneDrives quiet for 93 days in place of the unlicensed ones when the licence report is missing', () => {
     features.oneDrive = true
     const unlicensed = { basis: 'noActivity', count: 5, bytes: 25 * GB, days: 93, since: '2026-05-29' } as const
-    renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...base.oneDrive.attention, unlicensed } } })
+    renderPanel({ ...base, oneDrive: { ...base.oneDrive, attention: { ...baseAttention, unlicensed } } })
     expect(
       screen.getByText(/and 25 GB sits in OneDrives with no activity for over 93 days\. Microsoft's active-user report did not come back or matched none of the owners, so the quiet ones stand in for the owners without a licence\./),
     ).toBeInTheDocument()

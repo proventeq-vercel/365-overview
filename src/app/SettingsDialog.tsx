@@ -62,6 +62,7 @@ export function SettingsDialog({
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
   const oneDriveEstimateBytes = data?.oneDrive.licenceEstimatePerUserBytes ?? null
   const oneDriveLimitWhenUnset = data === undefined ? undefined : data.oneDrive.limitWhenUnset
+  const oneDriveReportUnread = data?.oneDrive.accountReportRead === false
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,16 +145,18 @@ export function SettingsDialog({
             id={oneDriveEntitlementId}
             label={t('settings.oneDriveEntitlement')}
             hint={
-              oneDriveLimitWhenUnset === 'driveLimit'
-                ? t('settings.oneDriveEntitlementHintDriveLimit')
-                : oneDriveLimitWhenUnset === null
-                  ? t('settings.oneDriveEntitlementHintNoLimit')
-                  : oneDriveEstimateBytes === null
-                    ? t('settings.oneDriveEntitlementHintNoEstimate')
-                    : t('settings.oneDriveEntitlementHint', {
-                        estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
-                        unit: t('settings.oneDriveEntitlementUnit'),
-                      })
+              oneDriveReportUnread
+                ? t('settings.oneDriveEntitlementHintUnread')
+                : oneDriveLimitWhenUnset === 'driveLimit'
+                  ? t('settings.oneDriveEntitlementHintDriveLimit')
+                  : oneDriveLimitWhenUnset === null
+                    ? t('settings.oneDriveEntitlementHintNoLimit')
+                    : oneDriveEstimateBytes === null
+                      ? t('settings.oneDriveEntitlementHintNoEstimate')
+                      : t('settings.oneDriveEntitlementHint', {
+                          estimate: formatBytesInUnit(oneDriveEstimateBytes, GB_IN_BYTES),
+                          unit: t('settings.oneDriveEntitlementUnit'),
+                        })
             }
           >
             <ByteOverrideInput

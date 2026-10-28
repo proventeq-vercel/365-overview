@@ -1,11 +1,13 @@
 import { HelpButton } from '@/app/help/HelpButton'
 import { PageHeader } from '@/design/primitives'
 import { useSettings } from '@/app/useSettings'
+import { ReportDate } from '@/app/ReportDate'
 import { ReportLoading } from '@/app/ReportLoading'
 import { useRefreshReport } from '@/hooks/useRefreshReport'
 import { useStorageGrowth } from '@/hooks/useStorageGrowth'
 import { useStorageOverview } from '@/hooks/useStorageOverview'
 import { useTranslation } from '@/hooks/useTranslation'
+import { UnreadReports } from '@/components/UnreadReports'
 import { AccessFailure } from './AccessFailure'
 import { DistributionSection } from './DistributionSection'
 import { GrowthSection } from './GrowthSection'
@@ -15,7 +17,7 @@ import { OffendersSection } from './OffendersSection'
 export function StorageOptimization() {
   const t = useTranslation()
   const { settings } = useSettings()
-  const { data, error, isPending } = useStorageOverview(settings)
+  const { data, error, notReloaded, isPending } = useStorageOverview(settings)
   const { refresh } = useRefreshReport()
   const growth = useStorageGrowth(data)
 
@@ -28,13 +30,13 @@ export function StorageOptimization() {
         title={t('reports.storageOptimisation.title')}
         help={<HelpButton topic="storageOptimisation" />}
       >
-        {t('storageOptimisation.description')} {t('app.dataAsOf', { date: data.reportRefreshDate })}{' '}
-        {t('app.reportLagNote')}
+        {t('storageOptimisation.description')} <ReportDate date={data.reportRefreshDate} />
       </PageHeader>
-      <KpiCards overview={data} delay={40} />
+      <UnreadReports reports={data.caveats.unreadReports} notReloaded={notReloaded} />
+      {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
       <DistributionSection overview={data} delay={120} />
-      <GrowthSection overview={data} delay={160} />
-      <OffendersSection overview={data} growth={growth} delay={240} />
+      {data.sharePoint.read && <GrowthSection overview={data} delay={160} />}
+      {data.offenders.read && <OffendersSection overview={data} growth={growth} delay={240} />}
     </div>
   )
 }

@@ -53,10 +53,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
   sub-requests of a batch are re-sent. Anything else surfaces as `ApiError`
-  and is left to React Query's single retry.
-- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (ten mock
+  and is left to React Query's single retry (the storage inputs query
+  instead has `retry: false` and re-reads each failed core report once
+  itself, never after a throttled status the client already retried).
+- `src/data/` — `DataSource` interface (thirteen methods plus `namesHidden`); `fixtures.ts` (fourteen mock
   tenants: `healthy`, `over-entitlement`, `concealed`, `short-history`,
-  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`) +
+  `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`,
+  and four whose named reads answer 503: `no-site-report`, `no-onedrive-report`, `no-trends`,
+  `no-sharepoint-reports`) +
   `live.ts` (the five Graph calls on `/beta/reports`, period `D180`, plus
   `getOneDriveLicences`: `getOffice365ActiveUserDetail(period='D180')`'s
   `hasOneDriveLicense` per user, keyed by lower-cased principal name, needing
@@ -117,6 +121,25 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   inside the per-keystroke path).
 - `src/hooks/useStorageOverview.ts` — fetches the inputs once under
   `['storageInputs']` and rebuilds the model in `useMemo` when settings change.
+  **Each report loads on its own** (`readStorageInputs`): every read is settled
+  separately, and a failed core report (site usage, OneDrive usage, either
+  storage trend) or the report date is read once more (not after a throttled
+  status, which the client already waited out) and then left out, listed
+  in `caveats.unreadReports`. The model leaves out only the figures that need it
+  (`sharePoint.siteReportRead` / `oneDrive.accountReportRead` / `trendRead`, a
+  pool with neither report → `read` false) and `components/UnreadReports` names
+  it with a Refresh data button. The hook returns an `error` (→ `AccessFailure`)
+  only for an access refusal on any read, or when nothing usable came back;
+  a failed refresh keeps the page on screen, and so does a refresh that fails
+  to bring back a report on screen (`readStorageInputs(ds, onScreen)` throws
+  `ReportsNotReloaded`, so React Query keeps the earlier load whole and no
+  figure mixes two loads; the hook's `notReloaded` names them in the note,
+  and Refresh data re-reads no growth since no load landed). With neither
+  usage report read and no trend holding storage, the page is the failure
+  screen.
+  A pool counts as read only when its usage report came back or its trend
+  holds storage, so an empty trend never shows as 0 B. Growth waits for
+  `offenders.read` and keys on the two usage reports' read flags.
   The ONLY data entry point for the page — except growth:
   `src/hooks/useStorageGrowth.ts` reads the detail reports for every day
   `DataSource.getDailyReportDates` lists (`lib/growthWindow`: today − 26 up to
@@ -448,7 +471,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
   them while the entitlement is unknown). `cost.applies` (a growth rate
   exists, `rateSource !== 'none'`) shows *Cost of doing nothing* and the
-  projected-cost block. *Inactive sites to archive* always shows. The grid's
+  projected-cost block. *Inactive sites to archive* shows whenever the site usage report came back. The grid's
   `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
@@ -512,7 +535,7 @@ typecheck · test · build as a separate job.
   `functions/` first), no tenant.
 - `VITE_USE_MOCK=true npm run dev` — **mock mode on :5173**, no auth, fixture
   data. Add `VITE_MOCK_SCENARIO=concealed` (or `over-entitlement`,
-  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage and OneDrive pages have no unavailable / unknown wording. This is also what the e2e webServer runs.
+  `short-history`, `onedrive-over-licence`, `nothing-to-clean`, `no-licences`, `first-day`, `no-daily-reports`, `onedrive-gaps`, `no-site-report`, `no-onedrive-report`, `no-trends`, `no-sharepoint-reports`) for the other tenants. `e2e/fallbacks.spec.ts` checks every tenant's Storage and OneDrive pages have no unavailable / unknown wording. This is also what the e2e webServer runs.
 - `npm run lint` (oxlint) · `npm run typecheck` (tsc -b) · `npm run test`
   (vitest) · `npm run build` · `npm run e2e` (playwright, mock mode).
 - `VITE_USE_MOCK` is a **build-time** flag; a normal `npm run build` produces a

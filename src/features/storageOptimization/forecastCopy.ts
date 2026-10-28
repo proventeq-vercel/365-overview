@@ -29,9 +29,19 @@ function dailyRateNote(overview: StorageOverview, t: TranslateFn): string | null
 }
 
 function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
-  return overview.sharePoint.usedFromSiteReport
+  const { sharePoint } = overview
+  if (!sharePoint.trendRead) return t('storageOptimisation.growth.trendUnreadNote')
+  return sharePoint.usedFromSiteReport
     ? t('storageOptimisation.growth.noTrendNote')
     : t('storageOptimisation.growth.firstDayNote')
+}
+
+function siteReportSource(overview: StorageOverview, t: TranslateFn): string | null {
+  const { sharePoint } = overview
+  if (!sharePoint.usedFromSiteReport) return null
+  return sharePoint.trendRead
+    ? t('storageOptimisation.growth.siteReportSource')
+    : t('storageOptimisation.growth.siteReportSourceTrendUnread')
 }
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
@@ -136,7 +146,7 @@ function headlineAndNote(overview: StorageOverview, t: TranslateFn): [string, st
     return [
       t('storageOptimisation.growth.alreadyExhausted'),
       t('storageOptimisation.growth.alreadyExhaustedNote'),
-      sharePoint.usedFromSiteReport ? t('storageOptimisation.growth.siteReportSource') : null,
+      siteReportSource(overview, t),
     ]
   }
   if (growth.rateSource === 'none') {

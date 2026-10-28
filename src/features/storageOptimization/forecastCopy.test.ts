@@ -96,6 +96,24 @@ describe('forecastCard hint', () => {
     expect(buildCallout(noTrend, t).note).toMatch(/^Microsoft 365's storage trend lists no day/)
   })
 
+  it('says the storage trend did not come back, not that it lists no day, when it failed', () => {
+    const trendUnread: StorageOverview = {
+      ...firstDay,
+      sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true, trendRead: false },
+    }
+    expect(buildCallout(trendUnread, t).note).toMatch(
+      /^Microsoft 365's SharePoint storage trend did not come back this time, so this is the total of the site usage report\. The forecast returns when Refresh data brings the trend back\./,
+    )
+    const exhausted: StorageOverview = {
+      ...trendUnread,
+      sharePoint: { ...trendUnread.sharePoint, exhausted: true, remainingBytes: 0, overageBytes: 1_073_741_824 },
+      growth: { ...firstDay.growth, forecastStatus: 'Critical', forecastMonthsToExhaustion: 0 },
+    }
+    expect(buildCallout(exhausted, t).note).toMatch(
+      /This is the total of its site usage report: Microsoft 365's SharePoint storage trend did not come back this time\. /,
+    )
+  })
+
   it('explains a date by the entitlement, the growth assumption and the headroom left', () => {
     expect(hint(base)).toBe(
       'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left.',

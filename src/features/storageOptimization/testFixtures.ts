@@ -1,10 +1,30 @@
-import type { StorageOverview } from '@/types/storage'
+import type { OneDriveAttention, StorageOverview } from '@/types/storage'
 
 const GB = 1_073_741_824
+
+export const baseAttention: OneDriveAttention = {
+  inactiveYears: 3,
+  inactiveSince: '2023-08-30',
+  inactive: {
+    count: 6,
+    bytes: 30 * GB,
+    bands: [
+      { band: 'firstYear', fromYears: 3, toYears: 4, count: 3, bytes: 12 * GB },
+      { band: 'secondYear', fromYears: 4, toYears: 5, count: 1, bytes: 8 * GB },
+      { band: 'older', fromYears: 5, toYears: null, count: 1, bytes: 9 * GB },
+      { band: 'never', fromYears: null, toYears: null, count: 1, bytes: 1 * GB },
+    ],
+  },
+  unlicensed: { basis: 'licences', count: 2, bytes: 40 * GB, notListed: 1 },
+}
 
 export const base: StorageOverview = {
   reportRefreshDate: '2026-08-30',
   sharePoint: {
+    read: true,
+    unreadReports: [],
+    siteReportRead: true,
+    trendRead: true,
     usedBytes: 500 * GB,
     usedFromSiteReport: false,
     entitledBytes: 1000 * GB,
@@ -22,6 +42,10 @@ export const base: StorageOverview = {
     deletedButBilling: { bytes: 0, count: 0 },
   },
   oneDrive: {
+    read: true,
+    unreadReports: [],
+    accountReportRead: true,
+    trendRead: true,
     usedBytes: 120 * GB,
     usedFromAccountReport: false,
     drives: [],
@@ -49,21 +73,7 @@ export const base: StorageOverview = {
         freeShare: 40_840 / 40_960,
       },
     },
-    attention: {
-      inactiveYears: 3,
-      inactiveSince: '2023-08-30',
-      inactive: {
-        count: 6,
-        bytes: 30 * GB,
-        bands: [
-          { band: 'firstYear', fromYears: 3, toYears: 4, count: 3, bytes: 12 * GB },
-          { band: 'secondYear', fromYears: 4, toYears: 5, count: 1, bytes: 8 * GB },
-          { band: 'older', fromYears: 5, toYears: null, count: 1, bytes: 9 * GB },
-          { band: 'never', fromYears: null, toYears: null, count: 1, bytes: 1 * GB },
-        ],
-      },
-      unlicensed: { basis: 'licences', count: 2, bytes: 40 * GB, notListed: 1 },
-    },
+    attention: baseAttention,
   },
   breakdown: {
     segments: [
@@ -78,6 +88,7 @@ export const base: StorageOverview = {
     deletedCount: 4,
   },
   offenders: {
+    read: true,
     rows: [],
     poolUsedBytes: { SharePoint: 500 * GB, OneDrive: 120 * GB },
     topSites: [],
@@ -97,6 +108,7 @@ export const base: StorageOverview = {
     forecastMonthsToExhaustion: 50,
     forecastEndBytes: 560 * GB,
     afterCleanUp: {
+      applies: true,
       inactiveBytes: 120 * GB,
       deletedBytes: 0,
       removableBytes: 120 * GB,
@@ -105,6 +117,7 @@ export const base: StorageOverview = {
     },
   },
   archive: {
+    applies: true,
     inactiveYears: 3,
     inactiveSince: '2023-08-30',
     siteCount: 42,
@@ -126,6 +139,7 @@ export const base: StorageOverview = {
   caveats: {
     entitlementIsEstimated: true,
     nameMask: null,
+    unreadReports: [],
   },
 }
 

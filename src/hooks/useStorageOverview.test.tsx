@@ -65,7 +65,8 @@ function sourceWith(over: Partial<DataSource> = {}) {
 function Unlicensed() {
   const { data } = useStorageOverview(DEFAULT_SETTINGS)
   if (!data) return <p>pending</p>
-  const { unlicensed } = data.oneDrive.attention
+  const unlicensed = data.oneDrive.attention?.unlicensed
+  if (!unlicensed) return <p>no account report</p>
   return <p>{`${unlicensed.basis} ${unlicensed.count}`}</p>
 }
 
@@ -129,6 +130,217 @@ describe('useStorageOverview', () => {
     renderWithData(<Probe />, sourceWith({ getSiteDirectory: async () => new Map() }))
 
     expect(await screen.findByText(`${FINANCE_ID}=(unnamed)`)).toBeInTheDocument()
+  })
+})
+
+describe('useStorageOverview when a report does not come back', () => {
+  const DOWN = new ApiError(500, 'Internal server error', 'InternalServerError')
+
+  function Unread() {
+    const { data, error, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
+    const { refresh, isRefreshing } = useRefreshReport()
+    if (error) return <p>whole page failed</p>
+    if (!data) return <p>pending</p>
+    return (
+      <>
+        <p>{`unread: ${data.caveats.unreadReports.join(',') || 'none'}; sites ${data.sharePoint.siteCount}`}</p>
+        <p>{`as of ${data.reportRefreshDate}; drives ${data.oneDrive.driveCount}`}</p>
+        <p>{isRefreshing ? 'refreshing' : 'settled'}</p>
+        <p>{notReloaded === null ? 'current load' : `earlier load kept, not reloaded: ${notReloaded.join(',') || 'any'}`}</p>
+        <button type="button" onClick={() => void refresh()}>
+          refresh
+        </button>
+      </>
+    )
+  }
+
+  it('renders the reports that came back and names the one that did not', async () => {
+    renderWithData(<Unread />, sourceWith({ getDrives: async () => Promise.reject(DOWN) }))
+    expect(await screen.findByText('unread: drives; sites 2')).toBeInTheDocument()
+  })
+
+  it('reads a failed report once more before leaving it out', async () => {
+    let calls = 0
+    const getDrives = vi.fn(async () => {
+      calls += 1
+      if (calls === 1) throw DOWN
+      return []
+    })
+    renderWithData(<Unread />, sourceWith({ getDrives }))
+    expect(await screen.findByText('unread: none; sites 2')).toBeInTheDocument()
+    expect(getDrives).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not ask a throttled report again, since the Graph client already waited and retried it', async () => {
+    const getDrives = vi.fn(async (): Promise<never> => {
+      throw new ApiError(503, 'Service unavailable', 'ServiceUnavailable')
+    })
+    renderWithData(<Unread />, sourceWith({ getDrives }))
+    expect(await screen.findByText('unread: drives; sites 2')).toBeInTheDocument()
+    expect(getDrives).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports no kept load while the access screen shows', async () => {
+    const refused = new ApiError(403, 'Forbidden', 'Forbidden')
+    function Kept() {
+      const { error, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
+      return <p>{`${error ? 'blocked' : 'open'}; kept ${notReloaded === null ? 'none' : notReloaded.join(',') || 'any'}`}</p>
+    }
+    renderWithData(<Kept />, sourceWith({ getDrives: async () => Promise.reject(refused) }))
+    expect(await screen.findByText('blocked; kept none')).toBeInTheDocument()
+  })
+
+  it('does not ask a refused report again, and shows the access screen', async () => {
+    const refused = new ApiError(403, 'Forbidden', 'Forbidden')
+    const getOneDriveTrend = vi.fn(async (): Promise<never> => {
+      throw refused
+    })
+    renderWithData(<Unread />, sourceWith({ getOneDriveTrend }))
+    expect(await screen.findByText('whole page failed')).toBeInTheDocument()
+    expect(getOneDriveTrend).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders while any one storage report came back with storage in it', async () => {
+    const down = async (): Promise<never> => Promise.reject(DOWN)
+    renderWithData(
+      <Unread />,
+      sourceWith({
+        getSites: down,
+        getDrives: down,
+        getSharePointTrend: down,
+        getOneDriveTrend: async () => [{ date: '2026-09-20', value: 60 }],
+      }),
+    )
+    expect(await screen.findByText('unread: sites,drives,sharePointTrend; sites 0')).toBeInTheDocument()
+  })
+
+  it('fails the whole page when neither usage report came back and no trend holds storage', async () => {
+    const down = async (): Promise<never> => Promise.reject(DOWN)
+    renderWithData(
+      <Unread />,
+      sourceWith({
+        getSites: down,
+        getDrives: down,
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 0 }],
+        getOneDriveTrend: async () => [],
+      }),
+    )
+    expect(await screen.findByText('whole page failed')).toBeInTheDocument()
+  })
+
+  it('fails the whole page when no storage report came back', async () => {
+    const down = async (): Promise<never> => Promise.reject(DOWN)
+    renderWithData(
+      <Unread />,
+      sourceWith({ getSites: down, getDrives: down, getSharePointTrend: down, getOneDriveTrend: down }),
+    )
+    expect(await screen.findByText('whole page failed')).toBeInTheDocument()
+  })
+
+  it('keeps the report on screen when a refresh brings nothing back', async () => {
+    let down = false
+    const failing =
+      <T,>(value: T) =>
+      async () => {
+        if (down) throw DOWN
+        return value
+      }
+    const getSites = vi.fn(failing([site(FINANCE_ID, 900), site(LEGAL_ID, 100)]))
+    renderWithData(
+      <Unread />,
+      sourceWith({ getSites, getDrives: failing([]), getSharePointTrend: failing([]), getOneDriveTrend: failing([]) }),
+    )
+    expect(await screen.findByText('unread: none; sites 2')).toBeInTheDocument()
+
+    down = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    await waitFor(() => expect(getSites).toHaveBeenCalledTimes(3))
+    expect(await screen.findByText('settled')).toBeInTheDocument()
+    expect(screen.queryByText('whole page failed')).not.toBeInTheDocument()
+    expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
+  })
+
+  it('keeps the whole page as it was when a refresh fails to bring back a report on screen', async () => {
+    let refreshed = false
+    const getSites = vi.fn(async () => {
+      if (refreshed) throw DOWN
+      return [site(FINANCE_ID, 900), site(LEGAL_ID, 100)]
+    })
+    renderWithData(
+      <Unread />,
+      sourceWith({
+        getSites,
+        getReportRefreshDate: async () => (refreshed ? Promise.reject(DOWN) : '2026-09-20'),
+        getDrives: async () => (refreshed ? [ownerDrive('ada@contoso.com'), ownerDrive('bo@contoso.com')] : [ownerDrive('ada@contoso.com')]),
+      }),
+    )
+    expect(await screen.findByText('unread: none; sites 2')).toBeInTheDocument()
+
+    refreshed = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    await waitFor(() => expect(getSites).toHaveBeenCalledTimes(3))
+    expect(await screen.findByText('settled')).toBeInTheDocument()
+    expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
+    expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept, not reloaded: sites')).toBeInTheDocument()
+
+    refreshed = false
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    expect(await screen.findByText('current load')).toBeInTheDocument()
+    expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
+  })
+
+  it('keeps the page when a refresh fails a report on screen while another is still missing', async () => {
+    let refreshed = false
+    const getDrives = vi.fn(async () => {
+      if (refreshed) throw DOWN
+      return [ownerDrive('ada@contoso.com')]
+    })
+    renderWithData(
+      <Unread />,
+      sourceWith({
+        getSites: async () => Promise.reject(DOWN),
+        getDrives,
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 900 }],
+      }),
+    )
+    expect(await screen.findByText('unread: sites; sites 0')).toBeInTheDocument()
+    expect(screen.getByText('current load')).toBeInTheDocument()
+
+    refreshed = true
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    await waitFor(() => expect(getDrives).toHaveBeenCalledTimes(3))
+    expect(await screen.findByText('settled')).toBeInTheDocument()
+    expect(screen.getByText('unread: sites; sites 0')).toBeInTheDocument()
+    expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept, not reloaded: drives')).toBeInTheDocument()
+  })
+
+  it('reads each report at most twice when none came back, with the app query defaults', async () => {
+    const down = vi.fn(async (): Promise<never> => {
+      throw DOWN
+    })
+    const client = new QueryClient({ defaultOptions: { queries: appQueryClient.getDefaultOptions().queries } })
+    renderWithData(
+      <Unread />,
+      sourceWith({ getSites: down, getDrives: down, getSharePointTrend: down, getOneDriveTrend: down }),
+      client,
+    )
+    expect(await screen.findByText('whole page failed')).toBeInTheDocument()
+    await new Promise((resolve) => setTimeout(resolve, 2500))
+    expect(down).toHaveBeenCalledTimes(8)
+  })
+
+  it('names the rows from the directory when the name lookup is refused, since Sites.Read.All is optional', async () => {
+    const refused = new ApiError(403, 'Forbidden', 'Forbidden')
+    renderWithData(<Probe />, sourceWith({ getSiteDetails: async () => Promise.reject(refused) }))
+    expect(await screen.findByText(`${FINANCE_ID}=Finance`)).toBeInTheDocument()
+  })
+
+  it('still lists the rows when the name lookup fails', async () => {
+    renderWithData(<Probe />, sourceWith({ getSiteDetails: async () => Promise.reject(DOWN) }))
+    expect(await screen.findByText(`${FINANCE_ID}=Finance`)).toBeInTheDocument()
   })
 })
 
@@ -292,14 +504,174 @@ describe('useStorageOverview after access is refused', () => {
     expect(getSitesOn).toHaveBeenCalledTimes(reads)
   })
 
-  it('does not keep asking after a failure access cannot fix', async () => {
-    const getSites = refusedOnce(new ApiError(500, 'Graph is down'))
-    renderAsTheApp(<Status />, sourceWith({ getSites }))
+  it('reads a growth that missed a report again on Refresh data when the report date comes from the storage trend', async () => {
+    const down = async (): Promise<never> => {
+      throw new ApiError(500, 'Graph is down')
+    }
+    const getDrivesOn = vi.fn(async (date: string) => {
+      if (date === '2026-09-19' && getDrivesOn.mock.calls.length === 1) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    })
+    function WithGrowth() {
+      const { data } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{growth ? `missing ${growth.reportsMissing}` : 'pending'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({
+        getSites: down,
+        getReportRefreshDate: down,
+        getDrives: async () => [ownerDrive('ada@contoso.com')],
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 900 }],
+        getSitesOn: async () => [],
+        getDrivesOn,
+        getDailyReportDates: () => ['2026-09-19', '2026-09-20'],
+      }),
+    )
+    expect(await screen.findByText('missing 1')).toBeInTheDocument()
+    vi.setSystemTime(Date.now() + REREAD_COOLDOWN_MS)
+
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    expect(await screen.findByText('missing 0')).toBeInTheDocument()
+    expect(getDrivesOn).toHaveBeenCalledTimes(4)
+  })
+
+  it('measures the sites again once Refresh data brings their usage report back on the same report date', async () => {
+    let sitesDown = true
+    const getSites = async () => {
+      if (sitesDown) throw new ApiError(500, 'Graph is down')
+      return [site(FINANCE_ID, 900)]
+    }
+    function WithGrowth() {
+      const { data } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{growth ? `measured ${growth.measuredRows}` : 'pending'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({
+        getSites,
+        getDrives: async () => [ownerDrive('ada@contoso.com')],
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 900 }],
+        getSitesOn: async () => [site(FINANCE_ID, 400)],
+        getDrivesOn: async () => [ownerDrive('ada@contoso.com')],
+        getDailyReportDates: () => ['2026-09-19', '2026-09-20'],
+      }),
+    )
+    expect(await screen.findByText('measured 1')).toBeInTheDocument()
+    sitesDown = false
+
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    expect(await screen.findByText('measured 2')).toBeInTheDocument()
+  })
+
+  it('measures the OneDrives again once Refresh data brings their usage report back on the same report date', async () => {
+    let drivesDown = true
+    const getDrives = async () => {
+      if (drivesDown) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    }
+    function WithGrowth() {
+      const { data } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{growth ? `measured ${growth.measuredRows}` : 'pending'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({
+        getSites: async () => [site(FINANCE_ID, 900)],
+        getDrives,
+        getSharePointTrend: async () => [{ date: '2026-09-20', value: 900 }],
+        getSitesOn: async () => [site(FINANCE_ID, 400)],
+        getDrivesOn: async () => [ownerDrive('ada@contoso.com')],
+        getDailyReportDates: () => ['2026-09-19', '2026-09-20'],
+      }),
+    )
+    expect(await screen.findByText('measured 1')).toBeInTheDocument()
+    drivesDown = false
+
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    expect(await screen.findByText('measured 2')).toBeInTheDocument()
+  })
+
+  it('does not read the growth again when a refresh kept the earlier load', async () => {
+    let refreshed = false
+    const getDrives = async () => {
+      if (refreshed) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    }
+    const getDrivesOn = vi.fn(async (date: string) => {
+      if (date === '2026-09-19' && getDrivesOn.mock.calls.length === 1) throw new ApiError(500, 'Graph is down')
+      return [ownerDrive('ada@contoso.com')]
+    })
+    function WithGrowth() {
+      const { data, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
+      const growth = useStorageGrowth(data)
+      const { refresh } = useRefreshReport()
+      return (
+        <>
+          <p>{growth ? `missing ${growth.reportsMissing}` : 'pending'}</p>
+          <p>{notReloaded === null ? 'fresh' : 'kept'}</p>
+          <button type="button" onClick={() => void refresh()}>refresh</button>
+        </>
+      )
+    }
+    renderAsTheApp(
+      <WithGrowth />,
+      sourceWith({
+        getDrives,
+        getSitesOn: async () => [],
+        getDrivesOn,
+        getDailyReportDates: () => ['2026-09-19', '2026-09-20'],
+      }),
+    )
+    expect(await screen.findByText('missing 1')).toBeInTheDocument()
+    vi.setSystemTime(Date.now() + REREAD_COOLDOWN_MS)
+    refreshed = true
+
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+
+    expect(await screen.findByText('kept')).toBeInTheDocument()
+    await vi.advanceTimersByTimeAsync(1_000)
+    expect(getDrivesOn).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('missing 1')).toBeInTheDocument()
+  })
+
+  it('does not keep asking after a failure access cannot fix, once no report came back', async () => {
+    const down = vi.fn(async (): Promise<never> => {
+      throw new ApiError(500, 'Graph is down')
+    })
+    renderAsTheApp(
+      <Status />,
+      sourceWith({ getSites: down, getDrives: down, getSharePointTrend: down, getOneDriveTrend: down }),
+    )
     expect(await screen.findByText('refused')).toBeInTheDocument()
 
     await vi.advanceTimersByTimeAsync(90_000)
 
-    expect(getSites).toHaveBeenCalledTimes(1)
+    expect(down).toHaveBeenCalledTimes(8)
     expect(screen.getByText('refused')).toBeInTheDocument()
   })
 })

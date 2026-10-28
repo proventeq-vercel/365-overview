@@ -11,7 +11,9 @@ order: 10
 
 One line shows where SharePoint storage sits, split into six parts, and ends in what is left of
 your SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to
-see its size, its share of the line and what it counts.
+see its size, its share of the line and what it counts. When the SharePoint site usage report does
+not come back, the Teams, Deleted and Inactive parts are left out and the SharePoint part holds all
+the storage in the storage trend: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
 
 OneDrive is not on this line. Microsoft's
 [SharePoint limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/sharepoint-online-service-description/sharepoint-online-limits)

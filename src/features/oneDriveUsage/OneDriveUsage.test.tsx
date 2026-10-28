@@ -268,6 +268,75 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(await screen.findByRole('dialog')).toHaveTextContent(title)
   })
 
+  it('shows the OneDrive storage from its trend and names the report that did not come back', async () => {
+    renderReport('no-onedrive-report')
+    expect(await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      "Microsoft's OneDrive usage report did not come back this time, so the figures drawn from it are left out of this page. Refresh data asks for it again.",
+    )
+    expect(card('OneDrive storage')).toHaveTextContent('Tenant-wide, as reported by Microsoft 365')
+    expect(screen.queryByText('OneDrives', { selector: '[data-slot="stat-card"] p' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'All OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /^Inactive, deleted and/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/unknown|unavailable/i)).not.toBeInTheDocument()
+  })
+
+  it('shows no OneDrive figure at all when neither OneDrive report came back', async () => {
+    const down = () => Promise.reject(new ApiError(503, 'Service unavailable'))
+    renderReport('healthy', { getDrives: down, getOneDriveTrend: down })
+    expect(await screen.findByRole('heading', { name: 'OneDrive Usage', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      "Microsoft's OneDrive usage report and OneDrive storage trend did not come back this time, so the figures drawn from them are left out of this page. Refresh data asks for them again.",
+    )
+    expect(document.querySelector('[data-slot="stat-card"]')).toBeNull()
+  })
+
+  it('says the OneDrive page still shows the earlier load when a reload loses a report', async () => {
+    const user = userEvent.setup()
+    const source = createMockDataSource('no-trends')
+    let reloaded = false
+    renderReport('no-trends', {
+      getDrives: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getDrives()),
+    })
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    reloaded = true
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: 'Refresh data' }))
+    expect(
+      await screen.findByText(
+        "The last reload of Microsoft's reports did not bring back the OneDrive usage report, so this page still shows the earlier load. In that earlier load, Microsoft's OneDrive storage trend did not come back, so the figures drawn from it are left out of this page.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+  })
+
+  it('names no SharePoint report when a reload lost only SharePoint figures', async () => {
+    const user = userEvent.setup()
+    const source = createMockDataSource('no-trends')
+    let reloaded = false
+    renderReport('no-trends', {
+      getSites: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getSites()),
+    })
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    reloaded = true
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: 'Refresh data' }))
+    const note = await screen.findByText(/^The last reload of Microsoft's reports did not bring every report back/)
+    expect(note).not.toHaveTextContent(/SharePoint/)
+  })
+
+  it('names only the OneDrive reports that did not come back', async () => {
+    renderReport('no-site-report')
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    expect(screen.queryByText(/did not come back this time/)).not.toBeInTheDocument()
+  })
+
+  it('says the OneDrive storage is the usage report total when its trend did not come back', async () => {
+    renderReport('no-trends')
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    expect(card('OneDrive storage')).toHaveTextContent(
+      "The total of Microsoft's OneDrive usage report, which lists every OneDrive: its OneDrive storage trend did not come back this time.",
+    )
+  })
+
   it('shows the same access failure screens as the storage report', async () => {
     renderReport('healthy', { getDrives: () => Promise.reject(new ApiError(403, 'Forbidden')) })
     expect(await screen.findByRole('alert')).toHaveTextContent(/reports reader/i)

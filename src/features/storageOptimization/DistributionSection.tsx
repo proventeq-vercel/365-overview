@@ -25,32 +25,38 @@ export function DistributionSection({ overview, delay }: Props) {
     <Section
       delay={delay}
       title={t('storageOptimisation.distribution.title')}
-      subtitle={t('storageOptimisation.distribution.subtitle')}
+      subtitle={
+        sharePoint.siteReportRead && overview.oneDrive.read
+          ? t('storageOptimisation.distribution.subtitle')
+          : t('storageOptimisation.distribution.subtitlePartial')
+      }
       help={<HelpButton topic="storageDistribution" />}
     >
-      <StorageUsagePanel overview={overview} />
-      <OneDrivePoolPanel overview={overview} />
+      {sharePoint.read && <StorageUsagePanel overview={overview} />}
+      {overview.oneDrive.read && <OneDrivePoolPanel overview={overview} />}
 
-      <Panel>
-        <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
-        <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
-        <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
-          <MonoDoughnut
-            slices={shaded(sharePoint.byTemplate)}
-            formatValue={formatBytes}
-            ariaLabel={t('storageOptimisation.template.title')}
-          />
-          <Legend
-            className="max-w-3xl"
-            columns={3}
-            items={shaded(sharePoint.byTemplate).map((slice) => ({
-              name: slice.name,
-              color: slice.color,
-              detail: formatBytes(slice.value),
-            }))}
-          />
-        </div>
-      </Panel>
+      {sharePoint.siteReportRead && (
+        <Panel>
+          <PanelLabel>{t('storageOptimisation.template.title')}</PanelLabel>
+          <PanelDescription>{t('storageOptimisation.template.subtitle')}</PanelDescription>
+          <div className="grid gap-6 md:grid-cols-[14rem_1fr] md:items-center">
+            <MonoDoughnut
+              slices={shaded(sharePoint.byTemplate)}
+              formatValue={formatBytes}
+              ariaLabel={t('storageOptimisation.template.title')}
+            />
+            <Legend
+              className="max-w-3xl"
+              columns={3}
+              items={shaded(sharePoint.byTemplate).map((slice) => ({
+                name: slice.name,
+                color: slice.color,
+                detail: formatBytes(slice.value),
+              }))}
+            />
+          </div>
+        </Panel>
+      )}
     </Section>
   )
 }
