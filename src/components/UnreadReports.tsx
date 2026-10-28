@@ -7,12 +7,35 @@ import { cn } from '@/lib/utils'
 import type { CoreReport } from '@/types/storage'
 import { CaveatBanner } from './CaveatBanner'
 
-export function UnreadReports({ reports, refreshKept }: { reports: CoreReport[]; refreshKept: boolean }) {
+interface Props {
+  reports: CoreReport[]
+  notReloaded: CoreReport[] | null
+}
+
+export function UnreadReports({ reports, notReloaded }: Props) {
   const t = useTranslation()
   const intl = useIntl()
   const { refresh, isRefreshing } = useRefreshReport()
-  if (reports.length === 0 && !refreshKept) return null
-  const names = reports.map((report) => t(`app.unreadReports.name.${report}`))
+  if (reports.length === 0 && notReloaded === null) return null
+  const named = (list: CoreReport[]) => ({
+    reports: intl.formatList(
+      list.map((report) => t(`app.unreadReports.name.${report}`)),
+      { type: 'conjunction' },
+    ),
+    count: list.length,
+  })
+  const lines = [
+    notReloaded === null
+      ? null
+      : notReloaded.length > 0
+        ? t('app.unreadReports.notReloaded', named(notReloaded))
+        : t('app.unreadReports.refreshKept'),
+    reports.length === 0
+      ? null
+      : notReloaded === null
+        ? t('app.unreadReports.note', named(reports))
+        : t('app.unreadReports.noteEarlier', named(reports)),
+  ]
   return (
     <CaveatBanner
       tone="warning"
@@ -27,10 +50,7 @@ export function UnreadReports({ reports, refreshKept }: { reports: CoreReport[];
         </Button>
       }
     >
-      {reports.length > 0 &&
-        t('app.unreadReports.note', { reports: intl.formatList(names, { type: 'conjunction' }), count: reports.length })}
-      {reports.length > 0 && refreshKept && ' '}
-      {refreshKept && t('app.unreadReports.refreshKept')}
+      {lines.filter((line) => line !== null).join(' ')}
     </CaveatBanner>
   )
 }

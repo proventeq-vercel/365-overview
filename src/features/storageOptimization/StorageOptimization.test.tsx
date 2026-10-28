@@ -357,19 +357,26 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
   })
 
-  it('says the page still shows the earlier load when a refresh fails a report on screen', async () => {
+  it('names the report the last reload lost, and that the page still shows the earlier load', async () => {
     const user = userEvent.setup()
+    const source = createMockDataSource('no-site-report')
     const healthy = createMockDataSource('healthy')
-    let down = false
-    renderApp('healthy', { getDrives: () => (down ? Promise.reject(new ApiError(500, 'Server exploded')) : healthy.getDrives()) })
+    let reloaded = false
+    renderApp('no-site-report', {
+      getSites: () => (reloaded ? healthy.getSites() : source.getSites()),
+      getReportRefreshDate: () => (reloaded ? healthy.getReportRefreshDate() : source.getReportRefreshDate()),
+      getDrives: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getDrives()),
+    })
     await reportLoaded()
     expect(screen.queryByText(/still shows the earlier load/)).not.toBeInTheDocument()
 
-    down = true
+    reloaded = true
     await chooseOption(user, /refresh data/i)
 
     expect(
-      await screen.findByText('The last refresh did not bring every report back, so this page still shows the earlier load.'),
+      await screen.findByText(
+        "The last reload of Microsoft's reports did not bring back the OneDrive usage report, so this page still shows the earlier load. In that earlier load, Microsoft's SharePoint site usage report did not come back, so the figures drawn from it are left out of this page.",
+      ),
     ).toBeInTheDocument()
     expect(screen.getByText('Top OneDrives by storage')).toBeInTheDocument()
   })

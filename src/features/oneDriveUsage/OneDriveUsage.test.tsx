@@ -291,6 +291,24 @@ describe('OneDriveUsage', FULL_REPORT_RENDER, () => {
     expect(document.querySelector('[data-slot="stat-card"]')).toBeNull()
   })
 
+  it('says the OneDrive page still shows the earlier load when a reload loses a report', async () => {
+    const user = userEvent.setup()
+    const source = createMockDataSource('no-trends')
+    let reloaded = false
+    renderReport('no-trends', {
+      getDrives: () => (reloaded ? Promise.reject(new ApiError(500, 'Server exploded')) : source.getDrives()),
+    })
+    expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+    reloaded = true
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: 'Refresh data' }))
+    expect(
+      await screen.findByText(
+        "The last reload of Microsoft's reports did not bring back the OneDrive usage report, so this page still shows the earlier load. In that earlier load, Microsoft's OneDrive storage trend did not come back, so the figures drawn from it are left out of this page.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()
+  })
+
   it('names only the OneDrive reports that did not come back', async () => {
     renderReport('no-site-report')
     expect(await screen.findByRole('heading', { name: 'All OneDrives' })).toBeInTheDocument()

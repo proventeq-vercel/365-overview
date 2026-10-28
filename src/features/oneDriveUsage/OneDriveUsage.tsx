@@ -22,7 +22,7 @@ const DRIVE_COLUMNS = ['name', 'owner', 'used', 'capacity', 'files', 'active', '
 export function OneDriveUsage() {
   const t = useTranslation()
   const { settings } = useSettings()
-  const { data, error, refreshKept, isPending } = useStorageOverview(settings)
+  const { data, error, notReloaded, isPending } = useStorageOverview(settings)
   const { refresh } = useRefreshReport()
 
   if (error) return <AccessFailure error={error} onRetry={refresh} />
@@ -35,7 +35,7 @@ export function OneDriveUsage() {
       <PageHeader title={t('reports.oneDriveUsage.title')} help={<HelpButton topic="oneDriveUsage" />}>
         {t('oneDrive.description')} <ReportDate date={data.reportRefreshDate} />
       </PageHeader>
-      <UnreadReports reports={oneDrive.unreadReports} refreshKept={refreshKept} />
+      <UnreadReports reports={oneDrive.unreadReports} notReloaded={notReloaded} />
       {oneDrive.read && <OneDriveKpiCards overview={data} />}
       {oneDrive.accountReportRead && <DriveSections overview={data} />}
     </div>

@@ -37,6 +37,15 @@ function refusalOf(results: PromiseSettledResult<unknown>[]): unknown {
   return refused?.reason
 }
 
+export class ReportsNotReloaded extends Error {
+  readonly reports: CoreReport[]
+  constructor(reports: CoreReport[]) {
+    super(`Not reloaded: ${reports.join(', ')}`)
+    this.name = 'ReportsNotReloaded'
+    this.reports = reports
+  }
+}
+
 export interface StorageInputs {
   sites: StorageRow[]
   drives: StorageRow[]
@@ -64,11 +73,10 @@ export async function readStorageInputs(ds: DataSource, onScreen?: StorageInputs
   const refusal = refusalOf([...core, directory, skus, oneDriveLicences, reportRefreshDate])
   if (refusal !== undefined) throw refusal
   const unreadReports = CORE_REPORTS.filter((_, i) => core[i].status === 'rejected')
-  const lostFromScreen = core.find(
-    (result, i): result is PromiseRejectedResult =>
-      result.status === 'rejected' && onScreen !== undefined && !onScreen.unreadReports.includes(CORE_REPORTS[i]),
+  const lostFromScreen = CORE_REPORTS.filter(
+    (report, i) => core[i].status === 'rejected' && onScreen !== undefined && !onScreen.unreadReports.includes(report),
   )
-  if (lostFromScreen !== undefined) throw lostFromScreen.reason
+  if (lostFromScreen.length > 0) throw new ReportsNotReloaded(lostFromScreen)
   const rowsRead = rawSites.status === 'fulfilled' || drives.status === 'fulfilled'
   const trendsHoldStorage = [sharePointTrend, oneDriveTrend].some(
     (trend) => trend.status === 'fulfilled' && holdsStorage(trend.value),
@@ -99,6 +107,8 @@ async function namedSites(
   const directoryNamed = withSiteDirectory(siteRows, valueOr<SiteDirectory>(directory, new Map()))
   return nameTopSites(ds, directoryNamed).catch(() => directoryNamed)
 }
+
+const notReloadedOf = (error: Error): CoreReport[] => (error instanceof ReportsNotReloaded ? error.reports : [])
 
 function useRevalidateOnRecovery(error: unknown, recovered: boolean) {
   const queryClient = useQueryClient()
@@ -159,7 +169,7 @@ export function useStorageOverview(settings: ReportSettings) {
   return {
     data,
     error: blocking ? query.error : null,
-    refreshKept: query.error !== null && !blocking,
+    notReloaded: query.error === null || blocking ? null : notReloadedOf(query.error),
     isPending: query.isPending,
   }
 }

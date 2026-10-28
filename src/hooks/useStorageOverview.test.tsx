@@ -137,7 +137,7 @@ describe('useStorageOverview when a report does not come back', () => {
   const DOWN = new ApiError(500, 'Internal server error', 'InternalServerError')
 
   function Unread() {
-    const { data, error, refreshKept } = useStorageOverview(DEFAULT_SETTINGS)
+    const { data, error, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
     const { refresh, isRefreshing } = useRefreshReport()
     if (error) return <p>whole page failed</p>
     if (!data) return <p>pending</p>
@@ -146,7 +146,7 @@ describe('useStorageOverview when a report does not come back', () => {
         <p>{`unread: ${data.caveats.unreadReports.join(',') || 'none'}; sites ${data.sharePoint.siteCount}`}</p>
         <p>{`as of ${data.reportRefreshDate}; drives ${data.oneDrive.driveCount}`}</p>
         <p>{isRefreshing ? 'refreshing' : 'settled'}</p>
-        <p>{refreshKept ? 'earlier load kept' : 'current load'}</p>
+        <p>{notReloaded === null ? 'current load' : `earlier load kept, not reloaded: ${notReloaded.join(',') || 'any'}`}</p>
         <button type="button" onClick={() => void refresh()}>
           refresh
         </button>
@@ -273,7 +273,12 @@ describe('useStorageOverview when a report does not come back', () => {
     expect(await screen.findByText('settled')).toBeInTheDocument()
     expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
     expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
-    expect(screen.getByText('earlier load kept')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept, not reloaded: sites')).toBeInTheDocument()
+
+    refreshed = false
+    fireEvent.click(screen.getByRole('button', { name: 'refresh' }))
+    expect(await screen.findByText('current load')).toBeInTheDocument()
+    expect(screen.getByText('unread: none; sites 2')).toBeInTheDocument()
   })
 
   it('keeps the page when a refresh fails a report on screen while another is still missing', async () => {
@@ -299,7 +304,7 @@ describe('useStorageOverview when a report does not come back', () => {
     expect(await screen.findByText('settled')).toBeInTheDocument()
     expect(screen.getByText('unread: sites; sites 0')).toBeInTheDocument()
     expect(screen.getByText('as of 2026-09-20; drives 1')).toBeInTheDocument()
-    expect(screen.getByText('earlier load kept')).toBeInTheDocument()
+    expect(screen.getByText('earlier load kept, not reloaded: drives')).toBeInTheDocument()
   })
 
   it('reads each report at most twice when none came back, with the app query defaults', async () => {
@@ -612,13 +617,13 @@ describe('useStorageOverview after access is refused', () => {
       return [ownerDrive('ada@contoso.com')]
     })
     function WithGrowth() {
-      const { data, refreshKept } = useStorageOverview(DEFAULT_SETTINGS)
+      const { data, notReloaded } = useStorageOverview(DEFAULT_SETTINGS)
       const growth = useStorageGrowth(data)
       const { refresh } = useRefreshReport()
       return (
         <>
           <p>{growth ? `missing ${growth.reportsMissing}` : 'pending'}</p>
-          <p>{refreshKept ? 'kept' : 'fresh'}</p>
+          <p>{notReloaded === null ? 'fresh' : 'kept'}</p>
           <button type="button" onClick={() => void refresh()}>refresh</button>
         </>
       )

@@ -132,8 +132,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   only for an access refusal on any read, or when nothing usable came back;
   a failed refresh keeps the page on screen, and so does a refresh that fails
   to bring back a report on screen (`readStorageInputs(ds, onScreen)` throws
-  that report's error, so React Query keeps the earlier load whole and no
-  figure mixes two loads; the hook's `refreshKept` adds a line to the note,
+  `ReportsNotReloaded`, so React Query keeps the earlier load whole and no
+  figure mixes two loads; the hook's `notReloaded` names them in the note,
   and Refresh data re-reads no growth since no load landed). With neither
   usage report read and no trend holding storage, the page is the failure
   screen.

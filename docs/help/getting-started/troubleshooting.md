@@ -120,8 +120,8 @@ report that did not come back, and the figures drawn from it are left out:
   out as a whole.
 
 **Refresh data** in the note asks for the missing report again. If a refresh fails to bring back
-a report that is on screen, the page stays as it was and the note says it still shows the earlier
-load. The report stops with an error only when
+a report that is on screen, the page stays as it was, and the note names the report the reload
+did not bring back and says the page still shows the earlier load. The report stops with an error only when
 nothing usable comes back, or when Microsoft refuses access (see the sections above).
 
 ## The data looks a few days old
