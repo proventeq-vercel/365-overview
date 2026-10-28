@@ -109,6 +109,21 @@ describe('SiteTable', () => {
     expect(screen.getByText('TEAMCHANNEL#0')).toBeInTheDocument()
   })
 
+  it('says a site has no template reported, trims a padded one, and leaves a OneDrive template empty', () => {
+    render(
+      <SiteTable
+        rows={[{ ...rows[0], template: ' ' }, { ...rows[1], template: ' STS#3 ' }, drive]}
+        poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }}
+        columns={['name', 'template']}
+      />,
+    )
+    const templates = screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].textContent)
+    expect(templates).toEqual(['STS#3', '', 'Template not reported'])
+    const cell = screen.getByRole('cell', { name: 'Template not reported' })
+    expect(within(cell).getByTitle('Template not reported')).toHaveTextContent('Template not reported')
+    expect(cell).not.toHaveAttribute('title')
+  })
+
   it('sorts by storage used descending by default', () => {
     render(<SiteTable rows={rows} poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }} columns={['name', 'used']} />)
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('beta')
@@ -207,10 +222,16 @@ describe('SiteTable', () => {
     expect(cell).toHaveTextContent('<0.1%')
   })
 
-  it('shows an unknown share, not 0%, when its pool total is not known', () => {
-    render(<SiteTable rows={[drive]} poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }} columns={['name', 'share']} />)
+  it('shows 0.0%, never Unknown, for a row of a pool that holds no storage', () => {
+    render(
+      <SiteTable
+        rows={[{ ...drive, storageUsedBytes: 0 }]}
+        poolUsedBytes={{ SharePoint: 1000, OneDrive: 0 }}
+        columns={['name', 'share']}
+      />,
+    )
     const [cell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell').slice(1)
-    expect(cell).toHaveTextContent('Unknown')
+    expect(cell).toHaveTextContent(/^0\.0%$/)
   })
 
   it('shows the resolved display name over a link to the site that opens in a new tab', () => {

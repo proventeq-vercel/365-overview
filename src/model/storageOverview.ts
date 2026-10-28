@@ -10,6 +10,7 @@ import {
   type StoragePool,
   type StorageOverview,
   type StorageRow,
+  type TemplateSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
@@ -27,6 +28,7 @@ import type { OneDriveLicences } from '@/reports/activeUsers'
 import { oneDriveAttention } from './oneDriveAttention'
 import { nameMaskOf } from '@/lib/concealment'
 import { hideRowNames } from '@/lib/hiddenNames'
+import { reportedTemplate } from '@/lib/reportedTemplate'
 import { rowName } from '@/lib/rowName'
 import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
 import { topNWithOther } from '@/lib/topNWithOther'
@@ -88,6 +90,20 @@ const sumBytes = (rows: StorageRow[]): number =>
 
 const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
   trend.length === 0 ? sumBytes(rows) : latest(trend)
+
+function templateSlices(liveSites: StorageRow[]): TemplateSlice[] {
+  const slices = topNWithOther(
+    totalsBy(liveSites, reportedTemplate),
+    TOP_TEMPLATE_SLICES,
+    ([, value]) => value,
+    ([name]) => name,
+    '',
+  )
+  return slices.map((slice, index) => ({
+    ...slice,
+    group: index >= TOP_TEMPLATE_SLICES ? 'other' : slice.name === '' ? 'notReported' : 'named',
+  }))
+}
 
 const latestDay = (...trends: UsagePoint[][]): string =>
   trends.flat().reduce((latest, point) => (point.date > latest ? point.date : latest), '')
@@ -327,12 +343,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       utilization,
       entitlementIsMeasured,
       licenceEstimateBytes,
-      byTemplate: topNWithOther(
-        totalsBy(liveSites, (site) => site.template || 'Unknown'),
-        TOP_TEMPLATE_SLICES,
-        ([, value]) => value,
-        ([name]) => name,
-      ),
+      byTemplate: templateSlices(liveSites),
       sites,
       siteCount: liveSites.length,
       deletedButBilling: deletedSites,

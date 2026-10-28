@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { reportedTemplate } from '@/lib/reportedTemplate'
 import { rowName } from '@/lib/rowName'
 import { buildSearchIndex, normaliseQuery, searchOrder, sortOrder } from '@/lib/rowSearch'
 import type { SortDirection } from '@/lib/rowSearch'
@@ -48,9 +49,9 @@ interface ColumnSpec {
   sortValue?: (row: StorageRow, poolUsedBytes: Record<StoragePool, number>) => number
 }
 
-function shareOfPool(row: StorageRow, poolUsedBytes: Record<StoragePool, number>): number | null {
+function shareOfPool(row: StorageRow, poolUsedBytes: Record<StoragePool, number>): number {
   const poolBytes = poolUsedBytes[row.pool]
-  return poolBytes > 0 ? row.storageUsedBytes / poolBytes : null
+  return poolBytes > 0 ? row.storageUsedBytes / poolBytes : 0
 }
 
 const capacityRatio = (row: StorageRow): number =>
@@ -97,7 +98,7 @@ const COLUMNS: Record<ColumnKey, ColumnSpec> = {
     help: 'table.column.help.share',
     sortable: true,
     width: 'minmax(120px,1.4fr)',
-    sortValue: (r, poolUsedBytes) => shareOfPool(r, poolUsedBytes) ?? -1,
+    sortValue: shareOfPool,
   },
   lastActivity: {
     label: 'table.column.lastActivity',
@@ -276,12 +277,19 @@ export function SiteTable({
             {row.lastActivityDate ?? t('table.never')}
           </span>
         )
-      case 'template':
+      case 'template': {
+        const template =
+          row.pool === 'SharePoint' && reportedTemplate(row) === ''
+            ? t('storageOptimisation.template.notReported')
+            : reportedTemplate(row)
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
-            {row.template ?? ''}
+          <span role="cell" key={key} className="min-w-0 text-p365-grey-600">
+            <span className="block truncate" title={template || undefined}>
+              {template}
+            </span>
           </span>
         )
+      }
       case 'capacity':
         return (
           <span role="cell" key={key} className="tabular text-p365-grey-600">
@@ -299,13 +307,6 @@ export function SiteTable({
         )
       case 'share': {
         const share = shareOfPool(row, poolUsedBytes)
-        if (share === null) {
-          return (
-            <span role="cell" key={key} className="tabular text-p365-grey-500">
-              {t('table.shareUnknown')}
-            </span>
-          )
-        }
         return (
           <span role="cell" key={key} className="flex items-center gap-2">
             <span className="tabular w-12 text-p365-grey-600">{formatShare(share, 1)}</span>

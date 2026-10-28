@@ -13,7 +13,7 @@ const label = (i: (typeof items)[number]) => i.name
 
 describe('topNWithOther', () => {
   it('keeps the top N and folds the tail into Other', () => {
-    expect(topNWithOther(items, 3, value, label)).toEqual([
+    expect(topNWithOther(items, 3, value, label, 'Other')).toEqual([
       { name: 'a', value: 100 },
       { name: 'b', value: 50 },
       { name: 'c', value: 30 },
@@ -22,7 +22,7 @@ describe('topNWithOther', () => {
   })
 
   it('adds no Other slice when the list fits', () => {
-    expect(topNWithOther(items.slice(0, 2), 3, value, label)).toEqual([
+    expect(topNWithOther(items.slice(0, 2), 3, value, label, 'Other')).toEqual([
       { name: 'a', value: 100 },
       { name: 'b', value: 50 },
     ])
@@ -30,7 +30,7 @@ describe('topNWithOther', () => {
 
   it('sorts descending regardless of input order', () => {
     const shuffled = [items[3], items[0], items[2]]
-    expect(topNWithOther(shuffled, 2, value, label).map((s) => s.name)).toEqual([
+    expect(topNWithOther(shuffled, 2, value, label, 'Other').map((s) => s.name)).toEqual([
       'a',
       'c',
       'Other',
@@ -39,7 +39,7 @@ describe('topNWithOther', () => {
 
   it('omits an Other slice that would be zero', () => {
     const withZeroTail = [...items.slice(0, 2), { name: 'z', bytes: 0 }]
-    expect(topNWithOther(withZeroTail, 2, value, label)).toHaveLength(2)
+    expect(topNWithOther(withZeroTail, 2, value, label, 'Other')).toHaveLength(2)
   })
 
   it('uses the caller-supplied label for the tail slice', () => {
@@ -51,11 +51,11 @@ describe('topNWithOther', () => {
 
   it('leaves the caller array untouched', () => {
     const input = [items[3], items[0], items[2]]
-    topNWithOther(input, 2, value, label)
+    topNWithOther(input, 2, value, label, 'Other')
     expect(input.map((i) => i.name)).toEqual(['d', 'a', 'c'])
   })
 
   it('returns an empty array for no items', () => {
-    expect(topNWithOther([], 3, value, label)).toEqual([])
+    expect(topNWithOther([], 3, value, label, 'Other')).toEqual([])
   })
 })

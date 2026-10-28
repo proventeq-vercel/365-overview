@@ -54,10 +54,10 @@ describe('en.json catalogue', () => {
     }
   })
 
-  it('never tells the reader that a figure of the main offenders is missing', () => {
-    const offenders = Object.entries(messages).filter(([key]) => key.startsWith('storageOptimisation.offenders.'))
-    expect(offenders.length).toBeGreaterThan(0)
-    for (const [key, message] of offenders) expect(message, key).not.toMatch(/unavailable|unknown|not enough history|could not be read|not an all-clear/i)
+  it('never calls a figure unavailable, unknown or short of history outside the whole-app failure screens', () => {
+    const reports = Object.entries(messages).filter(([key]) => !key.startsWith('auth.') && !key.startsWith('access.'))
+    expect(reports.length).toBeGreaterThan(0)
+    for (const [key, message] of reports) expect(message, key).not.toMatch(/unavailable|unknown|not enough history|could not be read|not an all-clear/i)
   })
 
   it('has no empty or unbalanced messages', () => {
