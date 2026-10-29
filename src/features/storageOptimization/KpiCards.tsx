@@ -1,4 +1,4 @@
-import { formatBytes, formatLongMonthYear, formatNumber, formatPercent } from '@/lib/format'
+import { formatBytes, formatPercent, formatShortDate } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import { costHint, forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
@@ -17,11 +17,6 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   const { sharePoint, cost, archive } = overview
   const forecast = forecastCard(overview, t)
   const rate = formatMoney(cost.ratePerGb, cost.currency)
-  const inactivity = {
-    years: archive.inactiveYears,
-    date: formatLongMonthYear(archive.inactiveSince),
-  }
-
   const cards = [
     archive.applies && (
       <StatCard
@@ -31,12 +26,11 @@ export function KpiCards({ overview, delay = 0 }: Props) {
         color={HEALTH_COLOR[archive.status]}
         information={
           archive.siteCount === 0
-            ? t('storageOptimisation.kpi.archivableNoneHint', inactivity)
+            ? t('storageOptimisation.kpi.archivableNoneHint', { years: archive.inactiveYears })
             : t('storageOptimisation.kpi.archivableHint', {
-                ...inactivity,
-                percent: formatPercent(archive.shareOfSharePoint, 1),
                 count: archive.siteCount,
-                sites: formatNumber(archive.siteCount),
+                percent: formatPercent(archive.shareOfSharePoint, 1),
+                date: formatShortDate(archive.inactiveSince),
               })
         }
       />

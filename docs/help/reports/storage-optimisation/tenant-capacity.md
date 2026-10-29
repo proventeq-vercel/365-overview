@@ -38,7 +38,8 @@ Only the cards that apply to your tenant are shown:
 The storage held by live SharePoint sites with **no activity for the inactivity window**. The
 window is 3 years by default, and you can set 1 to 10 years in
 [Report settings](../../reference/settings.md#archive-sites-inactive-for). The description gives
-the share of live site storage, the number of sites and the cutoff date.
+the number of sites, their share of live site storage and the cutoff day, for example
+*42 sites · 24% of live site storage · no activity since 30 Aug 2023*.
 
 - The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
   window, a site last active before 30 August 2023 counts.
@@ -81,7 +82,9 @@ with, so the card stays orange however large the growth.
 
 The month SharePoint storage passes your entitlement if it keeps growing at the current rate.
 The card is not shown once the entitlement is already exceeded.
-The description gives the entitlement, the monthly growth and the headroom left.
+The description reads *At current growth*. The growth rate and the entitlement line behind it are
+in [Future state & growth impact](growth-forecast.md), and what is left of the entitlement in
+[Current storage distribution](storage-distribution.md).
 
 | You see | Because |
 | --- | --- |
@@ -90,13 +93,13 @@ The description gives the entitlement, the monthly growth and the headroom left.
 | **No growth detected** | Storage has not grown over the measured months. |
 
 With under six months of storage history, the month comes from the daily storage reported so
-far, and the description says how many days it was measured over.
+far, and the description adds how many days it was measured over.
 
 Two cases show a different card in the same place, in navy:
 
 | Card | Because |
 | --- | --- |
-| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description gives the storage used and where to enter the entitlement. |
+| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description reads *Needs tenant entitlement*: enter it in [Report settings](../../reference/settings.md) to get the forecast. |
 | **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day with storage, the value is the total of the site usage report, and the description says so. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.

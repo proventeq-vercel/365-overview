@@ -3,6 +3,7 @@ import {
   formatBytes,
   formatBytesInUnit,
   formatLongMonthYear,
+  formatShortDate,
   formatShortMonthYear,
   formatNumber,
   formatPercent,
@@ -101,6 +102,21 @@ describe('formatLongMonthYear', () => {
 
   it('returns the input untouched when it is not a date', () => {
     expect(formatLongMonthYear('soon')).toBe('soon')
+  })
+})
+
+describe('formatShortDate', () => {
+  it('renders an ISO date as day, short month and year', () => {
+    expect(formatShortDate('2023-08-30')).toBe('30 Aug 2023')
+    expect(formatShortDate('2023-09-05')).toBe('5 Sep 2023')
+  })
+
+  it('does not shift a first-of-month date across a timezone boundary', () => {
+    expect(formatShortDate('2027-01-01')).toBe('1 Jan 2027')
+  })
+
+  it('returns the input untouched when it is not a date', () => {
+    expect(formatShortDate('soon')).toBe('soon')
   })
 })
 

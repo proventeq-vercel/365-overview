@@ -59,3 +59,12 @@ export function formatLongMonthYear(isoDate: string): string {
   if (Number.isNaN(date.getTime())) return isoDate
   return new Intl.DateTimeFormat(REPORT_LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
+
+export function formatShortDate(isoDate: string): string {
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return isoDate
+  const parts = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value
+  return `${part('day')} ${part('month')} ${part('year')}`
+}
