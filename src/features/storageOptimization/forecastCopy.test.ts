@@ -125,7 +125,7 @@ describe('forecastCard hint', () => {
     expect(hint(beyondHorizon)).toBe('At current growth')
   })
 
-  it('says no growth is detected at current growth for a flat tenant', () => {
+  it('gives a flat tenant the at-current-growth hint', () => {
     expect(hint(flat)).toBe('At current growth')
   })
 

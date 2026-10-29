@@ -40,7 +40,8 @@ window is 3 years by default, and you can set 1 to 10 years in
 [Report settings](../../reference/settings.md#archive-sites-inactive-for). The description gives
 the number of sites, their share of live site storage and the cutoff day, for example
 *42 sites · 24.0% of live site storage · no activity since 30 Aug 2023*. A share too small to
-round reads *<0.1%*.
+round reads *<0.1%*. With no site past the window it reads *No live site with recorded activity has
+been inactive for 3 years*.
 
 - The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
   window, a site last active before 30 August 2023 counts.
