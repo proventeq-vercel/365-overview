@@ -236,13 +236,13 @@ describe('Storage Optimisation app', () => {
     const user = userEvent.setup()
     const { ds } = renderApp()
     await reportLoaded()
-    expect(archiveCard()).toHaveTextContent('no activity for 3 years (since August 2023)')
+    expect(archiveCard()).toHaveTextContent('no activity since 30 Aug 2023')
 
     await chooseOption(user, /report settings/i)
     await user.click(screen.getByRole('combobox', { name: 'Archive sites inactive for' }))
     await user.click(await screen.findByRole('option', { name: '5 years' }))
 
-    expect(archiveCard()).toHaveTextContent('No site has gone 5 years without activity (since August 2021).')
+    expect(archiveCard()).toHaveTextContent('No live site with recorded activity has been inactive for 5 years')
     expect(ds.getSites).toHaveBeenCalledTimes(1)
     expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
       inactiveYears: 5,

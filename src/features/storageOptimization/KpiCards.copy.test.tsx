@@ -41,27 +41,36 @@ describe('KpiCards', () => {
     expect(screen.getByRole('region', { name: 'Tenant capacity' })).toBeInTheDocument()
   })
 
-  it('shows the archivable storage as a size, with the share and the sites in the description', () => {
+  it('shows the archivable storage as a size, with the sites, the share and the cutoff day in the description', () => {
     render(<KpiCards overview={base} />)
     expect(card(ARCHIVE)).toHaveTextContent('120 GB')
-    expect(card(ARCHIVE)).toHaveTextContent(
-      '24.0% of SharePoint storage, in 42 sites with no activity for 3 years (since August 2023).',
-    )
+    expect(card(ARCHIVE)).toHaveTextContent('42 sites · 24.0% of live site storage · no activity since 30 Aug 2023')
   })
 
-  it('names a single site and a single year without a plural', () => {
-    render(
-      <KpiCards
-        overview={{ ...base, archive: { ...base.archive, siteCount: 1, inactiveYears: 1 } }}
-      />,
-    )
-    expect(card(ARCHIVE)).toHaveTextContent('in 1 site with no activity for 1 year')
+  it('names a single site without a plural', () => {
+    render(<KpiCards overview={{ ...base, archive: { ...base.archive, siteCount: 1 } }} />)
+    expect(card(ARCHIVE)).toHaveTextContent(/^120 GBInactive sites to archive1 site · /)
   })
 
-  it('says no site has gone the window without activity when nothing is archivable', () => {
+  it('shows a share too small to round as under 0.1%, never as 0.0%', () => {
+    render(<KpiCards overview={{ ...base, archive: { ...base.archive, shareOfSharePoint: 0.0002 } }} />)
+    expect(card(ARCHIVE)).toHaveTextContent('42 sites · <0.1% of live site storage · ')
+  })
+
+  it('groups a large site count', () => {
+    render(<KpiCards overview={{ ...base, archive: { ...base.archive, siteCount: 12345 } }} />)
+    expect(card(ARCHIVE)).toHaveTextContent('12,345 sites · ')
+  })
+
+  it('says no live site has been inactive for the window when nothing is archivable', () => {
     render(<KpiCards overview={nothingToArchive} />)
     expect(card(ARCHIVE)).toHaveTextContent('0 B')
-    expect(card(ARCHIVE)).toHaveTextContent('No site has gone 3 years without activity (since August 2023).')
+    expect(card(ARCHIVE)).toHaveTextContent('No live site with recorded activity has been inactive for 3 years')
+  })
+
+  it('names a single year without a plural when nothing is archivable', () => {
+    render(<KpiCards overview={{ ...nothingToArchive, archive: { ...nothingToArchive.archive, inactiveYears: 1 } }} />)
+    expect(card(ARCHIVE)).toHaveTextContent(/has been inactive for 1 year$/)
   })
 
   it('shows the yearly saving as money, with the storage and rate behind it, when the entitlement is unknown', () => {
@@ -113,15 +122,12 @@ describe('KpiCards', () => {
     expect(card(USED)).toHaveTextContent('The forecast starts from the second day it reports.')
   })
 
-  it('explains the exhaustion month by the entitlement, the growth rate and the headroom left', () => {
+  it('says the exhaustion month holds at current growth', () => {
     render(<KpiCards overview={base} />)
-    expect(card(FORECAST)).toHaveTextContent('January 2030')
-    expect(card(FORECAST)).toHaveTextContent(
-      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left.',
-    )
+    expect(card(FORECAST)).toHaveTextContent(/^January 2030Forecast exhaustionAt current growth$/)
   })
 
-  it('explains a forecast beyond the horizon by the growth rate and the headroom', () => {
+  it('says a forecast beyond the horizon holds at current growth', () => {
     render(
       <KpiCards
         overview={{
@@ -130,13 +136,10 @@ describe('KpiCards', () => {
         }}
       />,
     )
-    expect(card(FORECAST)).toHaveTextContent('Beyond 10 years')
-    expect(card(FORECAST)).toHaveTextContent(
-      'At 10 GB a month, the 500 GB of headroom left under your 1000 GB entitlement lasts more than 10 years.',
-    )
+    expect(card(FORECAST)).toHaveTextContent(/^Beyond 10 yearsForecast exhaustionAt current growth$/)
   })
 
-  it('explains no forecast for a tenant that is not growing', () => {
+  it('says no growth is detected at current growth for a tenant that is not growing', () => {
     render(
       <KpiCards
         overview={{
@@ -145,15 +148,12 @@ describe('KpiCards', () => {
         }}
       />,
     )
-    expect(card(FORECAST)).toHaveTextContent('No growth detected')
-    expect(card(FORECAST)).toHaveTextContent('has not grown over the last 5 months')
+    expect(card(FORECAST)).toHaveTextContent(/^No growth detectedForecast exhaustionAt current growth$/)
   })
 
-  it('shows the monthly growth in place of a runway, and where to enter the entitlement, when it is unknown', () => {
+  it('shows the monthly growth in place of a runway, and says it needs the entitlement, when it is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card(GROWTH)).toHaveTextContent('+10 GB')
-    expect(card(GROWTH)).not.toHaveTextContent(/unknown/i)
-    expect(card(GROWTH)).toHaveTextContent('Enter the tenant entitlement in Options, Report settings')
+    expect(card(GROWTH)).toHaveTextContent(/^\+10 GBSharePoint growth per monthNeeds tenant entitlement · growth over the last 5 months$/)
   })
 
   it('leaves the saving out while storage is within the entitlement, where archiving saves nothing', () => {

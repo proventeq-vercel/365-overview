@@ -67,19 +67,22 @@ describe('forecastCard value', () => {
 })
 
 describe('forecastCard hint', () => {
-  it('gives the storage used and its growth, and where to enter the entitlement, when it is unknown', () => {
-    expect(hint(unknownEntitlement)).toBe(
-      '500 GB of SharePoint storage, changing by +10 GB a month over the last 5 months. Enter the tenant entitlement in Options, Report settings to forecast it against the entitlement.',
+  it('says the forecast needs the tenant entitlement, and names the months the growth was measured over', () => {
+    expect(hint(unknownEntitlement)).toBe('Needs tenant entitlement · growth over the last 5 months')
+  })
+
+  it('names the days the growth was measured over on a short history without an entitlement, and claims no forecast', () => {
+    expect(hint({ ...unknownEntitlement, growth: { ...dailyRate.growth, forecastStatus: 'Unknown' } })).toBe(
+      'Needs tenant entitlement · growth over the last 40 days',
     )
   })
 
-  it('signs a shrinking rate without an entitlement, never "growing" a negative figure', () => {
+  it('signs a shrinking rate without an entitlement', () => {
     const shrinking: StorageOverview = {
       ...unknownEntitlement,
       growth: { ...unknownEntitlement.growth, avgMonthlyGrowthBytes: -10 * 1_073_741_824 },
     }
     expect(forecastCard(shrinking, t).value).toBe('-10 GB')
-    expect(hint(shrinking)).toMatch(/^500 GB of SharePoint storage, changing by -10 GB a month over the last 5 months\./)
   })
 
   it('shows the storage used, not a growth of +0 B, from a single day without an entitlement', () => {
@@ -114,39 +117,25 @@ describe('forecastCard hint', () => {
     )
   })
 
-  it('explains a date by the entitlement, the growth assumption and the headroom left', () => {
-    expect(hint(base)).toBe(
-      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left.',
-    )
+  it('says a date holds at current growth', () => {
+    expect(hint(base)).toBe('At current growth')
   })
 
-  it('quotes the headroom left, not the storage used', () => {
-    const tighter: StorageOverview = {
-      ...base,
-      sharePoint: { ...base.sharePoint, usedBytes: 620 * 1_073_741_824, remainingBytes: 380 * 1_073_741_824 },
-    }
-    expect(hint(tighter)).toMatch(/380 GB of headroom is left\.$/)
+  it('says beyond-horizon holds at current growth', () => {
+    expect(hint(beyondHorizon)).toBe('At current growth')
   })
 
-  it('explains beyond-horizon by how long the headroom lasts', () => {
-    expect(hint(beyondHorizon)).toBe(
-      'At 10 GB a month, the 500 GB of headroom left under your 1000 GB entitlement lasts more than 10 years.',
-    )
+  it('gives a flat tenant the at-current-growth hint', () => {
+    expect(hint(flat)).toBe('At current growth')
   })
 
-  it('explains no forecast for a flat tenant by the window it did not grow over', () => {
-    expect(hint(flat)).toBe(
-      'SharePoint storage has not grown over the last 5 months, so it is not on course to pass your 1000 GB entitlement.',
-    )
-  })
-
-  it('counts the days a flat daily series did not grow over', () => {
+  it('names the days a flat daily series was measured over', () => {
     const flatDaily: StorageOverview = {
       ...flat,
       growth: { ...flat.growth, rateSource: 'daily', windowDays: 40 },
     }
     expect(hint(flatDaily)).toBe(
-      'SharePoint storage has not grown over the last 40 days, so it is not on course to pass your 1000 GB entitlement.',
+      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
     )
   })
 
@@ -156,7 +145,7 @@ describe('forecastCard hint', () => {
 
   it('names the days a short-history forecast was measured over', () => {
     expect(hint(dailyRate)).toBe(
-      'The month SharePoint storage passes your 1000 GB entitlement if it keeps growing 10 GB a month. 500 GB of headroom is left. Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
+      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
     )
   })
 

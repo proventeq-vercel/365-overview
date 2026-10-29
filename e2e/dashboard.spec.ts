@@ -116,24 +116,26 @@ test('an entitlement override replaces the licence estimate everywhere', async (
   await reportLoaded(page)
   await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
 
+  const forecastCard = page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })
+  await expect(forecastCard).not.toContainText('Beyond 10 years')
+
   await chooseOption(page, /report settings/i)
   await page.getByLabel('SharePoint entitlement').fill('40')
   await expect(page.getByText(/estimated from licence counts/i)).toHaveCount(0)
-  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })).toContainText(
-    'your 40 TB entitlement',
-  )
+  await expect(page.getByText('of the 40 TB SharePoint entitlement used', { exact: false })).toBeVisible()
+  await expect(forecastCard).toContainText('Beyond 10 years')
 })
 
 test('the inactivity window in the report settings recounts the sites ready to archive', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
   const archiveCard = page.locator('[data-slot="stat-card"]', { hasText: 'Inactive sites to archive' })
-  await expect(archiveCard).toContainText('no activity for 3 years (since August 2023)')
+  await expect(archiveCard).toContainText('no activity since 30 Aug 2023')
 
   await chooseOption(page, /report settings/i)
   await page.getByRole('combobox', { name: 'Archive sites inactive for' }).click()
   await page.getByRole('option', { name: '5 years' }).click()
-  await expect(archiveCard).toContainText('No site has gone 5 years without activity')
+  await expect(archiveCard).toContainText('No live site with recorded activity has been inactive for 5 years')
 })
 
 test('refresh re-runs the report without a blank flash', async ({ page }) => {
