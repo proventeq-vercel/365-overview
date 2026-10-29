@@ -52,6 +52,11 @@ describe('KpiCards', () => {
     expect(card(ARCHIVE)).toHaveTextContent(/^120 GBInactive sites to archive1 site · /)
   })
 
+  it('shows a share too small to round as under 0.1%, never as 0.0%', () => {
+    render(<KpiCards overview={{ ...base, archive: { ...base.archive, shareOfSharePoint: 0.0002 } }} />)
+    expect(card(ARCHIVE)).toHaveTextContent('42 sites · <0.1% of live site storage · ')
+  })
+
   it('groups a large site count', () => {
     render(<KpiCards overview={{ ...base, archive: { ...base.archive, siteCount: 12345 } }} />)
     expect(card(ARCHIVE)).toHaveTextContent('12,345 sites · ')
@@ -148,7 +153,7 @@ describe('KpiCards', () => {
 
   it('shows the monthly growth in place of a runway, and says it needs the entitlement, when it is unknown', () => {
     render(<KpiCards overview={unknownEntitlement} />)
-    expect(card(GROWTH)).toHaveTextContent(/^\+10 GBSharePoint growth per monthNeeds tenant entitlement$/)
+    expect(card(GROWTH)).toHaveTextContent(/^\+10 GBSharePoint growth per monthNeeds tenant entitlement · growth over the last 5 months$/)
   })
 
   it('leaves the saving out while storage is within the entitlement, where archiving saves nothing', () => {

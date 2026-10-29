@@ -231,7 +231,7 @@
   "storageOptimisation.kpi.forecastBeyondHorizon": "Beyond {years} years",
   "storageOptimisation.kpi.forecastHint": "At current growth",
   "storageOptimisation.kpi.growthPerMonth": "SharePoint growth per month",
-  "storageOptimisation.kpi.forecastUnknownHint": "Needs tenant entitlement",
+  "storageOptimisation.kpi.forecastUnknownHint": "Needs tenant entitlement · growth over {window}",
   "storageOptimisation.kpi.usedToday": "SharePoint storage used",
 
   "storageOptimisation.distribution.title": "Current storage distribution",

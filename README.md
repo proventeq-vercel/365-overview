@@ -43,10 +43,10 @@ forecast card becomes **SharePoint storage used** and the cost card is left out:
 
 | Card | Value | Green · orange · red |
 |---|---|---|
-| **Inactive sites to archive** | Storage in live SharePoint sites with no activity for the inactivity window (Report settings, default 3 years, before the report date); the share of site storage and the site count in the description. A site with no recorded activity is not counted. | ≤ 5% · ≤ 50% · above 50% of live site storage |
+| **Inactive sites to archive** | Storage in live SharePoint sites with no activity for the inactivity window (Report settings, default 3 years, before the report date); the site count, the share of live site storage and the cutoff day in the description. A site with no recorded activity is not counted. | ≤ 5% · ≤ 50% · above 50% of live site storage |
 | **Potential saving per year** | The part of that storage over the entitlement (all of it when the entitlement is unknown) × the cost per GB per month × 12 | as the archive card |
 | **Cost of doing nothing, next 12 months** | The next year's growth beyond the entitlement, priced at the same rate | zero · above zero · the year's billable growth is more than a tenth of the entitlement |
-| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth, explained with the rate and the headroom left | runway ≥ 36 months · ≥ 12 months · under 12 months |
+| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth; the description reads *At current growth* (plus the window on a short history), and *Needs tenant entitlement* with the growth window on the growth-per-month card shown without one | runway ≥ 36 months · ≥ 12 months · under 12 months |
 
 Storage used and remaining headroom are on the *Storage usage* line under the cards. SharePoint and
 OneDrive are reported as two separate pools: the line is SharePoint only, and OneDrive has its own

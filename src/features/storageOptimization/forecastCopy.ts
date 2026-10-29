@@ -85,7 +85,7 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
       label: t('storageOptimisation.kpi.growthPerMonth'),
       value: formatSignedBytes(growth.avgMonthlyGrowthBytes),
       status: null,
-      hint: shortHint(t('storageOptimisation.kpi.forecastUnknownHint'), overview, t),
+      hint: t('storageOptimisation.kpi.forecastUnknownHint', { window: rateWindow(overview, t) }),
     }
   }
 

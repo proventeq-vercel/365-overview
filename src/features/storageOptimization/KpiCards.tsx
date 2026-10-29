@@ -1,4 +1,4 @@
-import { formatBytes, formatPercent, formatShortDate } from '@/lib/format'
+import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
 import { useTranslation } from '@/hooks/useTranslation'
 import { costHint, forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
@@ -29,7 +29,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             ? t('storageOptimisation.kpi.archivableNoneHint', { years: archive.inactiveYears })
             : t('storageOptimisation.kpi.archivableHint', {
                 count: archive.siteCount,
-                percent: formatPercent(archive.shareOfSharePoint, 1),
+                percent: formatShare(archive.shareOfSharePoint),
                 date: formatShortDate(archive.inactiveSince),
               })
         }

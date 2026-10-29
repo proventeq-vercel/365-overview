@@ -116,10 +116,14 @@ test('an entitlement override replaces the licence estimate everywhere', async (
   await reportLoaded(page)
   await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
 
+  const forecastCard = page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })
+  await expect(forecastCard).toContainText('September 2027')
+
   await chooseOption(page, /report settings/i)
   await page.getByLabel('SharePoint entitlement').fill('40')
   await expect(page.getByText(/estimated from licence counts/i)).toHaveCount(0)
   await expect(page.getByText('of the 40 TB SharePoint entitlement used', { exact: false })).toBeVisible()
+  await expect(forecastCard).toContainText('Beyond 10 years')
 })
 
 test('the inactivity window in the report settings recounts the sites ready to archive', async ({ page }) => {

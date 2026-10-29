@@ -67,13 +67,13 @@ describe('forecastCard value', () => {
 })
 
 describe('forecastCard hint', () => {
-  it('says the forecast needs the tenant entitlement when it is unknown', () => {
-    expect(hint(unknownEntitlement)).toBe('Needs tenant entitlement')
+  it('says the forecast needs the tenant entitlement, and names the months the growth was measured over', () => {
+    expect(hint(unknownEntitlement)).toBe('Needs tenant entitlement · growth over the last 5 months')
   })
 
-  it('names the days the growth was measured over on a short history without an entitlement', () => {
+  it('names the days the growth was measured over on a short history without an entitlement, and claims no forecast', () => {
     expect(hint({ ...unknownEntitlement, growth: { ...dailyRate.growth, forecastStatus: 'Unknown' } })).toBe(
-      'Needs tenant entitlement · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
+      'Needs tenant entitlement · growth over the last 40 days',
     )
   })
 

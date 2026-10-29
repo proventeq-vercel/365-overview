@@ -39,7 +39,8 @@ The storage held by live SharePoint sites with **no activity for the inactivity 
 window is 3 years by default, and you can set 1 to 10 years in
 [Report settings](../../reference/settings.md#archive-sites-inactive-for). The description gives
 the number of sites, their share of live site storage and the cutoff day, for example
-*42 sites · 24% of live site storage · no activity since 30 Aug 2023*.
+*42 sites · 24.0% of live site storage · no activity since 30 Aug 2023*. A share too small to
+round reads *<0.1%*.
 
 - The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
   window, a site last active before 30 August 2023 counts.
@@ -99,7 +100,7 @@ Two cases show a different card in the same place, in navy:
 
 | Card | Because |
 | --- | --- |
-| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description reads *Needs tenant entitlement*: enter it in [Report settings](../../reference/settings.md) to get the forecast. |
+| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description reads *Needs tenant entitlement* and the months or days the growth was measured over: enter the entitlement in [Report settings](../../reference/settings.md) to get the forecast. |
 | **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day with storage, the value is the total of the site usage report, and the description says so. |
 
 [Future state & growth impact](growth-forecast.md) shows the trend behind this card.
