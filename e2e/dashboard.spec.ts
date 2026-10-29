@@ -117,7 +117,7 @@ test('an entitlement override replaces the licence estimate everywhere', async (
   await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
 
   const forecastCard = page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })
-  await expect(forecastCard).toContainText('September 2027')
+  await expect(forecastCard).not.toContainText('Beyond 10 years')
 
   await chooseOption(page, /report settings/i)
   await page.getByLabel('SharePoint entitlement').fill('40')

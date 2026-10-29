@@ -117,7 +117,8 @@ describe('formatShortDate', () => {
     try {
       expect(formatShortDate('2027-01-01')).toBe('1 Jan 2027')
     } finally {
-      process.env.TZ = zone
+      if (zone === undefined) delete process.env.TZ
+      else process.env.TZ = zone
     }
   })
 
