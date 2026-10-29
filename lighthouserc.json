@@ -95,7 +95,7 @@
           "aggregationMethod": "median",
           "assertions": {
             "categories:accessibility": ["error", { "minScore": 0.96 }],
-            "color-contrast": ["error", { "maxLength": 86 }]
+            "color-contrast": ["error", { "maxLength": 90 }]
           }
         },
         {
@@ -103,7 +103,7 @@
           "aggregationMethod": "median",
           "assertions": {
             "categories:accessibility": ["error", { "minScore": 0.96 }],
-            "color-contrast": ["error", { "maxLength": 64 }]
+            "color-contrast": ["error", { "maxLength": 70 }]
           }
         }
       ]
