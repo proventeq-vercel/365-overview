@@ -261,7 +261,7 @@ describe('buildStorageGrowth', () => {
 
   it('explains a ranking by storage freed as shrinking', () => {
     const growth = buildStorageGrowth({ ...window, current: one, baseline: [row('SharePoint', 'a', 9)] })
-    expect([growth.ranking, growth.explanation, growth.leaders]).toEqual(['shrink', 'shrink', [{ name: 'a', value: 4 }]])
+    expect([growth.ranking, growth.explanation, growth.leaders]).toEqual(['shrink', 'shrink', [{ name: 'a', value: 4, pool: 'SharePoint' }]])
   })
 })
 

@@ -84,6 +84,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
             .map((band) => ({ name: bandLabel(band, t), value: band.bytes }))}
           formatValue={formatBytes}
           emptyText={t('oneDrive.attention.bandsEmpty', { years: inactiveYears })}
+          ariaLabel={t('oneDrive.attention.bandsTitle')}
         />
       </Panel>
     </Section>

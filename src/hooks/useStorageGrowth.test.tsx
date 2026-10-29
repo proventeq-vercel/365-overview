@@ -372,11 +372,11 @@ describe('useStorageGrowth', () => {
       return sitesOn(date)
     })
     const { result } = renderGrowth({ getSitesOn })
-    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 600 }))
+    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 600, pool: 'SharePoint' }))
     round = 2
     afterCooldown()
     await act(() => result.current.refresh())
-    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 200 }))
+    await waitFor(() => expect(result.current.growth?.leaders[1]).toEqual({ name: 'busy', value: 200, pool: 'SharePoint' }))
   })
 
   it('takes a complete re-read after UTC midnight shortens the window, over a fuller read that missed a report', async () => {
