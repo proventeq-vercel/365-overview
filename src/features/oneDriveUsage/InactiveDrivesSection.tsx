@@ -2,7 +2,7 @@ import { HelpButton } from '@/app/help/HelpButton'
 import { FacetBars } from '@/design/charts'
 import { Panel, PanelDescription, PanelLabel, Section } from '@/design/primitives'
 import { StatCard } from '@/design/StatCard'
-import { P365 } from '@/design/theme'
+import { P365, POOL_COLOR } from '@/design/theme'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import { formatBytes, formatLongDate, formatLongMonthYear } from '@/lib/format'
 import type { InactiveDriveBandTotal, OneDriveAttention, StorageOverview } from '@/types/storage'
@@ -83,6 +83,7 @@ export function InactiveDrivesSection({ overview, delay }: { overview: StorageOv
             .filter((band) => band.count > 0)
             .map((band) => ({ name: bandLabel(band, t), value: band.bytes }))}
           formatValue={formatBytes}
+          color={POOL_COLOR.OneDrive}
           emptyText={t('oneDrive.attention.bandsEmpty', { years: inactiveYears })}
           ariaLabel={t('oneDrive.attention.bandsTitle')}
         />
