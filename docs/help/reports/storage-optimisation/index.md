@@ -14,7 +14,7 @@ from today's position to the actions that would change it:
    what archiving would save once you are over the entitlement, what growth beyond the
    entitlement costs, and when the entitlement runs out.
 2. [Current storage distribution](storage-distribution.md): one line for SharePoint, Teams,
-   deleted sites, inactive, versions and free storage against the SharePoint entitlement, live
+   deleted sites, inactive and free storage against the SharePoint entitlement, live
    OneDrive storage as its own pool, and how SharePoint splits by site template.
 3. [Future state & growth impact](growth-forecast.md): the storage trend, a six-month forecast,
    and the projected cost if nothing changes.

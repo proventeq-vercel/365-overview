@@ -31,7 +31,6 @@ export function storageBreakdown(inputs: StorageBreakdownInputs): StorageBreakdo
     teams: teamsBytes,
     deleted: deletedSiteBytes,
     inactive: inactiveBytes,
-    versions: null,
     free: freeBytes,
   }
   const totalBytes = STORAGE_SEGMENTS.reduce((total, key) => total + (bytes[key] ?? 0), 0)

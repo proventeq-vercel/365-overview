@@ -108,7 +108,6 @@ export const STORAGE_SEGMENTS = [
   'teams',
   'deleted',
   'inactive',
-  'versions',
   'free',
 ] as const
 

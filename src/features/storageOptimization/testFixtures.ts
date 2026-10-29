@@ -81,7 +81,6 @@ export const base: StorageOverview = {
       { key: 'teams', bytes: 170 * GB, share: 170 / 1000 },
       { key: 'deleted', bytes: 10 * GB, share: 10 / 1000 },
       { key: 'inactive', bytes: 120 * GB, share: 120 / 1000 },
-      { key: 'versions', bytes: null, share: 0 },
       { key: 'free', bytes: 500 * GB, share: 500 / 1000 },
     ],
     totalBytes: 1000 * GB,

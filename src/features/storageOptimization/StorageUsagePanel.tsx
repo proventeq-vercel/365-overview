@@ -12,7 +12,6 @@ const SEGMENT_COLOR: Record<StorageSegmentKey, string> = {
   teams: WORKLOAD_COLOR.teams,
   deleted: P365.red,
   inactive: P365.yellow,
-  versions: P365.grey400,
   free: P365.grey100,
 }
 
@@ -57,7 +56,6 @@ function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: Tra
         ? null
         : t('storageOptimisation.usage.share', { percent: formatShare(segment.share, 1) }),
     description: describe(segment.key, overview, t),
-    unmeasured: segment.key === 'versions',
   }
 }
 
@@ -117,8 +115,9 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
         <PanelDescription>{t('storageOptimisation.usage.enterEntitlement')}</PanelDescription>
       )}
       {quotaNote !== null && <PanelDescription>{quotaNote}</PanelDescription>}
+      <p className="text-xs text-p365-grey-600">{t('storageOptimisation.usage.versionsNote')}</p>
       {sharePoint.siteReportRead && (
-        <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
+        <p className="text-xs text-p365-grey-600">{t('storageOptimisation.workload.groupingNote')}</p>
       )}
     </Panel>
   )
