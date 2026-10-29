@@ -18,6 +18,7 @@ import {
 import { CHART_GRID, CHART_TICK, P365, facetFill } from '@/design/theme'
 import { EmptyBlock } from '@/design/primitives'
 import { HiddenName } from '@/design/HiddenName'
+import { TruncatedText } from '@/design/TruncatedText'
 import { useTranslation } from '@/hooks/useTranslation'
 import { hiddenNameLength } from '@/lib/hiddenNames'
 import type { NameMask } from '@/types/storage'
@@ -265,6 +266,8 @@ export function MonoBarChart({
   )
 }
 
+const FACET_NAME_CLASS = 'relative px-2 text-xs font-semibold text-p365-navy'
+
 export function FacetBars({
   items,
   formatValue,
@@ -290,15 +293,9 @@ export function FacetBars({
               aria-hidden="true"
             />
             {nameMask === null ? (
-              <span className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
-                {item.name}
-              </span>
+              <TruncatedText text={item.name} className={FACET_NAME_CLASS} />
             ) : (
-              <HiddenName
-                mask={nameMask}
-                seed={item.name}
-                className="relative px-2 text-xs font-semibold text-p365-navy"
-              />
+              <HiddenName mask={nameMask} seed={item.name} className={FACET_NAME_CLASS} />
             )}
           </div>
           <span className="tabular shrink-0 text-xs text-p365-grey-700">{formatValue(item.value)}</span>
