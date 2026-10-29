@@ -117,7 +117,7 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
       {quotaNote !== null && <PanelDescription>{quotaNote}</PanelDescription>}
       <p className="text-xs text-p365-grey-600">{t('storageOptimisation.usage.versionsNote')}</p>
       {sharePoint.siteReportRead && (
-        <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
+        <p className="text-xs text-p365-grey-600">{t('storageOptimisation.workload.groupingNote')}</p>
       )}
     </Panel>
   )
