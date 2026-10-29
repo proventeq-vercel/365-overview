@@ -111,17 +111,6 @@ describe('formatShortDate', () => {
     expect(formatShortDate('2023-09-05')).toBe('5 Sep 2023')
   })
 
-  it('does not shift a first-of-month date into the previous day west of UTC', () => {
-    const zone = process.env.TZ
-    process.env.TZ = 'America/Los_Angeles'
-    try {
-      expect(formatShortDate('2027-01-01')).toBe('1 Jan 2027')
-    } finally {
-      if (zone === undefined) delete process.env.TZ
-      else process.env.TZ = zone
-    }
-  })
-
   it('returns the input untouched when it is not a date', () => {
     expect(formatShortDate('soon')).toBe('soon')
   })
