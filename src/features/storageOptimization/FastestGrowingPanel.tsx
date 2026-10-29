@@ -2,16 +2,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
 import type { GrowthRanking, NameMask, StorageGrowth } from '@/types/storage'
-import { MonoBarChart } from '@/design/charts'
+import { FacetBars } from '@/design/charts'
 import { EmptyBlock, Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
-import { P365 } from '@/design/theme'
+import { POOL_COLOR } from '@/design/theme'
+import { TOP_GROWERS } from '@/model/storageGrowth'
 
 function useRankingCopy(ranking: GrowthRanking) {
   const t = useTranslation()
   return {
-    growth: { title: t('storageOptimisation.offenders.fastest'), legend: t('storageOptimisation.offenders.added') },
-    shrink: { title: t('storageOptimisation.offenders.shrinking'), legend: t('storageOptimisation.offenders.removed') },
-    size: { title: t('storageOptimisation.offenders.largest'), legend: t('storageOptimisation.offenders.used') },
+    growth: { title: t('storageOptimisation.offenders.fastest') },
+    shrink: { title: t('storageOptimisation.offenders.shrinking') },
+    size: { title: t('storageOptimisation.offenders.largest') },
   }[ranking]
 }
 
@@ -49,7 +50,15 @@ export function FastestGrowingPanel({
     <Panel>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PanelLabel>{copy.title}</PanelLabel>
-        <Legend items={[{ name: copy.legend, color: P365.blue }]} />
+        {growth && growth.leaders.length > 0 && (
+          <Legend
+            columns={2}
+            items={[
+              { name: t('table.pool.SharePoint'), color: POOL_COLOR.SharePoint },
+              { name: t('table.pool.OneDrive'), color: POOL_COLOR.OneDrive },
+            ]}
+          />
+        )}
       </div>
       {growth ? (
         <>
@@ -57,16 +66,26 @@ export function FastestGrowingPanel({
           {growth.leaders.length === 0 ? (
             <EmptyBlock>{t('storageOptimisation.offenders.empty')}</EmptyBlock>
           ) : (
-            <MonoBarChart
-              data={growth.leaders.map((slice) => ({ ...slice }))}
+            <FacetBars
+              items={growth.leaders}
               formatValue={formatBytes}
+              emptyText={t('storageOptimisation.offenders.empty')}
               ariaLabel={copy.title}
               nameMask={nameMask}
             />
           )}
         </>
       ) : (
-        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-72 w-full" />
+        <div
+          role="status"
+          aria-label={t('storageOptimisation.offenders.fastestLoading')}
+          className="flex flex-col gap-2.5"
+        >
+          <span className="sr-only">{t('storageOptimisation.offenders.fastestLoading')}</span>
+          {Array.from({ length: TOP_GROWERS }, (_, index) => (
+            <Skeleton key={index} className="h-7 w-full" />
+          ))}
+        </div>
       )}
     </Panel>
   )

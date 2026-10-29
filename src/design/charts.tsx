@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react'
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -15,12 +13,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { CHART_GRID, CHART_TICK, P365, facetFill } from '@/design/theme'
+import { CHART_GRID, CHART_TICK, P365, POOL_COLOR, facetFill, poolFill } from '@/design/theme'
 import { EmptyBlock } from '@/design/primitives'
 import { HiddenName } from '@/design/HiddenName'
-import { useTranslation } from '@/hooks/useTranslation'
-import { hiddenNameLength } from '@/lib/hiddenNames'
-import type { NameMask } from '@/types/storage'
+import { PoolIcon } from '@/design/PoolIcon'
+import type { NameMask, StoragePool } from '@/types/storage'
 
 const TOOLTIP_STYLE = {
   borderRadius: 6,
@@ -182,87 +179,16 @@ export function MonoLineChart({
   )
 }
 
-const HIDDEN_TICK_CHAR_WIDTH = 6
-const HIDDEN_TICK_HEIGHT = 8
-
-function HiddenNameTick({
-  x,
-  y,
-  payload,
-  lengths,
-}: {
-  x?: number
-  y?: number
-  payload?: { index: number }
-  lengths: number[]
-}) {
-  const width = (lengths[payload?.index ?? 0] ?? 0) * HIDDEN_TICK_CHAR_WIDTH
-  return (
-    <g transform={`translate(${x ?? 0},${y ?? 0}) rotate(-20)`}>
-      <rect
-        x={-width}
-        y={4}
-        width={width}
-        height={HIDDEN_TICK_HEIGHT}
-        rx={HIDDEN_TICK_HEIGHT / 2}
-        fill={P365.grey400}
-        style={{ filter: 'blur(2px)' }}
-      />
-    </g>
-  )
+export interface FacetItem {
+  name: string
+  value: number
+  pool?: StoragePool
 }
 
-export function MonoBarChart({
-  data,
-  formatValue,
-  height = 288,
-  ariaLabel,
-  nameMask = null,
-}: {
-  data: { name: string; value: number }[]
-  formatValue: (value: number) => string
-  height?: number
-  ariaLabel: string
-  nameMask?: NameMask | null
-}) {
-  const t = useTranslation()
-  const masked = nameMask !== null
-  const bars = masked ? data.map((item, index) => ({ ...item, name: String(index) })) : data
-  const lengths = masked ? data.map((item) => hiddenNameLength(item.name)) : []
-  return (
-    <div role="img" aria-label={ariaLabel} className="w-full">
-      <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={bars} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke={CHART_GRID} vertical={false} />
-          <XAxis
-            dataKey="name"
-            tick={masked ? <HiddenNameTick lengths={lengths} /> : CHART_TICK}
-            stroke={P365.grey100}
-            tickLine={false}
-            interval={0}
-            angle={-20}
-            textAnchor="end"
-            height={56}
-          />
-          <YAxis
-            tick={CHART_TICK}
-            stroke={P365.grey100}
-            tickLine={false}
-            axisLine={false}
-            width={68}
-            tickFormatter={formatValue}
-          />
-          <Tooltip
-            cursor={{ fill: CHART_GRID }}
-            contentStyle={TOOLTIP_STYLE}
-            formatter={(v) => formatValue(Number(v))}
-            labelFormatter={masked ? () => t('hiddenName.label') : undefined}
-          />
-          <Bar dataKey="value" fill={P365.blue} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )
+function facetStyle(item: FacetItem, index: number, color: string, max: number) {
+  const width = `${(item.value / max) * 100}%`
+  if (!item.pool) return { width, background: facetFill(index, color) }
+  return { width, background: poolFill(item.pool), borderLeft: `3px solid ${POOL_COLOR[item.pool]}` }
 }
 
 export function FacetBars({
@@ -270,27 +196,33 @@ export function FacetBars({
   formatValue,
   emptyText,
   nameMask = null,
+  color = P365.teal,
+  ariaLabel,
 }: {
-  items: { name: string; value: number }[]
+  items: FacetItem[]
   formatValue: (value: number) => string
   emptyText: string
   nameMask?: NameMask | null
+  color?: string
+  ariaLabel: string
 }) {
   if (items.length === 0) return <EmptyBlock>{emptyText}</EmptyBlock>
   const max = items.reduce((top, item) => Math.max(top, item.value), 1)
 
   return (
-    <ul className="flex flex-col gap-2.5">
+    <ul aria-label={ariaLabel} className="flex flex-col gap-2.5">
       {items.map((item, index) => (
         <li key={`${index}-${item.name}`} className="flex items-center gap-3">
+          {item.pool && <PoolIcon pool={item.pool} />}
           <div className="relative flex h-7 min-w-0 flex-1 items-center">
             <span
+              data-slot="facet-bar"
               className="absolute inset-y-0 left-0 rounded-sm"
-              style={{ width: `${(item.value / max) * 100}%`, background: facetFill(index) }}
+              style={facetStyle(item, index, color, max)}
               aria-hidden="true"
             />
             {nameMask === null ? (
-              <span className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
+              <span title={item.name} className="relative min-w-0 truncate px-2 text-xs font-semibold text-p365-navy">
                 {item.name}
               </span>
             ) : (

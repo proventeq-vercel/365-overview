@@ -1,5 +1,5 @@
 import type { HealthStatus } from '@/lib/thresholds'
-import type { ForecastStatus } from '@/types/storage'
+import type { ForecastStatus, StoragePool } from '@/types/storage'
 
 export const P365 = {
   navy: '#0f2c3d',
@@ -17,9 +17,14 @@ export const P365 = {
 
 export const WORKLOAD_COLOR = {
   sharePoint: '#038387',
-  oneDrive: '#0078d4',
+  oneDrive: '#0364b8',
   teams: '#5b5fc7',
 } as const
+
+export const POOL_COLOR: Record<StoragePool, string> = {
+  SharePoint: WORKLOAD_COLOR.sharePoint,
+  OneDrive: WORKLOAD_COLOR.oneDrive,
+}
 
 export interface LabelTone {
   text: string
@@ -61,9 +66,13 @@ export function monoColor(index: number, total: number): string {
 
 const FACET_TINT_CYCLE = [50, 40, 30, 22, 15, 10]
 
-export function facetFill(index: number): string {
+export function facetFill(index: number, base: string = P365.teal): string {
   const percent = FACET_TINT_CYCLE[index % FACET_TINT_CYCLE.length]
-  return `color-mix(in srgb, ${P365.teal} ${percent}%, white)`
+  return `color-mix(in srgb, ${base} ${percent}%, white)`
+}
+
+export function poolFill(pool: StoragePool): string {
+  return `color-mix(in srgb, ${POOL_COLOR[pool]} 30%, white)`
 }
 
 export const CHART_GRID = '#f0f0f0'

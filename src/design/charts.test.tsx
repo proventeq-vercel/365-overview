@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import { render } from '@/test/render'
 import { FacetBars } from './charts'
 import { Legend } from './primitives'
@@ -18,9 +18,10 @@ describe('FacetBars', () => {
         ]}
         formatValue={(v) => `${v / GB} GB`}
         emptyText="No results"
+        ariaLabel="Ranked"
       />,
     )
-    const rows = screen.getAllByRole('listitem')
+    const rows = within(screen.getByRole('list', { name: 'Ranked' })).getAllByRole('listitem')
     expect(rows).toHaveLength(2)
     const fills = rows.map((row) => (row.querySelector('[aria-hidden]') as HTMLElement).style.width)
     expect(fills).toEqual(['100%', '25%'])
@@ -38,6 +39,7 @@ describe('FacetBars', () => {
         ]}
         formatValue={String}
         emptyText="No results"
+        ariaLabel="Ranked"
       />,
     )
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
@@ -46,7 +48,7 @@ describe('FacetBars', () => {
   })
 
   it('shows the empty text instead of an empty list', () => {
-    render(<FacetBars items={[]} formatValue={String} emptyText="No results" />)
+    render(<FacetBars items={[]} formatValue={String} emptyText="No results" ariaLabel="Ranked" />)
     expect(screen.getByText('No results')).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })

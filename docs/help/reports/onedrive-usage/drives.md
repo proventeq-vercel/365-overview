@@ -11,7 +11,7 @@ the subtitle says how many.
 
 | Column | Meaning |
 | --- | --- |
-| Drive | The OneDrive account, named after its owner, with a link to the drive. |
+| Drive | The OneDrive icon (OneDrive blue), the account, named after its owner, and a link to the drive. |
 | Owner | The drive's owner. |
 | Storage used | Storage consumed as of the report date. |
 | Quota used | How much of the drive's own storage quota is used. This is the limit a OneDrive actually stops at. |

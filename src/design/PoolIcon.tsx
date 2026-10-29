@@ -1,5 +1,6 @@
 import { useTranslation } from '@/hooks/useTranslation'
 import type { StoragePool } from '@/types/storage'
+import { POOL_COLOR } from '@/design/theme'
 
 const POOL_PATH: Record<StoragePool, string> = {
   SharePoint:
@@ -21,7 +22,8 @@ export function PoolIcon({ pool }: PoolIconProps) {
       fill="currentColor"
       role="img"
       aria-label={label}
-      className="size-5 shrink-0 text-p365-teal"
+      className="size-5 shrink-0"
+      style={{ color: POOL_COLOR[pool] }}
     >
       <title>{label}</title>
       <path d={POOL_PATH[pool]} />

@@ -103,6 +103,15 @@ describe('InactiveDrivesSection', () => {
     expect(screen.queryByText('No activity recorded')).not.toBeInTheDocument()
   })
 
+  it('tints the inactive OneDrive bands in OneDrive blue, like every other OneDrive list', () => {
+    render(<InactiveDrivesSection overview={base} />)
+    const bars = screen
+      .getByRole('list', { name: 'How long the inactive OneDrives have been inactive' })
+      .querySelectorAll<HTMLElement>('[data-slot="facet-bar"]')
+    expect(bars).toHaveLength(4)
+    bars.forEach((bar) => expect(bar.style.background).toContain(rgb('#0364b8')))
+  })
+
   it('says no OneDrive is inactive instead of drawing empty bars', () => {
     const bands = baseAttention.inactive.bands.map((band) => ({ ...band, count: 0, bytes: 0 }))
     render(<InactiveDrivesSection overview={withAttention({ inactive: { count: 0, bytes: 0, bands } })} />)

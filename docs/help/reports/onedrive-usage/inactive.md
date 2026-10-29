@@ -52,6 +52,6 @@ which of these OneDrives are already past day 93. It shows what they hold, not a
 
 ## How long the inactive ones have been inactive
 
-A bar per band, by storage: up to one year past the inactivity window, one to two years past it,
-more than that, and OneDrives with no activity recorded. Change the window under
+A bar per band in OneDrive blue, by storage: up to one year past the inactivity window, one to two
+years past it, more than that, and OneDrives with no activity recorded. Change the window under
 **Options (⋯) → Report settings**.

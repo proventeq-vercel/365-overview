@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup, within } from '@testing-library/react'
+import { rgb } from '@/test/colour'
 import { renderWithData } from '@/test/render'
 import type { StorageGrowth, StorageOverview, StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
@@ -20,8 +21,8 @@ const grown: StorageGrowth = {
   missingNote: false,
   measuredRows: 40,
   leaders: [
-    { name: 'gamma', value: 900 },
-    { name: 'dana', value: 400 },
+    { name: 'gamma', value: 900, pool: 'SharePoint' },
+    { name: 'dana', value: 400, pool: 'OneDrive' },
   ],
 }
 const bySize: StorageGrowth = {
@@ -34,7 +35,7 @@ const bySize: StorageGrowth = {
   reportsMissing: 50,
   complete: false,
   measuredRows: 0,
-  leaders: [{ name: 'gamma', value: 5000 }],
+  leaders: [{ name: 'gamma', value: 5000, pool: 'SharePoint' }],
 }
 
 function renderOffenders(overview: StorageOverview, growth: StorageGrowth | undefined = grown) {
@@ -42,6 +43,14 @@ function renderOffenders(overview: StorageOverview, growth: StorageGrowth | unde
 }
 
 afterEach(cleanup)
+
+const growthPanel = (title = 'Fastest-growing sites & OneDrives') =>
+  screen.getByRole('heading', { name: title }).parentElement!.parentElement!
+
+const growthLegend = (title?: string) =>
+  within(growthPanel(title))
+    .queryAllByRole('list')
+    .find((list) => !list.hasAttribute('aria-label')) ?? null
 
 const site = (id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool: 'SharePoint',
@@ -91,7 +100,7 @@ describe('OffendersSection', () => {
   it('names the section and charts the fastest-growing sites and OneDrives over the window', () => {
     renderOffenders(withSites)
     expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
     expect(
       screen.getByText(
         "Storage added between 2026-08-06 and 2026-08-30 (24 days), counted from the first day each site or OneDrive was active in the daily usage reports that came back.",
@@ -100,10 +109,70 @@ describe('OffendersSection', () => {
     expect(screen.queryByText(/biggest sites & onedrives/i)).not.toBeInTheDocument()
   })
 
+  it('marks every fastest grower as a SharePoint site or a OneDrive, by icon and product colour', () => {
+    renderOffenders(withSites)
+    const rows = within(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).getAllByRole('listitem')
+    const summarise = (row: HTMLElement) => {
+      const bar = row.querySelector<HTMLElement>('[data-slot="facet-bar"]')!
+      const icon = within(row).getByRole('img')
+      return [row.textContent, icon.getAttribute('aria-label'), icon.style.color, bar.style.borderLeft]
+    }
+    expect(rows.map(summarise)).toEqual([
+      ['SharePointgamma900 B', 'SharePoint', rgb('#038387'), `3px solid ${rgb('#038387')}`],
+      ['OneDrivedana400 B', 'OneDrive', rgb('#0364b8'), `3px solid ${rgb('#0364b8')}`],
+    ])
+    const fills = rows.map((row) => row.querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background)
+    expect(fills[0]).toContain(rgb('#038387'))
+    expect(fills[1]).toContain(rgb('#0364b8'))
+  })
+
+  it('names both products in the growth legend, each in its own colour', () => {
+    renderOffenders(withSites)
+    const swatch = (name: string) =>
+      within(growthLegend()!).getByText(name).closest('li')!.querySelector<HTMLElement>('i')!
+    expect(swatch('SharePoint').style.background).toBe(rgb('#038387'))
+    expect(swatch('OneDrive').style.background).toBe(rgb('#0364b8'))
+  })
+
+  it('keeps grower names hidden behind the hidden-name control and still marks each product', () => {
+    renderOffenders({ ...withSites, caveats: { ...withSites.caveats, nameMask: 'hidden' as const } })
+    const list = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect(within(list).getAllByRole('button', { name: 'Hidden name' })).toHaveLength(2)
+    expect(within(list).queryByText('gamma')).not.toBeInTheDocument()
+    expect(within(list).queryByTitle('gamma')).not.toBeInTheDocument()
+    expect(within(list).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'SharePoint',
+      'OneDrive',
+    ])
+  })
+
+  it('shows a long grower name in full on hover', () => {
+    renderOffenders(withSites)
+    const list = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect(within(list).getByText('gamma')).toHaveAttribute('title', 'gamma')
+  })
+
+  it('shows no product legend until there are growers to label', () => {
+    renderOffenders(withSites, { ...bySize, leaders: [] })
+    expect(growthLegend('Sites & OneDrives by storage used')).toBeNull()
+    expect(within(growthPanel('Sites & OneDrives by storage used')).getByText('No results')).toBeInTheDocument()
+  })
+
+  it('tints the largest sites in SharePoint teal and the largest OneDrives in OneDrive blue', () => {
+    renderOffenders(withSites)
+    const firstBar = (label: string) =>
+      screen.getByRole('list', { name: label }).querySelector<HTMLElement>('[data-slot="facet-bar"]')!.style.background
+    expect(firstBar('Top SharePoint sites by storage')).toContain(rgb('#038387'))
+    expect(firstBar('Top OneDrives by storage')).toContain(rgb('#0364b8'))
+  })
+
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
-    expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    const placeholder = screen.getByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' })
+    expect(placeholder).toHaveTextContent('Loading the fastest-growing sites and OneDrives')
+    expect(placeholder).not.toHaveAttribute('aria-busy')
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(growthLegend()).toBeNull()
   })
 
   it('says how many reports of each pool came back, and over which window, when some are missing', () => {
@@ -122,21 +191,19 @@ describe('OffendersSection', () => {
 
   it('charts the sites that freed the most storage when nothing grew, and says so', () => {
     renderOffenders(withSites, { ...grown, ranking: 'shrink', explanation: 'shrink' })
-    const chart = screen.getByRole('img', { name: 'Sites & OneDrives that shrank the most' })
-    expect(within(chart.parentElement!).getByText('Storage freed')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Sites & OneDrives that shrank the most' })).toBeInTheDocument()
     expect(screen.getByText(/^No site or OneDrive measured between 2026-08-06 and 2026-08-30 \(24 days\) grew\. These freed the most storage/)).toBeInTheDocument()
   })
 
   it('charts the sites and OneDrives by storage used when no daily report came back, naming the day of the sizes', () => {
     renderOffenders(withSites, bySize)
-    const chart = screen.getByRole('img', { name: 'Sites & OneDrives by storage used' })
-    expect(within(chart.parentElement!).getByText('Storage used')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Sites & OneDrives by storage used' })).toBeInTheDocument()
     expect(
       screen.getByText(
         "Ranked by storage used on 2026-08-30. Growth is measured from Microsoft's daily usage reports, and none of those from 2026-08-06 to 2026-08-30 came back; Refresh data reads them again after ten minutes.",
       ),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   const sizeStates: Record<'reportDateTooOld' | 'growthFailed' | 'notMeasured', Partial<StorageGrowth>> = {
@@ -182,7 +249,7 @@ describe('OffendersSection', () => {
   it('says there is nothing to rank, rather than drawing an empty chart, when no row holds storage', () => {
     renderOffenders(withSites, { ...bySize, leaders: [] })
     expect(screen.getByText('No results')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Sites & OneDrives by storage used' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Sites & OneDrives by storage used' })).not.toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {

@@ -90,6 +90,11 @@ describe('Storage Optimisation app', () => {
   it('keeps the estimated-entitlement caveat inside the growth callout, not a banner', async () => {
     renderApp()
     await reportLoaded()
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('status', { name: 'Loading the fastest-growing sites and OneDrives' }),
+      ).not.toBeInTheDocument(),
+    )
     const statuses = screen.getAllByRole('status')
     expect(statuses).toHaveLength(1)
     expect(statuses[0]).toHaveTextContent(/estimated from licence counts/i)
