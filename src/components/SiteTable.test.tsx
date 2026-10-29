@@ -251,7 +251,7 @@ describe('SiteTable', () => {
     vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(640)
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
     const named: StorageRow = { ...rows[0], name: 'Alpha Finance' }
-    render(<SiteTable rows={[named]} totalUsedBytes={300} columns={['name', 'owner']} />)
+    render(<SiteTable rows={[named]} poolUsedBytes={{ SharePoint: 300, OneDrive: 300 }} columns={['name', 'owner']} />)
     expect(screen.getByText('Alpha Finance', { exact: true })).toHaveAttribute('tabindex', '0')
     expect(screen.getByText('Ada', { exact: true })).toHaveAttribute('tabindex', '0')
   })
