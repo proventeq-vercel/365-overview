@@ -64,3 +64,26 @@ jobs:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+
+  lighthouse:
+    name: Lighthouse (mock mode, desktop)
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_USE_MOCK: 'true'
+          VITE_FEATURES: optimization.storage.report.overview,optimization.storage.report.onedrive
+      - run: npx --yes @lhci/cli@0.15.1 autorun
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: lighthouse-reports/
+          retention-days: 14

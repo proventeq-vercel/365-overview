@@ -606,11 +606,45 @@ repository **variables** `AZURE_FUNCTIONAPP_NAME` and `AZURE_STORAGE_ACCOUNT`. T
 reads `VITE_GRAPH_PROXY_URL`, `VITE_GRAPH_PROXY_SCOPE`, `VITE_FEATURES` and `VITE_MODES_LOCKED`
 from repository variables, so the Azure-hosted copy is configured without touching the code.
 
+### Lighthouse
+
+The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
+builds in **mock mode** with `VITE_FEATURES` naming both reports (whichever ones production
+enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
+entry), serves the build with `npm run preview`, and runs Lighthouse
+CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
+`/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
+`lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
+best practices and SEO at 1, every scored accessibility audit at 1 on its own (title, `lang`,
+labels, ARIA roles and attributes, names, lists, …), console errors and text compression at 1,
+and at most the one known CSP finding. Colour contrast is the one exception: the help pages hold
+it at 1, the report pages at no more failing elements than today, because the P365 palette's
+teal links, grey secondary text and state-coloured card values sit under 4.5:1. Their
+accessibility score is held at 0.96: with every other audit held on its own it moves only when a
+page stops carrying audits that apply to it, which is a reason to re-measure, not a defect. The
+help articles share one template, so `/help` and one article stand for all of them. A regression
+fails the job. The reports are
+kept as the `lighthouse-reports` artifact for 14 days and are never uploaded to a public server.
+
+The job is part of CI, so a red Lighthouse run on `main` also holds the deploy back (*Automatic
+deployment* waits for the whole CI workflow). A performance median under 0.9 from a slow runner,
+with nothing else red, is re-run with *Re-run failed jobs* rather than lowered. A pull request's
+run never deploys; on `main`, re-run only while that commit is still the tip and no newer run
+exists. A re-run joins the same concurrency group, so re-running an older run cancels a newer
+run still in progress whether the re-run ends green or red, and a green re-run deploys its own,
+older commit. If that happens, re-run the newer commit's run.
+
 ### Preview production build locally
 
 ```bash
 npm run preview
 ```
+
+The preview server sends the `globalHeaders` of `public/staticwebapp.config.json` (CSP, HSTS and
+the rest), so a local check, and the Lighthouse job, see the headers the Static Web App serves.
+The application-permissions copy on Azure Storage sends none of them. The CSP's `connect-src`
+allows only the Microsoft and deployed proxy hosts, so a build pointed at the local proxy stack
+is checked with `npm run dev`, not `npm run preview`.
 
 ---
 
@@ -620,7 +654,7 @@ npm run preview
 |---|---|
 | `dev` | Start Vite dev server with HMR |
 | `build` | TypeScript compile then Vite production bundle (output: `dist/`) |
-| `preview` | Serve the production build locally for inspection |
+| `preview` | Serve the production build locally, with the production response headers |
 | `lint` | Run Oxlint static analysis |
 | `typecheck` | TypeScript type-check without emitting files |
 | `test` | Run Vitest unit tests (single run) |
