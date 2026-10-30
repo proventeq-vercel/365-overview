@@ -55,11 +55,12 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   hostile response cannot collect the bearer token. Through the proxy that
   means its rewritten links must point back at the `VITE_GRAPH_PROXY_URL`
   origin (`PROXY_PUBLIC_URL`, see `functions/README.md`; the local node host
-  links on `127.0.0.1`). `getAllPages` also refuses a next link that is not an
-  absolute `http(s)://` address; the site-directory walk follows its links
-  through `get`, which resolves such a link against the origin, so it stays
-  there. `ErrorState` shows the refusal
-  as `errors.linkNotAllowed.title` / `.body` with the help link.
+  links on `127.0.0.1`). `getAllPages` follows a next link by its parsed
+  origin, so it also refuses one with no host of its own (a path, `//host/…`);
+  the site-directory walk follows its links through `get`, which resolves any
+  link that is not an absolute `http(s)://` address against the origin, so it
+  stays there. `ErrorState` shows the refusal as `errors.linkNotAllowed.title`
+  / `.body` with the help link.
   `ApiError` keeps the Graph-shaped `error.code`;
   `AdminConsentRequired` from the proxy counts as a consent failure. A 429/503/504 — on the request or on
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
