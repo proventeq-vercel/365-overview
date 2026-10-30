@@ -1,8 +1,9 @@
-import { ApiError, NETWORK_ERROR_CODE, THROTTLED_STATUSES } from './apiError'
+import { ApiError, LINK_NOT_ALLOWED_CODE, NETWORK_ERROR_CODE, THROTTLED_STATUSES } from './apiError'
 
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
 const VERSIONED_PATH = /^\/(v1\.0|beta)\//
+const ABSOLUTE_URL = /^https?:\/\//i
 
 export const BATCH_LIMIT = 20
 export const MAX_THROTTLE_RETRIES = 3
@@ -54,13 +55,27 @@ const headerOf = (headers: Record<string, string> | undefined, name: string) =>
     ? Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1]
     : undefined
 
+const sameOrigin = (url: string, origin: string) => {
+  try {
+    const target = new URL(url)
+    return (
+      (target.protocol === 'https:' || target.protocol === 'http:') &&
+      target.username === '' &&
+      target.password === '' &&
+      target.origin === new URL(origin).origin
+    )
+  } catch {
+    return false
+  }
+}
+
 export function createGraphClient(
   getToken: () => Promise<string>,
   fetchImpl: typeof fetch = fetch,
   origin: string = GRAPH_ORIGIN,
 ): GraphClient {
   const resolve = (path: string) => {
-    if (path.startsWith('http')) return path
+    if (ABSOLUTE_URL.test(path)) return path
     return VERSIONED_PATH.test(path) ? `${origin}${path}` : `${origin}/v1.0${path}`
   }
 
@@ -76,6 +91,9 @@ export function createGraphClient(
   }
 
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+    if (!sameOrigin(url, origin)) {
+      throw new ApiError(502, 'Refused a link outside the configured origin.', LINK_NOT_ALLOWED_CODE)
+    }
     for (let attempt = 0; ; attempt++) {
       const token = await getToken()
       const res = await fetchImpl(url, {

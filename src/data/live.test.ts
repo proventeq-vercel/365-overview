@@ -2,7 +2,7 @@
 import { createLiveDataSource } from './live'
 import { ApiError } from '../clients/apiError'
 import { siteDirectoryPath } from '../reports/siteDirectory'
-import type { GraphClient } from '../clients/graphClient'
+import { createGraphClient, type GraphClient } from '../clients/graphClient'
 import { pseudonymOf } from '../lib/hiddenNames'
 
 function recordingGraph() {
@@ -356,6 +356,25 @@ describe('getSiteDirectory', () => {
     get.mockRejectedValue(new TypeError('network down'))
 
     await expect(createLiveDataSource(graph).getSiteDirectory()).rejects.toThrow('network down')
+  })
+
+  it.each([
+    ['another address', 'https://evil.example/v1.0/sites/delta?$skiptoken=x'],
+    ['Graph with a user name before the host', 'https://user@graph.microsoft.com/v1.0/sites/delta?$skiptoken=x'],
+  ])('does not follow a delta link to %s, and the directory comes back empty', async (_case, link) => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: () => Promise.resolve(page(2, link)),
+    } as Response)
+    const ds = createLiveDataSource(createGraphClient(() => Promise.resolve('tok'), fetchImpl))
+
+    await expect(ds.getSiteDirectory()).resolves.toEqual(new Map())
+
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      `https://graph.microsoft.com/v1.0${siteDirectoryPath()}`,
+    ])
   })
 })
 

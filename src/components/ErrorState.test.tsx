@@ -31,6 +31,16 @@ describe('ErrorState', () => {
     expect(queryByRole('link', { name: 'Troubleshooting' })).toBeNull()
   })
 
+  it('names a refused link in its own words and links it to troubleshooting', () => {
+    const { getByText, getByRole, queryByText } = render(
+      <ErrorState error={new ApiError(502, 'Refused a link outside the configured origin.', 'LinkNotAllowed')} />,
+    )
+    expect(getByRole('heading', { name: 'The data service sent a link to another address' })).toBeInTheDocument()
+    expect(getByText(/your sign-in was not sent there/)).toBeInTheDocument()
+    expect(queryByText('Refused a link outside the configured origin.')).toBeNull()
+    expect(getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
+  })
+
   it('shows fallback for unknown error type', () => {
     const { getByText } = render(<ErrorState error="something went wrong" />)
     expect(getByText(/unexpected error/i)).toBeInTheDocument()

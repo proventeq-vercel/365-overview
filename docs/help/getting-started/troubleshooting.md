@@ -69,6 +69,38 @@ The report could not start in your browser. Refresh the page. If the screen says
 overrides the deployed modes, select **Reset the modes for this tab**. If it keeps happening,
 send Proventeq the message shown under the heading.
 
+## The data service sent a link to another address
+
+A large answer arrives a page at a time, and each page links to the next. The report follows a
+link only when it leads back to the same data service, so your sign-in token is never sent to
+another address. A refused link stops the answer it belongs to:
+
+- When nothing usable comes back, the screen shows this heading. Select **Try again** once. If
+  the screen returns, see below.
+- When only some answers were refused, the page loads from the rest. A refused usage report
+  shows as a report that did not come back (see
+  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)). A refused
+  site directory leaves site names to be looked up a page at a time, so search finds only the
+  fifty largest sites and those already shown. On a tenant of more than 10,000 licensed users, a
+  refused user licence report leaves OneDrives with no activity for over 93 days standing in for
+  the unlicensed ones. **Refresh data** meets the same link again, so see below.
+
+::: audience application
+The data service here is Proventeq's Graph proxy. This is a setup fault on Proventeq's side:
+either the address the proxy puts in its links does not match the address this site calls, or
+this site was built with a proxy address that is not a full web address. In the first case only
+answers that span more than one page are refused, so the page usually loads without the usage
+reports; in the second every request is, and the screen shows this heading. Either way, contact
+Proventeq.
+:::
+
+::: audience delegated
+The data service here is Microsoft Graph, and its links always lead back to Microsoft Graph. A
+link anywhere else means something between your browser and Microsoft changed the answer, for
+example a browser extension or a network appliance that inspects traffic. Try another browser or
+network.
+:::
+
 ## Sites are listed by an id instead of a name
 
 The figures are still correct. The app has no `Sites.Read.All`, or, with delegated permissions,
