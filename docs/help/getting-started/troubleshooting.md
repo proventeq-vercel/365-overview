@@ -81,9 +81,9 @@ another address. A refused link stops the answer it belongs to:
   shows as a report that did not come back (see
   [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)). A refused
   site directory leaves site names to be looked up a page at a time, so search finds only the
-  sites already shown. On a tenant of more than 10,000 users, a refused user licence report
-  leaves the unlicensed OneDrives *Unknown*. **Refresh data** meets the same link again, so see
-  below.
+  fifty largest sites and those already shown. On a tenant of more than 10,000 licensed users, a
+  refused user licence report leaves OneDrives with no activity for over 93 days standing in for
+  the unlicensed ones. **Refresh data** meets the same link again, so see below.
 
 ::: audience application
 The data service here is Proventeq's Graph proxy. This is a setup fault on Proventeq's side:

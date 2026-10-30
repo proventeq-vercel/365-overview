@@ -673,8 +673,8 @@ description).
   `app/help/topics.ts`. The ⋯ menu has *Help* (new tab).
 - Every failure surface renders `components/HelpLink` → troubleshooting:
   `AuthErrorScreen` (all branches), the three `AccessFailure` panels,
-  `ErrorState` for auth errors and refused links, `BootstrapError`. A new failure screen gets the
-  link, and its title becomes an `##` heading in
+  `ErrorState` for auth errors and refused links, `BootstrapError`. A new
+  failure screen gets the link, and its title becomes an `##` heading in
   `docs/help/getting-started/troubleshooting.md` (the content test checks).
   `AADSTS50105` is `isUserNotAssigned` and gets its own `AuthErrorScreen` branch.
 - **The help shows only the enabled features.** A page with `feature: <flag>`

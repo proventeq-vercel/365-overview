@@ -35,7 +35,7 @@ describe('ErrorState', () => {
     const { getByText, getByRole, queryByText } = render(
       <ErrorState error={new ApiError(502, 'Refused a link outside the configured origin.', 'LinkNotAllowed')} />,
     )
-    expect(getByText('The data service sent a link to another address')).toBeInTheDocument()
+    expect(getByRole('heading', { name: 'The data service sent a link to another address' })).toBeInTheDocument()
     expect(getByText(/your sign-in was not sent there/)).toBeInTheDocument()
     expect(queryByText('Refused a link outside the configured origin.')).toBeNull()
     expect(getByRole('link', { name: 'Troubleshooting' })).toHaveAttribute('href', '/help/getting-started/troubleshooting')
