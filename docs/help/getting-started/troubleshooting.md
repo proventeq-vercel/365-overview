@@ -71,16 +71,26 @@ send Proventeq the message shown under the heading.
 
 ## The data service sent a link to another address
 
-The screen says "The data service sent a link to another address, so the report could not be
-loaded." A large answer arrives a page at a time, and each page links to the next. The report
-follows a link only when it leads back to the same data service, so your sign-in token is never
-sent to another address. Select **Try again** once. If the screen returns, contact Proventeq.
+A large answer arrives a page at a time, and each page links to the next. The report follows a
+link only when it leads back to the same data service, so your sign-in token is never sent to
+another address. A refused link stops the answer it belongs to:
+
+- When nothing usable comes back, the screen shows this heading. Select **Try again** once. If
+  the screen returns, contact Proventeq.
+- When only some answers were refused, the page loads from the rest. A refused usage report
+  shows as a report that did not come back (see
+  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)), a refused
+  site directory leaves sites named by their id, and a refused licence list leaves the figures
+  measured against a stand-in (see
+  [Figures are measured against a stand-in](#figures-are-measured-against-a-stand-in)).
+  **Refresh data** meets the same link again, so contact Proventeq.
 
 ::: audience application
 The data service here is Proventeq's Graph proxy. This is a setup fault on Proventeq's side:
 either the address the proxy puts in its links does not match the address this site calls, or
 this site was built with a proxy address that is not a full web address. In the first case only
-answers that span more than one page are refused; in the second every request is.
+answers that span more than one page are refused, so the page usually loads without the usage
+reports; in the second every request is, and the screen shows this heading.
 :::
 
 ::: audience delegated

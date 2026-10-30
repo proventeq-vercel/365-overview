@@ -50,9 +50,12 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   names `/beta/reports/…` and the same code runs against either. An absolute
   URL (an `@odata.nextLink`) is followed only when it is an `http(s)` address
   on that same origin with no user name or password in it; any other (another
-  host, scheme or port, a link with no host) is refused with a 502 `ApiError`
-  (`LinkNotAllowed`) before the token is read or anything is sent, so a hostile
-  response cannot collect the bearer token. Through the proxy that means its
+  host, scheme or port) is refused with a 502 `ApiError` (`LinkNotAllowed`,
+  `LINK_NOT_ALLOWED_CODE`) before the token is read or anything is sent, so a
+  hostile response cannot collect the bearer token. `getAllPages` also refuses
+  a next link with no host; the site-directory walk follows its links through
+  `get`, which resolves a path against the origin, so one stays there.
+  `ErrorState` shows the refusal as `errors.linkNotAllowed` with the help link. Through the proxy that means its
   rewritten links must point back at the `VITE_GRAPH_PROXY_URL` origin
   (`PROXY_PUBLIC_URL`, see `functions/README.md`; the local node host links on
   `127.0.0.1`). `ApiError` keeps the Graph-shaped `error.code`;
