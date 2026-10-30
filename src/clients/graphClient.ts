@@ -1,4 +1,4 @@
-import { ApiError, NETWORK_ERROR_CODE, THROTTLED_STATUSES } from './apiError'
+import { ApiError, LINK_NOT_ALLOWED_CODE, NETWORK_ERROR_CODE, THROTTLED_STATUSES } from './apiError'
 
 export const GRAPH_ORIGIN = 'https://graph.microsoft.com'
 
@@ -92,11 +92,7 @@ export function createGraphClient(
 
   async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
     if (!sameOrigin(url, origin)) {
-      throw new ApiError(
-        502,
-        'The data service sent a link to another address, so the report could not be loaded.',
-        'LinkNotAllowed',
-      )
+      throw new ApiError(502, 'Refused a link outside the configured origin.', LINK_NOT_ALLOWED_CODE)
     }
     for (let attempt = 0; ; attempt++) {
       const token = await getToken()

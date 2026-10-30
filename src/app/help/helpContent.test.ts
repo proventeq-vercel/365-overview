@@ -36,6 +36,7 @@ const FAILURE_SCREENS = [
   messages['auth.signInFailed'],
   messages['app.bootstrap.title'],
   messages['errors.insufficientPermissions'].split(' — ')[0],
+  messages['errors.linkNotAllowed'],
 ]
 
 function linksOf(body: string): string[] {

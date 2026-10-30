@@ -1,5 +1,7 @@
 export const NETWORK_ERROR_CODE = 'NetworkError'
 
+export const LINK_NOT_ALLOWED_CODE = 'LinkNotAllowed'
+
 export const THROTTLED_STATUSES: ReadonlySet<number> = new Set([429, 503, 504])
 
 export function wasThrottled(error: unknown): boolean {
