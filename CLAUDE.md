@@ -52,13 +52,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   on that same origin with no user name or password in it; any other (another
   host, scheme or port) is refused with a 502 `ApiError` (`LinkNotAllowed`,
   `LINK_NOT_ALLOWED_CODE`) before the token is read or anything is sent, so a
-  hostile response cannot collect the bearer token. `getAllPages` also refuses
-  a next link with no host; the site-directory walk follows its links through
-  `get`, which resolves a path against the origin, so one stays there.
-  `ErrorState` shows the refusal as `errors.linkNotAllowed` with the help link. Through the proxy that means its
-  rewritten links must point back at the `VITE_GRAPH_PROXY_URL` origin
-  (`PROXY_PUBLIC_URL`, see `functions/README.md`; the local node host links on
-  `127.0.0.1`). `ApiError` keeps the Graph-shaped `error.code`;
+  hostile response cannot collect the bearer token. Through the proxy that
+  means its rewritten links must point back at the `VITE_GRAPH_PROXY_URL`
+  origin (`PROXY_PUBLIC_URL`, see `functions/README.md`; the local node host
+  links on `127.0.0.1`). `getAllPages` also refuses a next link with no host;
+  the site-directory walk follows its links through `get`, which resolves a
+  path against the origin, so one stays there. `ErrorState` shows the refusal
+  as `errors.linkNotAllowed.title` / `.body` with the help link.
+  `ApiError` keeps the Graph-shaped `error.code`;
   `AdminConsentRequired` from the proxy counts as a consent failure. A 429/503/504 — on the request or on
   a `$batch` sub-response — is retried after its `Retry-After` (default 2 s,
   capped at 60 s), up to `MAX_THROTTLE_RETRIES` times; only the throttled
@@ -672,7 +673,7 @@ description).
   `app/help/topics.ts`. The ⋯ menu has *Help* (new tab).
 - Every failure surface renders `components/HelpLink` → troubleshooting:
   `AuthErrorScreen` (all branches), the three `AccessFailure` panels,
-  `ErrorState` for auth errors, `BootstrapError`. A new failure screen gets the
+  `ErrorState` for auth errors and refused links, `BootstrapError`. A new failure screen gets the
   link, and its title becomes an `##` heading in
   `docs/help/getting-started/troubleshooting.md` (the content test checks).
   `AADSTS50105` is `isUserNotAssigned` and gets its own `AuthErrorScreen` branch.

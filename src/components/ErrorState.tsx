@@ -11,7 +11,7 @@ interface ErrorStateProps {
 
 function describe(error: unknown, t: TranslateFn): { title: string; detail?: string } {
   if (error instanceof ApiError && error.code === LINK_NOT_ALLOWED_CODE) {
-    return { title: t('errors.linkNotAllowed'), detail: t('errors.linkNotAllowedDetail') }
+    return { title: t('errors.linkNotAllowed.title'), detail: t('errors.linkNotAllowed.body') }
   }
   if (error instanceof ApiError) {
     return {

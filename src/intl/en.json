@@ -125,8 +125,8 @@
   "errors.unexpected": "An unexpected error occurred.",
   "errors.insufficientPermissions": "Insufficient permissions — admin consent or the required role may be needed for this report.",
   "errors.retry": "Try again",
-  "errors.linkNotAllowed": "The data service sent a link to another address",
-  "errors.linkNotAllowedDetail": "The report did not follow it, so your sign-in was not sent there and the report could not be loaded.",
+  "errors.linkNotAllowed.title": "The data service sent a link to another address",
+  "errors.linkNotAllowed.body": "The report did not follow it, so your sign-in was not sent there and the report could not be loaded.",
 
   "access.consent.title": "Your organisation has not approved this app yet",
   "access.consent.body": "Approving sign-in is not enough: the report reads your tenant with application permissions, which a Global Administrator has to grant once for the whole tenant. Signing in again will not help until they do.",
