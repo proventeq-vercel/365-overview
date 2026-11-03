@@ -82,10 +82,10 @@ const withSites = {
     rows,
     poolUsedBytes: { SharePoint: 1000, OneDrive: 500 },
     topSites: [
-      { name: 'beta', value: 700 },
-      { name: 'alpha', value: 300 },
+      { name: 'beta', value: 700, workload: 'teams' as const },
+      { name: 'alpha', value: 300, workload: 'sharePoint' as const },
     ],
-    topDrives: [{ name: 'dana', value: 500 }],
+    topDrives: [{ name: 'dana', value: 500, workload: 'oneDrive' as const }],
     retained: { bytes: 42, count: 2 },
   },
 }
@@ -206,6 +206,21 @@ describe('OffendersSection', () => {
     ])
   })
 
+  it('colours the top lists by service, the same as the growth bars', () => {
+    renderOffenders(withSites)
+    const colours = (name: string) =>
+      [...screen.getByRole('list', { name }).querySelectorAll('[data-color]')].map((bar) => bar.getAttribute('data-color'))
+    expect(colours('Top SharePoint sites by storage')).toEqual(['#5b5fc7', '#038387'])
+    expect(colours('Top OneDrives by storage')).toEqual(['#0078d4'])
+  })
+
+  it('hides the leader names of the growth panel under a name mask', () => {
+    renderOffenders({ ...withSites, caveats: { ...withSites.caveats, nameMask: 'hidden' as const } })
+    const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    for (const name of ['gamma', 'delta', 'dana']) expect(within(bars).queryByText(name)).not.toBeInTheDocument()
+    expect(within(bars).getAllByRole('button', { name: 'Hidden name' })).toHaveLength(3)
+  })
+
   it('lists only the services among the leaders', () => {
     renderOffenders(withSites, { ...grown, leaders: [grown.leaders[2]], workloads: ['oneDrive'] })
     const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
@@ -215,10 +230,10 @@ describe('OffendersSection', () => {
 
   it('shows no legend while loading or when there is nothing to rank', () => {
     const { unmount } = renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
-    expect(screen.queryByText('Teams')).not.toBeInTheDocument()
+    expect(screen.queryByText('Teams', { selector: 'span:not(.sr-only)' })).not.toBeInTheDocument()
     unmount()
     renderOffenders(withSites, { ...bySize, leaders: [], workloads: ['sharePoint'] })
-    expect(screen.queryByText('SharePoint', { selector: 'span' })).not.toBeInTheDocument()
+    expect(screen.queryByText('SharePoint', { selector: 'span:not(.sr-only)' })).not.toBeInTheDocument()
   })
 
   it('says there is nothing to rank, rather than drawing an empty chart, when no row holds storage', () => {

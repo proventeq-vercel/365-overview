@@ -1,16 +1,11 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'
+import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
-import type { GrowthRanking, NameMask, StorageGrowth, Workload } from '@/types/storage'
+import type { GrowthRanking, NameMask, StorageGrowth } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
 import { Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
 import { WORKLOAD_COLOR } from '@/design/theme'
-
-const WORKLOAD_LABEL = {
-  sharePoint: 'storageOptimisation.usage.segment.sharePoint',
-  teams: 'storageOptimisation.usage.segment.teams',
-  oneDrive: 'table.pool.OneDrive',
-} as const satisfies Record<Workload, TranslateKey>
+import { WORKLOAD_LABEL } from './workloadLabel'
 
 function useRankingTitle(ranking: GrowthRanking) {
   const t = useTranslation()

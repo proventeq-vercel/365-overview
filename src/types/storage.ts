@@ -207,8 +207,8 @@ export interface StorageOverview {
     read: boolean
     rows: StorageRow[]
     poolUsedBytes: Record<StoragePool, number>
-    topSites: Slice[]
-    topDrives: Slice[]
+    topSites: WorkloadSlice[]
+    topDrives: WorkloadSlice[]
     retained: RetainedTotal | null
   }
 

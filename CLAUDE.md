@@ -186,7 +186,10 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `oneDrive`; SharePoint → `classifyWorkload(template)`, no template →
   `sharePoint`: the template rule the usage line uses for Teams, though an inactive Teams site is Teams here and Inactive on the line) and `workloads` lists the distinct ones
   in the order SharePoint, Teams, OneDrive; the panel draws `FacetBars` in
-  `WORKLOAD_COLOR` with a legend of exactly those. `explanation` names the description:
+  `WORKLOAD_COLOR` with a legend of exactly those. `offenders.topSites` /
+  `topDrives` are `WorkloadSlice`s with the same `workloadOf(row)` (in
+  `storageOverview.ts`), so `OffendersSection` colours the two top lists by
+  service too; labels come from `workloadLabel.ts`. `explanation` names the description:
   `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
   window: a report date at or before today − 26), `noDailyReports` (no report
   read), `notMeasured`, `unchanged` or `growthFailed`; the panel reads it as
@@ -264,10 +267,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line + `FacetBars`: a ranked bar list whose
   items may carry a `color`, drawn as a light tint with a solid left edge and
-  exposed as `data-color`; the Growth panel colours them by service and its
-  legend lists `growth.workloads`), `TruncatedText` (a name cut with an
-  ellipsis inside its box, in full in a tooltip on hover and keyboard focus
-  only while it is cut; every `FacetBars` name uses it), `AlertPanel`,
+  exposed as `data-color`; the Growth panel and the two top lists colour them
+  by service, the Growth legend lists `growth.workloads`; the OneDrive report
+  keeps the facet cycle), `TruncatedText` (a name cut with an ellipsis inside
+  its box, in full in a popover on hover, click/tap and keyboard focus only
+  while it is cut; every `FacetBars` name uses it), `AlertPanel`,
   `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading the SharePoint usage line), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
@@ -736,8 +740,8 @@ for byte/number axis + tooltip formatting; the number axis is `XAxis` when
   `nameTopSites` and the site directory on a concealed tenant, and
   `SiteTable` skips `useSiteDetails` and the known-sites search, so no name
   resolved through `/sites/{id}` can show. Every name, owner and chart label
-  renders `design/HiddenName` (SVG chart ticks a blurred bar, the bar tooltip
-  "Hidden name"), never the pseudonym; `NameCaveats` renders one banner.
+  renders `design/HiddenName` (the bar lists render `HiddenName`, a button
+  named "Hidden name"), never the pseudonym; `NameCaveats` renders one banner.
   Search still matches the pseudonym. A tenant both concealed and hidden reads
   as hidden: the masking runs before the detection can see the hashes.
 - Component tests import `render` from `@/test/render`, not from

@@ -8,16 +8,11 @@ import type {
   StorageRow,
   Workload,
 } from '@/types/storage'
-import { classifyWorkload } from './storageOverview'
+import { workloadOf } from './storageOverview'
 
 export const TOP_GROWERS = 10
 
 const WORKLOAD_ORDER: readonly Workload[] = ['sharePoint', 'teams', 'oneDrive']
-
-function workloadOf(row: StorageRow): Workload {
-  if (row.pool === 'OneDrive') return 'oneDrive'
-  return classifyWorkload(row.template) === 'Teams' ? 'teams' : 'sharePoint'
-}
 
 export interface GrowthLeader {
   row: StorageRow

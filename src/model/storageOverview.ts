@@ -5,11 +5,12 @@ import {
   type CoreReport,
   type OneDriveLimit,
   type OverEntitlement,
-  type Slice,
   type StoragePool,
   type StorageOverview,
   type StorageRow,
   type TemplateSlice,
+  type Workload,
+  type WorkloadSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
@@ -81,6 +82,11 @@ export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
     : 'SharePoint'
 }
 
+export function workloadOf(row: StorageRow): Workload {
+  if (row.pool === 'OneDrive') return 'oneDrive'
+  return classifyWorkload(row.template) === 'Teams' ? 'teams' : 'sharePoint'
+}
+
 const latest = (series: UsagePoint[]): number =>
   series.length === 0 ? 0 : series[series.length - 1].value
 
@@ -139,14 +145,14 @@ function totalsBy(rows: StorageRow[], key: (row: StorageRow) => string) {
   return [...totals.entries()]
 }
 
-function largest(rows: StorageRow[], limit: number): Slice[] {
+function largest(rows: StorageRow[], limit: number): WorkloadSlice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
     .slice(0, limit)
-    .map((row) => ({ name: rowName(row), value: row.storageUsedBytes }))
+    .map((row) => ({ name: rowName(row), value: row.storageUsedBytes, workload: workloadOf(row) }))
 }
 
-function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
+function topByPool(rows: StorageRow[], pool: StoragePool): WorkloadSlice[] {
   return largest(
     rows.filter((row) => row.pool === pool),
     TOP_PER_POOL,

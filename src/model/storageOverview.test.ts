@@ -1014,11 +1014,23 @@ describe('buildStorageOverview growth and cost', () => {
     )
     const { offenders } = buildStorageOverview(inputs({ sites, drives }))
     expect(offenders.topSites).toHaveLength(5)
-    expect(offenders.topSites[0]).toEqual({ name: 'site-6', value: 7 * GB })
-    expect(offenders.topSites[4]).toEqual({ name: 'site-2', value: 3 * GB })
+    expect(offenders.topSites[0]).toEqual({ name: 'site-6', value: 7 * GB, workload: 'sharePoint' })
+    expect(offenders.topSites[4]).toEqual({ name: 'site-2', value: 3 * GB, workload: 'sharePoint' })
     expect(offenders.topDrives).toHaveLength(5)
-    expect(offenders.topDrives[0]).toEqual({ name: 'd5', value: 600 * GB })
-    expect(offenders.topDrives[4]).toEqual({ name: 'd1', value: 200 * GB })
+    expect(offenders.topDrives[0]).toEqual({ name: 'd5', value: 600 * GB, workload: 'oneDrive' })
+    expect(offenders.topDrives[4]).toEqual({ name: 'd1', value: 200 * GB, workload: 'oneDrive' })
+  })
+
+  it('carries each top site by its template and each top drive as OneDrive', () => {
+    const sites = [
+      site({ id: 'a', url: 'https://c.sharepoint.com/sites/a', storageUsedBytes: 3 * GB, template: 'Group' }),
+      site({ id: 'b', url: 'https://c.sharepoint.com/sites/b', storageUsedBytes: 2 * GB, template: 'Team Site' }),
+      site({ id: 'c', url: 'https://c.sharepoint.com/sites/c', storageUsedBytes: GB, template: 'TEAMCHANNEL#0' }),
+    ]
+    const drives = [drive({ id: 'd', url: '', ownerDisplayName: 'Owner', storageUsedBytes: GB })]
+    const { offenders } = buildStorageOverview(inputs({ sites, drives }))
+    expect(offenders.topSites.map((slice) => slice.workload)).toEqual(['teams', 'sharePoint', 'teams'])
+    expect(offenders.topDrives.map((slice) => slice.workload)).toEqual(['oneDrive'])
   })
 
   it('totals each pool on its own, so a site is a share of SharePoint and a OneDrive of OneDrive', () => {
