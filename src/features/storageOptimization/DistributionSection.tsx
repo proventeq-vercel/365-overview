@@ -36,7 +36,7 @@ export function DistributionSection({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.distribution.title')}
       subtitle={
-        sharePoint.read && sharePoint.siteReportRead
+        sharePoint.siteReportRead
           ? t('storageOptimisation.distribution.subtitle')
           : t('storageOptimisation.distribution.subtitlePartial')
       }

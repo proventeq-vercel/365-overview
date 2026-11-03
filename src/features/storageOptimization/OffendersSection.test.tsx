@@ -217,7 +217,7 @@ describe('OffendersSection', () => {
     const { unmount } = renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
     expect(screen.queryByText('Teams')).not.toBeInTheDocument()
     unmount()
-    renderOffenders(withSites, { ...bySize, leaders: [], workloads: [] })
+    renderOffenders(withSites, { ...bySize, leaders: [], workloads: ['sharePoint'] })
     expect(screen.queryByText('SharePoint', { selector: 'span' })).not.toBeInTheDocument()
   })
 

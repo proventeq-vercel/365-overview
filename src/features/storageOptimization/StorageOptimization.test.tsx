@@ -348,8 +348,8 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText(/^Microsoft's SharePoint site usage report and SharePoint storage trend did not come back/)).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Tenant capacity' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Future state & growth impact/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Current storage distribution/ })).not.toBeInTheDocument()
     expect(screen.queryByText('Storage usage')).not.toBeInTheDocument()
-    expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
   })
 
   it('names the report the last reload lost, and that the page still shows the earlier load', async () => {

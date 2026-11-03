@@ -83,7 +83,7 @@ export function FastestGrowingPanel({
           />
         </>
       ) : (
-        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-72 w-full" />
+        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-96 w-full" />
       )}
     </Panel>
   )
