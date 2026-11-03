@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
-import { act, cleanup, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
 import { TruncatedText } from './TruncatedText'
@@ -76,12 +76,37 @@ describe('TruncatedText', () => {
     await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
   })
 
-  it('shows the full name on click or tap when it is cut short', async () => {
+  it('shows the full name on a tap when it is cut short, and a second tap closes it', async () => {
     layout(640, 120)
-    const user = userEvent.setup()
+    const user = userEvent.setup({ skipHover: true })
     render(<TruncatedText text={LONG_NAME} />)
     expect(popup()).toBeNull()
-    await user.click(screen.getByRole('button'))
+    const trigger = screen.getByRole('button')
+    await user.pointer({ keys: '[TouchA]', target: trigger })
+    await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
+    expect(screen.getByRole('dialog', { name: LONG_NAME })).toBeInTheDocument()
+    await user.pointer({ keys: '[TouchA]', target: trigger })
+    await waitFor(() => expect(popup()).toBeNull())
+  })
+
+  it('opens on keyboard focus after an earlier tap', async () => {
+    layout(640, 120)
+    const user = userEvent.setup({ skipHover: true })
+    render(
+      <>
+        <TruncatedText text={LONG_NAME} />
+        <button type="button">elsewhere</button>
+      </>,
+    )
+    const trigger = screen.getByRole('button', { name: LONG_NAME })
+    fireEvent.pointerDown(trigger)
+    fireEvent.click(trigger)
+    await waitFor(() => expect(popup()).not.toBeNull())
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(popup()).toBeNull())
+    screen.getByRole('button', { name: 'elsewhere' }).focus()
+    await user.tab({ shift: true })
+    expect(trigger).toHaveFocus()
     await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
   })
 

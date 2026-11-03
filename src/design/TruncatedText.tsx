@@ -46,6 +46,9 @@ export function TruncatedText({ text, className }: { text: string; className?: s
         onPointerDown={() => {
           pointerDown.current = true
         }}
+        onClick={() => {
+          pointerDown.current = false
+        }}
         onFocus={() => {
           if (!pointerDown.current) setOpen(true)
           pointerDown.current = false
@@ -60,7 +63,7 @@ export function TruncatedText({ text, className }: { text: string; className?: s
       >
         {text}
       </PopoverTrigger>
-      <PopoverContent initialFocus={false} finalFocus={false} className="leading-snug wrap-anywhere">
+      <PopoverContent aria-label={text} initialFocus={false} finalFocus={false} className="leading-snug wrap-anywhere">
         {text}
       </PopoverContent>
     </PopoverPrimitive.Root>
