@@ -184,7 +184,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
   `sizesOn`, zero-byte rows left out). Each leader carries a `workload` (OneDrive pool →
   `oneDrive`; SharePoint → `classifyWorkload(template)`, no template →
-  `sharePoint`, the usage line's rule) and `workloads` lists the distinct ones
+  `sharePoint`: the template rule the usage line uses for Teams, though an inactive Teams site is Teams here and Inactive on the line) and `workloads` lists the distinct ones
   in the order SharePoint, Teams, OneDrive; the panel draws `FacetBars` in
   `WORKLOAD_COLOR` with a legend of exactly those. `explanation` names the description:
   `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
@@ -234,8 +234,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the groups stay disjoint — and the card is *No activity for over 93 days*
   (section *Inactive, deleted and quiet OneDrives*), saying
   it stands in for the unlicensed ones; `basis: 'licences'` carries `notListed`,
-  the owners inferred from absence, and both the card and the Storage-page line
-  say it. Billing
+  the owners inferred from absence, and the card says it. Billing
   copy is Microsoft's "Manage unlicensed OneDrive user accounts" only ($0.05/GB
   a month once archived after 93 days with billing on); the report never
   prices it, because the reports do not say how long an owner has been

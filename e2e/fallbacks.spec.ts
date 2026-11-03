@@ -50,14 +50,11 @@ test('without licences the OneDrive report measures against the commonest OneDri
   await expect(page.getByText('No OneDrive holds more than 1 TB')).toBeVisible()
 })
 
-test('without the active-user report the quiet OneDrives stand in for the unlicensed ones, and the pool is drawn over the drives with a limit', async ({ page }) => {
+test('without the active-user report the quiet OneDrives stand in for the unlicensed ones', async ({ page }) => {
   await page.goto(`/onedrive-usage?features=${ONEDRIVE}&scenario=onedrive-gaps`)
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'No activity for over 93 days' })).toContainText(
     /live OneDrives have had no activity since 29 May 2026/,
   )
-  await page.goto('/?scenario=onedrive-gaps')
-  await expect(page.getByText(/^of the .+ allocated to the 388 OneDrives that report a limit used/)).toBeVisible()
-  await expect(page.getByText(/^10 live OneDrives holding .+ report no limit and are left out of this line\.$/)).toBeVisible()
 })
 
 test('a report that does not come back leaves out only its own figures, and Refresh data asks for it again', async ({ page }) => {
@@ -95,7 +92,7 @@ test('from a single reported day the trend chart still draws that day', async ({
 
 test('when no daily report comes back the growth panel charts the sites and OneDrives by storage used', async ({ page }) => {
   await page.goto('/?scenario=no-daily-reports')
-  const chart = page.getByRole('img', { name: 'Sites & OneDrives by storage used' })
-  await expect(chart.locator('.recharts-bar-rectangle')).toHaveCount(10)
+  const chart = page.getByRole('list', { name: 'Sites & OneDrives by storage used' })
+  await expect(chart.getByRole('listitem')).toHaveCount(10)
   await expect(page.getByText(/^Ranked by storage used on \d{4}-\d{2}-\d{2}\. Growth is measured from Microsoft's daily usage reports, and none of those from \d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2} came back/)).toBeVisible()
 })

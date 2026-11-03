@@ -186,7 +186,7 @@ export function FacetBars({
   nameMask = null,
   ariaLabel,
 }: {
-  items: { name: string; value: number; color?: string }[]
+  items: { name: string; value: number; color?: string; label?: string }[]
   formatValue: (value: number) => string
   emptyText: string
   nameMask?: NameMask | null
@@ -223,6 +223,7 @@ export function FacetBars({
                 className="relative px-2 text-xs font-semibold text-p365-navy"
               />
             )}
+            {item.label !== undefined && <span className="sr-only">{item.label}</span>}
           </div>
           <span className="tabular shrink-0 text-xs text-p365-grey-700">{formatValue(item.value)}</span>
         </li>

@@ -74,6 +74,7 @@ export function FastestGrowingPanel({
               name: leader.name,
               value: leader.value,
               color: WORKLOAD_COLOR[leader.workload],
+              label: t(WORKLOAD_LABEL[leader.workload]),
             }))}
             formatValue={formatBytes}
             ariaLabel={title}

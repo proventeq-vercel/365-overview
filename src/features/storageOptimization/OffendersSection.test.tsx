@@ -196,6 +196,16 @@ describe('OffendersSection', () => {
     ])
   })
 
+  it('names the service of each growth bar for a screen reader, not by colour alone', () => {
+    renderOffenders(withSites)
+    const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect(within(bars).getAllByRole('listitem').map((item) => item.querySelector('.sr-only')?.textContent)).toEqual([
+      'SharePoint',
+      'Teams',
+      'OneDrive',
+    ])
+  })
+
   it('lists only the services among the leaders', () => {
     renderOffenders(withSites, { ...grown, leaders: [grown.leaders[2]], workloads: ['oneDrive'] })
     const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })

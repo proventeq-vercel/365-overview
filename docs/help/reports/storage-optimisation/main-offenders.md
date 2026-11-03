@@ -18,7 +18,7 @@ ranked by storage added. It shows who is driving growth, which the size alone do
 Each ranked row is a bar, sized against the largest one and coloured by service: SharePoint teal,
 Teams purple, OneDrive blue. A legend above the list names only the services that appear. A name
 too long for its bar is cut with an ellipsis; hover over it, or tab to it, to read it in full.
-The two top lists below work the same way.
+The two top lists below cut and show long names the same way; their bars stay in the report's teal.
 
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
   only the sites and OneDrives that had activity on that day, with their size on that day.
