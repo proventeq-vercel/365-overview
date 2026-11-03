@@ -26,7 +26,7 @@ export function storageBreakdown(inputs: StorageBreakdownInputs): StorageBreakdo
     freeBytes,
     siteFiguresRead,
   } = inputs
-  const bytes: Partial<Record<StorageSegmentKey, number>> = {
+  const bytes: Record<Exclude<StorageSegmentKey, 'free'>, number> & { free?: number } = {
     sharePoint: Math.max(0, sharePointUsedBytes - teamsBytes - inactiveBytes - deletedSiteBytes),
     teams: teamsBytes,
     deleted: deletedSiteBytes,

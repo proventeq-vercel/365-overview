@@ -7,6 +7,9 @@ feature: optimization.storage.report.overview
 order: 10
 ---
 
+When neither the SharePoint site usage report nor a SharePoint storage trend with storage in it
+comes back, this section is left out: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
+
 ## Storage usage
 
 One line shows where SharePoint storage sits, split into five parts, and ends in what is left of

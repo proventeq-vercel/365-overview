@@ -42,7 +42,7 @@ export function DistributionSection({ overview, delay }: Props) {
       }
       help={<HelpButton topic="storageDistribution" />}
     >
-      {sharePoint.read && <StorageUsagePanel overview={overview} />}
+      <StorageUsagePanel overview={overview} />
 
       {sharePoint.siteReportRead && (
         <Panel>
