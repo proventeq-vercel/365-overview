@@ -77,9 +77,9 @@ describe('FacetBars', () => {
     const user = userEvent.setup()
     render(<FacetBars items={[{ name: longName, value: 5 }]} formatValue={String} emptyText="No results" />)
     await user.tab()
-    expect(document.querySelector('[data-slot="tooltip-trigger"]')).toHaveFocus()
+    expect(document.querySelector('[data-slot="popover-trigger"]')).toHaveFocus()
     await waitFor(() =>
-      expect(document.querySelector('[data-slot="tooltip-content"]')).toHaveTextContent(longName),
+      expect(document.querySelector('[data-slot="popover-content"]')).toHaveTextContent(longName),
     )
   })
 

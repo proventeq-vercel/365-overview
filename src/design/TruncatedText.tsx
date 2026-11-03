@@ -1,17 +1,24 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
+import { PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useExclusiveOpen } from '@/hooks/useExclusiveOpen'
 import { cn } from '@/lib/utils'
+
+const HOVER_OPEN_DELAY = 80
+const HOVER_CLOSE_DELAY = 120
 
 function isCut(element: HTMLElement) {
   return element.scrollWidth > element.clientWidth
 }
 
 export function TruncatedText({ text, className }: { text: string; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
+  const [element, setElement] = useState<HTMLElement | null>(null)
   const [truncated, setTruncated] = useState(false)
+  const [open, setOpen] = useExclusiveOpen()
+  const pointerDown = useRef(false)
+  const textClassName = cn('block min-w-0 truncate rounded-sm', className)
 
   useLayoutEffect(() => {
-    const element = ref.current
     if (!element) return
     const measure = () => setTruncated(isCut(element))
     measure()
@@ -20,25 +27,42 @@ export function TruncatedText({ text, className }: { text: string; className?: s
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [text])
+  }, [text, element])
+
+  if (!truncated) {
+    return (
+      <span ref={setElement} className={textClassName}>
+        {text}
+      </span>
+    )
+  }
 
   return (
-    <Tooltip disabled={!truncated}>
-      <TooltipTrigger
+    <PopoverPrimitive.Root open={open} onOpenChange={(next) => setOpen(next)}>
+      <PopoverTrigger
+        openOnHover
+        delay={HOVER_OPEN_DELAY}
+        closeDelay={HOVER_CLOSE_DELAY}
+        onPointerDown={() => {
+          pointerDown.current = true
+        }}
+        onFocus={() => {
+          if (!pointerDown.current) setOpen(true)
+          pointerDown.current = false
+        }}
         render={
-          <span
-            ref={ref}
-            tabIndex={truncated ? 0 : undefined}
-            className={cn(
-              'block min-w-0 truncate rounded-sm focus-visible:outline-2 focus-visible:outline-p365-teal',
-              className,
-            )}
+          <button
+            ref={setElement}
+            type="button"
+            className={cn(textClassName, 'w-full text-left focus-visible:outline-2 focus-visible:outline-p365-teal')}
           />
         }
       >
         {text}
-      </TooltipTrigger>
-      <TooltipContent className="text-left leading-snug font-normal wrap-anywhere">{text}</TooltipContent>
-    </Tooltip>
+      </PopoverTrigger>
+      <PopoverContent initialFocus={false} finalFocus={false} className="leading-snug wrap-anywhere">
+        {text}
+      </PopoverContent>
+    </PopoverPrimitive.Root>
   )
 }

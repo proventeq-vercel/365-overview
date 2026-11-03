@@ -11,7 +11,7 @@ function layout(scrollWidth: number, clientWidth: number) {
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(clientWidth)
 }
 
-const tooltip = () => document.querySelector('[data-slot="tooltip-content"]')
+const popup = () => document.querySelector('[data-slot="popover-content"]')
 
 afterEach(() => {
   cleanup()
@@ -46,34 +46,53 @@ describe('TruncatedText', () => {
     expect(screen.getByText(LONG_NAME)).toHaveClass('truncate', 'min-w-0', 'block')
   })
 
-  it('adds no tab stop and no tooltip when the name fits', async () => {
+  it('adds no button and no popover when the name fits', async () => {
     layout(120, 120)
     const user = userEvent.setup()
     render(<TruncatedText text={LONG_NAME} />)
     const name = screen.getByText(LONG_NAME)
+    expect(screen.queryByRole('button')).toBeNull()
     expect(name).not.toHaveAttribute('tabindex')
     await user.hover(name)
-    await new Promise((resolve) => setTimeout(resolve, 900))
-    expect(tooltip()).toBeNull()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(popup()).toBeNull()
   })
 
-  it('shows the full name on focus when it is cut short', async () => {
+  it('shows the full name on keyboard focus when it is cut short', async () => {
     layout(640, 120)
     const user = userEvent.setup()
     render(<TruncatedText text={LONG_NAME} />)
-    const name = screen.getByText(LONG_NAME)
-    expect(name).toHaveAttribute('tabindex', '0')
     await user.tab()
-    expect(name).toHaveFocus()
-    await waitFor(() => expect(tooltip()).toHaveTextContent(LONG_NAME))
+    expect(screen.getByRole('button')).toHaveFocus()
+    await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
+    expect(screen.getByRole('button')).toHaveFocus()
   })
 
   it('shows the full name on hover when it is cut short', async () => {
     layout(640, 120)
     const user = userEvent.setup()
     render(<TruncatedText text={LONG_NAME} />)
-    await user.hover(screen.getByText(LONG_NAME))
-    await waitFor(() => expect(tooltip()).toHaveTextContent(LONG_NAME))
+    await user.hover(screen.getByRole('button'))
+    await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
+  })
+
+  it('shows the full name on click or tap when it is cut short', async () => {
+    layout(640, 120)
+    const user = userEvent.setup()
+    render(<TruncatedText text={LONG_NAME} />)
+    expect(popup()).toBeNull()
+    await user.click(screen.getByRole('button'))
+    await waitFor(() => expect(popup()).toHaveTextContent(LONG_NAME))
+  })
+
+  it('closes the full name when focus leaves', async () => {
+    layout(640, 120)
+    const user = userEvent.setup()
+    render(<TruncatedText text={LONG_NAME} />)
+    await user.tab()
+    await waitFor(() => expect(popup()).not.toBeNull())
+    await user.tab()
+    await waitFor(() => expect(popup()).toBeNull())
   })
 
   it('measures again when its box is resized', () => {
@@ -81,10 +100,10 @@ describe('TruncatedText', () => {
     layout(120, 120)
     render(<TruncatedText text={LONG_NAME} />)
     const name = screen.getByText(LONG_NAME)
-    expect(name).not.toHaveAttribute('tabindex')
+    expect(screen.queryByRole('button')).toBeNull()
     layout(640, 120)
     resize(name)
-    expect(name).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
   it('measures again when the name changes', () => {
@@ -92,7 +111,7 @@ describe('TruncatedText', () => {
     const { rerender } = render(<TruncatedText text="Finance" />)
     layout(640, 120)
     rerender(<TruncatedText text={LONG_NAME} />)
-    expect(screen.getByText(LONG_NAME)).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('button')).toHaveTextContent(LONG_NAME)
   })
 
   it('measures again once the web fonts have loaded', async () => {
@@ -106,10 +125,9 @@ describe('TruncatedText', () => {
     })
     layout(120, 120)
     render(<TruncatedText text={LONG_NAME} />)
-    const name = screen.getByText(LONG_NAME)
-    expect(name).not.toHaveAttribute('tabindex')
+    expect(screen.queryByRole('button')).toBeNull()
     layout(640, 120)
     await act(async () => fontsLoaded())
-    expect(name).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 })
