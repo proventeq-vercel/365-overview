@@ -178,11 +178,15 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   Graph allows per 10 minutes per report API),
   AFTER the overview has loaded and without blocking it, names only the ten
   leaders (`getSiteDetails`, O(10); none while a name mask applies), and returns `model/storageGrowth.buildStorageGrowth`
-  — pure, table-tested. The panel always charts something, picked in the model
+  — pure, table-tested. The panel always ranks something, picked in the model
   (`rankLeaders` → `ranking`): `growth` when a measured row grew (title
   *Fastest-growing sites & OneDrives*), else `shrink` (storage freed) when one
   shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
-  `sizesOn`, zero-byte rows left out). `explanation` names the description:
+  `sizesOn`, zero-byte rows left out). Each leader carries a `workload` (OneDrive pool →
+  `oneDrive`; SharePoint → `classifyWorkload(template)`, no template →
+  `sharePoint`, the usage line's rule) and `workloads` lists the distinct ones
+  in the order SharePoint, Teams, OneDrive; the panel draws `FacetBars` in
+  `WORKLOAD_COLOR` with a legend of exactly those. `explanation` names the description:
   `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
   window: a report date at or before today − 26), `noDailyReports` (no report
   read), `notMeasured`, `unchanged` or `growthFailed`; the panel reads it as
@@ -235,8 +239,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   copy is Microsoft's "Manage unlicensed OneDrive user accounts" only ($0.05/GB
   a month once archived after 93 days with billing on); the report never
   prices it, because the reports do not say how long an owner has been
-  unlicensed. `OneDrivePoolPanel` repeats the three figures in one line and
-  links to `/onedrive-usage` when that report is on.
+  unlicensed.
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection` (with `CleanUpForecast`, the
@@ -260,8 +263,13 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `facetFill` = its teal tint cycle), `StatCard` (coloured left rail, value in
   the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
-  (monochrome Recharts doughnut / line / bar + `FacetBars`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading both the SharePoint usage line and the OneDrive pool), `ByteOverrideInput` (a byte figure
+  (monochrome Recharts doughnut / line + `FacetBars`: a ranked bar list whose
+  items may carry a `color`, drawn as a light tint with a solid left edge and
+  exposed as `data-color`; the Growth panel colours them by service and its
+  legend lists `growth.workloads`), `TruncatedText` (a name cut with an
+  ellipsis inside its box, in full in a tooltip on hover and keyboard focus
+  only while it is cut; every `FacetBars` name uses it), `AlertPanel`,
+  `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading the SharePoint usage line), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
@@ -434,8 +442,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `archive.bytes` (inactive live sites) + `sharePoint.deletedButBilling.bytes`.
   It starts at the last actual month, grows at the same rate, clamps at 0. Deleted
   OneDrives are the other pool and are never subtracted. Versions are not
-  counted — the usage reports do not carry them, and measuring them needs a
-  SharePoint-audience token. With nothing removable the line is the forecast
+  counted. With nothing removable the line is the forecast
   itself and the copy says there is nothing to clean up; with `rateSource`
   `none` there is no line and `endBytes` is null. The removable figure itself
   is always measured (the archive cutoff falls back to today without a refresh
@@ -480,24 +487,21 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
-  for each licensed user"). Six parts in this order: SharePoint · Teams ·
-  Deleted · Inactive · Versions · Free. Inactive wins over Teams (an inactive
+  for each licensed user"). Five parts in this order: SharePoint · Teams ·
+  Deleted · Inactive · Free. Inactive wins over Teams (an inactive
   Teams site counts once, as inactive); Deleted holds deleted **sites** only;
   the SharePoint part is the trend total (the site rows' total when the trend
   lists no day with storage) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
-  part). OneDrive is its own pool, `oneDrive.pool` → `OneDrivePoolPanel`:
-  storage in live drives against the sum of their own allocations, both from
-  the account rows; `allocation` covers the live drives that report a limit
-  (its own `usedBytes` and `driveCount`) and counts the rest in `withoutLimit`,
-  named under the line; it is `null` only when no live drive reports one. The Share column divides each row by its own pool
+  part). OneDrive is its own pool and is not drawn on the line or as a panel. The Share column divides each row by its own pool
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
   a trend lists no day with storage). A pool total of 0 therefore means every
   row in it is 0 B, and the Share reads 0.0%, never *Unknown*.
-  **Versions is always `null`**: the usage reports count version history inside
-  each site's storage and never split it out, so it is shown *Not measured*,
-  never as a size or a guess. Workload colours are
+  Versions are not a part: the usage reports count version history inside
+  each site's storage and never split it out, so nothing is shown for them.
+  Every segment's `bytes` is a number. Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
   `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
+  `Workload` (`sharePoint` | `teams` | `oneDrive`) types its keys.
 - Settings (rate, currency, override) are **not** part of the React Query key.
   Putting them there refetches five Graph reports and unmounts the header on
   every keystroke; the integration test pins this.

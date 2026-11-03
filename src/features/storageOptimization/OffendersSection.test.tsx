@@ -20,9 +20,11 @@ const grown: StorageGrowth = {
   missingNote: false,
   measuredRows: 40,
   leaders: [
-    { name: 'gamma', value: 900 },
-    { name: 'dana', value: 400 },
+    { name: 'gamma', value: 900, workload: 'sharePoint' },
+    { name: 'delta', value: 700, workload: 'teams' },
+    { name: 'dana', value: 400, workload: 'oneDrive' },
   ],
+  workloads: ['sharePoint', 'teams', 'oneDrive'],
 }
 const bySize: StorageGrowth = {
   ...grown,
@@ -34,7 +36,8 @@ const bySize: StorageGrowth = {
   reportsMissing: 50,
   complete: false,
   measuredRows: 0,
-  leaders: [{ name: 'gamma', value: 5000 }],
+  leaders: [{ name: 'gamma', value: 5000, workload: 'sharePoint' }],
+  workloads: ['sharePoint'],
 }
 
 function renderOffenders(overview: StorageOverview, growth: StorageGrowth | undefined = grown) {
@@ -91,7 +94,7 @@ describe('OffendersSection', () => {
   it('names the section and charts the fastest-growing sites and OneDrives over the window', () => {
     renderOffenders(withSites)
     expect(screen.getByRole('heading', { name: /main offenders/i })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).toBeInTheDocument()
     expect(
       screen.getByText(
         "Storage added between 2026-08-06 and 2026-08-30 (24 days), counted from the first day each site or OneDrive was active in the daily usage reports that came back.",
@@ -103,7 +106,7 @@ describe('OffendersSection', () => {
   it('shows a skeleton while the earlier report loads, not an empty chart', () => {
     renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
     expect(screen.getByLabelText('Loading the fastest-growing sites and OneDrives')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   it('says how many reports of each pool came back, and over which window, when some are missing', () => {
@@ -122,21 +125,19 @@ describe('OffendersSection', () => {
 
   it('charts the sites that freed the most storage when nothing grew, and says so', () => {
     renderOffenders(withSites, { ...grown, ranking: 'shrink', explanation: 'shrink' })
-    const chart = screen.getByRole('img', { name: 'Sites & OneDrives that shrank the most' })
-    expect(within(chart.parentElement!).getByText('Storage freed')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Sites & OneDrives that shrank the most' })).toBeInTheDocument()
     expect(screen.getByText(/^No site or OneDrive measured between 2026-08-06 and 2026-08-30 \(24 days\) grew\. These freed the most storage/)).toBeInTheDocument()
   })
 
   it('charts the sites and OneDrives by storage used when no daily report came back, naming the day of the sizes', () => {
     renderOffenders(withSites, bySize)
-    const chart = screen.getByRole('img', { name: 'Sites & OneDrives by storage used' })
-    expect(within(chart.parentElement!).getByText('Storage used')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Sites & OneDrives by storage used' })).toBeInTheDocument()
     expect(
       screen.getByText(
         "Ranked by storage used on 2026-08-30. Growth is measured from Microsoft's daily usage reports, and none of those from 2026-08-06 to 2026-08-30 came back; Refresh data reads them again after ten minutes.",
       ),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Fastest-growing sites & OneDrives' })).not.toBeInTheDocument()
   })
 
   const sizeStates: Record<'reportDateTooOld' | 'growthFailed' | 'notMeasured', Partial<StorageGrowth>> = {
@@ -179,10 +180,41 @@ describe('OffendersSection', () => {
     ).toBeInTheDocument()
   })
 
+  it('colours each growth bar by its service and lists exactly the services present, in order', () => {
+    renderOffenders(withSites)
+    const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    expect([...bars.querySelectorAll('[data-color]')].map((bar) => bar.getAttribute('data-color'))).toEqual([
+      '#038387',
+      '#5b5fc7',
+      '#0078d4',
+    ])
+    const legend = bars.parentElement!.querySelector('ul:not([aria-label])') as HTMLElement
+    expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'SharePoint',
+      'Teams',
+      'OneDrive',
+    ])
+  })
+
+  it('lists only the services among the leaders', () => {
+    renderOffenders(withSites, { ...grown, leaders: [grown.leaders[2]], workloads: ['oneDrive'] })
+    const bars = screen.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })
+    const legend = bars.parentElement!.querySelector('ul:not([aria-label])') as HTMLElement
+    expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['OneDrive'])
+  })
+
+  it('shows no legend while loading or when there is nothing to rank', () => {
+    const { unmount } = renderWithData(<OffendersSection overview={withSites} growth={undefined} />)
+    expect(screen.queryByText('Teams')).not.toBeInTheDocument()
+    unmount()
+    renderOffenders(withSites, { ...bySize, leaders: [], workloads: [] })
+    expect(screen.queryByText('SharePoint', { selector: 'span' })).not.toBeInTheDocument()
+  })
+
   it('says there is nothing to rank, rather than drawing an empty chart, when no row holds storage', () => {
-    renderOffenders(withSites, { ...bySize, leaders: [] })
+    renderOffenders(withSites, { ...bySize, leaders: [], workloads: [] })
     expect(screen.getByText('No results')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Sites & OneDrives by storage used' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Sites & OneDrives by storage used' })).not.toBeInTheDocument()
   })
 
   it('reports deleted content that is still consuming quota', () => {

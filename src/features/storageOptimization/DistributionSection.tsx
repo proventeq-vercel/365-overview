@@ -5,7 +5,6 @@ import type { StorageOverview, TemplateSlice } from '@/types/storage'
 import { MonoDoughnut } from '@/design/charts'
 import { Legend, PanelDescription, PanelLabel, Panel, Section } from '@/design/primitives'
 import { monoColor } from '@/design/theme'
-import { OneDrivePoolPanel } from './OneDrivePoolPanel'
 import { StorageUsagePanel } from './StorageUsagePanel'
 
 interface Props {
@@ -37,14 +36,13 @@ export function DistributionSection({ overview, delay }: Props) {
       delay={delay}
       title={t('storageOptimisation.distribution.title')}
       subtitle={
-        sharePoint.siteReportRead && overview.oneDrive.read
+        sharePoint.read && sharePoint.siteReportRead
           ? t('storageOptimisation.distribution.subtitle')
           : t('storageOptimisation.distribution.subtitlePartial')
       }
       help={<HelpButton topic="storageDistribution" />}
     >
       {sharePoint.read && <StorageUsagePanel overview={overview} />}
-      {overview.oneDrive.read && <OneDrivePoolPanel overview={overview} />}
 
       {sharePoint.siteReportRead && (
         <Panel>

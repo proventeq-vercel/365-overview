@@ -4,7 +4,6 @@ import {
   REPORT_POOL,
   type CoreReport,
   type OneDriveLimit,
-  type OneDrivePool,
   type OverEntitlement,
   type Slice,
   type StoragePool,
@@ -186,28 +185,6 @@ function drivesOverEntitlement(liveDrives: StorageRow[], limit: OneDriveLimit): 
   }
 }
 
-function oneDrivePool(liveDrives: StorageRow[]): OneDrivePool {
-  const usedBytes = sumBytes(liveDrives)
-  const limited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) > 0)
-  if (limited.length === 0) return { usedBytes, allocation: null }
-  const unlimited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) <= 0)
-  const limitedUsedBytes = sumBytes(limited)
-  const allocatedBytes = limited.reduce((total, drive) => total + (drive.allocatedBytes ?? 0), 0)
-  const usedShare = Math.min(1, limitedUsedBytes / allocatedBytes)
-  return {
-    usedBytes,
-    allocation: {
-      allocatedBytes,
-      usedBytes: limitedUsedBytes,
-      driveCount: limited.length,
-      withoutLimit: { count: unlimited.length, bytes: sumBytes(unlimited) },
-      freeBytes: Math.max(0, allocatedBytes - limitedUsedBytes),
-      usedShare,
-      freeShare: 1 - usedShare,
-    },
-  }
-}
-
 const positiveOrNull = (bytes: number | null): number | null =>
   bytes !== null && bytes > 0 ? bytes : null
 
@@ -370,7 +347,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       limitWhenUnset: limitWhenUnset === null ? null : limitWhenUnset.basis === 'licences' ? 'licences' : 'driveLimit',
       overEntitlement:
         driveLimit === null || !accountReportRead ? null : drivesOverEntitlement(liveDrives, driveLimit),
-      pool: oneDrivePool(liveDrives),
       attention: accountReportRead
         ? oneDriveAttention({
             drives: reportedDrives,

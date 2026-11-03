@@ -15,6 +15,11 @@ both, the section is left out: see [A Microsoft report did not come back](../../
 The ten sites and OneDrives together that added the most storage over about the last four weeks,
 ranked by storage added. It shows who is driving growth, which the size alone does not.
 
+Each ranked row is a bar, sized against the largest one and coloured by service: SharePoint teal,
+Teams purple, OneDrive blue. A legend above the list names only the services that appear. A name
+too long for its bar is cut with an ellipsis; hover over it, or tab to it, to read it in full.
+The two top lists below work the same way.
+
 - Microsoft keeps no history of each site's size. Its daily usage report for an earlier day lists
   only the sites and OneDrives that had activity on that day, with their size on that day.
   Microsoft offers those daily reports for the last 28 days, counting today. The report reads
@@ -36,16 +41,16 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   limits the requests for it, or once a whole group of four days of it fails after the first
   group, and measures from what it already has, so it does not spend more of the limit the rest
   of the report shares. The other report is still read.
-- The panel always draws a chart, and its title says what it ranks:
-  - **Sites & OneDrives that shrank the most**, by **Storage freed**, when none of the measured
+- The panel always draws its bars, and its title says what it ranks:
+  - **Sites & OneDrives that shrank the most**, by storage freed, when none of the measured
     ones grew but some shrank.
-  - **Sites & OneDrives by storage used**, by **Storage used** on the report date, when no daily
+  - **Sites & OneDrives by storage used**, by storage used on the report date, when no daily
     report came back, when the report date is not at least two days inside the days Microsoft
     keeps, when no site or
     OneDrive in the report was active in the reports that came back, when none of them changed
     size, or when measuring did not finish. The description says which. It lists the
     ten largest sites and OneDrives together, so it repeats the two lists below it.
-- The chart loads after the rest of the report, with a placeholder while it does.
+- The bars load after the rest of the report, with a placeholder while they do.
 - Microsoft limits how often its usage reports can be read, so once growth has loaded from every
   daily report for a report date, **Refresh data** does not read it again. If some daily reports did
   not come back, **Refresh data** reads every day of the window again once the report itself
@@ -53,11 +58,11 @@ ranked by storage added. It shows who is driving growth, which the size alone do
   report, it keeps the earlier one if the new one brings back fewer reports, or as many but fewer
   of SharePoint's or of OneDrive's. If
   measuring did not finish, it reads them again at once. When the report itself moves to a new
-  date, the chart shows its placeholder again while the new date's daily reports are read.
+  date, the panel shows its placeholder again while the new date's daily reports are read.
 
 ## Largest sites and OneDrives
 
-Two lists sit under the growth chart:
+Two lists sit under the growth bars:
 
 - **Top SharePoint sites by storage**: the five largest sites.
 - **Top OneDrives by storage**: the five largest personal drives.

@@ -12,7 +12,6 @@ const SEGMENT_COLOR: Record<StorageSegmentKey, string> = {
   teams: WORKLOAD_COLOR.teams,
   deleted: P365.red,
   inactive: P365.yellow,
-  versions: P365.grey400,
   free: P365.grey100,
 }
 
@@ -45,19 +44,14 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
 }
 
 function toBarSegment(segment: StorageSegment, overview: StorageOverview, t: TranslateFn): BarSegment {
-  const value = segment.bytes === null ? t('storageOptimisation.usage.notMeasured') : formatBytes(segment.bytes)
   return {
     id: segment.key,
     label: t(`storageOptimisation.usage.segment.${segment.key}`),
     color: SEGMENT_COLOR[segment.key],
     share: segment.share,
-    value,
-    shareLabel:
-      segment.bytes === null
-        ? null
-        : t('storageOptimisation.usage.share', { percent: formatShare(segment.share, 1) }),
+    value: formatBytes(segment.bytes),
+    shareLabel: t('storageOptimisation.usage.share', { percent: formatShare(segment.share, 1) }),
     description: describe(segment.key, overview, t),
-    unmeasured: segment.key === 'versions',
   }
 }
 
@@ -89,13 +83,10 @@ function Headline({ overview }: { overview: StorageOverview }) {
   )
 }
 
-function subtitle({ sharePoint, oneDrive }: StorageOverview, t: TranslateFn): string {
-  if (sharePoint.entitledBytes === null) {
-    return oneDrive.read
-      ? t('storageOptimisation.usage.subtitleNoEntitlement')
-      : t('storageOptimisation.usage.subtitleNoEntitlementAlone')
-  }
-  return oneDrive.read ? t('storageOptimisation.usage.subtitle') : t('storageOptimisation.usage.subtitleAlone')
+function subtitle({ sharePoint }: StorageOverview, t: TranslateFn): string {
+  return sharePoint.entitledBytes === null
+    ? t('storageOptimisation.usage.subtitleNoEntitlement')
+    : t('storageOptimisation.usage.subtitle')
 }
 
 export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {

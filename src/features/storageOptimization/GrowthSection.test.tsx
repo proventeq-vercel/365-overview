@@ -154,7 +154,7 @@ describe('GrowthSection', () => {
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
       expect(row('Stays under the entitlement')).toHaveTextContent(/^Yes$/)
       expect(screen.getByText(/in live sites with no activity for 3 years/)).toHaveTextContent(
-        /Versions are not counted: Microsoft's usage reports do not carry version storage/,
+        /in deleted sites still billing\.$/,
       )
     })
 

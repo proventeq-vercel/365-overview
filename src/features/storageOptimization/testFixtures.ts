@@ -61,18 +61,6 @@ export const base: StorageOverview = {
       count: 7,
       excessBytes: 900 * GB,
     },
-    pool: {
-      usedBytes: 120 * GB,
-      allocation: {
-        allocatedBytes: 40_960 * GB,
-        usedBytes: 120 * GB,
-        driveCount: 40,
-        withoutLimit: { count: 0, bytes: 0 },
-        freeBytes: 40_840 * GB,
-        usedShare: 120 / 40_960,
-        freeShare: 40_840 / 40_960,
-      },
-    },
     attention: baseAttention,
   },
   breakdown: {
@@ -81,7 +69,6 @@ export const base: StorageOverview = {
       { key: 'teams', bytes: 170 * GB, share: 170 / 1000 },
       { key: 'deleted', bytes: 10 * GB, share: 10 / 1000 },
       { key: 'inactive', bytes: 120 * GB, share: 120 / 1000 },
-      { key: 'versions', bytes: null, share: 0 },
       { key: 'free', bytes: 500 * GB, share: 500 / 1000 },
     ],
     totalBytes: 1000 * GB,

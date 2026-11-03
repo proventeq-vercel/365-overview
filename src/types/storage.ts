@@ -88,27 +88,11 @@ export type UnlicensedDrives =
   | (DriveGroup & { basis: 'licences'; notListed: number })
   | (DriveGroup & { basis: 'noActivity'; days: number; since: string })
 
-export interface OneDriveAllocation {
-  allocatedBytes: number
-  usedBytes: number
-  driveCount: number
-  withoutLimit: DriveGroup
-  freeBytes: number
-  usedShare: number
-  freeShare: number
-}
-
-export interface OneDrivePool {
-  usedBytes: number
-  allocation: OneDriveAllocation | null
-}
-
 export const STORAGE_SEGMENTS = [
   'sharePoint',
   'teams',
   'deleted',
   'inactive',
-  'versions',
   'free',
 ] as const
 
@@ -116,7 +100,7 @@ export type StorageSegmentKey = (typeof STORAGE_SEGMENTS)[number]
 
 export interface StorageSegment {
   key: StorageSegmentKey
-  bytes: number | null
+  bytes: number
   share: number
 }
 
@@ -124,6 +108,12 @@ export interface StorageBreakdown {
   segments: StorageSegment[]
   totalBytes: number
   deletedCount: number
+}
+
+export type Workload = 'sharePoint' | 'teams' | 'oneDrive'
+
+export interface WorkloadSlice extends Slice {
+  workload: Workload
 }
 
 export type GrowthRanking = 'growth' | 'shrink' | 'size'
@@ -146,7 +136,8 @@ export interface StorageGrowth {
   complete: boolean
   missingNote: boolean
   measuredRows: number
-  leaders: Slice[]
+  leaders: WorkloadSlice[]
+  workloads: Workload[]
 }
 
 export interface OverEntitlement {
@@ -207,7 +198,6 @@ export interface StorageOverview {
     licenceGap: OneDriveLicenceGap | null
     limitWhenUnset: 'licences' | 'driveLimit' | null
     overEntitlement: OverEntitlement | null
-    pool: OneDrivePool
     attention: OneDriveAttention | null
   }
 

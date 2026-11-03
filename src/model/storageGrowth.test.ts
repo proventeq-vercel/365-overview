@@ -186,10 +186,43 @@ describe('buildStorageGrowth', () => {
       missingNote: true,
       measuredRows: 2,
       leaders: [
-        { name: 'Finance', value: 60 },
-        { name: 'legal', value: 10 },
+        { name: 'Finance', value: 60, workload: 'sharePoint' },
+        { name: 'legal', value: 10, workload: 'sharePoint' },
       ],
+      workloads: ['sharePoint'],
     })
+  })
+
+  it.each([
+    ['a Team Channel site', row('SharePoint', 'x', 80, { template: 'TEAMCHANNEL#0' }), 'teams'],
+    ['a Group site', row('SharePoint', 'x', 80, { template: 'GROUP#0' }), 'teams'],
+    ['a Team Site', row('SharePoint', 'x', 80, { template: 'STS#3' }), 'sharePoint'],
+    ['a SharePoint site with no template', row('SharePoint', 'x', 80), 'sharePoint'],
+    ['a OneDrive', row('OneDrive', 'x', 80, { template: 'GROUP#0' }), 'oneDrive'],
+  ] as const)('classifies %s by its workload', (_label, current, workload) => {
+    const growth = buildStorageGrowth({ ...window, current: [current], baseline: [{ ...current, storageUsedBytes: 10 }] })
+    expect(growth.leaders.map((leader) => leader.workload)).toEqual([workload])
+  })
+
+  it('lists each workload among the leaders once, in the order SharePoint, Teams, OneDrive', () => {
+    const grew = (pool: StorageRow['pool'], id: string, bytes: number, template?: string) => [
+      row(pool, id, bytes, { template }),
+      row(pool, id, 1, { template }),
+    ]
+    const pairs = [
+      grew('OneDrive', 'd1', 90),
+      grew('SharePoint', 't1', 80, 'GROUP#0'),
+      grew('OneDrive', 'd2', 70),
+      grew('SharePoint', 't2', 60, 'TEAMCHANNEL#0'),
+      grew('SharePoint', 's1', 50, 'STS#3'),
+    ]
+    const growth = buildStorageGrowth({ ...window, current: pairs.map(([now]) => now), baseline: pairs.map(([, before]) => before) })
+    expect(growth.leaders.map((leader) => leader.workload)).toEqual(['oneDrive', 'teams', 'oneDrive', 'teams', 'sharePoint'])
+    expect(growth.workloads).toEqual(['sharePoint', 'teams', 'oneDrive'])
+  })
+
+  it('lists no workload when there is no leader', () => {
+    expect(buildStorageGrowth({ ...window, current: [], baseline: [] }).workloads).toEqual([])
   })
 
   it.each([
@@ -256,7 +289,7 @@ describe('buildStorageGrowth', () => {
 
   it('explains a ranking by storage freed as shrinking', () => {
     const growth = buildStorageGrowth({ ...window, current: one, baseline: [row('SharePoint', 'a', 9)] })
-    expect([growth.ranking, growth.explanation, growth.leaders]).toEqual(['shrink', 'shrink', [{ name: 'a', value: 4 }]])
+    expect([growth.ranking, growth.explanation, growth.leaders]).toEqual(['shrink', 'shrink', [{ name: 'a', value: 4, workload: 'sharePoint' }]])
   })
 })
 

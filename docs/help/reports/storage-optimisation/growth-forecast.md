@@ -77,8 +77,7 @@ is shown only when the entitlement is known.
 | Stays under the entitlement | **Yes** when the dotted line stays below the entitlement for the whole forecast, **No** when it reaches it. Shown only when the entitlement is known. |
 
 Only SharePoint storage is counted. Deleted OneDrives are in the OneDrive pool, so they do not
-lower the SharePoint forecast. **Versions are not counted**: Microsoft's usage reports do not
-carry version storage.
+lower the SharePoint forecast.
 
 When nothing is removable, the dotted line is the forecast itself and lies on the dashed one,
 and the note under the figures says there is nothing to clean up.

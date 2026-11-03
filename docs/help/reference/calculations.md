@@ -74,7 +74,7 @@ total of the matching usage report's rows.
 - Status: **Critical** under 12 months, **At risk** under 36, otherwise **Healthy**.
 - **Forecast after clean-up** = forecast − (inactive live site storage + deleted site storage
   still billing), never below zero. It stays under the entitlement when every month from today
-  to the end of the forecast is below it. Deleted OneDrives and versions are not counted. With
+  to the end of the forecast is below it. Deleted OneDrives are not counted. With
   nothing removable it is the forecast itself.
 
 ## Costs

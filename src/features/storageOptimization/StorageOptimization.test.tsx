@@ -304,7 +304,7 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByText('Top OneDrives by storage')).not.toBeInTheDocument()
     expect(screen.queryByText('Drives near their quota')).not.toBeInTheDocument()
     expect(screen.getByText('Live sites')).toBeInTheDocument()
-    expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
+    expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
   })
 
   it('leaves OneDrive out as a whole, and gives no date it does not have, when only the OneDrive usage report came back', async () => {
@@ -349,12 +349,7 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByRole('region', { name: 'Tenant capacity' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Future state & growth impact/ })).not.toBeInTheDocument()
     expect(screen.queryByText('Storage usage')).not.toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "A separate pool: each user's OneDrive has its own allowance from their licence, so it does not use the SharePoint entitlement.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Live OneDrive storage')).toBeInTheDocument()
+    expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
   })
 
   it('names the report the last reload lost, and that the page still shows the earlier load', async () => {

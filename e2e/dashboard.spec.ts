@@ -473,7 +473,7 @@ test('the help is searchable and published for agents as llms.txt', async ({ pag
 test('the main offenders chart ranks sites and OneDrives by storage added', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  await expect(page.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).toBeVisible()
   await expect(page.getByText(/^Storage added between \d{4}-\d{2}-\d{2} and \d{4}-\d{2}-\d{2} \(\d+ days\)/)).toBeVisible()
 })
 
