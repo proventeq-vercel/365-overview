@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ApiError } from '../clients/apiError'
+import { ApiError, LINK_NOT_ALLOWED_CODE } from '../clients/apiError'
 import { AlertPanel } from '../design/AlertPanel'
 import { useTranslation, type TranslateFn } from '../hooks/useTranslation'
 import { HelpLink } from './HelpLink'
@@ -10,6 +10,9 @@ interface ErrorStateProps {
 }
 
 function describe(error: unknown, t: TranslateFn): { title: string; detail?: string } {
+  if (error instanceof ApiError && error.code === LINK_NOT_ALLOWED_CODE) {
+    return { title: t('errors.linkNotAllowed.title'), detail: t('errors.linkNotAllowed.body') }
+  }
   if (error instanceof ApiError) {
     return {
       title: error.message,
