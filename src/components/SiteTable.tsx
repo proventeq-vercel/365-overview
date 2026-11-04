@@ -221,7 +221,7 @@ export function SiteTable({
         return (
           <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
             <PoolIcon pool={row.pool} />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col gap-1.5">
               {resolving ? (
                 <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
               ) : (
@@ -357,33 +357,42 @@ export function SiteTable({
             className="grid items-center gap-2 border-b border-p365-grey-100 bg-p365-page px-4 py-2.5 text-xs font-semibold text-p365-grey-600"
             style={{ gridTemplateColumns: gridCols }}
           >
-            {columns.map((key) => (
-              <ColumnHeaderTooltip
-                key={key}
-                tooltip={helpOf(key)}
-                header={
-                  COLUMNS[key].sortable ? (
-                    <button
-                      type="button"
-                      role="columnheader"
-                      onClick={() => toggleSort(key)}
-                      aria-sort={
-                        key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
-                      }
-                      className={cn(
-                        'flex items-center gap-1 text-left transition-colors duration-150 ease-out hover:text-p365-navy',
-                        key === sortKey && 'text-p365-navy',
-                      )}
-                    />
-                  ) : (
-                    <span role="columnheader" tabIndex={0} className="w-fit cursor-help" />
-                  )
-                }
-              >
-                {headerOf(key)}
-                {sortIndicator(key)}
-              </ColumnHeaderTooltip>
-            ))}
+            {columns.map((key) => {
+              const header = (
+                <ColumnHeaderTooltip
+                  key={key}
+                  tooltip={helpOf(key)}
+                  header={
+                    COLUMNS[key].sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(key)}
+                        className={cn(
+                          'flex w-full items-center gap-1 text-left transition-colors duration-150 ease-out hover:text-p365-navy',
+                          key === sortKey && 'text-p365-navy',
+                        )}
+                      />
+                    ) : (
+                      <span role="columnheader" tabIndex={0} className="w-fit cursor-help" />
+                    )
+                  }
+                >
+                  {headerOf(key)}
+                  {sortIndicator(key)}
+                </ColumnHeaderTooltip>
+              )
+              return COLUMNS[key].sortable ? (
+                <div
+                  key={key}
+                  role="columnheader"
+                  aria-sort={key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                >
+                  {header}
+                </div>
+              ) : (
+                header
+              )
+            })}
           </div>
 
           {pageRows.map((row) => (

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -9,10 +10,15 @@ import { helpBoot } from './src/app/help/helpBoot'
 import { HELP_PATH } from './src/config/helpPath'
 import { readFeatures } from './src/config/featureFlags'
 
+const staticWebAppConfig: { globalHeaders: Record<string, string> } = JSON.parse(
+  readFileSync(path.resolve(__dirname, 'public/staticwebapp.config.json'), 'utf8'),
+)
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const features: ReadonlySet<string> = readFeatures(loadEnv(mode, __dirname).VITE_FEATURES)
   return {
+    preview: { headers: staticWebAppConfig.globalHeaders },
     plugins: [
       react(),
       babel({ presets: [reactCompilerPreset()] }),

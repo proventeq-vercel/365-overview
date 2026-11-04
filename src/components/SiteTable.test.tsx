@@ -11,6 +11,8 @@ import { SiteTable } from './SiteTable'
 const render = (ui: ReactNode, getSiteDetails: DataSource['getSiteDetails'] = NO_SITE_DETAILS) =>
   renderWithData(ui, { getSiteDetails })
 
+const sortButton = (name: RegExp) => within(screen.getByRole('columnheader', { name })).getByRole('button')
+
 const rows: StorageRow[] = [
   {
     pool: 'SharePoint',
@@ -67,7 +69,7 @@ describe('SiteTable', () => {
     it('explains a sortable column on hover', async () => {
       const user = userEvent.setup()
       render(<SiteTable rows={rows} poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }} columns={['name', 'used']} />)
-      await user.hover(screen.getByRole('columnheader', { name: /storage used/i }))
+      await user.hover(sortButton(/storage used/i))
       expect(
         await screen.findByText(/Storage consumed, as Microsoft's usage report measures it/),
       ).toBeInTheDocument()
@@ -99,6 +101,17 @@ describe('SiteTable', () => {
       await user.hover(screen.getByRole('columnheader', { name: 'Drive' }))
       expect(await screen.findByText('The OneDrive account, named after its owner.')).toBeInTheDocument()
     })
+  })
+
+  it('marks the sorted column on its header and sorts from the button inside it', async () => {
+    const user = userEvent.setup()
+    render(<SiteTable rows={rows} poolUsedBytes={{ SharePoint: 1000, OneDrive: 1000 }} columns={['name', 'used', 'lastActivity']} />)
+    expect(screen.getByRole('columnheader', { name: /storage used/i })).toHaveAttribute('aria-sort', 'descending')
+    expect(screen.getByRole('columnheader', { name: /last activity/i })).not.toHaveAttribute('aria-sort')
+    await user.click(sortButton(/last activity/i))
+    expect(screen.getByRole('columnheader', { name: /last activity/i })).toHaveAttribute('aria-sort', 'descending')
+    expect(screen.getByRole('columnheader', { name: /storage used/i })).not.toHaveAttribute('aria-sort')
+    expect(document.querySelector('button[role="columnheader"]')).toBeNull()
   })
 
   it('renders the last-activity column when asked', () => {
@@ -141,7 +154,7 @@ describe('SiteTable', () => {
         columns={['name', 'lastActivity']}
       />,
     )
-    await user.click(screen.getByRole('columnheader', { name: /last activity/i }))
+    await user.click(sortButton(/last activity/i))
     const cells = screen.getAllByRole('cell')
     expect(cells[0]).toHaveTextContent('beta')
     expect(cells.at(-2)).toHaveTextContent('personal/d')
@@ -160,7 +173,7 @@ describe('SiteTable', () => {
       />,
     )
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('personal/x')
-    await user.click(screen.getByRole('columnheader', { name: /over licence by/i }))
+    await user.click(sortButton(/over licence by/i))
     expect(screen.getAllByRole('cell')[0]).toHaveTextContent('personal/y')
   })
 
@@ -214,7 +227,7 @@ describe('SiteTable', () => {
         columns={['name', 'share']}
       />,
     )
-    await userEvent.setup().click(screen.getByRole('columnheader', { name: /share/i }))
+    await userEvent.setup().click(sortButton(/share/i))
     const shares = screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].textContent)
     expect(shares).toEqual(['50.0%', '3.0%'])
   })
@@ -444,7 +457,7 @@ describe('SiteTable', () => {
       const user = userEvent.setup()
       render(<SiteTable rows={many} poolUsedBytes={{ SharePoint: 1e6, OneDrive: 1e6 }} columns={['name', 'used']} />)
       await user.click(screen.getByRole('button', { name: 'Next page' }))
-      await user.click(screen.getByRole('columnheader', { name: /storage used/i }))
+      await user.click(sortButton(/storage used/i))
       expect(screen.getByText('1–50 of 120')).toBeInTheDocument()
       expect(firstCell()).toHaveTextContent('team-119')
     })

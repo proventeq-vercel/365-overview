@@ -85,6 +85,17 @@ test.describe('the offenders table pages through a large estate', () => {
   })
 })
 
+test('a sortable column sorts from anywhere in its header, not only its label', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  const share = page.getByRole('columnheader', { name: 'Share' })
+  await expect(share).not.toHaveAttribute('aria-sort')
+  const box = await share.boundingBox()
+  if (!box) throw new Error('the Share header has no box')
+  await share.click({ position: { x: box.width - 4, y: box.height / 2 } })
+  await expect(share).toHaveAttribute('aria-sort', /ascending|descending/)
+})
+
 async function chooseOption(page: Page, name: RegExp) {
   await page.getByRole('button', { name: 'Options' }).click()
   await page.getByRole('menuitem', { name }).click()
