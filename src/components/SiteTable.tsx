@@ -17,6 +17,7 @@ import { HiddenName } from '@/design/HiddenName'
 import { Pagination } from '@/design/Pagination'
 import { PoolIcon } from '@/design/PoolIcon'
 import { ColumnHeaderTooltip } from '@/design/ColumnHeaderTooltip'
+import { TruncatedText } from '@/design/TruncatedText'
 
 export type ColumnKey =
   | 'name'
@@ -224,9 +225,7 @@ export function SiteTable({
               {resolving ? (
                 <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
               ) : (
-                <span className="block truncate font-semibold text-p365-navy" title={name}>
-                  {name}
-                </span>
+                <TruncatedText text={name} className="font-semibold text-p365-navy" />
               )}
               {resolving ? (
                 <Skeleton className="h-3 w-2/3" />
@@ -234,9 +233,7 @@ export function SiteTable({
                 <ExternalUrlLink href={row.url} />
               ) : (
                 name !== row.id && (
-                  <span className="block truncate text-xs text-p365-grey-500" title={row.id}>
-                    {row.id}
-                  </span>
+                  <TruncatedText text={row.id} className="text-xs text-p365-grey-500" />
                 )
               )}
             </span>
@@ -245,9 +242,9 @@ export function SiteTable({
       }
       case 'owner':
         return (
-          <span role="cell" key={key} className="min-w-0 truncate text-p365-grey-600">
+          <span role="cell" key={key} className="min-w-0 text-p365-grey-600">
             {nameMask === null ? (
-              row.ownerDisplayName
+              <TruncatedText text={row.ownerDisplayName} />
             ) : (
               <HiddenName mask={nameMask} seed={row.ownerDisplayName} />
             )}
