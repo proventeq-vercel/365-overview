@@ -14,11 +14,16 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-const snapshot = () => openId
-
 export function useExclusiveOpen() {
   const id = useId()
-  const open = useSyncExternalStore(subscribe, snapshot, snapshot) === id
-  const setOpen = useCallback((next: boolean) => setOpenId(next ? id : null), [id])
+  const isOpen = useCallback(() => openId === id, [id])
+  const open = useSyncExternalStore(subscribe, isOpen, isOpen)
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (next) setOpenId(id)
+      else if (openId === id) setOpenId(null)
+    },
+    [id],
+  )
   return [open, setOpen] as const
 }

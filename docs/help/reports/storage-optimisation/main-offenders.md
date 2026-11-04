@@ -87,8 +87,8 @@ Every site and drive in the usage reports, in one table.
 
 | Column | Meaning |
 | --- | --- |
-| Site | The display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. |
-| Owner | The primary owner as Microsoft records it. For group-connected sites, these are the Microsoft 365 group's owners. |
+| Site | The display name and a link to the site, which opens in a new tab. A site that cannot be named shows its id. A long name or id is cut short; hover over it, tap it or tab to it to see it in full. |
+| Owner | The primary owner as Microsoft records it. For group-connected sites, these are the Microsoft 365 group's owners. A long owner is cut short the same way. |
 | Storage used | Storage consumed as of the report date. |
 | Share | This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is on the same scale. The pool's total is Microsoft's storage trend, or the total of the usage report's rows when the trend lists no day with storage. A pool that holds no storage at all gives each of its rows **0.0%**; a share that would round to 0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**. |
 | Files | Files stored as of the report date. |

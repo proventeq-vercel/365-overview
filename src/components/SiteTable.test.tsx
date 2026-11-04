@@ -247,6 +247,14 @@ describe('SiteTable', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
+  it('lets the keyboard reach a cut-short id under a site with no address', () => {
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(640)
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
+    const noAddress: StorageRow = { ...rows[0], name: 'Alpha Finance', url: '' }
+    render(<SiteTable rows={[noAddress]} poolUsedBytes={{ SharePoint: 300, OneDrive: 300 }} columns={['name']} />)
+    expect(screen.getByRole('button', { name: noAddress.id })).toBeInTheDocument()
+  })
+
   it('lets the keyboard reach a cut-short name and owner', () => {
     vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(640)
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(120)
