@@ -34,7 +34,7 @@ export function StorageOptimization() {
       </PageHeader>
       <UnreadReports reports={data.caveats.unreadReports} notReloaded={notReloaded} />
       {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
-      <DistributionSection overview={data} delay={120} />
+      {data.sharePoint.read && <DistributionSection overview={data} delay={120} />}
       {data.sharePoint.read && <GrowthSection overview={data} delay={160} />}
       {data.offenders.read && <OffendersSection overview={data} growth={growth} delay={240} />}
     </div>

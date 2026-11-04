@@ -4,13 +4,13 @@ import {
   REPORT_POOL,
   type CoreReport,
   type OneDriveLimit,
-  type OneDrivePool,
   type OverEntitlement,
-  type Slice,
   type StoragePool,
   type StorageOverview,
   type StorageRow,
   type TemplateSlice,
+  type Workload,
+  type WorkloadSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
@@ -82,6 +82,11 @@ export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
     : 'SharePoint'
 }
 
+export function workloadOf(row: StorageRow): Workload {
+  if (row.pool === 'OneDrive') return 'oneDrive'
+  return classifyWorkload(row.template) === 'Teams' ? 'teams' : 'sharePoint'
+}
+
 const latest = (series: UsagePoint[]): number =>
   series.length === 0 ? 0 : series[series.length - 1].value
 
@@ -140,14 +145,14 @@ function totalsBy(rows: StorageRow[], key: (row: StorageRow) => string) {
   return [...totals.entries()]
 }
 
-function largest(rows: StorageRow[], limit: number): Slice[] {
+function largest(rows: StorageRow[], limit: number): WorkloadSlice[] {
   return [...rows]
     .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
     .slice(0, limit)
-    .map((row) => ({ name: rowName(row), value: row.storageUsedBytes }))
+    .map((row) => ({ name: rowName(row), value: row.storageUsedBytes, workload: workloadOf(row) }))
 }
 
-function topByPool(rows: StorageRow[], pool: StoragePool): Slice[] {
+function topByPool(rows: StorageRow[], pool: StoragePool): WorkloadSlice[] {
   return largest(
     rows.filter((row) => row.pool === pool),
     TOP_PER_POOL,
@@ -183,28 +188,6 @@ function drivesOverEntitlement(liveDrives: StorageRow[], limit: OneDriveLimit): 
     drives: over,
     count: over.length,
     excessBytes: over.reduce((total, drive) => total + drive.overEntitlementBytes, 0),
-  }
-}
-
-function oneDrivePool(liveDrives: StorageRow[]): OneDrivePool {
-  const usedBytes = sumBytes(liveDrives)
-  const limited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) > 0)
-  if (limited.length === 0) return { usedBytes, allocation: null }
-  const unlimited = liveDrives.filter((drive) => (drive.allocatedBytes ?? 0) <= 0)
-  const limitedUsedBytes = sumBytes(limited)
-  const allocatedBytes = limited.reduce((total, drive) => total + (drive.allocatedBytes ?? 0), 0)
-  const usedShare = Math.min(1, limitedUsedBytes / allocatedBytes)
-  return {
-    usedBytes,
-    allocation: {
-      allocatedBytes,
-      usedBytes: limitedUsedBytes,
-      driveCount: limited.length,
-      withoutLimit: { count: unlimited.length, bytes: sumBytes(unlimited) },
-      freeBytes: Math.max(0, allocatedBytes - limitedUsedBytes),
-      usedShare,
-      freeShare: 1 - usedShare,
-    },
   }
 }
 
@@ -370,7 +353,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       limitWhenUnset: limitWhenUnset === null ? null : limitWhenUnset.basis === 'licences' ? 'licences' : 'driveLimit',
       overEntitlement:
         driveLimit === null || !accountReportRead ? null : drivesOverEntitlement(liveDrives, driveLimit),
-      pool: oneDrivePool(liveDrives),
       attention: accountReportRead
         ? oneDriveAttention({
             drives: reportedDrives,

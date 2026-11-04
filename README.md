@@ -29,9 +29,9 @@ Each site also serves `/help` — the help centre for every report and for enabl
 | Section | What it shows |
 |---|---|
 | **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
-| **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive, versions (not measured) and free — against the SharePoint entitlement, each part explained in a popover; live OneDrive storage as its own pool against the drives' own allocations; and SharePoint split by site template |
+| **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive and free — against the SharePoint entitlement, each part explained in a popover; and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth (from the daily figures under six months of history), the projected exhaustion date, or the projected storage without an entitlement, and the cost of doing nothing |
-| **Main offenders** | The largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
+| **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
 **Tenant capacity** sits straight under the report title with no section heading, as up to four
 cards, each railed green, orange or red by its state. Within the entitlement the saving card is
@@ -166,7 +166,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
 | `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 | `no-daily-reports` | Every daily usage report is throttled (the report itself loads) — the growth panel stops asking after the first four days, ranks the sites and OneDrives by storage used and says none of the daily reports came back |
-| `onedrive-gaps` | Microsoft's active-user report does not come back and every fortieth OneDrive reports no storage limit — the OneDrives quiet for 93 days stand in for the unlicensed ones, and the OneDrive pool is drawn over the drives that report a limit |
+| `onedrive-gaps` | Microsoft's active-user report does not come back and every fortieth OneDrive reports no storage limit — the OneDrives quiet for 93 days stand in for the unlicensed ones |
 
 ### Feature flags — `VITE_FEATURES`
 

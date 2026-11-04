@@ -1,5 +1,5 @@
 import type { HealthStatus } from '@/lib/thresholds'
-import type { ForecastStatus } from '@/types/storage'
+import type { ForecastStatus, Workload } from '@/types/storage'
 
 export const P365 = {
   navy: '#0f2c3d',
@@ -19,7 +19,7 @@ export const WORKLOAD_COLOR = {
   sharePoint: '#038387',
   oneDrive: '#0078d4',
   teams: '#5b5fc7',
-} as const
+} as const satisfies Record<Workload, string>
 
 export interface LabelTone {
   text: string

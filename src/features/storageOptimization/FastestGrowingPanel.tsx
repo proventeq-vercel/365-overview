@@ -2,16 +2,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes } from '@/lib/format'
 import type { GrowthRanking, NameMask, StorageGrowth } from '@/types/storage'
-import { MonoBarChart } from '@/design/charts'
-import { EmptyBlock, Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
-import { P365 } from '@/design/theme'
+import { FacetBars } from '@/design/charts'
+import { Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
+import { WORKLOAD_COLOR } from '@/design/theme'
+import { WORKLOAD_LABEL } from './workloadLabel'
 
-function useRankingCopy(ranking: GrowthRanking) {
+function useRankingTitle(ranking: GrowthRanking) {
   const t = useTranslation()
   return {
-    growth: { title: t('storageOptimisation.offenders.fastest'), legend: t('storageOptimisation.offenders.added') },
-    shrink: { title: t('storageOptimisation.offenders.shrinking'), legend: t('storageOptimisation.offenders.removed') },
-    size: { title: t('storageOptimisation.offenders.largest'), legend: t('storageOptimisation.offenders.used') },
+    growth: t('storageOptimisation.offenders.fastest'),
+    shrink: t('storageOptimisation.offenders.shrinking'),
+    size: t('storageOptimisation.offenders.largest'),
   }[ranking]
 }
 
@@ -44,29 +45,40 @@ export function FastestGrowingPanel({
   nameMask: NameMask | null
 }) {
   const t = useTranslation()
-  const copy = useRankingCopy(growth?.ranking ?? 'growth')
+  const title = useRankingTitle(growth?.ranking ?? 'growth')
+  const showLegend = growth !== undefined && growth.leaders.length > 0
   return (
     <Panel>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <PanelLabel>{copy.title}</PanelLabel>
-        <Legend items={[{ name: copy.legend, color: P365.blue }]} />
+        <PanelLabel>{title}</PanelLabel>
+        {showLegend && (
+          <Legend
+            columns={growth.workloads.length}
+            items={growth.workloads.map((workload) => ({
+              name: t(WORKLOAD_LABEL[workload]),
+              color: WORKLOAD_COLOR[workload],
+            }))}
+          />
+        )}
       </div>
       {growth ? (
         <>
           <GrowthDescription growth={growth} />
-          {growth.leaders.length === 0 ? (
-            <EmptyBlock>{t('storageOptimisation.offenders.empty')}</EmptyBlock>
-          ) : (
-            <MonoBarChart
-              data={growth.leaders.map((slice) => ({ ...slice }))}
-              formatValue={formatBytes}
-              ariaLabel={copy.title}
-              nameMask={nameMask}
-            />
-          )}
+          <FacetBars
+            items={growth.leaders.map((leader) => ({
+              name: leader.name,
+              value: leader.value,
+              color: WORKLOAD_COLOR[leader.workload],
+              label: t(WORKLOAD_LABEL[leader.workload]),
+            }))}
+            formatValue={formatBytes}
+            ariaLabel={title}
+            nameMask={nameMask}
+            emptyText={t('storageOptimisation.offenders.empty')}
+          />
         </>
       ) : (
-        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-72 w-full" />
+        <Skeleton aria-label={t('storageOptimisation.offenders.fastestLoading')} className="h-96 w-full" />
       )}
     </Panel>
   )

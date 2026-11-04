@@ -43,23 +43,21 @@ describe('DistributionSection', () => {
     for (const chart of charts) expect(chart).toHaveAccessibleName()
   })
 
-  it('lists the six SharePoint parts of the usage line in order, each with its size and share', () => {
+  it('lists the five SharePoint parts of the usage line in order, each with its size and share', () => {
     render(<DistributionSection overview={withTemplates} />)
     expect(parts().map((button) => button.textContent)).toEqual([
       'SharePoint200 GB20.0% of the line',
       'Teams170 GB17.0% of the line',
       'Deleted10 GB1.0% of the line',
       'Inactive120 GB12.0% of the line',
-      'VersionsNot measured',
       'Free500 GB50.0% of the line',
     ])
   })
 
-  it('draws SharePoint, OneDrive and Teams in their own product colours', () => {
+  it('draws SharePoint and Teams in their own product colours', () => {
     const { container } = render(<DistributionSection overview={withTemplates} />)
     const fill = (id: string) => (container.querySelector(`[data-segment="${id}"]`) as HTMLElement).style.background
     expect(fill('sharePoint')).toBe(rgb('#038387'))
-    expect(fill('oneDriveUsed')).toBe(rgb('#0078d4'))
     expect(fill('teams')).toBe(rgb('#5b5fc7'))
   })
 
@@ -72,8 +70,6 @@ describe('DistributionSection', () => {
       'deleted',
       'inactive',
       'free',
-      'oneDriveUsed',
-      'oneDriveFree',
     ])
     expect(Number(drawn[0].style.flexGrow)).toBeCloseTo(200 / 1000, 6)
   })
@@ -104,66 +100,22 @@ describe('DistributionSection', () => {
     expect(popover).toHaveTextContent(/^.*All SharePoint storage in use, from the SharePoint storage trend, Teams, inactive and deleted sites included/)
   })
 
-  it('shows OneDrive as its own pool against the storage allocated to the OneDrives', async () => {
+  it('keeps the full subtitle when only the OneDrive report did not come back', () => {
+    render(<DistributionSection overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, read: false } }} />)
+    expect(
+      screen.getByText(
+        'Where storage sits today — every SharePoint workload against your SharePoint entitlement, and which site types drive the volume',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('shows no OneDrive pool and no versions in the storage usage panel', () => {
     render(<DistributionSection overview={withTemplates} />)
-    expect(screen.getByRole('heading', { name: 'Live OneDrive storage' })).toBeInTheDocument()
-    expect(screen.getByText('3 OneDrives are at 90% or more of their own limits. Each OneDrive stops at its own limit, whatever the pool total.')).toBeInTheDocument()
-    expect(screen.getByText('of the 40 TB allocated to 40 OneDrives used (120 GB)')).toBeInTheDocument()
-    const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
-    expect(pool.map((button) => button.textContent)).toEqual([
-      'Used120 GB0.3% of the allocation',
-      'Unused allocation39.9 TB99.7% of the allocation',
-    ])
-    await userEvent.click(pool[0])
-    expect(await screen.findByRole('dialog', { name: 'Used' })).toHaveTextContent('Storage in live OneDrives')
-  })
-
-  it('draws the allocation over the OneDrives that report a limit, and names the rest apart', () => {
-    const allocation = {
-      ...withTemplates.oneDrive.pool.allocation!,
-      driveCount: 38,
-      withoutLimit: { count: 2, bytes: 6 * GB },
-    }
-    render(
-      <DistributionSection
-        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 126 * GB, allocation } } }}
-      />,
-    )
-    expect(screen.getByText('of the 40 TB allocated to the 38 OneDrives that report a limit used (120 GB)')).toBeInTheDocument()
-    expect(screen.getByText('2 live OneDrives holding 6 GB report no limit and are left out of this line.')).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: 'Live OneDrive storage' })).toBeInTheDocument()
-  })
-
-  it('says one OneDrive reports a limit in the singular', () => {
-    const allocation = { ...withTemplates.oneDrive.pool.allocation!, driveCount: 1, withoutLimit: { count: 1, bytes: 6 * GB } }
-    render(
-      <DistributionSection
-        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 126 * GB, allocation } } }}
-      />,
-    )
-    expect(screen.getByText('of the 40 TB allocated to the 1 OneDrive that reports a limit used (120 GB)')).toBeInTheDocument()
-    expect(screen.getByText('1 live OneDrive holding 6 GB reports no limit and is left out of this line.')).toBeInTheDocument()
-  })
-
-  it('says no OneDrive reports a limit, with no bar, rather than an unknown allocation', () => {
-    render(
-      <DistributionSection
-        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 120 * GB, allocation: null } } }}
-      />,
-    )
-    expect(screen.getByText("120 GB in 40 live OneDrives. Microsoft's usage report gives no storage limit for them, so there is no allocation to draw them against.")).toBeInTheDocument()
-    expect(screen.queryByText(/report a limit used/)).not.toBeInTheDocument()
-    expect(screen.getByText(/3 OneDrives are at 90% or more of their own limits/)).toBeInTheDocument()
+    expect(screen.queryByText('Live OneDrive storage')).not.toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Live OneDrive storage' })).not.toBeInTheDocument()
-  })
-
-  it('says versions are not measured and why, rather than showing a size', async () => {
-    render(<DistributionSection overview={withTemplates} />)
-    await userEvent.click(part('Versions'))
-    const popover = await screen.findByRole('dialog', { name: 'Versions' })
-    expect(popover).toHaveTextContent('Not measured')
-    expect(popover).not.toHaveTextContent('of the line')
-    expect(popover).toHaveTextContent('without splitting it out')
+    expect(screen.queryByText(/OneDrives are at 90%/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/versions?\b/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/not measured/i)).not.toBeInTheDocument()
   })
 
   it('counts the deleted sites still held', async () => {
@@ -241,47 +193,6 @@ describe('DistributionSection', () => {
     const legend = screen.getAllByRole('listitem').map((item) => item.textContent)
     expect(legend).toContain('Template not reported · 4 GB')
     expect(legend).toContain('Other · 2 GB')
-  })
-
-  it('says there is no live OneDrive, not that an allocation is missing, when the report lists none', () => {
-    render(
-      <DistributionSection
-        overview={{
-          ...withTemplates,
-          oneDrive: { ...withTemplates.oneDrive, driveCount: 0, drivesNearCap: 0, pool: { usedBytes: 0, allocation: null } },
-        }}
-      />,
-    )
-    expect(screen.getByText("No live OneDrive is in Microsoft's usage report.")).toBeInTheDocument()
-    expect(screen.queryByText(/gives no storage limit/)).not.toBeInTheDocument()
-  })
-
-  it('shows a used share too small to round as under 0.1%, not as nothing used', () => {
-    const allocation = {
-      allocatedBytes: 10_000 * 1024 * GB,
-      usedBytes: 2 * 1024 * GB,
-      driveCount: 40,
-      withoutLimit: { count: 0, bytes: 0 },
-      freeBytes: 9_998 * 1024 * GB,
-      usedShare: 0.0002,
-      freeShare: 0.9998,
-    }
-    render(
-      <DistributionSection
-        overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, pool: { usedBytes: 2 * 1024 * GB, allocation } } }}
-      />,
-    )
-    expect(screen.getByText('<0.1%')).toBeInTheDocument()
-    const pool = within(screen.getByRole('list', { name: 'Live OneDrive storage' })).getAllByRole('button')
-    expect(pool.map((button) => button.textContent)).toEqual([
-      'Used2 TB<0.1% of the allocation',
-      'Unused allocation9998 TB>99.9% of the allocation',
-    ])
-  })
-
-  it('says nothing about full OneDrives when none is near its limit', () => {
-    render(<DistributionSection overview={{ ...withTemplates, oneDrive: { ...withTemplates.oneDrive, drivesNearCap: 0 } }} />)
-    expect(screen.queryByText(/at 90% or more of/)).not.toBeInTheDocument()
   })
 
   it('shows a SharePoint part too small to round as under 0.1% of the line, not as nothing', () => {

@@ -6,7 +6,9 @@ import { formatBytes, formatNumber } from '@/lib/format'
 import type { StorageGrowth, StorageOverview } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
 import { PanelDescription, PanelLabel, Panel, Section, SplitGrid } from '@/design/primitives'
+import { WORKLOAD_COLOR } from '@/design/theme'
 import { FastestGrowingPanel } from './FastestGrowingPanel'
+import { WORKLOAD_LABEL } from './workloadLabel'
 
 const OFFENDER_COLUMNS = [
   'name',
@@ -75,8 +77,13 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <Panel>
             <PanelLabel>{t('storageOptimisation.offenders.topSites')}</PanelLabel>
             <FacetBars
-              items={topSites}
+              items={topSites.map((slice) => ({
+                ...slice,
+                color: WORKLOAD_COLOR[slice.workload],
+                label: t(WORKLOAD_LABEL[slice.workload]),
+              }))}
               formatValue={formatBytes}
+              ariaLabel={t('storageOptimisation.offenders.topSites')}
               emptyText={t('storageOptimisation.offenders.empty')}
               nameMask={overview.caveats.nameMask}
             />
@@ -86,8 +93,13 @@ export function OffendersSection({ overview, growth, delay }: Props) {
           <Panel>
             <PanelLabel>{t('storageOptimisation.offenders.topDrives')}</PanelLabel>
             <FacetBars
-              items={topDrives}
+              items={topDrives.map((slice) => ({
+                ...slice,
+                color: WORKLOAD_COLOR[slice.workload],
+                label: t(WORKLOAD_LABEL[slice.workload]),
+              }))}
               formatValue={formatBytes}
+              ariaLabel={t('storageOptimisation.offenders.topDrives')}
               emptyText={t('storageOptimisation.offenders.empty')}
               nameMask={overview.caveats.nameMask}
             />

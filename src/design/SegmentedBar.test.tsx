@@ -12,7 +12,7 @@ const segment = (id: string, label: string): BarSegment => ({
   color: '#34a1a0',
   share: 0.5,
   value: '1 TB',
-  shareLabel: null,
+  shareLabel: '50% of the line',
   description: `${label} explained`,
 })
 

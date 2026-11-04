@@ -26,22 +26,22 @@ export function storageBreakdown(inputs: StorageBreakdownInputs): StorageBreakdo
     freeBytes,
     siteFiguresRead,
   } = inputs
-  const bytes: Record<StorageSegmentKey, number | null> = {
+  const bytes: Record<Exclude<StorageSegmentKey, 'free'>, number> & { free?: number } = {
     sharePoint: Math.max(0, sharePointUsedBytes - teamsBytes - inactiveBytes - deletedSiteBytes),
     teams: teamsBytes,
     deleted: deletedSiteBytes,
     inactive: inactiveBytes,
-    versions: null,
-    free: freeBytes,
+    ...(freeBytes === null ? {} : { free: freeBytes }),
   }
-  const totalBytes = STORAGE_SEGMENTS.reduce((total, key) => total + (bytes[key] ?? 0), 0)
+  const present = STORAGE_SEGMENTS.flatMap((key) => {
+    const value = bytes[key]
+    return value === undefined ? [] : [{ key, value }]
+  })
+  const totalBytes = present.reduce((total, { value }) => total + value, 0)
   return {
-    segments: STORAGE_SEGMENTS.filter(
-      (key) => (key !== 'free' || freeBytes !== null) && (siteFiguresRead || !SITE_REPORT_SEGMENTS.has(key)),
-    ).map((key) => {
-      const value = bytes[key]
-      return { key, bytes: value, share: value === null || totalBytes === 0 ? 0 : value / totalBytes }
-    }),
+    segments: present
+      .filter(({ key }) => siteFiguresRead || !SITE_REPORT_SEGMENTS.has(key))
+      .map(({ key, value }) => ({ key, bytes: value, share: totalBytes === 0 ? 0 : value / totalBytes })),
     totalBytes,
     deletedCount,
   }

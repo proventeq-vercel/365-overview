@@ -1,8 +1,18 @@
 import { daysBetween } from '@/lib/growthWindow'
 import { rowName } from '@/lib/rowName'
-import type { GrowthExplanation, GrowthRanking, SizeRankingReason, StorageGrowth, StorageRow } from '@/types/storage'
+import type {
+  GrowthExplanation,
+  GrowthRanking,
+  SizeRankingReason,
+  StorageGrowth,
+  StorageRow,
+  Workload,
+} from '@/types/storage'
+import { workloadOf } from './storageOverview'
 
 export const TOP_GROWERS = 10
+
+const WORKLOAD_ORDER: readonly Workload[] = ['sharePoint', 'teams', 'oneDrive']
 
 export interface GrowthLeader {
   row: StorageRow
@@ -89,6 +99,11 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
   const measured = new Set(baseline.map(rowKey))
   const measuredRows = current.filter((row) => !row.isDeleted && measured.has(rowKey(row))).length
   const { ranking, leaders } = rankLeaders(current, baseline)
+  const bars = leaders.map(({ row, valueBytes }) => ({
+    name: rowName(row),
+    value: valueBytes,
+    workload: workloadOf(row),
+  }))
   const read = reportsRead.sharePoint + reportsRead.oneDrive
   const reportsMissing = dates.length * Object.keys(reportsRead).length - read
   const complete = !measurementFailed && reportsMissing === 0
@@ -106,7 +121,8 @@ export function buildStorageGrowth(inputs: GrowthInputs): StorageGrowth {
     complete,
     missingNote: read > 0 && !complete,
     measuredRows,
-    leaders: leaders.map(({ row, valueBytes }) => ({ name: rowName(row), value: valueBytes })),
+    leaders: bars,
+    workloads: WORKLOAD_ORDER.filter((workload) => bars.some((bar) => bar.workload === workload)),
   }
 }
 

@@ -374,7 +374,7 @@ test('hovering a part of the storage usage line explains it', async ({ page }) =
   await page.goto('/')
   await reportLoaded(page)
   const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
-  await expect(parts).toHaveCount(6)
+  await expect(parts).toHaveCount(5)
   await page.locator('[data-segment="teams"]').hover()
   const popover = page.getByRole('dialog', { name: 'Teams' })
   await expect(popover).toBeVisible()
@@ -382,20 +382,19 @@ test('hovering a part of the storage usage line explains it', async ({ page }) =
   await expect(popover).toContainText('Teams channel and group templates')
   await page.mouse.move(0, 0)
   await expect(popover).toBeHidden()
-  await parts.filter({ hasText: 'Versions' }).focus()
+  await parts.filter({ hasText: 'Inactive' }).focus()
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('dialog', { name: 'Versions' })).toContainText('Not measured')
+  await expect(page.getByRole('dialog', { name: 'Inactive' })).toContainText('of the line')
 })
 
-test('OneDrive sits in its own pool, off the SharePoint usage line', async ({ page }) => {
+test('the storage distribution shows only the SharePoint usage line, with no OneDrive pool and no versions', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  const main = page.getByRole('main')
-  await expect(main.getByRole('list', { name: 'Storage usage' }).getByRole('button', { name: /OneDrive/ })).toHaveCount(0)
-  await expect(main.getByRole('heading', { name: 'Live OneDrive storage' })).toBeVisible()
-  const pool = main.getByRole('list', { name: 'Live OneDrive storage' }).getByRole('button')
-  await expect(pool).toHaveCount(2)
-  await expect(pool.first()).toContainText('of the allocation')
+  const distribution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Current storage distribution' }) })
+  const parts = distribution.getByRole('list', { name: 'Storage usage' }).getByRole('button')
+  await expect(parts).toHaveText([/^SharePoint/, /^Teams/, /^Deleted/, /^Inactive/, /^Free/])
+  await expect(distribution.getByText('Live OneDrive storage')).toHaveCount(0)
+  await expect(distribution.getByText(/version/i)).toHaveCount(0)
 })
 
 test('a clicked part of the usage line gives way to the next one hovered', async ({ page }) => {
@@ -407,12 +406,12 @@ test('a clicked part of the usage line gives way to the next one hovered', async
   await expect(teams).toBeVisible()
   await page.mouse.move(0, 0)
   await expect(teams).toBeVisible()
-  await parts.filter({ hasText: 'Versions' }).hover()
-  await expect(page.getByRole('dialog', { name: 'Versions' })).toBeVisible()
+  await parts.filter({ hasText: 'Inactive' }).hover()
+  await expect(page.getByRole('dialog', { name: 'Inactive' })).toBeVisible()
   await expect(teams).toBeHidden()
   await expect(page.getByRole('dialog')).toHaveCount(1)
 
-  await parts.filter({ hasText: 'Versions' }).click()
+  await parts.filter({ hasText: 'Inactive' }).click()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await parts.filter({ hasText: 'Teams' }).click()
@@ -475,7 +474,7 @@ test('the help is searchable and published for agents as llms.txt', async ({ pag
 test('the main offenders chart ranks sites and OneDrives by storage added', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  await expect(page.getByRole('img', { name: 'Fastest-growing sites & OneDrives' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Fastest-growing sites & OneDrives' })).toBeVisible()
   await expect(page.getByText(/^Storage added between \d{4}-\d{2}-\d{2} and \d{4}-\d{2}-\d{2} \(\d+ days\)/)).toBeVisible()
 })
 
