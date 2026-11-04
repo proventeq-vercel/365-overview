@@ -70,7 +70,8 @@ Two lists sit under the growth bars:
 The names come from the site directory on the application-permissions site, or from a lookup as
 the signed-in user on the delegated site.
 When a name cannot be found, the row is listed by its id (see
-[Site names](../../reference/site-names.md)).
+[Site names](../../reference/site-names.md)). A long name is cut short; hover over it, tap it or tab to it to
+see it in full (see [Long names](../../reference/site-names.md#long-names)).
 
 ## Deleted but still billing
 

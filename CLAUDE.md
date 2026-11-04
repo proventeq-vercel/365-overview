@@ -284,7 +284,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   by service, the Growth legend lists `growth.workloads`; the OneDrive report
   keeps the facet cycle), `TruncatedText` (a name cut with an ellipsis inside
   its box, in full in a popover on hover, click/tap and keyboard focus only
-  while it is cut; every `FacetBars` name uses it), `AlertPanel`,
+  while it is cut; every `FacetBars` name and the `SiteTable` name, id and owner
+  cells use it; masked names stay `HiddenName`), `AlertPanel`,
   `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading the SharePoint usage line), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
