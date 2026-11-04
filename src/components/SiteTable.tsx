@@ -221,7 +221,7 @@ export function SiteTable({
         return (
           <span role="cell" key={key} className="flex min-w-0 items-center gap-2">
             <PoolIcon pool={row.pool} />
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex min-w-0 flex-1 flex-col gap-1.5">
               {resolving ? (
                 <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
               ) : (
