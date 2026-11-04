@@ -1,4 +1,4 @@
-import { formatBytes, formatLongMonthYear, formatShare } from '@/lib/format'
+import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import { estimatedQuotaNote } from './forecastCopy'
 import type { StorageOverview, StorageSegment, StorageSegmentKey } from '@/types/storage'
@@ -25,7 +25,7 @@ function describe(key: StorageSegmentKey, overview: StorageOverview, t: Translat
     case 'inactive':
       return t('storageOptimisation.usage.describe.inactive', {
         years: archive.inactiveYears,
-        date: formatLongMonthYear(archive.inactiveSince),
+        date: formatShortDate(archive.inactiveSince),
       })
     case 'free':
       if (sharePoint.exhausted && sharePoint.overageBytes !== null) {

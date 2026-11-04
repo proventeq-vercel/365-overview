@@ -174,6 +174,14 @@ describe('DistributionSection', () => {
     )
   })
 
+  it('dates the inactive part by the same cutoff day the archive card shows', async () => {
+    render(<DistributionSection overview={withTemplates} />)
+    await userEvent.click(part('Inactive'))
+    expect(await screen.findByRole('dialog', { name: 'Inactive' })).toHaveTextContent(
+      'Live sites with no activity for 3 years (since 30 Aug 2023).',
+    )
+  })
+
   it('leaves the free part out, never Unknown, and says where to enter the entitlement', async () => {
     render(<DistributionSection overview={{ ...unknownEntitlement, sharePoint: { ...unknownEntitlement.sharePoint, byTemplate: [] } }} />)
     expect(parts().map((button) => button.textContent)).not.toContainEqual(expect.stringMatching(/^Free/))

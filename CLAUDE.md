@@ -417,7 +417,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   it is the total of that pool's usage-report rows (`sharePoint.usedFromSiteReport`,
   `oneDrive.usedFromAccountReport`), drawn as a single point with no rate, and
   the copy names the report. A shrinking
-  rate reads "changing by -X a month", never "growing".
+  rate is shown signed ("-X GB", "At -X a month"), never "growing".
 - **Nothing on the page says "unavailable", "unknown", "not enough history" or
   "could not be read" (owner's decision, 2026-10-27).** The only can't-load
   screen is the whole-app failure. A chart or card whose primary data is

@@ -1,5 +1,6 @@
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const
 const REPORT_LOCALE = 'en-GB'
+const THREE_LETTER_MONTH_LOCALE = 'en-US'
 
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -58,4 +59,13 @@ export function formatLongMonthYear(isoDate: string): string {
   const date = new Date(isoDate)
   if (Number.isNaN(date.getTime())) return isoDate
   return new Intl.DateTimeFormat(REPORT_LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
+}
+
+export function formatShortDate(isoDate: string): string {
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return isoDate
+  const parts = new Intl.DateTimeFormat(THREE_LETTER_MONTH_LOCALE, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value
+  return `${part('day')} ${part('month')} ${part('year')}`
 }

@@ -46,6 +46,9 @@ function siteReportSource(overview: StorageOverview, t: TranslateFn): string | n
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
 
+const shortHint = (hint: string, overview: StorageOverview, t: TranslateFn) =>
+  [hint, dailyRateNote(overview, t)].filter((part) => part !== null).join(' · ')
+
 export function estimatedQuotaNote(overview: StorageOverview, t: TranslateFn): string | null {
   if (!overview.caveats.entitlementIsEstimated) return null
   return overview.cost.applies || overview.archive.savingApplies
@@ -82,19 +85,11 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
       label: t('storageOptimisation.kpi.growthPerMonth'),
       value: formatSignedBytes(growth.avgMonthlyGrowthBytes),
       status: null,
-      hint: t('storageOptimisation.kpi.growthPerMonthHint', {
-        used,
-        growth: formatSignedBytes(growth.avgMonthlyGrowthBytes),
-        window: rateWindow(overview, t),
-      }),
+      hint: t('storageOptimisation.kpi.forecastUnknownHint', { window: rateWindow(overview, t) }),
     }
   }
 
-  const figures = {
-    entitled: formatBytes(sharePoint.entitledBytes),
-    remaining: formatBytes(sharePoint.remainingBytes),
-    growth: formatBytes(growth.avgMonthlyGrowthBytes),
-  }
+  const atCurrentGrowth = shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t)
   const card = (value: string, hint: string): ForecastCard => ({
     label: t('storageOptimisation.kpi.forecast'),
     value,
@@ -104,7 +99,7 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
 
   const date = exhaustionLabel(overview)
   if (date !== null) {
-    return card(date, joined(t('storageOptimisation.kpi.forecastHint', figures), dailyRateNote(overview, t)))
+    return card(date, atCurrentGrowth)
   }
   if (growth.forecastMonthsToExhaustion === 0) {
     return card(
@@ -113,20 +108,9 @@ export function forecastCard(overview: StorageOverview, t: TranslateFn): Forecas
     )
   }
   if (growth.forecastMonthsToExhaustion === null) {
-    return card(
-      t('storageOptimisation.kpi.forecastNone'),
-      growth.rateSource === 'monthly'
-        ? t('storageOptimisation.kpi.forecastNoGrowthHint', { ...figures, months: growth.windowMonths })
-        : t('storageOptimisation.kpi.forecastNoGrowthDailyHint', { ...figures, days: growth.windowDays }),
-    )
+    return card(t('storageOptimisation.kpi.forecastNone'), atCurrentGrowth)
   }
-  return card(
-    t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS }),
-    joined(
-      t('storageOptimisation.kpi.forecastBeyondHorizonHint', { ...figures, years: FORECAST_HORIZON_YEARS }),
-      dailyRateNote(overview, t),
-    ),
-  )
+  return card(t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS }), atCurrentGrowth)
 }
 
 interface ForecastCallout {
