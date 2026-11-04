@@ -13,7 +13,6 @@ dist-ssr
 *.local
 
 # Local env files — real values, not committed (copy .env.example to .env).
-# On Vercel, set these in Project Settings > Environment Variables.
 .env
 .env.*
 !.env.example
