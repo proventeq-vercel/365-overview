@@ -19,7 +19,8 @@ export const WORKLOAD_COLOR = {
   sharePoint: '#038387',
   oneDrive: '#0078d4',
   teams: '#5b5fc7',
-} as const satisfies Record<Workload, string>
+  other: '#808080',
+} as const satisfies Record<Workload | 'other', string>
 
 export interface LabelTone {
   text: string
