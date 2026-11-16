@@ -13,7 +13,7 @@ still works.
 | Permission | Required | What the report reads with it | Without it |
 | --- | --- | --- | --- |
 | `Reports.Read.All` | Required | Microsoft 365 usage reports: storage per site and per OneDrive, the 180-day storage trend, and the active-user report, for which OneDrive owners hold a OneDrive licence. | The report cannot load. |
-| `Organization.Read.All` | Optional | The tenant's name and licences. The licences give the SharePoint entitlement and the OneDrive storage per user. | The header says *Your tenant*. Without the SharePoint entitlement the forecast card is left out, the *SharePoint storage used* card says none is entered and links to [Report settings](../reference/settings.md), the forecast projects used storage with no exhaustion date, and the storage usage line has no free part, until you enter it there. OneDrives are measured against the commonest OneDrive limit until you enter the storage per user there. |
+| `Organization.Read.All` | Optional | The tenant's name and licences. The licences give the SharePoint entitlement and the OneDrive storage per user. | The header says *Your tenant*. Without the SharePoint entitlement the forecast card is left out, the *SharePoint storage used* card says none is entered and links to [Report settings](../reference/settings.md), and the forecast projects used storage with no exhaustion date, until you enter it there. OneDrives are measured against the commonest OneDrive limit until you enter the storage per user there. |
 | `Sites.Read.All` | Optional | Each site's name and address. | Sites are listed by their id (see [Site names](../reference/site-names.md)). |
 
 ::: audience delegated
