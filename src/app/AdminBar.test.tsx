@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@/test/render'
 import type { StorageRow } from '@/types/storage'
+import { MockDataContext, type MockDataState } from '@/data/mockData'
 import { AdminBar, type AdminEnv } from './AdminBar'
 import { AdminBarContext } from './adminBarContext'
 
@@ -18,20 +19,34 @@ const mockHealthy: AdminEnv = {
 
 const ownedBy = (ownerDisplayName: string) => ({ ownerDisplayName }) as StorageRow
 
-function renderBar(env: AdminEnv = mockHealthy, open = true, sites?: StorageRow[], drives: StorageRow[] = []) {
+function renderBar(
+  env: AdminEnv = mockHealthy,
+  open = true,
+  sites?: StorageRow[],
+  drives: StorageRow[] = [],
+  mock: MockDataState | null = null,
+) {
   const navigate = vi.fn()
   const setOpen = vi.fn()
   const queryClient = new QueryClient()
   if (sites) queryClient.setQueryData(['storageInputs'], { sites, drives })
   render(
     <QueryClientProvider client={queryClient}>
-      <AdminBarContext value={{ available: true, open, setOpen }}>
-        <AdminBar env={env} navigate={navigate} />
-      </AdminBarContext>
+      <MockDataContext value={mock}>
+        <AdminBarContext value={{ available: true, open, setOpen }}>
+          <AdminBar env={env} navigate={navigate} />
+        </AdminBarContext>
+      </MockDataContext>
     </QueryClientProvider>,
   )
   return { navigate, setOpen }
 }
+
+function mockData(overrides: Partial<MockDataState> = {}): MockDataState {
+  return { scenario: 'healthy', delayMs: 0, setScenario: vi.fn(), setDelayMs: vi.fn(), ...overrides }
+}
+
+const renderMockBar = (mock: MockDataState, env: AdminEnv = mockHealthy) => renderBar(env, true, undefined, [], mock)
 
 const bar = () => screen.getByRole('region', { name: 'Admin' })
 const hrefOf = (navigate: ReturnType<typeof vi.fn>) => new URL(String(navigate.mock.calls[0][0]), 'http://x')
@@ -129,6 +144,82 @@ describe('AdminBar', () => {
     await user.click(screen.getByRole('button', { name: 'Apply and reload' }))
     expect(hrefOf(navigate).searchParams.get('mock')).toBe('false')
     expect(hrefOf(navigate).searchParams.get('scenario')).toBe('')
+  })
+
+  it('shows the scenario the tab switched to, not the one it booted with', () => {
+    renderMockBar(mockData({ scenario: 'concealed' }))
+    expect(screen.getByRole('combobox', { name: 'Data' })).toHaveTextContent('Mock: concealed names')
+    expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+  })
+
+  it('switches between mock scenarios in place, without a reload', async () => {
+    const user = userEvent.setup()
+    const mock = mockData()
+    const { navigate } = renderMockBar(mock)
+    await user.click(screen.getByRole('combobox', { name: 'Data' }))
+    await user.click(await screen.findByRole('option', { name: 'Mock: storage trends not returned' }))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+    expect(mock.setScenario).toHaveBeenCalledWith('no-trends')
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('describes each mock scenario on its option', async () => {
+    const user = userEvent.setup()
+    renderMockBar(mockData())
+    await user.click(screen.getByRole('combobox', { name: 'Data' }))
+    expect(await screen.findByRole('option', { name: 'Mock: storage trends not returned' })).toHaveAttribute(
+      'title',
+      'Both storage trend reports fail, so the forecast waits for them.',
+    )
+    expect(screen.getByRole('option', { name: 'Live tenant data' })).not.toHaveAttribute('title')
+  })
+
+  it('still reloads when a feature changes along with the scenario', async () => {
+    const user = userEvent.setup()
+    const mock = mockData()
+    const { navigate } = renderMockBar(mock)
+    await user.click(screen.getByRole('combobox', { name: 'Data' }))
+    await user.click(await screen.findByRole('option', { name: 'Mock: storage trends not returned' }))
+    await user.click(screen.getByRole('button', { name: 'Report menu' }))
+    await user.click(screen.getByRole('button', { name: 'Apply and reload' }))
+    expect(mock.setScenario).not.toHaveBeenCalled()
+    expect(hrefOf(navigate).searchParams.get('scenario')).toBe('no-trends')
+    expect(hrefOf(navigate).searchParams.get('features')).toBe('optimization.storage.report.overview,app.menu')
+  })
+
+  it('still reloads to switch a mock tab to live data', async () => {
+    const user = userEvent.setup()
+    const mock = mockData()
+    const { navigate } = renderMockBar(mock)
+    await user.click(screen.getByRole('combobox', { name: 'Data' }))
+    await user.click(await screen.findByRole('option', { name: 'Live tenant data' }))
+    await user.click(screen.getByRole('button', { name: 'Apply and reload' }))
+    expect(mock.setScenario).not.toHaveBeenCalled()
+    expect(hrefOf(navigate).searchParams.get('mock')).toBe('false')
+  })
+
+  it('applies a mock delay at once, with nothing left to apply', async () => {
+    const user = userEvent.setup()
+    const mock = mockData()
+    const { navigate } = renderMockBar(mock)
+    const delay = screen.getByRole('combobox', { name: 'Delay' })
+    expect(delay).toHaveTextContent('No delay')
+    await user.click(delay)
+    await user.click(await screen.findByRole('option', { name: '2 s' }))
+    expect(mock.setDelayMs).toHaveBeenCalledWith(2000)
+    expect(navigate).not.toHaveBeenCalled()
+    expect(screen.getByRole('status')).toHaveTextContent('Running as shown')
+  })
+
+  it('shows the delay the tab runs with', () => {
+    renderMockBar(mockData({ delayMs: 800 }))
+    expect(screen.getByRole('combobox', { name: 'Delay' })).toHaveTextContent('0.8 s')
+  })
+
+  it('has no delay on live data', () => {
+    renderBar({ ...mockHealthy, useMock: false })
+    expect(screen.getByRole('combobox', { name: 'Data' })).toHaveTextContent('Live tenant data')
+    expect(screen.queryByRole('combobox', { name: 'Delay' })).not.toBeInTheDocument()
   })
 
   it('resets the tab to the deployed modes, keeping the bar', async () => {

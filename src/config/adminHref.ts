@@ -1,5 +1,5 @@
 import type { MockScenario } from '../data/fixtures'
-import type { FeatureFlag } from './featureFlags'
+import { FeatureFlags, type FeatureFlag } from './featureFlags'
 import { MODES_RESET_PARAM, MODES_RESET_VALUE } from './modes'
 
 export const NO_FEATURES = 'none'
@@ -21,6 +21,22 @@ export function adminHref(pathname: string, choice: AdminChoice): string {
     admin: 'true',
   })
   return `${pathname}?${params.toString()}`
+}
+
+export function appliedChoice(
+  { features, hideNames }: { features: ReadonlySet<FeatureFlag>; hideNames: boolean },
+  data: AdminDataSource,
+): AdminChoice {
+  return { features: Object.values(FeatureFlags).filter((flag) => features.has(flag)), data, hideNames }
+}
+
+export function isScenarioOnlyChange(choice: AdminChoice, current: AdminChoice): boolean {
+  return (
+    choice.data !== 'live' &&
+    current.data !== 'live' &&
+    choice.data !== current.data &&
+    adminHref('/', { ...choice, data: current.data }) === adminHref('/', current)
+  )
 }
 
 export function adminResetHref(pathname: string): string {
