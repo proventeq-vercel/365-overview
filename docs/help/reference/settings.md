@@ -38,7 +38,7 @@ that estimate as a hint. To replace it, enter the tenant's total storage from th
 admin centre**. Clear the field to go back to the estimate.
 
 With no estimate and no figure entered, nothing is measured against a guessed entitlement: the
-storage usage line has no free part, the forecast projects used storage with no exhaustion date,
+forecast projects used storage with no exhaustion date,
 and the *Forecast exhaustion* card becomes *SharePoint growth per month*.
 
 ## OneDrive storage per user
@@ -60,9 +60,7 @@ How long a site must go without activity to count as ready to archive, and a One
 as inactive. You can pick 1 to 10 years. The default is 3 years.
 
 ::: feature optimization.storage.report.overview
-It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
-and the **Inactive** part of the
-[storage usage line](../reports/storage-optimisation/storage-distribution.md#storage-usage).
+It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive).
 :::
 
 ::: feature optimization.storage.report.onedrive

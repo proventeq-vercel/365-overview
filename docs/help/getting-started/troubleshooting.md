@@ -140,7 +140,7 @@ report that did not come back, and the figures drawn from it are left out:
 
 - Without the **SharePoint site usage report**, the per-site figures are left out: inactive sites,
   the saving, the template chart, *Live sites*, the top sites, the line after clean-up and the
-  Teams, Deleted and Inactive parts of the storage usage line. Storage used and the forecast come
+  Teams line of the storage usage panel. Storage used, the SharePoint line and the forecast come
   from the storage trend.
 - Without the **OneDrive usage report**, the per-OneDrive figures are left out: the OneDrive cards
   other than the storage, *Drives near their quota*, the top OneDrives, the over-licence and
