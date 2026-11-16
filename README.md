@@ -441,9 +441,12 @@ foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggl
   reading the real tenant, on any build, including a mock preview.
 - **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
 - **Names**: hide names (see *Hiding names*).
+- **Delay** (mock data only): holds every mock answer for 0.8, 2 or 5 s, so the loading
+  screen shows. It applies at once and is kept for the tab.
 
 **Apply and reload** writes the choices as the params above and reloads, because every mode
-is read once at load. **Reset** forgets the tab's overrides and keeps the bar. The bar is only
+is read once at load. Moving from one mock scenario to another is the exception: **Apply**
+switches it in place, with no reload, and the URL follows. **Reset** forgets the tab's overrides and keeps the bar. The bar is only
 a front end for those params: it can do nothing a URL cannot, so a build with
 `VITE_MODES_LOCKED=true` ignores `?admin=true` too.
 

@@ -344,7 +344,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   constant evaluated once at load. `?admin=true` (`env.admin`, also locked) mounts
   `app/AdminBar` in `AppShell`: a fixed bar that stages data source, features and
   hidden names and applies them as those same params through
-  `config/adminHref` + a reload — never a second way to change a mode. Its
+  `config/adminHref` + a reload — never a second way to change a mode. The one
+  exception is a mock-to-mock scenario change: `MockDataProvider` (`data/DataProvider.tsx`)
+  holds the scenario and a delay in state (`useMockData()`, `data/mockData.ts`); a switch
+  writes the same params with `history.replaceState`, clears the QueryClient and remounts
+  the tree under it (a `key`), so every query refetches from the new fixtures with its own
+  `queryFn` (a `resetQueries` would refetch through `useNamesConcealed`'s `skipToken`
+  observer and fail). The bar's Delay (0, 0.8, 2, 5 s, mock only) slows every fixture
+  call, so the loading screen shows; it is kept per tab. Its
   open state lives in `app/adminBarContext` (remembered per tab), and the ⋯
   menu shows *Show / Hide admin bar* only when admin is on. `?modes=reset`
   clears the tab and then applies any params sent with it.
