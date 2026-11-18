@@ -55,6 +55,7 @@ describe('Storage Optimisation app', () => {
       'Forecast exhaustion',
       'Cost of doing nothing, next 3 years',
       'Inactive sites to archive',
+      'Deleted but still counting',
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
       'Current storage distribution',

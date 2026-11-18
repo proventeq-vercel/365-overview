@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import { render } from '@/test/render'
 import { base, dailyRate, overEntitlement, unknownEntitlement } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
@@ -16,6 +16,7 @@ const FORECAST = 'Forecast exhaustion'
 const COST = 'Cost of doing nothing, next 3 years'
 const ARCHIVE = 'Inactive sites to archive'
 const DELETED = 'Deleted but still billing'
+const DELETED_COUNTING = 'Deleted but still counting'
 
 const card = (label: string) => screen.getByText(label).closest('[data-slot="stat-card"]') as HTMLElement
 
@@ -60,9 +61,21 @@ describe('KpiCards', () => {
     expect(card(USED)).toHaveTextContent('500 GB of 1000 GB entitlement')
   })
 
-  it('says the entitlement is unknown on the storage used card when it is', () => {
+  it('says the entitlement is unknown on the storage used card, with a way to enter it', () => {
     render(<KpiCards overview={{ ...unknownEntitlement, cost: { ...unknownEntitlement.cost, applies: false } }} />)
-    expect(card(USED)).toHaveTextContent('Entitlement unknown')
+    expect(card(USED)).toHaveTextContent('No entitlement entered · Enter it in Report settings')
+    expect(within(card(USED)).getByRole('button', { name: 'Enter it in Report settings' })).toBeInTheDocument()
+  })
+
+  it('puts the amount over the entitlement on the storage used card, in red', () => {
+    render(<KpiCards overview={busy} />)
+    expect(card(USED)).toHaveTextContent('1.1 TB of 1000 GB entitlement · 100 GB over')
+    expect(within(card(USED)).getByText('100 GB over').style.color).toBe(rgb(P365.red))
+  })
+
+  it('says when the entitlement is estimated from licences', () => {
+    render(<KpiCards overview={{ ...quiet, caveats: { ...quiet.caveats, entitlementIsEstimated: true } }} />)
+    expect(card(USED)).toHaveTextContent('500 GB of 1000 GB entitlement · entitlement estimated from licences')
   })
 
   it('shows every card a busy tenant can act on', () => {
@@ -70,8 +83,23 @@ describe('KpiCards', () => {
     expect(labels()).toEqual([USED, OVER, COST, ARCHIVE, DELETED])
     expect(card(OVER)).toHaveTextContent('100 GB')
     expect(card(COST)).toHaveTextContent('£1,296.00')
-    expect(card(DELETED)).toHaveTextContent('24 GB')
-    expect(card(DELETED)).toHaveTextContent('4 deleted sites still count against your quota')
+    expect(card(DELETED)).toHaveTextContent(
+      '24 GBDeleted but still billing4 deleted sites in the recycle bin or under retention · 24 GB of it is past your entitlement and billed · £5.76/yr until purged',
+    )
+    expect(card(DELETED).style.borderLeftColor).toBe(rgb(P365.orange))
+  })
+
+  it('says deleted storage under the entitlement counts but is not billed today', () => {
+    render(
+      <KpiCards
+        overview={{ ...quiet, sharePoint: { ...quiet.sharePoint, deletedButBilling: { bytes: 24 * GB, count: 4 } } }}
+      />,
+    )
+    expect(labels()).toEqual([USED, DELETED_COUNTING])
+    expect(card(DELETED_COUNTING)).toHaveTextContent(
+      'Counts toward your storage, not billed today: you are under your entitlement by 500 GB',
+    )
+    expect(card(DELETED_COUNTING).style.borderLeftColor).toBe(rgb(P365.grey500))
   })
 
   it('rails the over-entitlement card red', () => {
@@ -100,6 +128,12 @@ describe('KpiCards', () => {
     expect(card(ARCHIVE)).toHaveTextContent('42 sites · 24.0% of live site storage · no activity since 30 Aug 2023')
   })
 
+  it('says how long inactive means on the archive card, with a way to change it', () => {
+    render(<KpiCards overview={base} />)
+    expect(card(ARCHIVE)).toHaveTextContent('Inactive means no activity for 3 years. Change it in Report settings')
+    expect(within(card(ARCHIVE)).getByRole('button', { name: 'Change it in Report settings' })).toBeInTheDocument()
+  })
+
   it('names a single site without a plural, and a share too small to round as under 0.1%', () => {
     render(<KpiCards overview={{ ...base, archive: { ...base.archive, siteCount: 1, shareOfSharePoint: 0.0002 } }} />)
     expect(card(ARCHIVE)).toHaveTextContent('1 site · <0.1% of live site storage · ')
@@ -107,7 +141,7 @@ describe('KpiCards', () => {
 
   it('adds the yearly saving to the archive card when archiving cuts the bill', () => {
     render(<KpiCards overview={overEntitlement} />)
-    expect(card(ARCHIVE)).toHaveTextContent(/ · archiving saves £24\.00\/yr$/)
+    expect(card(ARCHIVE)).toHaveTextContent(/ · archiving saves £24\.00\/yr\s*Inactive means/)
   })
 
   it('fills the row with however many cards it shows', () => {

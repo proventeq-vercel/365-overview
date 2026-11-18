@@ -42,12 +42,16 @@ function Field({
   )
 }
 
+export type SettingsField = 'entitlement' | 'inactiveYears'
+
 export function SettingsDialog({
   open,
   onOpenChange,
+  focus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  focus?: SettingsField
 }) {
   const t = useTranslation()
   const { settings, update } = useSettings()
@@ -66,7 +70,13 @@ export function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        initialFocus={
+          focus
+            ? () => document.getElementById(focus === 'entitlement' ? entitlementId : inactiveYearsId)
+            : undefined
+        }
+      >
         <DialogTitle>{t('settings.title')}</DialogTitle>
         <DialogDescription>{t('settings.description')}</DialogDescription>
         <div className="mt-4 flex flex-col gap-4">
