@@ -96,7 +96,7 @@ indicative.
 The extra spend once storage grows past the entitlement, at the configured rate.
 
 - **Next 12 months** is the same figure as the *Cost of doing nothing* card in
-  [Tenant capacity](tenant-capacity.md#cost-of-doing-nothing-next-12-months).
+  [Tenant capacity](tenant-capacity.md#cost-of-doing-nothing-next-3-years).
 - **Cumulative, 3 years** adds up three years. Each year is priced on its **mid-year** volume,
   with the same rule: growth inside the entitlement costs nothing.
 

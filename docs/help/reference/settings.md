@@ -23,7 +23,7 @@ default as Proventeq 365.
 It prices:
 
 - the [potential saving per year](../reports/storage-optimisation/tenant-capacity.md#potential-saving-per-year),
-- the [cost of doing nothing](../reports/storage-optimisation/tenant-capacity.md#cost-of-doing-nothing-next-12-months),
+- the [cost of doing nothing](../reports/storage-optimisation/tenant-capacity.md#cost-of-doing-nothing-next-3-years),
 - the [projected cost](../reports/storage-optimisation/growth-forecast.md#projected-cost-if-nothing-changes).
 :::
 

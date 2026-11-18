@@ -1,13 +1,42 @@
 import type { ReactNode } from 'react'
 import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
-import { useTranslation } from '@/hooks/useTranslation'
+import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import { costHint, forecastCard } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
 import { KPI_GRID_COLUMNS } from '@/design/kpiGrid'
 import { HEALTH_COLOR, P365, RISK_COLOR } from '@/design/theme'
-import { actionableCards, annualCost, deletedBillableBytes, type KpiCardId } from './actionableCards'
+import { SettingsLink } from '@/app/SettingsLink'
+import {
+  actionableCards,
+  annualCost,
+  deletedStorageCard,
+  type DeletedStorageCard,
+  type KpiCardId,
+} from './actionableCards'
+
+function deletedHeld(deleted: DeletedStorageCard, t: TranslateFn): string {
+  const values = { sites: deleted.siteCount, oneDrives: deleted.oneDriveCount }
+  if (deleted.oneDriveCount === 0) return t('storageOptimisation.kpi.deletedHeldSites', values)
+  if (deleted.siteCount === 0) return t('storageOptimisation.kpi.deletedHeldOneDrives', values)
+  return t('storageOptimisation.kpi.deletedHeldBoth', values)
+}
+
+function deletedBillingHint(deleted: DeletedStorageCard, cost: string, t: TranslateFn): string {
+  switch (deleted.billing) {
+    case 'billed':
+      return t('storageOptimisation.kpi.deletedBilled', { billable: formatBytes(deleted.billableBytes), cost })
+    case 'underEntitlement':
+      return t('storageOptimisation.kpi.deletedUnderEntitlement', { headroom: formatBytes(deleted.headroomBytes) })
+    case 'atEntitlement':
+      return t('storageOptimisation.kpi.deletedAtEntitlement')
+    case 'entitlementUnknown':
+      return t('storageOptimisation.kpi.deletedNoEntitlement')
+    case 'outsidePool':
+      return t('storageOptimisation.kpi.deletedOutsidePool')
+  }
+}
 
 interface Props {
   overview: StorageOverview
@@ -30,12 +59,28 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             value={formatBytes(sharePoint.usedBytes)}
             color={P365.navy}
             information={
-              sharePoint.entitledBytes === null
-                ? t('storageOptimisation.kpi.usedEntitlementUnknown')
-                : t('storageOptimisation.kpi.usedOfEntitled', {
+              sharePoint.entitledBytes === null ? (
+                <>
+                  {t('storageOptimisation.kpi.usedNoEntitlement')} ·{' '}
+                  <SettingsLink field="entitlement">{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
+                </>
+              ) : (
+                <>
+                  {t('storageOptimisation.kpi.usedOfEntitled', {
                     used: formatBytes(sharePoint.usedBytes),
                     entitled: formatBytes(sharePoint.entitledBytes),
-                  })
+                  })}
+                  {(sharePoint.overageBytes ?? 0) > 0 && (
+                    <>
+                      {' · '}
+                      <span className="font-semibold" style={{ color: P365.red }}>
+                        {t('storageOptimisation.kpi.usedOver', { over: formatBytes(sharePoint.overageBytes ?? 0) })}
+                      </span>
+                    </>
+                  )}
+                  {overview.caveats.entitlementIsEstimated && ` · ${t('storageOptimisation.kpi.usedEstimated')}`}
+                </>
+              )
             }
           />
         )
@@ -86,25 +131,44 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             value={formatBytes(archive.bytes)}
             color={HEALTH_COLOR[archive.status]}
             information={
-              archive.savingApplies && archive.annualSaving > 0
-                ? t('storageOptimisation.kpi.archivableSavingHint', { sites, saving: money(archive.annualSaving) })
-                : sites
+              <>
+                {archive.savingApplies && archive.annualSaving > 0
+                  ? t('storageOptimisation.kpi.archivableSavingHint', { sites, saving: money(archive.annualSaving) })
+                  : sites}
+                <span className="mt-1 block">
+                  {t('storageOptimisation.kpi.inactivePeriod', { years: archive.inactiveYears })}{' '}
+                  <SettingsLink field="inactiveYears">{t('storageOptimisation.kpi.changeInSettings')}</SettingsLink>
+                </span>
+              </>
             }
           />
         )
       }
       case 'deletedButBilling': {
-        const billable = deletedBillableBytes(overview)
+        const deleted = deletedStorageCard(overview)
+        if (deleted === null) return null
+        const billed = deleted.billing === 'billed'
+        const color = billed ? P365.orange : P365.grey500
         return (
           <StatCard
             key={id}
-            label={t('storageOptimisation.kpi.deletedButBilling')}
-            value={formatBytes(billable)}
-            color={P365.orange}
-            information={t('storageOptimisation.kpi.deletedButBillingHint', {
-              count: sharePoint.deletedButBilling.count,
-              cost: money(annualCost(billable, cost.ratePerGb)),
-            })}
+            label={
+              billed ? t('storageOptimisation.kpi.deletedButBilling') : t('storageOptimisation.kpi.deletedStillCounting')
+            }
+            value={formatBytes(deleted.bytes)}
+            color={color}
+            information={
+              <>
+                {deletedHeld(deleted, t)} ·{' '}
+                {deletedBillingHint(deleted, money(annualCost(deleted.billableBytes, cost.ratePerGb)), t)}
+                {deleted.billing === 'entitlementUnknown' && (
+                  <>
+                    {' '}
+                    <SettingsLink field="entitlement">{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
+                  </>
+                )}
+              </>
+            }
           />
         )
       }
