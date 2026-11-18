@@ -127,26 +127,34 @@ test('an entitlement override replaces the licence estimate everywhere', async (
   await reportLoaded(page)
   await expect(page.getByText(/estimated from licence counts/i).first()).toBeVisible()
 
+  const usedCard = page.locator('[data-slot="stat-card"]', { hasText: 'SharePoint storage used' })
   const forecastCard = page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })
-  await expect(forecastCard).not.toContainText('Beyond 10 years')
+  await expect(usedCard).toContainText('entitlement estimated from licences')
+  await expect(forecastCard).toBeVisible()
 
   await chooseOption(page, /report settings/i)
   await page.getByLabel('SharePoint entitlement').fill('40')
   await expect(page.getByText(/estimated from licence counts/i)).toHaveCount(0)
-  await expect(page.getByText('of the 40 TB SharePoint entitlement used', { exact: false })).toBeVisible()
-  await expect(forecastCard).toContainText('Beyond 10 years')
+  await expect(usedCard).toContainText('of 40 TB entitlement')
+  await expect(usedCard).not.toContainText('estimated from licences')
+  await expect(forecastCard).toHaveCount(0)
 })
 
-test('the inactivity window in the report settings recounts the sites ready to archive', async ({ page }) => {
+test('the archive card opens the inactivity period in the report settings, and a longer one recounts the sites', async ({
+  page,
+}) => {
   await page.goto('/')
   await reportLoaded(page)
   const archiveCard = page.locator('[data-slot="stat-card"]', { hasText: 'Inactive sites to archive' })
   await expect(archiveCard).toContainText('no activity since 30 Aug 2023')
+  await expect(archiveCard).toContainText('Inactive means no activity for 3 years.')
 
-  await chooseOption(page, /report settings/i)
-  await page.getByRole('combobox', { name: 'Archive sites inactive for' }).click()
+  await archiveCard.getByRole('button', { name: 'Change it in Report settings' }).click()
+  const inactivity = page.getByRole('combobox', { name: 'Archive sites inactive for' })
+  await expect(inactivity).toBeFocused()
+  await inactivity.click()
   await page.getByRole('option', { name: '5 years' }).click()
-  await expect(archiveCard).toContainText('No live site with recorded activity has been inactive for 5 years')
+  await expect(archiveCard).toHaveCount(0)
 })
 
 test('refresh re-runs the report without a blank flash', async ({ page }) => {
@@ -385,9 +393,11 @@ test('the cards sit straight under the title, above the storage usage line', asy
   const distributionBox = await main.getByRole('heading', { name: 'Current storage distribution' }).boundingBox()
   expect(cardsBox!.y).toBeLessThan(distributionBox!.y)
   await expect(cards.locator('[data-slot="stat-card"] > p:nth-child(2)')).toHaveText([
-    'Inactive sites to archive',
-    'Cost of doing nothing, next 12 months',
+    'SharePoint storage used',
     'Forecast exhaustion',
+    'Cost of doing nothing, next 3 years',
+    'Inactive sites to archive',
+    'Deleted but still counting',
   ])
 })
 
@@ -441,15 +451,20 @@ test('a clicked part of the usage line gives way to the next one hovered', async
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-test('a tenant over its entitlement sees the saving instead of the forecast', async ({ page }) => {
+test('a tenant over its entitlement sees what it is billed instead of the forecast', async ({ page }) => {
   await page.goto('/?scenario=over-entitlement')
   await reportLoaded(page)
   const cards = page.getByRole('region', { name: 'Tenant capacity' })
   await expect(cards.locator('[data-slot="stat-card"] > p:nth-child(2)')).toHaveText([
+    'SharePoint storage used',
+    'Over entitlement',
+    'Cost of doing nothing, next 3 years',
     'Inactive sites to archive',
-    'Potential saving per year',
-    'Cost of doing nothing, next 12 months',
+    'Deleted but still billing',
   ])
+  await expect(cards.locator('[data-slot="stat-card"]', { hasText: 'Inactive sites to archive' })).toContainText(
+    'archiving saves',
+  )
   await expect(page.getByText(/over the entitlement$/)).toBeVisible()
 })
 
