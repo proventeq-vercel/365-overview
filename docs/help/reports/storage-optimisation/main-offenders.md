@@ -1,6 +1,6 @@
 ---
 title: Main offenders
-description: The sites and OneDrives growing fastest and holding the most, storage that is deleted but still billing, and a searchable table of everything.
+description: The sites and OneDrives growing fastest and holding the most, and storage that is deleted but still billing.
 section: storage-optimisation
 feature: optimization.storage.report.overview
 order: 40
@@ -81,6 +81,7 @@ A deleted OneDrive is not part of the SharePoint entitlement, but Microsoft keep
 storage, until its own retention ends. The panel
 only appears when there are some. It shows their total size and how many there are.
 
+::: feature optimization.storage.report.allsites
 ## All sites and OneDrives
 
 Every site and drive in the usage reports, in one table.
@@ -107,3 +108,4 @@ Hover over or focus a column header to see its explanation in the table itself.
 
 The table is built for tenants with millions of rows, so names are looked up only for the rows
 on screen. A row shows a short placeholder while its name loads.
+:::

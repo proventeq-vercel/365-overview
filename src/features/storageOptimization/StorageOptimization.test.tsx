@@ -9,10 +9,26 @@ import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource, type DataSource, type MockScenario } from '@/data/fixtures'
 import { ApiError } from '@/clients/apiError'
 import App from '@/App'
+const allSitesTable = vi.hoisted(() => ({ on: true }))
+vi.mock('@/config/env', async (importOriginal) => {
+  const { env } = await importOriginal<typeof import('@/config/env')>()
+  const { FeatureFlags } = await import('@/config/featureFlags')
+  return {
+    env: {
+      ...env,
+      get features() {
+        const features = new Set(env.features)
+        if (allSitesTable.on) features.add(FeatureFlags.OptimizationStorageReportAllSitesTable)
+        return features
+      },
+    },
+  }
+})
 
 afterEach(() => {
   cleanup()
   localStorage.clear()
+  allSitesTable.on = true
 })
 
 function renderApp(scenario: MockScenario = 'healthy', overrides: Partial<DataSource> = {}, hideNames = false) {
@@ -69,6 +85,15 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('heading', { name: 'Top OneDrives by storage' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Sites and drives' })).toBeInTheDocument()
     expect(screen.getByText('Live sites').nextElementSibling).toHaveTextContent(/^2,499$/)
+  })
+
+  it('leaves the all sites and OneDrives table out unless its feature is turned on', async () => {
+    allSitesTable.on = false
+    renderApp()
+    await reportLoaded()
+    expect(screen.getByRole('heading', { name: 'Top SharePoint sites by storage' })).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Sites and drives' })).not.toBeInTheDocument()
+    expect(screen.queryByText('All sites and OneDrives')).not.toBeInTheDocument()
   })
 
   it('staggers each section in by its slot in the report', async () => {
