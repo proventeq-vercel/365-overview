@@ -230,7 +230,9 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `App.tsx` mounts one route per *enabled* entry plus a `*` fallback to the first
   enabled one (`NoReports` if none); `AppShell` shows the hamburger + menu only
   when `App.tsx` passes `menuEnabled` — the `app.menu` flag, which is **not** in
-  `DEFAULT_FEATURES` — *and* more than one report is enabled. Adding a report = a
+  `DEFAULT_FEATURES` — *and* more than one report is enabled. The
+  `optimization.storage.report.allsites` flag (also off by default) shows the
+  *All sites and OneDrives* table at the end of Main offenders. Adding a report = a
   flag in `FeatureFlags`, one entry here and one folder under `src/features/`.
 - `src/features/oneDriveUsage/` — the proof-of-concept second report (KPI cards
   incl. *Over licensed storage*, top drives, `OverLicenceSection` with the

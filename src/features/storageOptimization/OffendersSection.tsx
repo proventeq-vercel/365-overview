@@ -1,6 +1,8 @@
 import { HelpButton } from '@/app/help/HelpButton'
 import { NameCaveats } from '@/components/NameCaveats'
 import { SiteTable } from '@/components/SiteTable'
+import { env } from '@/config/env'
+import { FeatureFlags } from '@/config/featureFlags'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
 import type { StorageGrowth, StorageOverview } from '@/types/storage'
@@ -117,19 +119,21 @@ export function OffendersSection({ overview, growth, delay }: Props) {
         </Panel>
       )}
 
-      <Panel>
-        <PanelLabel>{copy.all}</PanelLabel>
-        <PanelDescription>{copy.allSubtitle}</PanelDescription>
-        <SiteTable
-          rows={rows}
-          poolUsedBytes={poolUsedBytes}
-          columns={listed === 'drives' ? DRIVE_COLUMNS : [...OFFENDER_COLUMNS]}
-          label={copy.tableLabel}
-          nameMask={overview.caveats.nameMask}
-          nameHeader={listed === 'drives' ? t('oneDrive.table.driveHeader') : undefined}
-          nameHelp={listed === 'drives' ? t('table.column.help.drive') : undefined}
-        />
-      </Panel>
+      {env.features.has(FeatureFlags.OptimizationStorageReportAllSitesTable) && (
+        <Panel>
+          <PanelLabel>{copy.all}</PanelLabel>
+          <PanelDescription>{copy.allSubtitle}</PanelDescription>
+          <SiteTable
+            rows={rows}
+            poolUsedBytes={poolUsedBytes}
+            columns={listed === 'drives' ? DRIVE_COLUMNS : [...OFFENDER_COLUMNS]}
+            label={copy.tableLabel}
+            nameMask={overview.caveats.nameMask}
+            nameHeader={listed === 'drives' ? t('oneDrive.table.driveHeader') : undefined}
+            nameHelp={listed === 'drives' ? t('table.column.help.drive') : undefined}
+          />
+        </Panel>
+      )}
     </Section>
   )
 }
