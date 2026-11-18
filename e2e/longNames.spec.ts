@@ -23,7 +23,7 @@ for (const width of [1280, 390]) {
     test.use({ viewport: { width, height: 900 } })
 
     test('the longest site, owner and OneDrive names stay inside their card and row', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('/?features=optimization.storage.report.overview,optimization.storage.report.allsites')
       const offenders = page.locator('section', { hasText: 'Main offenders' })
       await expect(offenders.getByRole('table')).toBeVisible({ timeout: 30_000 })
 
@@ -42,7 +42,7 @@ for (const width of [1280, 390]) {
     })
 
     test('a name cut short shows in full on hover and on keyboard focus', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('/?features=optimization.storage.report.overview,optimization.storage.report.allsites')
       const topSites = page.getByRole('heading', { name: 'Top SharePoint sites by storage' }).locator('xpath=ancestor::*[.//ul][1]')
       const name = topSites.locator('li').getByText(LONGEST_SITE, { exact: true })
       await expect(name).toBeVisible({ timeout: 30_000 })
@@ -59,7 +59,7 @@ for (const width of [1280, 390]) {
     })
 
     test('the full name of an unbreakable OneDrive wraps inside its popover', async ({ page }) => {
-      await page.goto('/')
+      await page.goto('/?features=optimization.storage.report.overview,optimization.storage.report.allsites')
       const offenders = page.locator('section', { hasText: 'Main offenders' })
       const name = offenders.getByRole('cell').getByText(LONGEST_DRIVE, { exact: true })
       await expect(name).toBeVisible({ timeout: 30_000 })
