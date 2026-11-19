@@ -13,7 +13,7 @@ import {
   type WorkloadSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
-import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
+import { archivableSites, archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
 import {
   annualGrowthGb,
   billableGrowthGb,
@@ -279,7 +279,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       : monthsToExhaustion(sharePointUsed, entitledBytes, rate)
 
   const archiveCutoff = inactiveSince(reportRefreshDate, inactiveYears, now)
-  const archivable = liveSites.filter((site) => isInactiveSince(site, archiveCutoff))
+  const archivable = archivableSites(sites, archiveCutoff)
   const archivableBytes = sumBytes(archivable)
   const liveSiteBytes = sumBytes(liveSites)
   const archivableShare = liveSiteBytes > 0 ? archivableBytes / liveSiteBytes : 0
@@ -294,7 +294,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const deletedSites = retainedTotal(sites)
   const deletedDrives = retainedTotal(drives)
 
-  const removableBytes = archivableBytes + deletedSites.bytes
+  const removableBytes = deletedSites.bytes
   const points = buildGrowthPoints(
     buckets,
     rate,
@@ -399,7 +399,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       forecastEndBytes: points.at(-1)?.projectedUsedBytes ?? sharePointUsed,
       afterCleanUp: {
         applies: siteReportRead,
-        inactiveBytes: archivableBytes,
         deletedBytes: deletedSites.bytes,
         removableBytes,
         endBytes: forecastsCleanUp ? (points.at(-1)?.afterCleanUpBytes ?? null) : null,

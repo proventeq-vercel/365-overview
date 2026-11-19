@@ -161,9 +161,8 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.growth.avgMonthlyGrowthBytes).toBeGreaterThan(0)
   })
 
-  it('healthy: inactive and deleted sites to clean up, so an after-clean-up forecast', async () => {
+  it('healthy: deleted sites to clean up, so an after-clean-up forecast', async () => {
     const { afterCleanUp } = (await overviewFor('healthy')).growth
-    expect(afterCleanUp.inactiveBytes).toBeGreaterThan(0)
     expect(afterCleanUp.deletedBytes).toBeGreaterThan(0)
     expect(afterCleanUp.endBytes).toBeLessThan((await overviewFor('healthy')).growth.forecastEndBytes)
   })

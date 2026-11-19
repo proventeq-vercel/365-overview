@@ -49,16 +49,16 @@ describe('GrowthSection trend chart', () => {
     ])
   })
 
-  it('still draws the after-clean-up line when nothing is removable, on the forecast itself', () => {
+  it('draws no after-clean-up line when nothing is removable, as it would be the forecast itself', () => {
     const nothing = {
       ...base,
       growth: {
         ...base.growth,
-        afterCleanUp: { ...base.growth.afterCleanUp, inactiveBytes: 0, removableBytes: 0, endBytes: 560 * 1_073_741_824 },
+        afterCleanUp: { ...base.growth.afterCleanUp, deletedBytes: 0, removableBytes: 0, endBytes: 560 * 1_073_741_824 },
       },
     }
     render(<GrowthSection overview={nothing} />)
-    expect(screen.getAllByRole('listitem')).toHaveLength(3)
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
   })
 
   it('draws no after-clean-up line when the site usage report did not come back', () => {
