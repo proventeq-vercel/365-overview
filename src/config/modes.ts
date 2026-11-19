@@ -50,6 +50,10 @@ function persist(storage: OverrideStore | null, overrides: ModeOverrides) {
   }
 }
 
+export function writeModeOverrides(storage: OverrideStore | null, changes: ModeOverrides) {
+  persist(storage, { ...stored(storage), ...changes })
+}
+
 export function isModesLocked(source: Record<string, string | undefined>): boolean {
   return source.VITE_MODES_LOCKED === 'true'
 }

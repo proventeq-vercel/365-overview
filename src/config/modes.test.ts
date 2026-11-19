@@ -1,9 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides, tabStorage } from './modes'
+import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides, tabStorage, writeModeOverrides } from './modes'
 
 const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
 
 beforeEach(() => sessionStorage.clear())
+
+describe('writeModeOverrides', () => {
+  it('changes the given overrides and keeps the other remembered ones', () => {
+    readModeOverrides(`?features=${BOTH}&mock=true&scenario=concealed`, sessionStorage)
+    writeModeOverrides(sessionStorage, { mockScenario: 'no-trends' })
+    expect(JSON.parse(sessionStorage.getItem(MODES_STORAGE_KEY)!)).toEqual({
+      features: BOTH,
+      useMock: 'true',
+      mockScenario: 'no-trends',
+    })
+  })
+
+  it('writes nothing without a tab store', () => {
+    expect(() => writeModeOverrides(null, { mockScenario: 'no-trends' })).not.toThrow()
+    expect(sessionStorage.getItem(MODES_STORAGE_KEY)).toBeNull()
+  })
+})
 
 describe('readModeOverrides', () => {
   it('returns nothing when the URL carries no mode params and nothing is stored', () => {

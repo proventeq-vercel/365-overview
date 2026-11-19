@@ -71,6 +71,17 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByText('Live sites').nextElementSibling).toHaveTextContent(/^2,499$/)
   })
 
+  it('staggers each section in by its slot in the report', async () => {
+    renderApp()
+    await reportLoaded()
+    const sectionOf = (heading: string) =>
+      (screen.getByRole('heading', { name: heading, level: 2 }).closest('section') as HTMLElement).style.animationDelay
+    expect(screen.getByRole('region', { name: 'Tenant capacity' }).style.animationDelay).toBe('40ms')
+    expect(sectionOf('Current storage distribution')).toBe('80ms')
+    expect(sectionOf('Future state & growth impact')).toBe('120ms')
+    expect(sectionOf('Main offenders')).toBe('280ms')
+  })
+
   it('has no breadcrumb, no menu button and no footer when the menu flag is off', async () => {
     renderApp()
     await reportLoaded()

@@ -31,7 +31,7 @@ export function Section({
 }: {
   title: string
   subtitle: string
-  help: ReactNode
+  help?: ReactNode
   delay?: number
   children: ReactNode
 }) {
