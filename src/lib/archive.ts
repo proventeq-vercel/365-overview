@@ -26,8 +26,21 @@ export function isInactiveSince(row: StorageRow, cutoff: string): boolean {
   return row.lastActivityDate !== null && row.lastActivityDate < cutoff
 }
 
+export function archivableSites(sites: StorageRow[], cutoff: string): StorageRow[] {
+  return sites
+    .filter((site) => !site.isDeleted && isInactiveSince(site, cutoff))
+    .sort((a, b) => b.storageUsedBytes - a.storageUsedBytes)
+}
+
 export function archiveStatus(share: number): HealthStatus {
   if (share > ARCHIVE_ATTENTION_SHARE) return 'attention'
   if (share > ARCHIVE_WATCH_SHARE) return 'watch'
   return 'healthy'
+}
+
+export function toggleId(ids: ReadonlySet<string>, id: string): Set<string> {
+  const next = new Set(ids)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  return next
 }

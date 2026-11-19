@@ -1099,11 +1099,10 @@ describe('buildStorageOverview forecast after clean-up', () => {
       ...over,
     })
 
-  it('counts inactive and deleted sites as removable, never the deleted OneDrives', () => {
+  it('counts deleted sites as removable, never inactive sites or deleted OneDrives', () => {
     const { afterCleanUp } = buildStorageOverview(tenant()).growth
-    expect(afterCleanUp.inactiveBytes).toBe(50 * GB)
     expect(afterCleanUp.deletedBytes).toBe(30 * GB)
-    expect(afterCleanUp.removableBytes).toBe(80 * GB)
+    expect(afterCleanUp.removableBytes).toBe(30 * GB)
   })
 
   it('starts at used less removable today and grows at the forecast rate', () => {
@@ -1114,20 +1113,19 @@ describe('buildStorageOverview forecast after clean-up', () => {
       null,
       null,
       null,
-      720 * GB,
-      730 * GB,
-      740 * GB,
-      750 * GB,
-      760 * GB,
       770 * GB,
       780 * GB,
+      790 * GB,
+      800 * GB,
+      810 * GB,
+      820 * GB,
+      830 * GB,
     ])
-    expect(afterCleanUp.endBytes).toBe(780 * GB)
+    expect(afterCleanUp.endBytes).toBe(830 * GB)
   })
 
-  it('follows the inactivity window from the settings', () => {
-    const { afterCleanUp } = buildStorageOverview(tenant({ inactiveYears: 6 })).growth
-    expect(afterCleanUp.inactiveBytes).toBe(0)
+  it('leaves archiving to the sites the user picks, whatever the inactivity window', () => {
+    const { afterCleanUp } = buildStorageOverview(tenant({ inactiveYears: 1 })).growth
     expect(afterCleanUp.removableBytes).toBe(30 * GB)
     expect(afterCleanUp.endBytes).toBe(830 * GB)
   })
@@ -1146,7 +1144,7 @@ describe('buildStorageOverview forecast after clean-up', () => {
       tenant({ skus: [], forceUnknownEntitlement: true, entitlementOverrideBytes: null }),
     )
     expect(overview.growth.afterCleanUp.staysUnderEntitlement).toBeNull()
-    expect(overview.growth.afterCleanUp.endBytes).toBe(780 * GB)
+    expect(overview.growth.afterCleanUp.endBytes).toBe(830 * GB)
   })
 
   it('draws the line on the forecast itself when nothing is removable', () => {
@@ -1174,16 +1172,16 @@ describe('buildStorageOverview forecast after clean-up', () => {
       }),
     )
     const { afterCleanUp, points } = overview.growth
-    expect(afterCleanUp.removableBytes).toBe(80 * GB)
-    expect(points.find((point) => point.month === '2026-08')?.afterCleanUpBytes).toBe(720 * GB)
-    expect(afterCleanUp.endBytes).toBeCloseTo((720 + 6 * (10 * 30.4375) / 30) * GB, 0)
+    expect(afterCleanUp.removableBytes).toBe(30 * GB)
+    expect(points.find((point) => point.month === '2026-08')?.afterCleanUpBytes).toBe(770 * GB)
+    expect(afterCleanUp.endBytes).toBeCloseTo((770 + 6 * (10 * 30.4375) / 30) * GB, 0)
     expect(afterCleanUp.staysUnderEntitlement).toBe(true)
   })
 
   it('has no cleaned-up forecast from a single day, only what is removable today', () => {
     const overview = buildStorageOverview(tenant({ sharePointTrend: [{ date: '2026-08-30', value: 800 * GB }] }))
     const { afterCleanUp } = overview.growth
-    expect(afterCleanUp.removableBytes).toBe(80 * GB)
+    expect(afterCleanUp.removableBytes).toBe(30 * GB)
     expect(afterCleanUp.endBytes).toBeNull()
     expect(afterCleanUp.staysUnderEntitlement).toBeNull()
   })

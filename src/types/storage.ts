@@ -49,7 +49,6 @@ export type GrowthRateSource = 'monthly' | 'daily' | 'none'
 
 export interface CleanUpForecast {
   applies: boolean
-  inactiveBytes: number
   deletedBytes: number
   removableBytes: number
   endBytes: number | null
