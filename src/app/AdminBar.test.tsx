@@ -58,6 +58,7 @@ describe('AdminBar', () => {
     expect(screen.getByRole('button', { name: 'Storage Optimisation' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'OneDrive Usage' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Report menu' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'All sites table' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Hide names' })).toHaveAttribute('aria-pressed', 'false')
   })
 
