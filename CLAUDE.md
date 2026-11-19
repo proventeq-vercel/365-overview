@@ -458,8 +458,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   screen is the whole-app failure. A chart or card whose primary data is
   missing shows the best other real Graph figure for the same question, in the
   same place, and its copy names that source and window. With no entitlement
-  the forecast card becomes *SharePoint growth per month*, the callout projects
-  used storage (pill *Projection*), and figures measured against the
+  the *SharePoint storage used* card says none is entered and links to Report
+  settings, the forecast card is left out, the callout projects used storage (pill *Projection*), and figures measured against the
   entitlement (Free, Over entitlement today, Stays under the entitlement) are
   left out, never shown as Unknown. This copy is the app's own: P365 still has
   its unavailable strings. The full list is
@@ -501,15 +501,16 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. There is no
   notional/billable split — one figure per card. P365 prices the whole growth
   ungated, so the two products differ here on purpose.
-- **The cards show only what applies, decided in the model.** `sharePoint.exhausted`
-  (used ≥ entitled) leaves *Forecast exhaustion* out — there is no date left
-  to forecast. `archive.savingApplies` (`entitledBytes === null || exhausted`)
-  shows *Potential saving per year* only when archiving can save money: by the
-  rule above, storage inside the entitlement is free, so the saving prices
-  `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
-  them while the entitlement is unknown). `cost.applies` (a growth rate
-  exists, `rateSource !== 'none'`) shows *Cost of doing nothing* and the
-  projected-cost block. *Inactive sites to archive* shows whenever the site usage report came back. The grid's
+- **The cards show only what the user can act on.** The rules are pure
+  functions in `features/storageOptimization/actionableCards.ts` over the
+  model: *SharePoint storage used* always, then, in this order and only when
+  they apply, *Over entitlement* (`overageBytes > 0`), *Forecast exhaustion*
+  (within `FORECAST_WINDOW_MONTHS` = 24 and not exceeded), *Cost of doing
+  nothing, next 3 years* (`cost.applies` and `cumulativeYear3 > 0`),
+  *Inactive sites to archive* (a site qualifies; the saving joins its
+  description when `archive.savingApplies`) and the deleted storage card
+  (`deletedStorageCard`, billed only for the site part above the entitlement).
+  A card whose value would be zero or "no exhaustion" is left out. The grid's
   `xl` column count follows the number of cards.
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
