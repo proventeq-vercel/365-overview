@@ -1,9 +1,25 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { screen, cleanup, within } from '@testing-library/react'
 import { renderWithData } from '@/test/render'
 import type { StorageGrowth, StorageOverview, StorageRow } from '@/types/storage'
 import { OffendersSection } from './OffendersSection'
 import { base } from './testFixtures'
+
+const allSitesTable = vi.hoisted(() => ({ on: true }))
+vi.mock('@/config/env', async (importOriginal) => {
+  const { env } = await importOriginal<typeof import('@/config/env')>()
+  const { FeatureFlags } = await import('@/config/featureFlags')
+  return {
+    env: {
+      ...env,
+      get features() {
+        const features = new Set(env.features)
+        if (allSitesTable.on) features.add(FeatureFlags.OptimizationStorageReportAllSitesTable)
+        return features
+      },
+    },
+  }
+})
 
 const grown: StorageGrowth = {
   ranking: 'growth',
@@ -44,7 +60,10 @@ function renderOffenders(overview: StorageOverview, growth: StorageGrowth | unde
   return renderWithData(<OffendersSection overview={overview} growth={growth} />)
 }
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  allSitesTable.on = true
+})
 
 const site = (id: string, bytes: number, over: Partial<StorageRow> = {}): StorageRow => ({
   pool: 'SharePoint',
@@ -264,6 +283,13 @@ describe('OffendersSection', () => {
     renderOffenders(both)
     expect(screen.getByText(/3 sites and drives/i)).toBeInTheDocument()
     expect(screen.getByText('50 B')).toBeInTheDocument()
+  })
+
+  it('leaves the detail table out while its feature is off', () => {
+    allSitesTable.on = false
+    renderOffenders(withSites)
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByText('All sites and OneDrives')).not.toBeInTheDocument()
   })
 
   it('renders the detail table with a last-activity column', () => {
