@@ -23,7 +23,7 @@ default as Proventeq 365.
 It prices:
 
 - the [potential saving per year](../reports/storage-optimisation/tenant-capacity.md#potential-saving-per-year),
-- the [cost of doing nothing](../reports/storage-optimisation/tenant-capacity.md#cost-of-doing-nothing-next-12-months),
+- the [cost of doing nothing](../reports/storage-optimisation/tenant-capacity.md#cost-of-doing-nothing-next-3-years),
 - the [projected cost](../reports/storage-optimisation/growth-forecast.md#projected-cost-if-nothing-changes).
 :::
 
@@ -39,7 +39,8 @@ admin centre**. Clear the field to go back to the estimate.
 
 With no estimate and no figure entered, nothing is measured against a guessed entitlement: the
 storage usage line has no free part, the forecast projects used storage with no exhaustion date,
-and the *Forecast exhaustion* card becomes *SharePoint growth per month*.
+the *Forecast exhaustion* card is left out, and the *SharePoint storage used* card reads *No
+entitlement entered · Enter it in Report settings*.
 
 ## OneDrive storage per user
 
