@@ -108,9 +108,8 @@ describe('GrowthSection', () => {
 
   it('prices growth identically whether or not the entitlement is known', () => {
     const { unmount } = render(<GrowthSection overview={withGrowth} />)
-    expect(
-      screen.getByRole('heading', { name: /projected cost if nothing changes/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /projected value of growth/i })).toBeInTheDocument()
+    expect(screen.getByText(/stays inside your entitlement, so growth adds no spend yet/)).toBeInTheDocument()
     expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
     expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent(
       '£1,296.00',
@@ -150,12 +149,11 @@ describe('GrowthSection', () => {
 
     it('shows what clean-up removes, where the forecast ends and that it stays under the entitlement', () => {
       render(<GrowthSection overview={withGrowth} />)
-      expect(row('Removable today')).toHaveTextContent(/^120 GB$/)
+      expect(row('Deleted sites still billing')).toHaveTextContent(/^120 GB$/)
+      expect(row('Total')).toHaveTextContent(/^120 GB$/)
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
       expect(row('Stays under the entitlement')).toHaveTextContent(/^Yes$/)
-      expect(screen.getByText(/in live sites with no activity for 3 years/)).toHaveTextContent(
-        /in deleted sites still billing\.$/,
-      )
+      expect(screen.getByText('SharePoint storage only. Archiving counts only the sites you pick.')).toBeInTheDocument()
     })
 
     it('says when the cleaned-up forecast still passes the entitlement', () => {
@@ -169,15 +167,15 @@ describe('GrowthSection', () => {
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
     })
 
-    it('says there is nothing to clean up and draws the forecast itself as the line after clean-up', () => {
+    it('says no deleted site is billing and points to the archive pick when nothing is removable', () => {
       render(
         <GrowthSection
-          overview={withCleanUp({ inactiveBytes: 0, removableBytes: 0, endBytes: 560 * GB, staysUnderEntitlement: true })}
+          overview={withCleanUp({ deletedBytes: 0, removableBytes: 0, endBytes: 560 * GB, staysUnderEntitlement: true })}
         />,
       )
-      expect(row('Removable today')).toHaveTextContent(/^0 B$/)
+      expect(row('Total')).toHaveTextContent(/^0 B$/)
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^560 GB$/)
-      expect(screen.getByText(/^Nothing to clean up: .* so the line after clean-up is the forecast itself\./)).toBeInTheDocument()
+      expect(screen.getByText(/^No deleted site is still billing\./)).toBeInTheDocument()
     })
   })
 

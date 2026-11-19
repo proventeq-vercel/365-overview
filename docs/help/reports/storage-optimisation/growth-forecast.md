@@ -16,9 +16,11 @@ A line chart of SharePoint storage, one point per month:
   rate. With under six months of history, the rate comes from the daily storage Microsoft has
   reported so far ([how](../../reference/calculations.md#growth-rate)), and the callout names the
   days it was measured over.
-- **Forecast after clean-up** (dotted) is the same forecast if the storage the report already
-  calls removable were cleaned up today: it starts at today's storage minus that storage and
-  grows at the same rate ([what is counted](#if-inactive-and-deleted-sites-are-cleaned-up)).
+- **Forecast after clean-up** (dotted) is the same forecast if the deleted sites still billing were
+  purged today: it starts at today's storage minus that storage and grows at the same rate
+  ([what is counted](#removable-today)). It is left out when nothing is removable.
+- **After clean-up and archiving** (dash-dot) appears once you choose sites to archive: the line
+  after clean-up minus the storage of the sites you picked.
 - **Entitlement** is a horizontal line at the SharePoint entitlement, when it is known.
 
 Under the chart:
@@ -68,19 +70,18 @@ The callout under the badge explains the headline. There are four special cases:
 forecast ends, and how far past the entitlement the tenant already is. **Over entitlement today**
 is shown only when the entitlement is known.
 
-### If inactive and deleted sites are cleaned up
+### Removable today
 
 | Figure | Meaning |
 | --- | --- |
-| Removable today | Storage in live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for) (the *Inactive sites to archive* card), plus storage in deleted sites still billing (the *Deleted but still counting* or *Deleted but still billing* card). |
-| Forecast after clean-up (6 mo) | Where the dotted line ends. |
-| Stays under the entitlement | **Yes** when the dotted line stays below the entitlement for the whole forecast, **No** when it reaches it. Shown only when the entitlement is known. |
+| Deleted sites still billing | Storage in deleted sites that still count against the entitlement (the *Deleted but still counting* or *Deleted but still billing* card). |
+| Archive inactive sites | The storage of the sites you chose to archive. **Choose sites** lists the live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for), largest first; tick the ones to archive and select **Show the impact**. Nothing is archived: the pick only changes the figures and lines here. |
+| Total | The two together. |
+| Forecast after clean-up (6 mo) | Where the forecast ends with both removed. |
+| Stays under the entitlement | **Yes** when that line stays below the entitlement for the whole forecast, **No** when it reaches it. Shown only when the entitlement is known. |
 
 Only SharePoint storage is counted. Deleted OneDrives are in the OneDrive pool, so they do not
-lower the SharePoint forecast.
-
-When nothing is removable, the dotted line is the forecast itself and lies on the dashed one,
-and the note under the figures says there is nothing to clean up.
+lower the SharePoint forecast. A refresh of the report clears the pick.
 
 From a single reported day the chart shows that day's storage as one point, with no dashed or
 dotted line. *Avg growth / mo*, *Added last …*, *Forecast (6 mo)*, the forecast after clean-up and
@@ -93,7 +94,13 @@ indicative.
 
 ## Projected cost if nothing changes
 
-The extra spend once storage grows past the entitlement, at the configured rate.
+A chart of the monthly cost over the forecast months, then two totals.
+
+- When the forecast passes the entitlement, the chart is the extra spend each month above it,
+  with the same lines after clean-up and after archiving.
+- When the forecast stays inside the entitlement, growth adds no spend yet, so the panel reads
+  **Projected value of growth** and the chart is the list-price value of the storage added.
+  The same holds when the entitlement is unknown.
 
 - **Next 12 months** is the growth over the coming year above the entitlement, at the rate.
   Growth inside the entitlement costs nothing.

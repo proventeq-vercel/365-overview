@@ -90,8 +90,7 @@ export const base: StorageOverview = {
     forecastEndBytes: 560 * GB,
     afterCleanUp: {
       applies: true,
-      inactiveBytes: 120 * GB,
-      deletedBytes: 0,
+      deletedBytes: 120 * GB,
       removableBytes: 120 * GB,
       endBytes: 440 * GB,
       staysUnderEntitlement: true,
