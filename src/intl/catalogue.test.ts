@@ -13,8 +13,8 @@ const DYNAMIC_PREFIX_SIZES: Record<string, number> = {
   'table.pool.': 2,
   'loading.': 18,
   'help.audience.': 2,
-  'storageOptimisation.usage.segment.': 5,
-  'storageOptimisation.usage.describe.': 6,
+  'storageOptimisation.usage.segment.': 3,
+  'storageOptimisation.usage.describe.': 3,
   'app.unreadReports.name.': 4,
   'storageOptimisation.offenders.explain.': 7,
 }
