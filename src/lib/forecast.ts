@@ -155,3 +155,37 @@ export function staysUnder(values: (number | null)[], limitBytes: number | null)
   if (limitBytes === null) return null
   return values.every((value) => value === null || value < limitBytes)
 }
+
+export function afterArchiveBytes(point: GrowthPoint, archivedBytes: number): number | null {
+  const base = point.afterCleanUpBytes ?? point.projectedUsedBytes
+  return base === null ? null : Math.max(0, base - archivedBytes)
+}
+
+export function growthRows(points: GrowthPoint[], archivedBytes: number): Record<string, unknown>[] {
+  return points.map((point) =>
+    archivedBytes > 0
+      ? { ...point, afterArchiveBytes: afterArchiveBytes(point, archivedBytes) }
+      : { ...point },
+  )
+}
+
+export interface CleanUpOutlook {
+  endBytes: number | null
+  staysUnderEntitlement: boolean | null
+}
+
+export function cleanUpOutlook(
+  points: GrowthPoint[],
+  archivedBytes: number,
+  entitledBytes: number | null,
+): CleanUpOutlook {
+  const forecast = points.filter((point) => point.actualUsedBytes === null)
+  const values = forecast.map((point) =>
+    archivedBytes > 0 ? afterArchiveBytes(point, archivedBytes) : point.afterCleanUpBytes,
+  )
+  if (values.every((value) => value === null)) return { endBytes: null, staysUnderEntitlement: null }
+  return {
+    endBytes: values.at(-1) ?? null,
+    staysUnderEntitlement: staysUnder(values, entitledBytes),
+  }
+}

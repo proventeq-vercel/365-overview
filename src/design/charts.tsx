@@ -16,6 +16,7 @@ import {
 import { CHART_GRID, CHART_TICK, P365, facetFill } from '@/design/theme'
 import { EmptyBlock } from '@/design/primitives'
 import { HiddenName } from '@/design/HiddenName'
+import { cn } from '@/lib/utils'
 import { TruncatedText } from '@/design/TruncatedText'
 import type { NameMask } from '@/types/storage'
 
@@ -81,9 +82,10 @@ export interface LineSeries {
   name: string
   dashed?: boolean
   dotted?: boolean
+  dashDot?: boolean
 }
 
-const LINE_DASH = { dashed: '8 4', dotted: '1 4' } as const
+const LINE_DASH = { dashed: '8 4', dotted: '1 4', dashDot: '10 4 1 4' } as const
 
 const SINGLE_POINT_DOT = { r: 3, strokeWidth: 0, fill: P365.blue }
 
@@ -100,6 +102,7 @@ export function MonoLineChart({
   formatX,
   referenceLine,
   height = 256,
+  fill = false,
   ariaLabel,
 }: {
   data: Record<string, unknown>[]
@@ -109,72 +112,82 @@ export function MonoLineChart({
   formatX: (label: string) => string
   referenceLine?: { value: number; label: string }
   height?: number
+  fill?: boolean
   ariaLabel: string
 }) {
   return (
-    <div role="img" aria-label={ariaLabel} className="w-full">
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke={CHART_GRID} />
-          <XAxis
-            dataKey={xKey}
-            tick={CHART_TICK}
-            stroke={P365.grey100}
-            tickLine={false}
-            tickFormatter={formatX}
-            angle={-30}
-            textAnchor="end"
-            height={44}
-            interval={0}
-          />
-          <YAxis
-            tick={CHART_TICK}
-            stroke={P365.grey100}
-            tickLine={false}
-            axisLine={false}
-            width={68}
-            tickFormatter={formatValue}
-          />
-          <Tooltip
-            contentStyle={TOOLTIP_STYLE}
-            formatter={(v) => formatValue(Number(v))}
-            labelFormatter={(label) => formatX(String(label))}
-          />
-          <Legend
-            iconType="plainline"
-            wrapperStyle={{ fontSize: 11, color: P365.grey700, paddingTop: 8 }}
-          />
-          {referenceLine && (
-            <ReferenceLine
-              y={referenceLine.value}
-              stroke={P365.grey400}
-              strokeDasharray="3 4"
-              ifOverflow="extendDomain"
-              label={{
-                value: referenceLine.label,
-                position: 'insideTopRight',
-                fill: P365.grey500,
-                fontSize: 11,
-              }}
+    <div
+      role="img"
+      aria-label={ariaLabel}
+      className={cn('w-full', fill && 'relative flex-1')}
+      style={fill ? { minHeight: height } : undefined}
+    >
+      <div className={fill ? 'absolute inset-0' : undefined}>
+        <ResponsiveContainer width="100%" height={fill ? '100%' : height}>
+          <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke={CHART_GRID} />
+            <XAxis
+              dataKey={xKey}
+              tick={CHART_TICK}
+              stroke={P365.grey100}
+              tickLine={false}
+              tickFormatter={formatX}
+              angle={-30}
+              textAnchor="end"
+              height={44}
+              interval={0}
             />
-          )}
-          {series.map((s) => (
-            <Line
-              key={s.key}
-              type="monotone"
-              dataKey={s.key}
-              name={s.name}
-              stroke={P365.blue}
-              strokeWidth={2}
-              strokeDasharray={s.dashed ? LINE_DASH.dashed : s.dotted ? LINE_DASH.dotted : undefined}
-              strokeLinecap={s.dotted ? 'round' : undefined}
-              dot={lineDot(data, s.key)}
-              connectNulls={false}
-              isAnimationActive={false}
+            <YAxis
+              tick={CHART_TICK}
+              stroke={P365.grey100}
+              tickLine={false}
+              axisLine={false}
+              width={68}
+              tickFormatter={formatValue}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            <Tooltip
+              contentStyle={TOOLTIP_STYLE}
+              formatter={(v) => formatValue(Number(v))}
+              labelFormatter={(label) => formatX(String(label))}
+            />
+            <Legend
+              iconType="plainline"
+              wrapperStyle={{ fontSize: 11, color: P365.grey700, paddingTop: 8 }}
+            />
+            {referenceLine && (
+              <ReferenceLine
+                y={referenceLine.value}
+                stroke={P365.grey400}
+                strokeDasharray="3 4"
+                ifOverflow="extendDomain"
+                label={{
+                  value: referenceLine.label,
+                  position: 'insideTopRight',
+                  fill: P365.grey500,
+                  fontSize: 11,
+                }}
+              />
+            )}
+            {series.map((s) => (
+              <Line
+                key={s.key}
+                type="monotone"
+                dataKey={s.key}
+                name={s.name}
+                stroke={P365.blue}
+                strokeWidth={2}
+                strokeDasharray={
+                  s.dashed ? LINE_DASH.dashed : s.dotted ? LINE_DASH.dotted : s.dashDot ? LINE_DASH.dashDot : undefined
+                }
+                strokeLinecap={s.dotted || s.dashDot ? 'round' : undefined}
+                dot={lineDot(data, s.key)}
+                connectNulls={false}
+                isAnimationActive={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
