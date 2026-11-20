@@ -38,7 +38,7 @@ async function chooseOption(user: ReturnType<typeof userEvent.setup>, name: RegE
 }
 const statCard = (label: string) =>
   screen.getByText(label).closest('[data-slot="stat-card"]') as HTMLElement
-const costCard = () => statCard('Cost of doing nothing, next 12 months')
+const costCard = () => statCard('Cost of doing nothing, next 3 years')
 const archiveCard = () => statCard('Inactive sites to archive')
 
 const SETTINGS_ROUND_TRIP = { timeout: 15_000 }
@@ -51,9 +51,11 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeInTheDocument()
     const cards = screen.getAllByText(/./, { selector: '[data-slot="stat-card"] > p:nth-child(2)' })
     expect(cards.map((card) => card.textContent)).toEqual([
-      'Inactive sites to archive',
-      'Cost of doing nothing, next 12 months',
+      'SharePoint storage used',
       'Forecast exhaustion',
+      'Cost of doing nothing, next 3 years',
+      'Inactive sites to archive',
+      'Deleted but still counting',
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
       'Current storage distribution',
@@ -253,7 +255,7 @@ describe('Storage Optimisation app', () => {
     await user.click(screen.getByRole('combobox', { name: 'Archive sites inactive for' }))
     await user.click(await screen.findByRole('option', { name: '5 years' }))
 
-    expect(archiveCard()).toHaveTextContent('No live site with recorded activity has been inactive for 5 years')
+    expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(ds.getSites).toHaveBeenCalledTimes(1)
     expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
       inactiveYears: 5,

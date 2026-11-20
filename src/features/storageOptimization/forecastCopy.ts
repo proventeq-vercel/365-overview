@@ -61,56 +61,24 @@ export function costHint(overview: StorageOverview, rate: string, t: TranslateFn
 }
 
 export interface ForecastCard {
-  label: string
   value: string
-  status: ForecastStatus | null
+  status: ForecastStatus
   hint: string
 }
 
 export function forecastCard(overview: StorageOverview, t: TranslateFn): ForecastCard {
-  const { sharePoint, growth } = overview
-  const used = formatBytes(sharePoint.usedBytes)
-
-  if (growth.rateSource === 'none') {
-    return {
-      label: t('storageOptimisation.kpi.usedToday'),
-      value: used,
-      status: null,
-      hint: firstDayNote(overview, t),
-    }
-  }
-
-  if (sharePoint.entitledBytes === null || sharePoint.remainingBytes === null) {
-    return {
-      label: t('storageOptimisation.kpi.growthPerMonth'),
-      value: formatSignedBytes(growth.avgMonthlyGrowthBytes),
-      status: null,
-      hint: t('storageOptimisation.kpi.forecastUnknownHint', { window: rateWindow(overview, t) }),
-    }
-  }
-
-  const atCurrentGrowth = shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t)
-  const card = (value: string, hint: string): ForecastCard => ({
-    label: t('storageOptimisation.kpi.forecast'),
-    value,
-    status: growth.forecastStatus,
-    hint,
-  })
-
   const date = exhaustionLabel(overview)
-  if (date !== null) {
-    return card(date, atCurrentGrowth)
-  }
-  if (growth.forecastMonthsToExhaustion === 0) {
-    return card(
-      t('storageOptimisation.growth.alreadyExhausted'),
-      t('storageOptimisation.growth.alreadyExhaustedNote'),
-    )
-  }
-  if (growth.forecastMonthsToExhaustion === null) {
-    return card(t('storageOptimisation.kpi.forecastNone'), atCurrentGrowth)
-  }
-  return card(t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS }), atCurrentGrowth)
+  return date === null
+    ? {
+        value: t('storageOptimisation.growth.alreadyExhausted'),
+        status: overview.growth.forecastStatus,
+        hint: t('storageOptimisation.growth.alreadyExhaustedNote'),
+      }
+    : {
+        value: date,
+        status: overview.growth.forecastStatus,
+        hint: shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t),
+      }
 }
 
 interface ForecastCallout {
