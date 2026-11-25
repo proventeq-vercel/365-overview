@@ -5,6 +5,7 @@ import {
   isModesLocked,
   readModeOverrides,
   tabStorage,
+  withoutModesReset,
   writeModeOverrides,
 } from './modes'
 
@@ -144,5 +145,17 @@ describe('isModesLocked', () => {
     expect(isModesLocked({ VITE_MODES_LOCKED: 'true' })).toBe(true)
     expect(isModesLocked({ VITE_MODES_LOCKED: '1' })).toBe(false)
     expect(isModesLocked({})).toBe(false)
+  })
+})
+
+describe('withoutModesReset', () => {
+  it('drops modes=reset and keeps the params sent with it, so a reload does not reset the tab again', () => {
+    expect(withoutModesReset('?modes=reset&admin=true&scenario=concealed')).toBe('?admin=true&scenario=concealed')
+    expect(withoutModesReset('?modes=reset')).toBe('')
+  })
+
+  it('leaves an address with no reset alone', () => {
+    expect(withoutModesReset('?admin=true')).toBeNull()
+    expect(withoutModesReset('?modes=other')).toBeNull()
   })
 })
