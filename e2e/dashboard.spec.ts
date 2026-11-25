@@ -509,3 +509,17 @@ test('?admin=true opens a bar that switches the tab’s features and data, and t
   await reportLoaded(page)
   await expect(page.getByRole('region', { name: 'Admin' })).toBeHidden()
 })
+
+test('the admin bar switches one mock scenario to another in place, without a reload', async ({ page }) => {
+  await page.goto('/?modes=reset&admin=true')
+  await reportLoaded(page)
+  await page.evaluate(() => Object.assign(window, { sameDocument: true }))
+  const bar = page.getByRole('region', { name: 'Admin' })
+  await bar.getByRole('combobox', { name: 'Data' }).click()
+  await page.getByRole('option', { name: 'Mock: concealed names' }).click()
+  await bar.getByRole('button', { name: 'Apply', exact: true }).click()
+  await reportLoaded(page)
+  await expect(page.getByText(/identities below are blurred/i)).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('scenario')).toBe('concealed')
+  expect(await page.evaluate(() => (window as Window & { sameDocument?: boolean }).sameDocument)).toBe(true)
+})
