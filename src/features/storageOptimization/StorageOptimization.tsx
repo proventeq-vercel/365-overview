@@ -36,7 +36,7 @@ export function StorageOptimization() {
       {data.sharePoint.read && <KpiCards overview={data} delay={40} />}
       {data.sharePoint.read && <DistributionSection overview={data} delay={80} />}
       {data.sharePoint.read && <GrowthSection overview={data} delay={120} />}
-      {data.offenders.read && <OffendersSection overview={data} growth={growth} delay={280} />}
+      {data.offenders.read && <OffendersSection overview={data} growth={growth} delay={160} />}
     </div>
   )
 }

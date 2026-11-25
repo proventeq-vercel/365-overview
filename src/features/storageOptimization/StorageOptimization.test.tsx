@@ -79,7 +79,7 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('region', { name: 'Tenant capacity' }).style.animationDelay).toBe('40ms')
     expect(sectionOf('Current storage distribution')).toBe('80ms')
     expect(sectionOf('Future state & growth impact')).toBe('120ms')
-    expect(sectionOf('Main offenders')).toBe('280ms')
+    expect(sectionOf('Main offenders')).toBe('160ms')
   })
 
   it('has no breadcrumb, no menu button and no footer when the menu flag is off', async () => {
