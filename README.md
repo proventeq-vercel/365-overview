@@ -442,12 +442,13 @@ foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggl
 - **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
 - **Names**: hide names (see *Hiding names*).
 - **Delay** (mock data only): holds every mock answer for 0.8, 2 or 5 s, so the loading
-  screen shows on the next load, scenario switch or Refresh data. It applies at once, is kept
-  for the tab while the bar is on, and is the one setting that has no URL param.
+  screen shows on the next load or scenario switch (Refresh data keeps the report on screen
+  and only spins its menu item). It applies at once, is kept for the tab while `?admin=true`
+  is on, also with the bar hidden, and is the one setting that has no URL param.
 
 **Apply and reload** writes the choices as the params above and reloads, because every mode
 is read once at load. Moving from one mock scenario to another is the exception: **Apply**
-switches it in place, with no reload, and the URL follows. **Reset** forgets the tab's overrides and the delay, and keeps the bar. Apart from the
+switches it in place, with no reload, and the URL follows. **Reset** (`?modes=reset`, also from the address bar) forgets the tab's overrides and the delay, and keeps the bar. Apart from the
 delay, the bar is only a front end for those params: it can do nothing a URL cannot, so a build with
 `VITE_MODES_LOCKED=true` ignores `?admin=true` too.
 

@@ -352,7 +352,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `queryFn` (a `resetQueries` would refetch through `useNamesConcealed`'s `skipToken`
   observer and fail). The bar's Delay (0, 0.8, 2, 5 s, mock only) slows every fixture
   call, so the loading screen shows; it is kept per tab (`data/mockData`, not a mode: no URL
-  param), applies only while `env.admin` is on, and Reset clears it. Its
+  param), applies only while `env.admin` is on (bar shown or hidden), and `?modes=reset`
+  (the Reset button) clears it. Its
   open state lives in `app/adminBarContext` (remembered per tab), and the ⋯
   menu shows *Show / Hide admin bar* only when admin is on. `?modes=reset`
   clears the tab and then applies any params sent with it.
