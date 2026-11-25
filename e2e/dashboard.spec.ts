@@ -266,6 +266,16 @@ test.describe('modes from the URL', () => {
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden()
   })
 
+  test('?modes=reset on a path that starts with two slashes still boots on this origin', async ({ page, baseURL }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    const origin = new URL(baseURL ?? '').origin
+    await page.goto(`${origin}//evil.example/?modes=reset&admin=true`)
+    await reportLoaded(page)
+    expect(new URL(page.url()).origin).toBe(origin)
+    expect(errors).toEqual([])
+  })
+
   test('?scenario= switches the fixture tenant for the tab', async ({ page }) => {
     await page.goto('/?scenario=concealed')
     await reportLoaded(page)
