@@ -424,7 +424,7 @@ browser tab with a search param:
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` / `onedrive-gaps` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
-| `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |
+| `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top; it leaves the address once applied, so a reload keeps the tab's choices) |
 
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears
@@ -441,10 +441,15 @@ foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggl
   reading the real tenant, on any build, including a mock preview.
 - **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
 - **Names**: hide names (see *Hiding names*).
+- **Delay** (mock data only): holds every mock answer for 0.8, 2 or 5 s, so the loading
+  screen shows on the next load or scenario switch (Refresh data keeps the report on screen
+  and only spins its menu item). It applies at once, is kept for the tab while `?admin=true`
+  is on, also with the bar hidden, and is the one setting that has no URL param.
 
 **Apply and reload** writes the choices as the params above and reloads, because every mode
-is read once at load. **Reset** forgets the tab's overrides and keeps the bar. The bar is only
-a front end for those params: it can do nothing a URL cannot, so a build with
+is read once at load. Moving from one mock scenario to another is the exception: **Apply**
+switches it in place, with no reload, and the URL follows. **Reset** (`?modes=reset`, also from the address bar) forgets the tab's overrides and the delay, and keeps the bar. Apart from the
+delay, the bar is only a front end for those params: it can do nothing a URL cannot, so a build with
 `VITE_MODES_LOCKED=true` ignores `?admin=true` too.
 
 ## Localisation

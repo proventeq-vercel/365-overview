@@ -1,9 +1,15 @@
 import { useMsal } from '@azure/msal-react'
-import { useMemo, type ReactNode } from 'react'
-import { env } from '../config/env'
-import { createMockDataSource, type DataSource } from './fixtures'
+import { useQueryClient } from '@tanstack/react-query'
+import { Fragment, useMemo, useState, type ReactNode } from 'react'
+import { adminHref, appliedChoice } from '../config/adminHref'
+import { env, type AppEnv } from '../config/env'
+import { tabStorage, writeModeOverrides } from '../config/modes'
+import { createMockDataSource, type DataSource, type MockScenario } from './fixtures'
+import { MockDataContext, readMockDelay, rememberMockDelay, type MockDataState } from './mockData'
 import { buildLiveSource, buildLocalAuthSource } from './sources'
 import { DataSourceContext } from './useDataSource'
+
+export type MockEnv = Pick<AppEnv, 'mockScenario' | 'hideNames' | 'features' | 'admin'>
 
 function LiveDataProvider({ children }: { children: ReactNode }) {
   const { instance, accounts } = useMsal()
@@ -22,14 +28,50 @@ function LocalAuthDataProvider({ localAuthUrl, children }: { localAuthUrl: strin
   return <DataSourceContext value={dataSource}>{children}</DataSourceContext>
 }
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  if (env.useMock) {
-    return (
-      <DataSourceContext value={createMockDataSource(env.mockScenario, { hideNames: env.hideNames })}>
-        {children}
+function rememberMockScenario(mockEnv: MockEnv, scenario: MockScenario) {
+  writeModeOverrides(tabStorage(), { mockScenario: scenario })
+  window.history.replaceState(
+    window.history.state,
+    '',
+    adminHref(window.location.pathname, appliedChoice(mockEnv, scenario)),
+  )
+}
+
+export function MockDataProvider({ mockEnv, children }: { mockEnv: MockEnv; children: ReactNode }) {
+  const queryClient = useQueryClient()
+  const [{ scenario, generation }, setLoaded] = useState({ scenario: mockEnv.mockScenario, generation: 0 })
+  const [delayMs, setDelayMs] = useState(() => (mockEnv.admin ? readMockDelay() : 0))
+  const dataSource = useMemo<DataSource>(
+    () => createMockDataSource(scenario, { hideNames: mockEnv.hideNames, delayMs }),
+    [scenario, delayMs, mockEnv.hideNames],
+  )
+  const mockData = useMemo<MockDataState>(
+    () => ({
+      scenario,
+      delayMs,
+      setScenario: (next) => {
+        rememberMockScenario(mockEnv, next)
+        queryClient.clear()
+        setLoaded((loaded) => ({ scenario: next, generation: loaded.generation + 1 }))
+      },
+      setDelayMs: (next) => {
+        rememberMockDelay(next)
+        setDelayMs(next)
+      },
+    }),
+    [scenario, delayMs, mockEnv, queryClient],
+  )
+  return (
+    <MockDataContext value={mockData}>
+      <DataSourceContext value={dataSource}>
+        <Fragment key={generation}>{children}</Fragment>
       </DataSourceContext>
-    )
-  }
+    </MockDataContext>
+  )
+}
+
+export function DataProvider({ children }: { children: ReactNode }) {
+  if (env.useMock) return <MockDataProvider mockEnv={env}>{children}</MockDataProvider>
   if (env.localAuthUrl) {
     return <LocalAuthDataProvider localAuthUrl={env.localAuthUrl}>{children}</LocalAuthDataProvider>
   }

@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { createMockDataSource } from './fixtures'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { createMockDataSource, type DataSource } from './fixtures'
+import { MOCK_SCENARIO_INFO, MOCK_SCENARIOS } from '../config/mockScenarios'
+import messages from '../intl/en.json'
 import { buildStorageOverview } from '../model/storageOverview'
 import { loadSettings } from '../lib/settings'
 import { readStorageInputs } from '../hooks/useStorageOverview'
@@ -259,5 +261,86 @@ describe('mock scenarios reach every caveat state', () => {
       const overview = await overviewFor(scenario)
       expect(overview.caveats.nameMask).toBeNull()
     }
+  })
+})
+
+describe('mock scenario registry', () => {
+  it('labels and describes every scenario from the catalogue, each in its own words', () => {
+    for (const scenario of MOCK_SCENARIOS) {
+      const info = MOCK_SCENARIO_INFO[scenario]
+      expect(info.label).toBe(`admin.source.${scenario}`)
+      expect(info.description).toBe(`admin.sourceDescription.${scenario}`)
+      expect(messages[info.label], scenario).toBeTruthy()
+      expect(messages[info.description], scenario).toBeTruthy()
+    }
+    const descriptions = MOCK_SCENARIOS.map((scenario) => messages[MOCK_SCENARIO_INFO[scenario].description])
+    expect(new Set(descriptions).size).toBe(descriptions.length)
+  })
+})
+
+describe('mock data source delay', () => {
+  afterEach(() => vi.useRealTimers())
+
+  const ASYNC_CALLS: [string, (ds: DataSource) => Promise<unknown>][] = [
+    ['getSites', (ds) => ds.getSites()],
+    ['getSitesOn', (ds) => ds.getSitesOn('2026-08-20')],
+    ['getSiteDetails', (ds) => ds.getSiteDetails([])],
+    ['getSiteDirectory', (ds) => ds.getSiteDirectory()],
+    ['getDrives', (ds) => ds.getDrives()],
+    ['getDrivesOn', (ds) => ds.getDrivesOn('2026-08-20')],
+    ['getSharePointTrend', (ds) => ds.getSharePointTrend()],
+    ['getOneDriveTrend', (ds) => ds.getOneDriveTrend()],
+    ['getLicenses', (ds) => ds.getLicenses()],
+    ['getOneDriveLicences', (ds) => ds.getOneDriveLicences()],
+    ['getOrg', (ds) => ds.getOrg()],
+    ['getReportRefreshDate', (ds) => ds.getReportRefreshDate()],
+  ]
+
+  function settledFlag(promise: Promise<unknown>) {
+    const state = { settled: false, rejected: false }
+    promise.then(
+      () => (state.settled = true),
+      () => {
+        state.settled = true
+        state.rejected = true
+      },
+    )
+    return state
+  }
+
+  it('answers at once, with no timer, when the delay is 0', async () => {
+    vi.useFakeTimers()
+    const ds = createMockDataSource('healthy', { hideNames: false, delayMs: 0 })
+    const sites = ds.getSites()
+    expect(vi.getTimerCount()).toBe(0)
+    await expect(sites).resolves.toHaveLength((await createMockDataSource().getSites()).length)
+  })
+
+  it.each(ASYNC_CALLS)('holds %s back by the delay', async (_name, call) => {
+    vi.useFakeTimers()
+    const state = settledFlag(call(createMockDataSource('healthy', { hideNames: false, delayMs: 800 })))
+    await vi.advanceTimersByTimeAsync(799)
+    expect(state.settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(state).toEqual({ settled: true, rejected: false })
+  })
+
+  it.each([
+    ['no-site-report', (ds: DataSource) => ds.getSites()],
+    ['no-daily-reports', (ds: DataSource) => ds.getSitesOn('2026-08-20')],
+  ] as const)('%s: holds a failed report back by the delay too', async (scenario, call) => {
+    vi.useFakeTimers()
+    const state = settledFlag(call(createMockDataSource(scenario, { hideNames: false, delayMs: 2000 })))
+    await vi.advanceTimersByTimeAsync(1999)
+    expect(state.settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(state).toEqual({ settled: true, rejected: true })
+  })
+
+  it('keeps the daily report window a plain answer', () => {
+    vi.useFakeTimers()
+    const ds = createMockDataSource('healthy', { hideNames: false, delayMs: 800 })
+    expect(ds.getDailyReportDates('2026-08-30').at(-1)).toBe('2026-08-30')
+    expect(vi.getTimerCount()).toBe(0)
   })
 })

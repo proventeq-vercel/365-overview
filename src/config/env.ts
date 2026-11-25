@@ -1,7 +1,7 @@
 import type { MockScenario } from '../data/fixtures'
 import { readFeatures, type FeatureFlag } from './featureFlags'
 import { MOCK_SCENARIOS } from './mockScenarios'
-import { isModesLocked, readModeOverrides, tabStorage, type ModeOverrides } from './modes'
+import { isModesLocked, readModeOverrides, tabStorage, withoutModesReset, type ModeOverrides } from './modes'
 
 export interface AppEnv {
   useMock: boolean
@@ -50,6 +50,8 @@ export function readEnv(
 function browserOverrides(source: Record<string, string | undefined>): ModeOverrides {
   if (typeof window === 'undefined') return {}
   const overrides = readModeOverrides(window.location.search, tabStorage())
+  const applied = withoutModesReset(window.location.href)
+  if (applied !== null) window.history.replaceState(window.history.state, '', applied)
   return isModesLocked(source) ? { hideNames: overrides.hideNames } : overrides
 }
 

@@ -343,12 +343,37 @@ function dailyReport(scenario: MockScenario, rows: () => StorageRow[]): StorageR
   return rows()
 }
 
+type AsyncCall = {
+  [K in keyof DataSource]: DataSource[K] extends (...args: never[]) => Promise<unknown> ? K : never
+}[keyof DataSource]
+
+function withDelay(source: DataSource, delayMs: number): DataSource {
+  if (delayMs <= 0) return source
+  const later = <T>(call: () => Promise<T>): Promise<T> =>
+    new Promise<void>((resolve) => setTimeout(resolve, delayMs)).then(call)
+  const delayed: Pick<DataSource, AsyncCall> = {
+    getSites: () => later(() => source.getSites()),
+    getSitesOn: (date) => later(() => source.getSitesOn(date)),
+    getSiteDetails: (ids) => later(() => source.getSiteDetails(ids)),
+    getSiteDirectory: () => later(() => source.getSiteDirectory()),
+    getDrives: () => later(() => source.getDrives()),
+    getDrivesOn: (date) => later(() => source.getDrivesOn(date)),
+    getSharePointTrend: () => later(() => source.getSharePointTrend()),
+    getOneDriveTrend: () => later(() => source.getOneDriveTrend()),
+    getLicenses: () => later(() => source.getLicenses()),
+    getOneDriveLicences: () => later(() => source.getOneDriveLicences()),
+    getOrg: () => later(() => source.getOrg()),
+    getReportRefreshDate: () => later(() => source.getReportRefreshDate()),
+  }
+  return { ...source, ...delayed }
+}
+
 export function createMockDataSource(
   scenario: MockScenario = 'healthy',
-  { hideNames }: { hideNames: boolean } = { hideNames: false },
+  { hideNames, delayMs = 0 }: { hideNames: boolean; delayMs?: number } = { hideNames: false },
 ): DataSource {
   const data = hideNames ? withHiddenNames(scenarioData(scenario)) : scenarioData(scenario)
-  return {
+  const source: DataSource = {
     namesHidden: hideNames,
     getSites: () => report(scenario, 'sites', data.sites),
     getDailyReportDates: (reportRefreshDate) => growthWindowDates(reportRefreshDate, MOCK_CLOCK),
@@ -371,4 +396,5 @@ export function createMockDataSource(
     getOrg: async () => org,
     getReportRefreshDate: () => report(scenario, 'sites', MOCK_REFRESH_DATE),
   }
+  return withDelay(source, delayMs)
 }

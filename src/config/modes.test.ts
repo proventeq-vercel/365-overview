@@ -1,9 +1,34 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides, tabStorage } from './modes'
+import {
+  MOCK_DELAY_STORAGE_KEY,
+  MODES_STORAGE_KEY,
+  isModesLocked,
+  readModeOverrides,
+  tabStorage,
+  withoutModesReset,
+  writeModeOverrides,
+} from './modes'
 
 const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
 
 beforeEach(() => sessionStorage.clear())
+
+describe('writeModeOverrides', () => {
+  it('changes the given overrides and keeps the other remembered ones', () => {
+    readModeOverrides(`?features=${BOTH}&mock=true&scenario=concealed`, sessionStorage)
+    writeModeOverrides(sessionStorage, { mockScenario: 'no-trends' })
+    expect(JSON.parse(sessionStorage.getItem(MODES_STORAGE_KEY)!)).toEqual({
+      features: BOTH,
+      useMock: 'true',
+      mockScenario: 'no-trends',
+    })
+  })
+
+  it('writes nothing without a tab store', () => {
+    expect(() => writeModeOverrides(null, { mockScenario: 'no-trends' })).not.toThrow()
+    expect(sessionStorage.getItem(MODES_STORAGE_KEY)).toBeNull()
+  })
+})
 
 describe('readModeOverrides', () => {
   it('returns nothing when the URL carries no mode params and nothing is stored', () => {
@@ -52,6 +77,18 @@ describe('readModeOverrides', () => {
     expect(readModeOverrides('?modes=reset', sessionStorage)).toEqual({})
     expect(sessionStorage.getItem(MODES_STORAGE_KEY)).toBeNull()
     expect(readModeOverrides('', sessionStorage)).toEqual({})
+  })
+
+  it('forgets the mock delay with modes=reset, from the Reset button or the address bar', () => {
+    sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, '5000')
+    readModeOverrides('?modes=reset&admin=true', sessionStorage)
+    expect(sessionStorage.getItem(MOCK_DELAY_STORAGE_KEY)).toBeNull()
+  })
+
+  it('keeps the mock delay when the address only changes a mode', () => {
+    sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, '5000')
+    readModeOverrides('?scenario=no-trends', sessionStorage)
+    expect(sessionStorage.getItem(MOCK_DELAY_STORAGE_KEY)).toBe('5000')
   })
 
   it('ignores a corrupt or foreign stored value', () => {
@@ -108,5 +145,25 @@ describe('isModesLocked', () => {
     expect(isModesLocked({ VITE_MODES_LOCKED: 'true' })).toBe(true)
     expect(isModesLocked({ VITE_MODES_LOCKED: '1' })).toBe(false)
     expect(isModesLocked({})).toBe(false)
+  })
+})
+
+describe('withoutModesReset', () => {
+  it('drops modes=reset and keeps the params sent with it, so a reload does not reset the tab again', () => {
+    expect(withoutModesReset('https://app.example/help/x?modes=reset&admin=true&scenario=concealed#top')).toBe(
+      'https://app.example/help/x?admin=true&scenario=concealed#top',
+    )
+    expect(withoutModesReset('https://app.example/?modes=reset')).toBe('https://app.example/')
+  })
+
+  it('keeps the page origin when the path starts with two slashes, so the address can be replaced', () => {
+    expect(withoutModesReset('https://app.example//evil.example/?modes=reset&admin=true')).toBe(
+      'https://app.example//evil.example/?admin=true',
+    )
+  })
+
+  it('leaves an address with no reset alone', () => {
+    expect(withoutModesReset('https://app.example/?admin=true')).toBeNull()
+    expect(withoutModesReset('https://app.example/?modes=other')).toBeNull()
   })
 })
