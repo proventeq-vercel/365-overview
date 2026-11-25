@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { MODES_STORAGE_KEY, isModesLocked, readModeOverrides, tabStorage, writeModeOverrides } from './modes'
+import {
+  MOCK_DELAY_STORAGE_KEY,
+  MODES_STORAGE_KEY,
+  isModesLocked,
+  readModeOverrides,
+  tabStorage,
+  writeModeOverrides,
+} from './modes'
 
 const BOTH = 'optimization.storage.report.overview,optimization.storage.report.onedrive'
 
@@ -69,6 +76,18 @@ describe('readModeOverrides', () => {
     expect(readModeOverrides('?modes=reset', sessionStorage)).toEqual({})
     expect(sessionStorage.getItem(MODES_STORAGE_KEY)).toBeNull()
     expect(readModeOverrides('', sessionStorage)).toEqual({})
+  })
+
+  it('forgets the mock delay with modes=reset, from the Reset button or the address bar', () => {
+    sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, '5000')
+    readModeOverrides('?modes=reset&admin=true', sessionStorage)
+    expect(sessionStorage.getItem(MOCK_DELAY_STORAGE_KEY)).toBeNull()
+  })
+
+  it('keeps the mock delay when the address only changes a mode', () => {
+    sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, '5000')
+    readModeOverrides('?scenario=no-trends', sessionStorage)
+    expect(sessionStorage.getItem(MOCK_DELAY_STORAGE_KEY)).toBe('5000')
   })
 
   it('ignores a corrupt or foreign stored value', () => {

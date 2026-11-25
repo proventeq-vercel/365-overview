@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, renderHook, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, skipToken, useQuery } from '@tanstack/react-query'
 import { render } from '@/test/render'
-import { MODES_STORAGE_KEY } from '@/config/modes'
+import { MOCK_DELAY_STORAGE_KEY, MODES_STORAGE_KEY } from '@/config/modes'
 import { MockDataProvider, type MockEnv } from './DataProvider'
 import type { DataSource } from './fixtures'
-import { MOCK_DELAY_STORAGE_KEY, useMockData, type MockDataState } from './mockData'
+import { useMockData, type MockDataState } from './mockData'
 import { useDataSource } from './useDataSource'
 
 const mockEnv: MockEnv = {

@@ -9,6 +9,7 @@ const MODE_PARAMS = {
 export const MODES_RESET_PARAM = 'modes'
 export const MODES_RESET_VALUE = 'reset'
 export const MODES_STORAGE_KEY = 'm365-overview:modes'
+export const MOCK_DELAY_STORAGE_KEY = 'm365-overview:mock-delay'
 
 export type ModeKey = keyof typeof MODE_PARAMS
 export type ModeOverrides = Partial<Record<ModeKey, string>>
@@ -50,6 +51,14 @@ function persist(storage: OverrideStore | null, overrides: ModeOverrides) {
   }
 }
 
+function forgetMockDelay(storage: OverrideStore | null) {
+  try {
+    storage?.removeItem(MOCK_DELAY_STORAGE_KEY)
+  } catch {
+    return
+  }
+}
+
 export function writeModeOverrides(storage: OverrideStore | null, changes: ModeOverrides) {
   persist(storage, { ...stored(storage), ...changes })
 }
@@ -70,6 +79,7 @@ export function readModeOverrides(search: string, storage: OverrideStore | null)
     if (value.trim() === '') delete overrides[key]
     else overrides[key] = value.trim()
   }
+  if (reset) forgetMockDelay(storage)
   if (changed) persist(storage, overrides)
   return overrides
 }

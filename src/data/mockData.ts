@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react'
+import { MOCK_DELAY_STORAGE_KEY } from '@/config/modes'
 import type { MockScenario } from './fixtures'
 
 export const MOCK_DELAYS: readonly number[] = [0, 800, 2000, 5000]
-export const MOCK_DELAY_STORAGE_KEY = 'm365-overview:mock-delay'
 
 export interface MockDataState {
   scenario: MockScenario
