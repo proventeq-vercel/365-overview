@@ -67,12 +67,11 @@ export function isModesLocked(source: Record<string, string | undefined>): boole
   return source.VITE_MODES_LOCKED === 'true'
 }
 
-export function withoutModesReset(search: string): string | null {
-  const params = new URLSearchParams(search)
-  if (params.get(MODES_RESET_PARAM) !== MODES_RESET_VALUE) return null
-  params.delete(MODES_RESET_PARAM)
-  const rest = params.toString()
-  return rest ? `?${rest}` : ''
+export function withoutModesReset(href: string): string | null {
+  const url = new URL(href)
+  if (url.searchParams.get(MODES_RESET_PARAM) !== MODES_RESET_VALUE) return null
+  url.searchParams.delete(MODES_RESET_PARAM)
+  return url.href
 }
 
 export function readModeOverrides(search: string, storage: OverrideStore | null): ModeOverrides {

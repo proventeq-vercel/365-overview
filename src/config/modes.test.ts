@@ -150,12 +150,20 @@ describe('isModesLocked', () => {
 
 describe('withoutModesReset', () => {
   it('drops modes=reset and keeps the params sent with it, so a reload does not reset the tab again', () => {
-    expect(withoutModesReset('?modes=reset&admin=true&scenario=concealed')).toBe('?admin=true&scenario=concealed')
-    expect(withoutModesReset('?modes=reset')).toBe('')
+    expect(withoutModesReset('https://app.example/help/x?modes=reset&admin=true&scenario=concealed#top')).toBe(
+      'https://app.example/help/x?admin=true&scenario=concealed#top',
+    )
+    expect(withoutModesReset('https://app.example/?modes=reset')).toBe('https://app.example/')
+  })
+
+  it('keeps the page origin when the path starts with two slashes, so the address can be replaced', () => {
+    expect(withoutModesReset('https://app.example//evil.example/?modes=reset&admin=true')).toBe(
+      'https://app.example//evil.example/?admin=true',
+    )
   })
 
   it('leaves an address with no reset alone', () => {
-    expect(withoutModesReset('?admin=true')).toBeNull()
-    expect(withoutModesReset('?modes=other')).toBeNull()
+    expect(withoutModesReset('https://app.example/?admin=true')).toBeNull()
+    expect(withoutModesReset('https://app.example/?modes=other')).toBeNull()
   })
 })

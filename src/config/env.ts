@@ -50,11 +50,8 @@ export function readEnv(
 function browserOverrides(source: Record<string, string | undefined>): ModeOverrides {
   if (typeof window === 'undefined') return {}
   const overrides = readModeOverrides(window.location.search, tabStorage())
-  const applied = withoutModesReset(window.location.search)
-  if (applied !== null) {
-    const { pathname, hash } = window.location
-    window.history.replaceState(window.history.state, '', `${pathname}${applied}${hash}`)
-  }
+  const applied = withoutModesReset(window.location.href)
+  if (applied !== null) window.history.replaceState(window.history.state, '', applied)
   return isModesLocked(source) ? { hideNames: overrides.hideNames } : overrides
 }
 
