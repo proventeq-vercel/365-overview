@@ -11,9 +11,8 @@ import {
   type AdminDataSource,
 } from '@/config/adminHref'
 import type { AppEnv } from '@/config/env'
-import { MOCK_SCENARIOS } from '@/config/mockScenarios'
+import { MOCK_SCENARIO_INFO, MOCK_SCENARIOS } from '@/config/mockScenarios'
 import { FeatureFlags, type FeatureFlag } from '@/config/featureFlags'
-import { MOCK_SCENARIO_INFO } from '@/data/fixtures'
 import { MOCK_DELAYS, useMockData, type MockDataState } from '@/data/mockData'
 import { useNamesConcealed } from '@/hooks/useStorageOverview'
 import { useTranslation, type TranslateKey } from '@/hooks/useTranslation'

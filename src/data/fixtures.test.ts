@@ -1,6 +1,6 @@
 import { afterEach, describe, it, expect, vi } from 'vitest'
-import { createMockDataSource, MOCK_SCENARIO_INFO, type DataSource } from './fixtures'
-import { MOCK_SCENARIOS } from '../config/mockScenarios'
+import { createMockDataSource, type DataSource } from './fixtures'
+import { MOCK_SCENARIO_INFO, MOCK_SCENARIOS } from '../config/mockScenarios'
 import messages from '../intl/en.json'
 import { buildStorageOverview } from '../model/storageOverview'
 import { loadSettings } from '../lib/settings'
@@ -266,16 +266,14 @@ describe('mock scenarios reach every caveat state', () => {
 
 describe('mock scenario registry', () => {
   it('labels and describes every scenario from the catalogue, each in its own words', () => {
-    const scenarios = Object.keys(MOCK_SCENARIO_INFO)
-    expect(MOCK_SCENARIOS).toEqual(scenarios)
-    expect(scenarios).toHaveLength(14)
-    for (const [scenario, info] of Object.entries(MOCK_SCENARIO_INFO)) {
+    for (const scenario of MOCK_SCENARIOS) {
+      const info = MOCK_SCENARIO_INFO[scenario]
       expect(info.label).toBe(`admin.source.${scenario}`)
       expect(info.description).toBe(`admin.sourceDescription.${scenario}`)
       expect(messages[info.label], scenario).toBeTruthy()
       expect(messages[info.description], scenario).toBeTruthy()
     }
-    const descriptions = Object.values(MOCK_SCENARIO_INFO).map((info) => messages[info.description])
+    const descriptions = MOCK_SCENARIOS.map((scenario) => messages[MOCK_SCENARIO_INFO[scenario].description])
     expect(new Set(descriptions).size).toBe(descriptions.length)
   })
 })
