@@ -424,7 +424,7 @@ browser tab with a search param:
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` / `onedrive-gaps` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
 | `admin` | `true` | `/?admin=true` (the admin bar, below) |
-| `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top) |
+| `modes` | `reset` | `/?modes=reset` (forget every override; params sent with it apply on top; it leaves the address once applied, so a reload keeps the tab's choices) |
 
 A param present in the URL is remembered for the tab (sessionStorage), so in-app
 navigation and the sign-in redirect keep it; an empty value such as `?features=` clears

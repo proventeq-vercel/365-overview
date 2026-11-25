@@ -356,7 +356,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   (the Reset button) clears it. Its
   open state lives in `app/adminBarContext` (remembered per tab), and the ⋯
   menu shows *Show / Hide admin bar* only when admin is on. `?modes=reset`
-  clears the tab and then applies any params sent with it.
+  clears the tab, then applies any params sent with it, and is dropped from
+  the address (`withoutModesReset`) so a reload does not reset the tab again.
 
 ## Rules most likely to be broken by a future change
 
