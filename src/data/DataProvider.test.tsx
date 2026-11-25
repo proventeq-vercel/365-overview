@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, renderHook, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, skipToken, useQuery } from '@tanstack/react-query'
@@ -12,25 +13,33 @@ const mockEnv: MockEnv = {
   mockScenario: 'healthy',
   hideNames: false,
   features: new Set(['optimization.storage.report.overview']),
+  admin: true,
 }
 
 let mock: MockDataState | null = null
 let source: DataSource | null = null
+let mounts = 0
 
 function Probe() {
   const ds = useDataSource()
   mock = useMockData()
   source = ds
+  useEffect(() => {
+    mounts += 1
+  }, [])
   const sites = useQuery({ queryKey: ['sites'], queryFn: () => ds.getSites() })
   const watched = useQuery({ queryKey: ['sites'], queryFn: skipToken })
   if (sites.isPending || watched.isPending) return <p>loading</p>
   return <p>{sites.isError ? 'failed' : `${sites.data.length} sites`}</p>
 }
 
-function renderProvider(queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+function renderProvider(
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  env: MockEnv = mockEnv,
+) {
   render(
     <QueryClientProvider client={queryClient}>
-      <MockDataProvider mockEnv={mockEnv}>
+      <MockDataProvider mockEnv={env}>
         <Probe />
       </MockDataProvider>
     </QueryClientProvider>,
@@ -39,6 +48,7 @@ function renderProvider(queryClient = new QueryClient({ defaultOptions: { querie
 }
 
 beforeEach(() => {
+  mounts = 0
   sessionStorage.clear()
   window.history.replaceState(null, '', '/')
 })
@@ -71,6 +81,24 @@ describe('MockDataProvider', () => {
     expect(queryClient.getQueryState(['sites'])?.error?.message).not.toMatch(/Missing queryFn/)
     expect(clear).toHaveBeenCalledTimes(1)
     expect(mock?.scenario).toBe('no-site-report')
+  })
+
+  it('remounts the tree under it on a switch, so no state of the old scenario survives', async () => {
+    renderProvider()
+    await screen.findByText(/^\d+ sites$/)
+    expect(mounts).toBe(1)
+
+    act(() => mock?.setScenario('no-trends'))
+
+    expect(mounts).toBe(2)
+  })
+
+  it('keeps hidden names in the URL it writes for the switched scenario', () => {
+    renderProvider(undefined, { ...mockEnv, hideNames: true })
+
+    act(() => mock?.setScenario('no-trends'))
+
+    expect(new URL(window.location.href).searchParams.get('hideNames')).toBe('true')
   })
 
   it('keeps the switched scenario for the tab in the session store and the URL, in place', () => {
@@ -132,6 +160,12 @@ describe('MockDataProvider', () => {
     sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, stored)
     renderProvider()
     expect(mock?.delayMs).toBe(delayMs)
+  })
+
+  it('runs with no delay once the admin bar is off, whatever the tab remembers', () => {
+    sessionStorage.setItem(MOCK_DELAY_STORAGE_KEY, '5000')
+    renderProvider(undefined, { ...mockEnv, admin: false })
+    expect(mock?.delayMs).toBe(0)
   })
 })
 

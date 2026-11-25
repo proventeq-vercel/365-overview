@@ -245,7 +245,10 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => navigate(adminResetHref(window.location.pathname))}
+            onClick={() => {
+              mock?.setDelayMs(0)
+              navigate(adminResetHref(window.location.pathname))
+            }}
           >
             <RotateCcw aria-hidden="true" />
             {t('admin.reset')}

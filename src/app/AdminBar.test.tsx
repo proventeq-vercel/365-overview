@@ -229,6 +229,15 @@ describe('AdminBar', () => {
     expect(hrefOf(navigate).search).toBe('?modes=reset&admin=true')
   })
 
+  it('forgets the mock delay on Reset too', async () => {
+    const user = userEvent.setup()
+    const mock = mockData({ delayMs: 5000 })
+    const { navigate } = renderMockBar(mock)
+    await user.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(mock.setDelayMs).toHaveBeenCalledWith(0)
+    expect(hrefOf(navigate).search).toBe('?modes=reset&admin=true')
+  })
+
   it('hides itself through the shared state', async () => {
     const user = userEvent.setup()
     const { setOpen } = renderBar()

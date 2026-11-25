@@ -9,7 +9,7 @@ import { MockDataContext, readMockDelay, rememberMockDelay, type MockDataState }
 import { buildLiveSource, buildLocalAuthSource } from './sources'
 import { DataSourceContext } from './useDataSource'
 
-export type MockEnv = Pick<AppEnv, 'mockScenario' | 'hideNames' | 'features'>
+export type MockEnv = Pick<AppEnv, 'mockScenario' | 'hideNames' | 'features' | 'admin'>
 
 function LiveDataProvider({ children }: { children: ReactNode }) {
   const { instance, accounts } = useMsal()
@@ -40,7 +40,7 @@ function rememberMockScenario(mockEnv: MockEnv, scenario: MockScenario) {
 export function MockDataProvider({ mockEnv, children }: { mockEnv: MockEnv; children: ReactNode }) {
   const queryClient = useQueryClient()
   const [{ scenario, generation }, setLoaded] = useState({ scenario: mockEnv.mockScenario, generation: 0 })
-  const [delayMs, setDelayMs] = useState(readMockDelay)
+  const [delayMs, setDelayMs] = useState(() => (mockEnv.admin ? readMockDelay() : 0))
   const dataSource = useMemo<DataSource>(
     () => createMockDataSource(scenario, { hideNames: mockEnv.hideNames, delayMs }),
     [scenario, delayMs, mockEnv.hideNames],
