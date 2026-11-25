@@ -50,7 +50,7 @@ function Details({ details, trigger }: { details: BarDetails; trigger: ReactElem
         <p className="tabular mt-1 text-lg font-bold" style={{ color: details.color }}>
           {details.value}
         </p>
-        <p className="text-p365-grey-500">{details.shareLabel}</p>
+        <p className="text-p365-grey-text">{details.shareLabel}</p>
         <PopoverDescription className="mt-2">{details.description}</PopoverDescription>
       </PopoverContent>
     </Popover>

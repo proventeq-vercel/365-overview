@@ -37,7 +37,7 @@ function Field({
         {label}
       </label>
       {children}
-      {hint && <p className="text-xs text-p365-grey-500">{hint}</p>}
+      {hint && <p className="text-xs text-p365-grey-text">{hint}</p>}
     </div>
   )
 }
@@ -89,11 +89,11 @@ export function SettingsDialog({
                 <SelectValue>
                   {(value: string) => (
                     <span className="flex items-center gap-2">
-                      <span className="w-8 shrink-0 text-center text-p365-grey-500">
+                      <span className="w-8 shrink-0 text-center text-p365-grey-text">
                         {currencySymbol(value)}
                       </span>
                       <span className="font-semibold">{value}</span>
-                      <span className="truncate text-p365-grey-500">{currencyName(value)}</span>
+                      <span className="truncate text-p365-grey-text">{currencyName(value)}</span>
                     </span>
                   )}
                 </SelectValue>
@@ -101,11 +101,11 @@ export function SettingsDialog({
               <SelectContent align="start" alignItemWithTrigger={false}>
                 {currencyOptions(settings.currency).map((code) => (
                   <SelectItem key={code} value={code}>
-                    <span className="w-8 shrink-0 text-center text-p365-grey-500">
+                    <span className="w-8 shrink-0 text-center text-p365-grey-text">
                       {currencySymbol(code)}
                     </span>
                     <span className="font-semibold">{code}</span>
-                    <span className="text-p365-grey-500">{currencyName(code)}</span>
+                    <span className="text-p365-grey-text">{currencyName(code)}</span>
                   </SelectItem>
                 ))}
               </SelectContent>

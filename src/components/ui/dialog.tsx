@@ -43,7 +43,7 @@ function DialogContent({
               variant="ghost"
               size="icon-sm"
               aria-label={t('app.close')}
-              className="absolute top-3 right-3 text-p365-grey-500"
+              className="absolute top-3 right-3 text-p365-grey-text"
             />
           }
         >
@@ -71,7 +71,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("mt-1 text-xs text-p365-grey-500", className)}
+      className={cn("mt-1 text-xs text-p365-grey-text", className)}
       {...props}
     />
   )

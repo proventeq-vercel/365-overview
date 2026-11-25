@@ -17,7 +17,7 @@ export function PageHeader({
         <h1 className="text-xl font-semibold text-p365-navy">{title}</h1>
         {help}
       </div>
-      <p className="text-sm text-p365-grey-500">{children}</p>
+      <p className="text-sm text-p365-grey-text">{children}</p>
     </div>
   )
 }
@@ -42,7 +42,7 @@ export function Section({
           <h2 className="text-base font-semibold text-p365-navy">{title}</h2>
           {help}
         </div>
-        <p className="text-sm text-p365-grey-500">{subtitle}</p>
+        <p className="text-sm text-p365-grey-text">{subtitle}</p>
       </div>
       {children}
     </section>
@@ -67,7 +67,7 @@ export function PanelLabel({ children }: { children: ReactNode }) {
 }
 
 export function PanelDescription({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-p365-grey-500">{children}</p>
+  return <p className="text-sm text-p365-grey-text">{children}</p>
 }
 
 export function SplitGrid({ children, className }: { children: ReactNode; className: string }) {
@@ -85,7 +85,7 @@ export function MiniStatRow({ children }: { children: ReactNode }) {
 export function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md bg-p365-grey-50 p-3">
-      <dt className="text-xs text-p365-grey-500">{label}</dt>
+      <dt className="text-xs text-p365-grey-text">{label}</dt>
       <dd className="tabular text-xl font-bold text-p365-navy">{value}</dd>
     </div>
   )
@@ -174,7 +174,7 @@ export function Legend({
 
 export function EmptyBlock({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-48 items-center justify-center rounded-md border border-dashed border-p365-grey-100 text-xs text-p365-grey-500">
+    <div className="flex min-h-48 items-center justify-center rounded-md border border-dashed border-p365-grey-100 text-xs text-p365-grey-text">
       {children}
     </div>
   )

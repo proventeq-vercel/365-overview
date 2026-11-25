@@ -233,7 +233,7 @@ export function SiteTable({
                 <ExternalUrlLink href={row.url} />
               ) : (
                 name !== row.id && (
-                  <TruncatedText text={row.id} className="text-xs text-p365-grey-500" />
+                  <TruncatedText text={row.id} className="text-xs text-p365-grey-text" />
                 )
               )}
             </span>
@@ -337,7 +337,7 @@ export function SiteTable({
             className="h-9 w-full max-w-sm rounded-lg border border-p365-grey-100 bg-white pr-3 pl-9 text-sm text-p365-navy outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-p365-grey-400 focus:border-p365-teal focus:ring-3 focus:ring-p365-teal/20"
           />
         </label>
-        <span className="tabular text-sm text-p365-grey-500">
+        <span className="tabular text-sm text-p365-grey-text">
           {t('table.count', { visible: formatNumber(visible.length), total: formatNumber(rows.length) })}
         </span>
       </div>

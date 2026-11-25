@@ -19,6 +19,7 @@
           "aggregationMethod": "median",
           "assertions": {
             "categories:performance": ["error", { "minScore": 0.9 }],
+            "categories:accessibility": ["error", { "minScore": 1 }],
             "categories:best-practices": ["error", { "minScore": 1 }],
             "categories:seo": ["error", { "minScore": 1 }],
             "accesskeys": ["error", { "minScore": 1 }],
@@ -45,6 +46,7 @@
             "aria-valid-attr-value": ["error", { "minScore": 1 }],
             "aria-valid-attr": ["error", { "minScore": 1 }],
             "button-name": ["error", { "minScore": 1 }],
+            "color-contrast": ["error", { "minScore": 1 }],
             "bypass": ["error", { "minScore": 1 }],
             "definition-list": ["error", { "minScore": 1 }],
             "dlitem": ["error", { "minScore": 1 }],
@@ -80,30 +82,6 @@
             "errors-in-console": ["error", { "minScore": 1 }],
             "uses-text-compression": ["error", { "minScore": 1 }],
             "csp-xss": ["error", { "maxLength": 1 }]
-          }
-        },
-        {
-          "matchingUrlPattern": "^http://localhost:4173/help",
-          "aggregationMethod": "median",
-          "assertions": {
-            "categories:accessibility": ["error", { "minScore": 1 }],
-            "color-contrast": ["error", { "minScore": 1 }]
-          }
-        },
-        {
-          "matchingUrlPattern": "^http://localhost:4173/storage-optimisation$",
-          "aggregationMethod": "median",
-          "assertions": {
-            "categories:accessibility": ["error", { "minScore": 0.96 }],
-            "color-contrast": ["error", { "maxLength": 90 }]
-          }
-        },
-        {
-          "matchingUrlPattern": "^http://localhost:4173/onedrive-usage$",
-          "aggregationMethod": "median",
-          "assertions": {
-            "categories:accessibility": ["error", { "minScore": 0.96 }],
-            "color-contrast": ["error", { "maxLength": 70 }]
           }
         }
       ]

@@ -15,7 +15,7 @@ export function AdornedInput({ prefix, suffix, className, ...props }: Props) {
       )}
     >
       {prefix && (
-        <span className="pl-3 text-p365-grey-500" aria-hidden="true">
+        <span className="pl-3 text-p365-grey-text" aria-hidden="true">
           {prefix}
         </span>
       )}
@@ -24,7 +24,7 @@ export function AdornedInput({ prefix, suffix, className, ...props }: Props) {
         {...props}
       />
       {suffix && (
-        <span className="whitespace-nowrap pr-3 text-p365-grey-500" aria-hidden="true">
+        <span className="whitespace-nowrap pr-3 text-p365-grey-text" aria-hidden="true">
           {suffix}
         </span>
       )}

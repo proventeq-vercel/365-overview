@@ -31,7 +31,7 @@ export function AccessFailure({ error, onRetry }: { error: unknown; onRetry?: ()
         {url && (
           <p className="text-sm text-p365-grey-600">
             {t('access.consent.sendLink')}{' '}
-            <a className="font-semibold text-p365-teal underline" href={url}>
+            <a className="font-semibold text-p365-teal-text underline" href={url}>
               {t('access.consent.grant')}
             </a>
           </p>

@@ -66,7 +66,7 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
         </>
       )}
       {overview.sharePoint.siteReportRead && (
-        <p className="text-xs text-p365-grey-500">{t('storageOptimisation.workload.groupingNote')}</p>
+        <p className="text-xs text-p365-grey-text">{t('storageOptimisation.workload.groupingNote')}</p>
       )}
     </Panel>
   )

@@ -31,7 +31,7 @@ export function HelpButton({ topic }: { topic: HelpTopic }) {
             href={helpUrl(page.slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-p365-teal')}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-p365-teal-text')}
           >
             {t('helpButton.seeMore')}
             <ExternalLink aria-hidden="true" />

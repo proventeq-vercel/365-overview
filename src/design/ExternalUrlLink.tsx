@@ -13,7 +13,7 @@ export function ExternalUrlLink({ href, label }: ExternalUrlLinkProps) {
       rel="noopener noreferrer"
       title={href}
       onClick={(event) => event.stopPropagation()}
-      className="block max-w-full truncate text-xs font-normal text-p365-teal transition-colors duration-150 ease-out hover:underline"
+      className="block max-w-full truncate text-xs font-normal text-p365-teal-text transition-colors duration-150 ease-out hover:underline"
     >
       {label ?? urlPathname(href)}
     </a>

@@ -611,14 +611,10 @@ typecheck · test · build as a separate job.
   `npx @lhci/cli@<pinned> autorun` on `lighthouserc.json`. The thresholds are
   the measured baseline, and every scored accessibility audit is asserted on its
   own at 1: a change that adds a contrast failure, drops a label, breaks an ARIA
-  role or drops a category below its floor fails CI, and a red CI holds the deploy. Colour
-  contrast on the report pages is held at its current count only because of
-  the P365 palette's low-contrast text; raise it to 1 when that is fixed, never
-  raise the count to get a PR green. Their accessibility 0.96 moves only when a
-  page stops carrying audits, so re-measure it then. A report added to the app
-  goes into the job's `VITE_FEATURES` and gets a URL in `collect.url` **and its
-  own `assertMatrix` entry** — the `.*` entry holds neither colour contrast nor
-  the accessibility score. Help articles share one template; `/help` and one
+  role or drops a category below its floor fails CI, and a red CI holds the deploy. The
+  accessibility score and colour contrast are held at 1 on every page by the
+  one `.*` entry. A report added to the app goes into the job's
+  `VITE_FEATURES` and gets a URL in `collect.url`. Help articles share one template; `/help` and one
   article stand for them. A flaky performance median is re-run, not lowered; on
   `main`, only while its commit is the tip and no newer run exists (a re-run,
   green or red, cancels a newer run in progress, so re-run that one too; a
@@ -631,6 +627,15 @@ typecheck · test · build as a separate job.
   amber `#eab000`, lime `#b1eb46`, ink `#0c2340`/`#16475c`; surfaces white /
   `#f7f8f9`. Typeface **Open Sans** (self-hosted, `@fontsource/open-sans`). Light
   theme only.
+- **Text never uses a brand colour lighter than its text-safe shade.** P365's
+  grey-500, teal, red, orange, yellow and green read under 4.5:1 as text, so
+  text takes `P365_TEXT` (`src/design/theme.ts`, mirrored as
+  `--color-p365-{grey,teal,red,orange,yellow,green}-text` in `index.css`;
+  `theme.test.ts` checks each shade's contrast and the mirror). `StatCard` and
+  `ShareHeadline` keep the brand colour on the rail and write the value in
+  `textShade(color)`; the pill tones use the shades. Rails, chart fills, icons
+  and placeholders keep the brand colours (user, N5, 2026-11-25). The static
+  boot copy in `index.html` uses the same shades for its text.
 - Chart palette + shared config live in `src/components/charts/chartTheme.ts`
   (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
 - Gradings: `src/lib/thresholds.ts` holds the `HealthStatus` type;

@@ -36,6 +36,12 @@
   --color-p365-grey-700: #434343;
   --color-p365-soft-green: #e1f1f1;
   --color-p365-soft-orange: #fef2ee;
+  --color-p365-grey-text: #6a6a6a;
+  --color-p365-teal-text: #267574;
+  --color-p365-red-text: #c70606;
+  --color-p365-orange-text: #c03a07;
+  --color-p365-yellow-text: #83650b;
+  --color-p365-green-text: #50730e;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-float: 0 12px 32px rgba(15, 44, 61, 0.18);

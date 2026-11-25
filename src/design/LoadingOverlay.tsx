@@ -41,7 +41,7 @@ function OverlayBadge({ label }: { label: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-p365-teal/25 bg-p365-teal/8 px-3 py-0.5">
       <span className="size-1.5 animate-pulse rounded-full bg-p365-teal" aria-hidden="true" />
-      <span className="text-xs font-bold tracking-[0.07em] text-p365-teal uppercase">{label}</span>
+      <span className="text-xs font-bold tracking-[0.07em] text-p365-teal-text uppercase">{label}</span>
     </span>
   )
 }
@@ -50,7 +50,7 @@ function StepPill({ label }: { label: string }) {
   return (
     <div className="flex w-full items-center gap-2 rounded-md border border-p365-teal/20 bg-p365-teal/6 px-4 py-2">
       <span className="size-1.5 shrink-0 rounded-full bg-p365-teal" aria-hidden="true" />
-      <span className="text-left text-sm text-p365-teal">{label}</span>
+      <span className="text-left text-sm text-p365-teal-text">{label}</span>
     </div>
   )
 }
@@ -78,7 +78,7 @@ function Checklist({ items }: { items: readonly LoadingChecklistItem[] }) {
           aria-current={state === 'active' ? 'step' : undefined}
           className={cn(
             'flex items-center gap-2 rounded-sm px-3 py-1 text-left text-sm transition-colors duration-200 ease-out',
-            state === 'pending' ? 'text-p365-grey-400' : 'bg-p365-teal/6 text-p365-grey-700',
+            state === 'pending' ? 'text-p365-grey-text' : 'bg-p365-teal/6 text-p365-grey-700',
           )}
         >
           <ChecklistMarker state={state} />
@@ -111,10 +111,10 @@ export function LoadingOverlay({ badge, title, subtitle, footer, step, checklist
           <OverlayBadge label={badge} />
           <RingSpinner />
           <p className="text-lg font-bold text-p365-navy">{title}</p>
-          <p className="text-sm leading-normal text-p365-teal">{subtitle}</p>
+          <p className="text-sm leading-normal text-p365-teal-text">{subtitle}</p>
           {checklist ? <Checklist items={checklist} /> : step && <StepPill label={step} />}
           <WaitingDots />
-          <p className="text-sm leading-normal text-p365-grey-400">{footer}</p>
+          <p className="text-sm leading-normal text-p365-grey-text">{footer}</p>
         </div>
       </div>
     </div>
