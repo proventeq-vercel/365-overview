@@ -351,7 +351,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   the tree under it (a `key`), so every query refetches from the new fixtures with its own
   `queryFn` (a `resetQueries` would refetch through `useNamesConcealed`'s `skipToken`
   observer and fail). The bar's Delay (0, 0.8, 2, 5 s, mock only) slows every fixture
-  call, so the loading screen shows; it is kept per tab. Its
+  call, so the loading screen shows; it is kept per tab (`data/mockData`, not a mode: no URL
+  param), applies only while `env.admin` is on, and Reset clears it. Its
   open state lives in `app/adminBarContext` (remembered per tab), and the ⋯
   menu shows *Show / Hide admin bar* only when admin is on. `?modes=reset`
   clears the tab and then applies any params sent with it.
@@ -703,8 +704,9 @@ description).
   `--color-p365-*` ones — do not re-theme `.hc` with P365 teal. Section cards take
   `description` from `helpSections.ts` and icons from `HelpPage`'s
   `SECTION_ICONS`.
-- Every report section and title has a P365-style **?** (`app/help/HelpButton`,
-  a required `help` slot on `Section` and `PageHeader`): a dialog with the page's
+- Every report section and title with a help page has a P365-style **?**
+  (`app/help/HelpButton`, the `help` slot on `Section`, optional for a section
+  with no page, and the required one on `PageHeader`): a dialog with the page's
   `description` and *See more* in a new tab. Topics → slugs are
   `app/help/topics.ts`. The ⋯ menu has *Help* (new tab).
 - Every failure surface renders `components/HelpLink` → troubleshooting:
