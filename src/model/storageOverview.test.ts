@@ -979,24 +979,25 @@ describe('buildStorageOverview growth and cost', () => {
 
   it('grades a cost of nothing as healthy', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
-    expect(overview.cost.growthAnnualStatus).toBe('healthy')
+    expect(overview.cost.cumulativeYear3Status).toBe('healthy')
   })
 
-  it('grades a cost within a tenth of the entitlement bought again as one to watch', () => {
-    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 250 * GB }))
-    expect(overview.cost.growthAnnual).toBeCloseTo(48, 6)
-    expect(overview.cost.growthAnnualStatus).toBe('watch')
+  it('grades the three-year cost, so growth that fits the next year but not the third is one to watch', () => {
+    const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 420 * GB }))
+    expect(overview.cost.growthAnnual).toBe(0)
+    expect(overview.cost.cumulativeYear3).toBeCloseTo(72, 6)
+    expect(overview.cost.cumulativeYear3Status).toBe('watch')
   })
 
-  it('grades a cost beyond a tenth of the entitlement bought again as needing attention', () => {
+  it('grades a third-year overflow beyond a tenth of the entitlement as needing attention', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 200 * GB }))
-    expect(overview.cost.growthAnnualStatus).toBe('attention')
+    expect(overview.cost.cumulativeYear3Status).toBe('attention')
   })
 
   it('grades a cost without an entitlement as one to watch, never as needing attention', () => {
     const overview = buildStorageOverview(unknownEntitlement())
-    expect(overview.cost.growthAnnual).toBeCloseTo(288, 6)
-    expect(overview.cost.growthAnnualStatus).toBe('watch')
+    expect(overview.cost.cumulativeYear3).toBeCloseTo(1296, 6)
+    expect(overview.cost.cumulativeYear3Status).toBe('watch')
   })
 
   it('passes the rate and currency through untouched', () => {

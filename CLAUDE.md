@@ -8,7 +8,7 @@ Guidance for working in this repo. See `README.md` for setup/permissions and
 A React 19 + TypeScript + Vite 8 SPA that renders **one report** —
 a sneak-peek of the Proventeq 365 storage-optimisation report — from a Microsoft
 365 tenant's own Graph usage reports. In order: the Tenant capacity KPI cards
-(straight under the page title, no section heading) · Current storage distribution · Future state & growth impact ·
+(straight under the page title, a small visible "Tenant capacity" label, no section heading) · Current storage distribution · Future state & growth impact ·
 Main offenders.
 No lead capture, no telemetry. By default nothing leaves the browser; with
 `VITE_GRAPH_PROXY_URL` set the browser's Graph calls go through `functions/`,
@@ -363,7 +363,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 
 - **Sections consume `buildStorageOverview` and nothing else.** A number a
   section needs (e.g. `offenders.topSites`, `sharePoint.licenceEstimateBytes`)
-  is added to the model with a test, never derived in a component.
+  is added to the model with a test, never derived in a component. The
+  *Tenant capacity* cards' figures (the overage's yearly cost, the deleted
+  card's billed part) come from the pure, table-tested
+  `features/storageOptimization/actionableCards.ts` over the model, the one
+  other place a card number is derived; never in `KpiCards` itself.
 - **The UI copies P365, it does not restyle it.** Colours, sizes and layout come
   from `Frontend/src/components/styles/themes.ts` and
   `features/storageOptimization/styles.ts` in the P365 repo (tokens mirrored as
@@ -420,7 +424,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   names (`lib/rowName.ts`, shared with `SiteTable`). The one sanctioned
   exception is the generic `SiteTable`'s per-row Share (`shareOfPool`: the
   row over the model's `poolUsedBytes` for its pool), computed for the rows it
-  pages and sorts, since the table is fed by several pages.
+  pages and sorts, since the table is fed by several pages. The other is
+  `actionableCards.ts` (see the first rule above), which `KpiCards` reads.
 - **Exhausted is a state, not a date.** Used ≥ entitled ⇒ `forecastStatus`
   `Critical`, `forecastMonthsToExhaustion` `0`, `forecastExhaustionDate`
   `null` — decided before the history check, exactly as P365's
@@ -434,7 +439,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `daily` (fewer: the least-squares slope of the daily trend,
   `lib/forecast.dailyRateBytesPerMonth`, labelled with `windowDays`) or
   `none` (a single reported day: no rate, status `Unknown`, no forecast
-  months, the cards and callout show the storage used under a *Latest* pill;
+  months, the callout shows the storage used under a *Latest* pill;
   *Avg growth / mo*, *Added last …*, *Forecast (6 mo)* and the cost figures
   are left out, `cost.applies` false). An exceeded entitlement wins over all
   of this in the copy: *Entitlement already exceeded*, Critical. Zero-valued
@@ -458,8 +463,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   screen is the whole-app failure. A chart or card whose primary data is
   missing shows the best other real Graph figure for the same question, in the
   same place, and its copy names that source and window. With no entitlement
-  the forecast card becomes *SharePoint growth per month*, the callout projects
-  used storage (pill *Projection*), and figures measured against the
+  the *SharePoint storage used* card says none is entered and links to Report
+  settings, the forecast card is left out, the callout projects used storage (pill *Projection*), and figures measured against the
   entitlement (Free, Over entitlement today, Stays under the entitlement) are
   left out, never shown as Unknown. This copy is the app's own: P365 still has
   its unavailable strings. The full list is
@@ -501,16 +506,28 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. There is no
   notional/billable split — one figure per card. P365 prices the whole growth
   ungated, so the two products differ here on purpose.
-- **The cards show only what applies, decided in the model.** `sharePoint.exhausted`
-  (used ≥ entitled) leaves *Forecast exhaustion* out — there is no date left
-  to forecast. `archive.savingApplies` (`entitledBytes === null || exhausted`)
-  shows *Potential saving per year* only when archiving can save money: by the
-  rule above, storage inside the entitlement is free, so the saving prices
-  `archive.savingBytes` = the archivable bytes capped at `overageBytes` (all of
-  them while the entitlement is unknown). `cost.applies` (a growth rate
-  exists, `rateSource !== 'none'`) shows *Cost of doing nothing* and the
-  projected-cost block. *Inactive sites to archive* shows whenever the site usage report came back. The grid's
-  `xl` column count follows the number of cards.
+- **The cards show only what the user can act on.** The rules are pure
+  functions in `features/storageOptimization/actionableCards.ts` over the
+  model: *SharePoint storage used* always, then, in this order and only when
+  they apply, *Over entitlement* (`overageBytes > 0`), *Forecast exhaustion*
+  (within `FORECAST_CARD_MONTHS` = 24 and the entitlement not yet reached),
+  *Cost of doing nothing, next 3 years* (`cost.applies` and
+  `cumulativeYear3 > 0`), *Inactive sites to archive* (a live site qualifies
+  and they hold storage; the saving joins its description when
+  `archive.savingApplies`) and the deleted storage card (`deletedStorageCard`,
+  billed only for the site part above the entitlement; left out unless both
+  usage reports were read, and it counts only a pool whose deleted rows hold
+  storage). A card whose value would be zero or "no exhaustion" is left out.
+  `actionableCards` returns each card as a `KpiCard` union carrying its own
+  figures, so `KpiCards` does no arithmetic. The grid's `xl` column count
+  follows the number of cards (`design/kpiGrid.kpiGridColumns(count)`; a lone
+  card stays half width). The *SharePoint storage used* card names the site
+  usage report when its figure comes from it (`forecastCopy.storageUsedSource`).
+  A card's *Report settings* link opens the one dialog `KpiCards` owns
+  (`app/useSettingsDialog`), so the dialog outlives the card that opened it;
+  on close focus goes back to that link, or to the cards' region when the link
+  has gone (the card left out by the new setting). The cards sit under a small
+  visible *Tenant capacity* label (a paragraph, not a heading).
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
@@ -613,10 +630,11 @@ typecheck · test · build as a separate job.
   badge. They answer different questions. The *Tenant capacity* cards (above
   *Current storage distribution*) carry two more, also graded in the model:
   `archive.status` (`lib/archive.ts` — archivable share of live site storage,
-  watch >5% / attention >50%; drives both the archive and the saving card) and
-  `cost.growthAnnualStatus` (`lib/cost.ts` — healthy at zero, watch above,
-  attention once the next 12 months bill more than a tenth of the licensed
-  entitlement again; rate-independent). A site is archivable when its
+  watch >5% / attention >50%; drives the archive card, whose description carries the saving) and
+  `cost.cumulativeYear3Status` (`lib/cost.ts` `growthCostStatus` — healthy at
+  zero, watch above, attention once the billable growth up to the middle of
+  the third year is more than a tenth of the entitlement; watch, never
+  attention, with no entitlement; rate-independent). A site is archivable when its
   `lastActivityDate` is older than `settings.inactiveYears` (default 3) before
   `reportRefreshDate`; a site with no recorded activity is never counted.
 

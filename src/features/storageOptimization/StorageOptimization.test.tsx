@@ -38,7 +38,7 @@ async function chooseOption(user: ReturnType<typeof userEvent.setup>, name: RegE
 }
 const statCard = (label: string) =>
   screen.getByText(label).closest('[data-slot="stat-card"]') as HTMLElement
-const costCard = () => statCard('Cost of doing nothing, next 12 months')
+const costCard = () => statCard('Cost of doing nothing, next 3 years')
 const archiveCard = () => statCard('Inactive sites to archive')
 
 const SETTINGS_ROUND_TRIP = { timeout: 15_000 }
@@ -51,9 +51,11 @@ describe('Storage Optimisation app', () => {
     expect(screen.getByRole('heading', { name: 'Storage Optimisation', level: 1 })).toBeInTheDocument()
     const cards = screen.getAllByText(/./, { selector: '[data-slot="stat-card"] > p:nth-child(2)' })
     expect(cards.map((card) => card.textContent)).toEqual([
-      'Inactive sites to archive',
-      'Cost of doing nothing, next 12 months',
+      'SharePoint storage used',
       'Forecast exhaustion',
+      'Cost of doing nothing, next 3 years',
+      'Inactive sites to archive',
+      'Deleted but still counting',
     ])
     expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
       'Current storage distribution',
@@ -253,11 +255,42 @@ describe('Storage Optimisation app', () => {
     await user.click(screen.getByRole('combobox', { name: 'Archive sites inactive for' }))
     await user.click(await screen.findByRole('option', { name: '5 years' }))
 
-    expect(archiveCard()).toHaveTextContent('No live site with recorded activity has been inactive for 5 years')
+    expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(ds.getSites).toHaveBeenCalledTimes(1)
     expect(JSON.parse(localStorage.getItem('m365-storage-settings')!)).toMatchObject({
       inactiveYears: 5,
     })
+  })
+
+  it('keeps Report settings open when the inactivity period it sets takes away the card that opened it', SETTINGS_ROUND_TRIP, async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await reportLoaded()
+
+    await user.click(within(archiveCard()).getByRole('button', { name: 'Change it in Report settings' }))
+    await user.click(await screen.findByRole('combobox', { name: 'Archive sites inactive for' }))
+    await user.click(await screen.findByRole('option', { name: '5 years' }))
+
+    expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Report settings' })).not.toBeInTheDocument())
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('region', { name: 'Tenant capacity' }))
+  })
+
+  it('keeps Report settings open while the entitlement is typed in from the storage used card', SETTINGS_ROUND_TRIP, async () => {
+    const user = userEvent.setup()
+    renderApp('no-licences')
+    await reportLoaded()
+
+    await user.click(within(statCard('SharePoint storage used')).getByRole('button', { name: 'Enter it in Report settings' }))
+    const entitlement = await screen.findByLabelText('SharePoint entitlement')
+    await user.type(entitlement, '40')
+
+    expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+    expect(screen.getByLabelText('SharePoint entitlement')).toHaveValue(40)
+    expect(within(statCard('SharePoint storage used')).queryByRole('button', { name: 'Enter it in Report settings' })).not.toBeInTheDocument()
   })
 
   it('refetches every query from the refresh option', async () => {

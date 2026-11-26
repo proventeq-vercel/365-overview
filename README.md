@@ -28,27 +28,34 @@ Each site also serves `/help` — the help centre for every report and for enabl
 
 | Section | What it shows |
 |---|---|
-| **Tenant capacity** (cards, no heading) | Inactive sites ready to archive, the potential saving, the cost of doing nothing over the next 12 months and the forecast exhaustion — only the ones that apply (see below) |
+| **Tenant capacity** (cards, a small label, no heading) | SharePoint storage used, then only the cards you can act on: over entitlement, forecast exhaustion, the cost of doing nothing over 3 years, inactive sites to archive and deleted storage (see below) |
 | **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive and free — against the SharePoint entitlement, each part explained in a popover; and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth (from the daily figures under six months of history), the projected exhaustion date, or the projected storage without an entitlement, and the cost of doing nothing |
 | **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
 
-**Tenant capacity** sits straight under the report title with no section heading, as up to four
-cards, each railed green, orange or red by its state. Within the entitlement the saving card is
-left out (archiving storage your licences already cover saves nothing); once the entitlement is
-exceeded the forecast card is left out (there is no date left to forecast); with an unknown
-entitlement all four show, the forecast card becoming **SharePoint growth per month** (navy, the
-monthly growth with no runway). From a single reported day of storage there is no rate: the
-forecast card becomes **SharePoint storage used** and the cost card is left out:
+**Tenant capacity** sits straight under the report title with a small *Tenant capacity* label and
+no section heading. Each card's
+rail and value take the colour of its state. **SharePoint storage used** is always shown, against
+the entitlement (*No entitlement entered · Enter it in Report settings* without one), and names
+the site usage report when the figure comes from it; the others
+appear only when there is something to act on, in this order:
 
-| Card | Value | Green · orange · red |
-|---|---|---|
-| **Inactive sites to archive** | Storage in live SharePoint sites with no activity for the inactivity window (Report settings, default 3 years, before the report date); the site count, the share of live site storage and the cutoff day in the description. A site with no recorded activity is not counted. | ≤ 5% · ≤ 50% · above 50% of live site storage |
-| **Potential saving per year** | The part of that storage over the entitlement (all of it when the entitlement is unknown) × the cost per GB per month × 12 | as the archive card |
-| **Cost of doing nothing, next 12 months** | The next year's growth beyond the entitlement, priced at the same rate | zero · above zero · the year's billable growth is more than a tenth of the entitlement |
-| **Forecast exhaustion** | The month SharePoint storage passes the entitlement at the measured growth; the description reads *At current growth*, plus the window on a short history. Without an entitlement the navy *SharePoint growth per month* card takes its place, described as *Needs tenant entitlement* and the growth window | runway ≥ 36 months · ≥ 12 months · under 12 months |
+| Card | Shown when |
+|---|---|
+| **Over entitlement** | SharePoint storage is above the entitlement; priced as *Billed now* at the configured rate |
+| **Forecast exhaustion** | The entitlement runs out within 24 months at the measured growth and is not reached yet; left out at or over the entitlement (red under 12 months, orange under 36) |
+| **Cost of doing nothing, next 3 years** | There is a growth rate and growth beyond the entitlement over the next three years costs more than zero; coloured on that figure |
+| **Inactive sites to archive** | At least one live site has had no activity for the inactivity window (Report settings, default 3 years) and they hold storage; the saving joins its description when no entitlement is entered or storage is over it |
+| **Deleted but still counting (or billing)** | Deleted sites or OneDrives still hold storage and both usage reports came back; billed only for the part above the entitlement |
 
-Storage used and remaining headroom are on the *Storage usage* line under the cards. SharePoint and
+When storage is over the entitlement, the money on *Over entitlement*, the deleted card's billed
+amount and the archive saving overlap: the last two are parts of the first. Do not add them up.
+
+The rules are pure functions in `src/features/storageOptimization/actionableCards.ts`; the help
+page *Tenant capacity* (`docs/help/reports/storage-optimisation/tenant-capacity.md`) is the full
+reference.
+
+The remaining headroom is on the *Storage usage* line under the cards. SharePoint and
 OneDrive are reported as two separate pools: the line is SharePoint only, and OneDrive has its own
 panel under it, because OneDrive storage is not part of the SharePoint entitlement.
 

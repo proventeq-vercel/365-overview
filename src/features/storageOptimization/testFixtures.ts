@@ -120,7 +120,7 @@ export const base: StorageOverview = {
     ratePerGb: 0.02,
     currency: 'GBP',
     growthAnnual: 288,
-    growthAnnualStatus: 'watch',
+    cumulativeYear3Status: 'watch',
     cumulativeYear3: 1296,
   },
   caveats: {
@@ -193,7 +193,7 @@ export const firstDay: StorageOverview = {
     forecastEndBytes: 500 * GB,
     afterCleanUp: { ...base.growth.afterCleanUp, endBytes: null, staysUnderEntitlement: null },
   },
-  cost: { ...base.cost, applies: false, growthAnnual: 0, growthAnnualStatus: 'healthy', cumulativeYear3: 0 },
+  cost: { ...base.cost, applies: false, growthAnnual: 0, cumulativeYear3: 0, cumulativeYear3Status: 'healthy' },
 }
 
 export const overEntitlement: StorageOverview = {

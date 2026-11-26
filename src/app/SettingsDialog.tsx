@@ -42,12 +42,18 @@ function Field({
   )
 }
 
+export type SettingsField = 'entitlement' | 'inactiveYears'
+
 export function SettingsDialog({
   open,
   onOpenChange,
+  focus,
+  finalFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  focus?: SettingsField
+  finalFocus?: () => HTMLElement | null
 }) {
   const t = useTranslation()
   const { settings, update } = useSettings()
@@ -57,6 +63,7 @@ export function SettingsDialog({
   const entitlementId = useId()
   const oneDriveEntitlementId = useId()
   const inactiveYearsId = useId()
+  const fieldIds: Record<SettingsField, string> = { entitlement: entitlementId, inactiveYears: inactiveYearsId }
 
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
@@ -66,7 +73,10 @@ export function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        initialFocus={focus ? () => document.getElementById(fieldIds[focus]) : undefined}
+        finalFocus={finalFocus ?? true}
+      >
         <DialogTitle>{t('settings.title')}</DialogTitle>
         <DialogDescription>{t('settings.description')}</DialogDescription>
         <div className="mt-4 flex flex-col gap-4">

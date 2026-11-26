@@ -1,5 +1,5 @@
 import { StatCard } from '@/design/StatCard'
-import { KPI_GRID_COLUMNS } from '@/design/kpiGrid'
+import { kpiGridColumns } from '@/design/kpiGrid'
 import { P365 } from '@/design/theme'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatNumber } from '@/lib/format'
@@ -42,7 +42,7 @@ export function OneDriveKpiCards({ overview }: { overview: StorageOverview }) {
 
   return (
     <div
-      className={`enter-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${KPI_GRID_COLUMNS[overEntitlement === null ? 4 : 5]}`}
+      className={`enter-rise grid grid-cols-1 gap-4 lg:grid-cols-3 ${kpiGridColumns(overEntitlement === null ? 4 : 5)}`}
       style={{ animationDelay: '40ms' }}
     >
       {used}

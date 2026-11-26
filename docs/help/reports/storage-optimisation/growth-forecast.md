@@ -72,7 +72,7 @@ is shown only when the entitlement is known.
 
 | Figure | Meaning |
 | --- | --- |
-| Removable today | Storage in live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for) (the *Inactive sites to archive* card), plus storage in deleted sites still billing (the *Deleted but still billing* figure). |
+| Removable today | Storage in live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for) (the *Inactive sites to archive* card), plus storage in deleted sites still billing (the *Deleted but still counting* or *Deleted but still billing* card). |
 | Forecast after clean-up (6 mo) | Where the dotted line ends. |
 | Stays under the entitlement | **Yes** when the dotted line stays below the entitlement for the whole forecast, **No** when it reaches it. Shown only when the entitlement is known. |
 
@@ -95,9 +95,10 @@ indicative.
 
 The extra spend once storage grows past the entitlement, at the configured rate.
 
-- **Next 12 months** is the same figure as the *Cost of doing nothing* card in
-  [Tenant capacity](tenant-capacity.md#cost-of-doing-nothing-next-12-months).
+- **Next 12 months** is the growth over the coming year above the entitlement, at the rate.
+  Growth inside the entitlement costs nothing.
 - **Cumulative, 3 years** adds up three years. Each year is priced on its **mid-year** volume,
-  with the same rule: growth inside the entitlement costs nothing.
+  with the same rule. It is the figure on the *Cost of doing nothing, next 3 years* card in
+  [Tenant capacity](tenant-capacity.md#cost-of-doing-nothing-next-3-years).
 
 Change the rate and currency in [Report settings](../../reference/settings.md#cost-per-gb-per-month).

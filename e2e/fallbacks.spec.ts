@@ -75,9 +75,10 @@ test('a short history is forecast from its daily storage, and says over how many
   await expect(page.getByRole('main').getByText('Added last 31 days')).toBeVisible()
 })
 
-test('without licences the forecast card shows the monthly growth and the callout projects used storage', async ({ page }) => {
+test('without licences the storage used card asks for the entitlement and the callout projects used storage', async ({ page }) => {
   await page.goto('/?scenario=no-licences')
-  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'SharePoint growth per month' })).toContainText('+')
+  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'SharePoint storage used' })).toContainText('No entitlement entered · Enter it in Report settings')
+  await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })).toHaveCount(0)
   await expect(page.getByText(/^SharePoint storage reaches .+ in 6 months$/)).toBeVisible()
   await expect(page.getByRole('list', { name: 'Storage usage' }).getByText('Free')).toHaveCount(0)
 })

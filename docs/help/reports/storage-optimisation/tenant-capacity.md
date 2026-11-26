@@ -1,107 +1,140 @@
 ---
 title: Tenant capacity
 nav: Capacity cards
-description: The cards at the top of the report — inactive sites to archive, what archiving would save, what growth beyond the entitlement costs, and when the entitlement runs out.
+description: The cards at the top of the report — storage used against the entitlement, and only the cards you can act on: over the entitlement, when it runs out, what growth costs, inactive sites to archive and deleted storage.
 section: storage-optimisation
 feature: optimization.storage.report.overview
 order: 20
 ---
 
-The cards sit at the top of the report, straight under its title. Each card's left rail and value
-take the colour of its state.
+The cards sit at the top of the report, straight under its title, below a small *Tenant capacity*
+label. Each card's left rail and value take the colour of its state.
 
-Only the cards that apply to your tenant are shown:
+**SharePoint storage used** is always shown. The other cards appear only when there is something
+to act on, in this order:
 
-| Your SharePoint storage is | Cards shown |
+| Card | Shown when |
 | --- | --- |
-| Within the entitlement | Inactive sites to archive · Cost of doing nothing · Forecast exhaustion |
-| At or over the entitlement | Inactive sites to archive · Potential saving per year · Cost of doing nothing |
-| Against an unknown entitlement | All four, with *SharePoint growth per month* in place of *Forecast exhaustion* |
-| With a single reported day of storage | Inactive sites to archive · *SharePoint storage used* in place of the forecast, plus Potential saving per year against an unknown entitlement. *Cost of doing nothing* is left out: there is no growth rate to price yet. An exceeded entitlement shows Inactive sites to archive and Potential saving per year. |
+| Over entitlement | SharePoint storage is above the entitlement. |
+| Forecast exhaustion | At the current growth the entitlement runs out within 24 months, and it is not reached yet. A tenant exactly at or over its entitlement gets no forecast card. |
+| Cost of doing nothing, next 3 years | There is a growth rate and growth over the next three years costs money. |
+| Inactive sites to archive | At least one live site has had no activity for the inactivity period, and those sites hold storage. |
+| Deleted but still counting (or billing) | Deleted sites or OneDrives still hold storage, and both usage reports came back. |
 
-- **Potential saving per year** appears only once you are over the entitlement. Below it, storage
-  you archive was already paid for by your licences, so archiving saves nothing.
-- **Forecast exhaustion** is left out once the entitlement is already exceeded. There is no
-  future date to forecast.
-- **Inactive sites to archive** is always shown while the SharePoint site usage report comes back.
-  Without it, the archive and saving cards are left out: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
+A card whose value would be zero, empty or "no exhaustion" is left out rather than shown with that
+value.
 
-| Card | Green | Orange | Red | Grey |
-| --- | --- | --- | --- | --- |
-| Inactive sites to archive | 5% of live site storage or less | above 5%, up to 50% | above 50% | — |
-| Potential saving per year | follows *Inactive sites to archive* | | | — |
-| Cost of doing nothing, next 12 months | zero | above zero | the next 12 months' billable growth is more than 10% of the entitlement (never while the entitlement is unknown) | — |
-| Forecast exhaustion | Healthy: 36 months or more, or no growth | At risk: under 36 months | Critical: under 12 months | — |
+When storage is over the entitlement, the money on *Over entitlement*, the billed amount on the
+deleted storage card and the saving on *Inactive sites to archive* overlap: the last two are parts
+of the first. Do not add them up.
 
-## Inactive sites to archive
+## SharePoint storage used
 
-The storage held by live SharePoint sites with **no activity for the inactivity window**. The
-window is 3 years by default, and you can set 1 to 10 years in
-[Report settings](../../reference/settings.md#archive-sites-inactive-for). The description gives
-the number of sites, their share of live site storage and the cutoff day, for example
-*42 sites · 24.0% of live site storage · no activity since 30 Aug 2023*. A share too small to
-round reads *<0.1%*. With no site past the window it reads *No live site with recorded activity has
-been inactive for 3 years*.
+The SharePoint storage in use today. The description gives it against the entitlement, for
+example *500 GB of 1000 GB entitlement*.
 
-- The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
-  window, a site last active before 30 August 2023 counts.
-- A site with **no recorded activity** is never counted. It may simply be new.
-- Deleted sites are not counted. They are in [Main offenders](main-offenders.md#deleted-but-still-billing).
-- The share is of live site storage, so it is not affected by OneDrive.
+- Over the entitlement it adds the amount over, in red: *1.1 TB of 1000 GB entitlement · 100 GB over*.
+- When the entitlement comes from your licences rather than a figure you entered, it adds
+  *entitlement estimated from licences*.
+- With no entitlement at all it reads *No entitlement entered · Enter it in Report settings*. The link
+  opens [Report settings](../../reference/settings.md#sharepoint-entitlement) on the SharePoint
+  entitlement.
+- When the storage figure is the total of the site usage report, a second line says so: *Total of
+  the site usage report: Microsoft 365's storage trend lists no day with storage yet.*, or *…
+  Microsoft 365's SharePoint storage trend did not come back this time.*
 
-## Potential saving per year
+## Over entitlement
 
-The spend you avoid in a year by archiving the inactive sites out of SharePoint, at the configured
-rate. Only storage **over the entitlement** costs anything, so only that part is priced:
-`smaller of (inactive GB, GB over the entitlement) × cost per GB per month × 12`. The description
-says how much of the overage archiving would clear. It takes the same colour as the archive card.
+How much SharePoint storage is above the entitlement, in red. The description prices it:
+*Billed now: about £120.00/yr for the storage above your entitlement*, at the configured rate.
 
-With an unknown entitlement nothing shows that the storage is covered, so all the inactive
-storage is priced, as the cost of doing nothing does.
+## Forecast exhaustion
 
-## Cost of doing nothing, next 12 months
+The month SharePoint storage passes your entitlement if it keeps growing at the current rate. It is
+shown only when that month is at most 24 months away and the entitlement is not reached yet. With
+no entitlement the card is left out. The description reads *At current growth*;
+with under six months of storage history it adds how many days the rate was measured over.
 
-The extra spend over the next 12 months on growth that goes **beyond your SharePoint
-entitlement**, at the configured rate. It is **zero while growth stays within the entitlement**.
+| Rail | Because |
+| --- | --- |
+| Red | Critical: under 12 months. |
+| Orange | At risk: under 36 months. |
 
-- Growth that stays under the entitlement costs nothing, because you already pay for it.
-- If growth crosses the entitlement during the year, only the part above it is priced.
-- If the tenant is already over its entitlement, all of the year's growth is priced.
-- If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced.
+The growth rate and the entitlement line behind it are in
+[Future state & growth impact](growth-forecast.md).
+
+## Cost of doing nothing, next 3 years
+
+The extra spend over the next three years on growth that goes **beyond your SharePoint
+entitlement**, at the configured rate. Growth that stays under the entitlement costs nothing,
+because you already pay for it, so the card is left out while growth fits.
+
+- If growth crosses the entitlement, only the part above it is priced.
+- If the tenant is already over its entitlement, all of the growth is priced.
+- If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced, and
+  the description says so: *Spend over the next three years on all storage growth … with no
+  entitlement entered, none of it is counted as covered.*
+
+The card is shown only when there is a growth rate and the three-year figure is above zero. Its
+colour is graded on that figure:
+
+| Rail | Because |
+| --- | --- |
+| Orange | Above zero. |
+| Red | The billable growth up to the middle of the third year (two and a half years of growth) is more than a tenth of the entitlement. With no entitlement it is orange, never red. |
 
 The growth rate is the typical month-to-month growth from the storage trend, or the daily rate
-under six months of history ([how](../../reference/calculations.md#growth-rate)). The card is left
-out when Microsoft 365 has reported a single day of storage: there is no growth to price yet. The card turns red once the next 12 months'
-billable growth is more than a tenth of the entitlement. That rule does not depend on the rate,
-so changing the currency or price does not change the colour, except a price of 0, which leaves
-nothing to pay and turns the card green. With an unknown entitlement there is nothing to compare
-with, so the card stays orange however large the growth.
+under six months of history ([how](../../reference/calculations.md#growth-rate)).
 
 > This figure is a deliberate departure from the full Proventeq 365 product, which prices all
 > growth. Here, growth already covered by your entitlement is treated as free.
 
-## Forecast exhaustion
+## Inactive sites to archive
 
-The month SharePoint storage passes your entitlement if it keeps growing at the current rate.
-The card is not shown once the entitlement is already exceeded.
-The description reads *At current growth*. The growth rate and the entitlement line behind it are
-in [Future state & growth impact](growth-forecast.md), and what is left of the entitlement in
-[Current storage distribution](storage-distribution.md).
+The storage held by live SharePoint sites with **no activity for the inactivity period**. The
+description gives the number of sites, their share of live site storage and the cutoff day, for
+example *42 sites · 24.0% of live site storage · no activity since 30 Aug 2023*. A share too small
+to round reads *<0.1%*. Under it, *Inactive means no activity for 3 years. Change it in Report
+settings* opens [Report settings](../../reference/settings.md#archive-sites-inactive-for) on the
+inactivity period (1 to 10 years, 3 by default).
 
-| You see | Because |
+| Rail | Share of live site storage |
 | --- | --- |
-| A month, for example *March 2028* | The headroom runs out then at the current rate. |
-| **Beyond 10 years** | The headroom outlasts the ten-year horizon. |
-| **No growth detected** | Storage has not grown over the measured months. |
+| Green | 5% or less |
+| Orange | above 5%, up to 50% |
+| Red | above 50% |
 
-With under six months of storage history, the month comes from the daily storage reported so
-far, and the description adds how many days it was measured over.
+- The cutoff counts back from the report date: with a report from 30 August 2026 and a 3-year
+  period, a site last active before 30 August 2023 counts.
+- A site with **no recorded activity** is never counted. It may simply be new.
+- Deleted sites are not counted here. They are the deleted storage card below.
+- Sites that hold no storage do not make the card appear.
 
-Two cases show a different card in the same place, in navy:
+### Potential saving per year
 
-| Card | Because |
+When no entitlement is entered, or storage is already over it, the description adds what
+archiving saves a year: *· archiving saves £24.00/yr*. Only storage **over the entitlement** costs
+anything, so only that part is priced:
+`smaller of (inactive GB, GB over the entitlement) × cost per GB per month × 12`. With no
+entitlement entered, nothing shows that the storage fits, so all of the inactive storage is priced.
+Under the entitlement, storage you archive was already paid for by your licences, so nothing is
+added.
+
+## Deleted but still counting
+
+Deleted sites in the recycle bin or under retention, and deleted OneDrives under retention, still
+hold storage until they are purged. The value is their total size; the description says how many
+there are and whether that storage costs money. Only a pool whose deleted rows hold storage is
+counted. The card adds the SharePoint and OneDrive reports, so it is left out when either usage
+report did not come back:
+
+| Your SharePoint storage is | The card reads |
 | --- | --- |
-| **SharePoint growth per month** | The entitlement is unknown. The value is the monthly growth, and the description reads *Needs tenant entitlement* and the months or days the growth was measured over: enter the entitlement in [Report settings](../../reference/settings.md) to get the forecast. |
-| **SharePoint storage used** | Microsoft 365 has reported a single day of storage, so there is no rate to forecast from yet. When the storage trend lists no day with storage, the value is the total of the site usage report, and the description says so. |
+| Over the entitlement | **Deleted but still billing**, in orange: *24 GB of it is past your entitlement and billed · £5.76/yr until purged*. Only the deleted storage that sits above the entitlement is billed. |
+| Under the entitlement | *Counts toward your storage, not billed today: you are under your entitlement by 500 GB.* |
+| Exactly at the entitlement | *Counts toward your storage, not billed today: you are at your entitlement, so any growth is billed.* |
+| Against no entitlement | *Counts toward your storage; whether it is billed depends on your entitlement.* The *SharePoint storage used* card links to Report settings to enter it. |
 
-[Future state & growth impact](growth-forecast.md) shows the trend behind this card.
+Deleted OneDrives are not part of the SharePoint entitlement. When only OneDrives are deleted the
+card reads *Held in the OneDrive pool, outside your SharePoint storage entitlement*.
+[Main offenders](main-offenders.md#deleted-but-still-billing) lists them.

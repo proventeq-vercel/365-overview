@@ -44,6 +44,14 @@ function siteReportSource(overview: StorageOverview, t: TranslateFn): string | n
     : t('storageOptimisation.growth.siteReportSourceTrendUnread')
 }
 
+export function storageUsedSource(overview: StorageOverview, t: TranslateFn): string | null {
+  const { sharePoint } = overview
+  if (!sharePoint.usedFromSiteReport) return null
+  return sharePoint.trendRead
+    ? t('storageOptimisation.kpi.usedFromSiteReport')
+    : t('storageOptimisation.kpi.usedFromSiteReportTrendUnread')
+}
+
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')
 
 const shortHint = (hint: string, overview: StorageOverview, t: TranslateFn) =>
@@ -57,60 +65,25 @@ export function estimatedQuotaNote(overview: StorageOverview, t: TranslateFn): s
 }
 
 export function costHint(overview: StorageOverview, rate: string, t: TranslateFn): string {
-  return joined(t('storageOptimisation.kpi.costOfNothingHint', { rate }), dailyRateNote(overview, t))
+  const hint =
+    overview.sharePoint.entitledBytes === null
+      ? t('storageOptimisation.kpi.costOfNothingHintNoEntitlement', { rate })
+      : t('storageOptimisation.kpi.costOfNothingHint', { rate })
+  return joined(hint, dailyRateNote(overview, t))
 }
 
 export interface ForecastCard {
-  label: string
   value: string
-  status: ForecastStatus | null
+  status: ForecastStatus
   hint: string
 }
 
-export function forecastCard(overview: StorageOverview, t: TranslateFn): ForecastCard {
-  const { sharePoint, growth } = overview
-  const used = formatBytes(sharePoint.usedBytes)
-
-  if (growth.rateSource === 'none') {
-    return {
-      label: t('storageOptimisation.kpi.usedToday'),
-      value: used,
-      status: null,
-      hint: firstDayNote(overview, t),
-    }
+export function forecastCard(exhaustionDate: string, overview: StorageOverview, t: TranslateFn): ForecastCard {
+  return {
+    value: formatLongMonthYear(exhaustionDate),
+    status: overview.growth.forecastStatus,
+    hint: shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t),
   }
-
-  if (sharePoint.entitledBytes === null || sharePoint.remainingBytes === null) {
-    return {
-      label: t('storageOptimisation.kpi.growthPerMonth'),
-      value: formatSignedBytes(growth.avgMonthlyGrowthBytes),
-      status: null,
-      hint: t('storageOptimisation.kpi.forecastUnknownHint', { window: rateWindow(overview, t) }),
-    }
-  }
-
-  const atCurrentGrowth = shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t)
-  const card = (value: string, hint: string): ForecastCard => ({
-    label: t('storageOptimisation.kpi.forecast'),
-    value,
-    status: growth.forecastStatus,
-    hint,
-  })
-
-  const date = exhaustionLabel(overview)
-  if (date !== null) {
-    return card(date, atCurrentGrowth)
-  }
-  if (growth.forecastMonthsToExhaustion === 0) {
-    return card(
-      t('storageOptimisation.growth.alreadyExhausted'),
-      t('storageOptimisation.growth.alreadyExhaustedNote'),
-    )
-  }
-  if (growth.forecastMonthsToExhaustion === null) {
-    return card(t('storageOptimisation.kpi.forecastNone'), atCurrentGrowth)
-  }
-  return card(t('storageOptimisation.kpi.forecastBeyondHorizon', { years: FORECAST_HORIZON_YEARS }), atCurrentGrowth)
 }
 
 interface ForecastCallout {

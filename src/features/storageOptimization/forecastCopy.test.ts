@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { StorageOverview } from '@/types/storage'
 import { translate as t } from '@/test/render'
 import { LABEL_TONES } from '@/design/theme'
-import { buildCallout, estimatedQuotaNote, forecastCard } from './forecastCopy'
+import { buildCallout, estimatedQuotaNote, forecastCard, storageUsedSource } from './forecastCopy'
 import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 const withGrowth = (over: Partial<StorageOverview['growth']>): StorageOverview => ({
@@ -22,81 +22,51 @@ const flat: StorageOverview = withGrowth({
   avgMonthlyGrowthBytes: 0,
 })
 
-const beyondHorizon: StorageOverview = withGrowth({
-  forecastStatus: 'Healthy',
-  forecastExhaustionDate: null,
-  forecastMonthsToExhaustion: 150,
-})
+const hint = (overview: StorageOverview) => forecastCard('2030-01-01', overview, t).hint
 
-const headline = (overview: StorageOverview) => forecastCard(overview, t).value
-const hint = (overview: StorageOverview) => forecastCard(overview, t).hint
-
-describe('forecastCard value', () => {
-  it('shows the exhaustion month when there is one', () => {
-    expect(headline(base)).toBe('January 2030')
-    expect(forecastCard(base, t).label).toBe('Forecast exhaustion')
-    expect(forecastCard(base, t).status).toBe('Healthy')
+describe('forecastCard', () => {
+  it('shows the exhaustion month at current growth, graded by the forecast', () => {
+    expect(forecastCard('2030-01-01', base, t)).toEqual({
+      value: 'January 2030',
+      status: 'Healthy',
+      hint: 'At current growth',
+    })
   })
 
-  it('shows the monthly growth, never Unknown, without an entitlement', () => {
-    const card = forecastCard(unknownEntitlement, t)
-    expect(card.label).toBe('SharePoint growth per month')
-    expect(card.value).toBe('+10 GB')
-    expect(card.status).toBeNull()
-  })
-
-  it('says the entitlement is already exceeded at zero runway', () => {
-    expect(headline(overEntitlement)).toBe('Entitlement already exceeded')
-  })
-
-  it('forecasts a date from the daily series on a short history', () => {
-    expect(headline(dailyRate)).toBe('January 2030')
-  })
-
-  it('shows the storage used when only one day has been reported', () => {
-    const card = forecastCard(firstDay, t)
-    expect(card.label).toBe('SharePoint storage used')
-    expect(card.value).toBe('500 GB')
-    expect(card.status).toBeNull()
-  })
-
-  it('distinguishes beyond-horizon from no growth', () => {
-    expect(headline(beyondHorizon)).toBe('Beyond 10 years')
-    expect(headline(flat)).toBe('No growth detected')
+  it('names the days a short-history forecast was measured over', () => {
+    expect(hint(dailyRate)).toBe(
+      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
+    )
   })
 })
 
-describe('forecastCard hint', () => {
-  it('says the forecast needs the tenant entitlement, and names the months the growth was measured over', () => {
-    expect(hint(unknownEntitlement)).toBe('Needs tenant entitlement · growth over the last 5 months')
+describe('storageUsedSource', () => {
+  it('names nothing while the storage comes from the trend', () => {
+    expect(storageUsedSource(base, t)).toBeNull()
   })
 
-  it('names the days the growth was measured over on a short history without an entitlement, and claims no forecast', () => {
-    expect(hint({ ...unknownEntitlement, growth: { ...dailyRate.growth, forecastStatus: 'Unknown' } })).toBe(
-      'Needs tenant entitlement · growth over the last 40 days',
+  it('says the storage is the site usage report total when the trend lists no day', () => {
+    const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
+    expect(storageUsedSource(noTrend, t)).toBe(
+      "Total of the site usage report: Microsoft 365's storage trend lists no day with storage yet.",
     )
   })
 
-  it('signs a shrinking rate without an entitlement', () => {
-    const shrinking: StorageOverview = {
-      ...unknownEntitlement,
-      growth: { ...unknownEntitlement.growth, avgMonthlyGrowthBytes: -10 * 1_073_741_824 },
+  it('says the trend did not come back, not that it lists no day, when it failed', () => {
+    const trendUnread: StorageOverview = {
+      ...firstDay,
+      sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true, trendRead: false },
     }
-    expect(forecastCard(shrinking, t).value).toBe('-10 GB')
+    expect(storageUsedSource(trendUnread, t)).toBe(
+      "Total of the site usage report: Microsoft 365's SharePoint storage trend did not come back this time.",
+    )
   })
+})
 
-  it('shows the storage used, not a growth of +0 B, from a single day without an entitlement', () => {
-    const card = forecastCard({ ...unknownEntitlement, growth: firstDay.growth }, t)
-    expect(card.label).toBe('SharePoint storage used')
-    expect(card.value).toBe('500 GB')
-  })
-
+describe('buildCallout', () => {
   it('says the figure is the site report total when the storage trend has no day at all', () => {
     const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
-    expect(hint(noTrend)).toBe(
-      "Microsoft 365's storage trend lists no day with storage for this tenant yet, so this is the total of its site usage report. The forecast starts once the trend has two days.",
-    )
-    expect(buildCallout(noTrend, t).note).toMatch(/^Microsoft 365's storage trend lists no day/)
+    expect(buildCallout(noTrend, t).note).toMatch(/^Microsoft 365's storage trend lists no day with storage for this tenant yet, so this is the total of its site usage report\./)
   })
 
   it('says the storage trend did not come back, not that it lists no day, when it failed', () => {
@@ -117,46 +87,6 @@ describe('forecastCard hint', () => {
     )
   })
 
-  it('says a date holds at current growth', () => {
-    expect(hint(base)).toBe('At current growth')
-  })
-
-  it('says beyond-horizon holds at current growth', () => {
-    expect(hint(beyondHorizon)).toBe('At current growth')
-  })
-
-  it('gives a flat tenant the at-current-growth hint', () => {
-    expect(hint(flat)).toBe('At current growth')
-  })
-
-  it('names the days a flat daily series was measured over', () => {
-    const flatDaily: StorageOverview = {
-      ...flat,
-      growth: { ...flat.growth, rateSource: 'daily', windowDays: 40 },
-    }
-    expect(hint(flatDaily)).toBe(
-      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
-    )
-  })
-
-  it('explains zero runway with the already-exhausted note', () => {
-    expect(hint(overEntitlement)).toMatch(/already using more than its pooled entitlement/)
-  })
-
-  it('names the days a short-history forecast was measured over', () => {
-    expect(hint(dailyRate)).toBe(
-      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
-    )
-  })
-
-  it('says the forecast starts from the second reported day', () => {
-    expect(hint(firstDay)).toBe(
-      'Microsoft 365 has reported one day of SharePoint storage so far. The forecast starts from the second day it reports.',
-    )
-  })
-})
-
-describe('buildCallout', () => {
   it('reports capacity exhaustion with a warn tone when action is needed', () => {
     const callout = buildCallout(withGrowth({ forecastStatus: 'Warning' }), t)
     expect(callout.tone).toBe('warn')

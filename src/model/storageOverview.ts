@@ -15,6 +15,7 @@ import {
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
 import { archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
 import {
+  COST_YEARS,
   annualGrowthGb,
   billableGrowthGb,
   cumulativeGrowthCost,
@@ -306,6 +307,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const growthGb = annualGrowthGb(rate)
   const excessGb = entitledBytes === null ? null : (sharePointUsed - entitledBytes) / GB_IN_BYTES
   const growthAnnual = growthCostAnnual(growthGb, ratePerGb, excessGb)
+  const cumulativeYear3 = cumulativeGrowthCost(growthGb, ratePerGb, excessGb)
 
   return {
     reportRefreshDate,
@@ -430,12 +432,12 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       ratePerGb,
       currency,
       growthAnnual,
-      growthAnnualStatus: growthCostStatus(
-        growthAnnual,
-        billableGrowthGb(growthGb, excessGb),
+      cumulativeYear3,
+      cumulativeYear3Status: growthCostStatus(
+        cumulativeYear3,
+        billableGrowthGb(growthGb * (COST_YEARS - 0.5), excessGb),
         entitledBytes === null ? null : entitledBytes / GB_IN_BYTES,
       ),
-      cumulativeYear3: cumulativeGrowthCost(growthGb, ratePerGb, excessGb),
     },
 
     caveats: {
