@@ -61,7 +61,9 @@ How long a site must go without activity to count as ready to archive, and a One
 as inactive. You can pick 1 to 10 years. The default is 3 years.
 
 ::: feature optimization.storage.report.overview
-It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive).
+It decides [Inactive sites to archive](../reports/storage-optimisation/tenant-capacity.md#inactive-sites-to-archive)
+and the sites that [Removable today](../reports/storage-optimisation/growth-forecast.md#removable-today)
+lets you pick to archive (a site you picked leaves the pick when the window no longer lists it).
 :::
 
 ::: feature optimization.storage.report.onedrive

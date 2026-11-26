@@ -18,7 +18,7 @@ A line chart of SharePoint storage, one point per month:
   days it was measured over.
 - **Forecast after clean-up** (dotted) is the same forecast if the deleted sites still billing were
   purged today: it starts at today's storage minus that storage and grows at the same rate
-  ([what is counted](#removable-today)). It is left out when nothing is removable.
+  ([what is counted](#removable-today)). It is left out when no deleted site is still billing.
 - **After clean-up and archiving** (dash-dot) appears once you choose sites to archive: the line
   after clean-up minus the storage of the sites you picked.
 - **Entitlement** is a horizontal line at the SharePoint entitlement, when it is known.
@@ -75,13 +75,16 @@ is shown only when the entitlement is known.
 | Figure | Meaning |
 | --- | --- |
 | Deleted sites still billing | Storage in deleted sites that still count against the entitlement (the *Deleted but still counting* or *Deleted but still billing* card). |
-| Archive inactive sites | The storage of the sites you chose to archive. **Choose sites** lists the live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for), largest first; tick the ones to archive and select **Show the impact**. Nothing is archived: the pick only changes the figures and lines here. |
+| Archive inactive sites | The storage of the sites you chose to archive. **Choose sites** (**Change sites** once some are picked) lists the live sites with no activity for the inactivity window set in [Report settings](../../reference/settings.md#archive-sites-inactive-for), largest first; tick the ones to archive and select **Show the impact**. Nothing is archived: the pick only changes the figures and lines here. |
 | Total | The two together. |
-| Forecast after clean-up (6 mo) | Where the forecast ends with both removed. |
+| Forecast after clean-up (6 mo) | Where the forecast ends with the deleted sites removed. With sites picked it reads **Forecast after clean-up and archiving (6 mo)** and ends where the dash-dot line ends. |
 | Stays under the entitlement | **Yes** when that line stays below the entitlement for the whole forecast, **No** when it reaches it. Shown only when the entitlement is known. |
 
 Only SharePoint storage is counted. Deleted OneDrives are in the OneDrive pool, so they do not
-lower the SharePoint forecast. A refresh of the report clears the pick.
+lower the SharePoint forecast. The pick lasts while the page is open, through a refresh of the
+report or a change in Report settings. A site leaves it when it is no longer inactive for the
+window set there. With no deleted site billing and no inactive site, the block says there is
+nothing to clean up and offers no pick.
 
 From a single reported day the chart shows that day's storage as one point, with no dashed or
 dotted line. *Avg growth / mo*, *Added last …*, *Forecast (6 mo)*, the forecast after clean-up and
@@ -98,9 +101,12 @@ A chart of the monthly cost over the forecast months, then two totals.
 
 - When the forecast passes the entitlement, the chart is the extra spend each month above it,
   with the same lines after clean-up and after archiving.
-- When the forecast stays inside the entitlement, growth adds no spend yet, so the panel reads
+- What a tenant already holds over the entitlement today is never priced here: only the growth
+  is, so the chart agrees with the two totals.
+- When the forecast stays inside the entitlement for the six months of the chart, the panel reads
   **Projected value of growth** and the chart is the list-price value of the storage added.
-  The same holds when the entitlement is unknown.
+  The totals can still show a cost, because they look 12 months and 3 years ahead. The same holds
+  when the entitlement is unknown.
 
 - **Next 12 months** is the growth over the coming year above the entitlement, at the rate.
   Growth inside the entitlement costs nothing.

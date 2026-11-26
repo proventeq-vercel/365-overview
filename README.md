@@ -170,7 +170,7 @@ without a live tenant. Ignored unless `VITE_USE_MOCK=true`; an unrecognised valu
 | `concealed` | Report names concealed in the Microsoft 365 admin centre — the banner explains the hashes |
 | `short-history` | Fewer than six months of trend data — the forecast comes from the daily series and names its window |
 | `onedrive-over-licence` | Four OneDrives raised past the 5 TB an E3/E5 licence includes — the OneDrive report's over-licence list |
-| `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so the *Forecast after clean-up* line is the forecast itself |
+| `nothing-to-clean` | No inactive and no deleted sites — nothing to clean up, so no *Forecast after clean-up* line is drawn (it would be the forecast itself) |
 | `no-licences` | The tenant's licences cannot be read — no entitlement, so the forecast projects used storage and the growth card replaces the runway |
 | `first-day` | The storage trend lists a single day (the other reports are the healthy tenant's) — no rate yet: the storage used in place of the forecast, no cost of doing nothing |
 | `no-daily-reports` | Every daily usage report is throttled (the report itself loads) — the growth panel stops asking after the first four days, ranks the sites and OneDrives by storage used and says none of the daily reports came back |

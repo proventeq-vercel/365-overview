@@ -260,7 +260,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/features/storageOptimization/` — the report: `StorageOptimization.tsx`
   (page: skeleton / `AccessFailure` with retry / sections), `KpiCards`,
   `DistributionSection`, `GrowthSection` (with `CleanUpForecast`, the
-  after-clean-up block of the impact panel), `OffendersSection` (includes the
+  *Removable today* block of the impact panel, and `ArchiveSitePicker`, the
+  paged dialog that names its page through `useSiteDetails`; `useArchivePicks`
+  keeps the picked site **ids**, so a settings change or refetch keeps the pick
+  and a site leaves it only when it is no longer in `archive.sites`; both
+  components only render what `model/archiveImpact.buildArchiveImpact` returns:
+  picked rows, archived and removable bytes, the trend rows with the archive
+  line, the cost rows and the outlook after clean-up and archiving),
+  `OffendersSection` (includes the
   paginated `SiteTable` and the one `NameCaveats` note for a name mask), `AccessFailure` (consent
   vs role screens), `forecastCopy.ts` (P365's forecast headline/hint/callout
   logic; takes `t` because it runs outside React).
@@ -474,16 +481,19 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   its unavailable strings. The full list is
   `agent-context/proventeq-365-lite/specs/fallbacks.md`.
 - **Forecast after clean-up** (`growth.afterCleanUp`, `GrowthPoint.afterCleanUpBytes`)
-  is the forecast line shifted down by what the report already calls removable:
-  `archive.bytes` (inactive live sites) + `sharePoint.deletedButBilling.bytes`.
-  It starts at the last actual month, grows at the same rate, clamps at 0. Deleted
-  OneDrives are the other pool and are never subtracted. Versions are not
-  counted. With nothing removable the line is the forecast
-  itself and the copy says there is nothing to clean up; with `rateSource`
-  `none` there is no line and `endBytes` is null. The removable figure itself
-  is always measured (the archive cutoff falls back to today without a refresh
-  date). `staysUnderEntitlement` is null without an entitlement, and the row is
-  then left out.
+  is the forecast line shifted down by the deleted sites still billing
+  (`sharePoint.deletedButBilling.bytes`) only. Inactive sites are removed only when
+  the user picks them in *Removable today*: `archive.sites` lists the candidates
+  (live, inactive before the cutoff, largest first) and `buildArchiveImpact`
+  subtracts the picked ones for the dash-dot line (`afterArchiveBytes`) and the
+  outlook (`cleanUpOutlook`, counting the last actual month like the model's
+  `staysUnder`). It starts at the last actual month, grows at the same rate,
+  clamps at 0. Deleted OneDrives are the other pool and are never subtracted.
+  Versions are not counted. With nothing removable no line is drawn and the
+  copy says there is nothing to clean up (it points to the pick only when
+  candidates exist); with `rateSource` `none` there is no line and `endBytes`
+  is null. `staysUnderEntitlement` is null without an entitlement, and the row
+  is then left out.
 - The entitlement estimate is P365's `TenantEntitlementCalculator`, ported to
   `lib/entitlement.ts`: a SKU contributes storage only by the **service plans**
   it carries (`SHAREPOINTSTANDARD`/`ENTERPRISE` family and Visio/Project
@@ -509,7 +519,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   unknown. The three-year figure applies the same rule to each year's
   **mid-year** volume (`growthGbPerYear × (year − 0.5)`), summed. There is no
   notional/billable split — one figure per card. P365 prices the whole growth
-  ungated, so the two products differ here on purpose.
+  ungated, so the two products differ here on purpose. The cost chart
+  (`lib/cost.costOverTime`) follows the same rule per line (forecast, after
+  clean-up, after archiving): month spend is `max(0, line − max(entitled, line
+  at the last actual month))`, so growth inside the entitlement costs 0 and a
+  tenant already over is never charged its standing overage. The chart is
+  `billable` when the last actual month is at or over the entitlement or any
+  forecast month passes it; otherwise (or without an entitlement) it is the
+  list-price value of the growth, with no clean-up or archive lines.
 - **The cards show only what the user can act on.** The rules are pure
   functions in `features/storageOptimization/actionableCards.ts` over the
   model: *SharePoint storage used* always, then, in this order and only when
