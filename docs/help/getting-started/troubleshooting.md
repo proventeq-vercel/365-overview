@@ -88,8 +88,7 @@ another address. A refused link stops the answer it belongs to:
 
 ::: feature optimization.storage.report.allsites
 A refused site directory leaves the site names in the All sites and OneDrives table to be looked
-up a page at a time, and its search of the All sites and OneDrives table finds only the
-fifty largest sites and those already shown.
+up a page at a time, and its search finds only the fifty largest sites and those already shown.
 :::
 
 ::: audience application

@@ -39,8 +39,8 @@ name that fits adds no Tab stop.
 ## Blurred names
 
 Concealed and hidden names look the same: every site name, drive name and owner is blurred,
-site links are removed, and the report looks up no names. One note above the tables says which
-of the two applies. Hover over or click a blurred name to see why it is blurred and how to show
+site links are removed, and the report looks up no names. One note on each report, above its
+lists, says which of the two applies. Hover over or click a blurred name to see why it is blurred and how to show
 it. The blur covers a placeholder, not the name, so it cannot be copied or uncovered. Storage
 figures are unaffected.
 

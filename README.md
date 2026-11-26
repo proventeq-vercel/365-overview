@@ -693,8 +693,8 @@ so read the summary after a first run.
 
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
 builds in **mock mode** with `VITE_FEATURES` naming both reports and the All sites and OneDrives
-table (whichever ones production enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
-entry), serves the build with `npm run preview`, and runs Lighthouse
+table, so every page and section is audited even when production leaves it off (a new report goes
+into that list and into `lighthouserc.json` with its own threshold entry), serves the build with `npm run preview`, and runs Lighthouse
 CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
 `lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
