@@ -186,6 +186,7 @@ that set rather than adding to it, so a list must name every flag it wants.
 | `optimization.storage.report.overview` | yes | The Storage Optimisation report — the whole point of the app |
 | `optimization.storage.report.onedrive` | no | The OneDrive Usage report, on `/onedrive-usage` |
 | `app.menu` | no | The hamburger and the side menu of reports |
+| `optimization.storage.report.allsites` | no | The *All sites and OneDrives* table at the end of Main offenders |
 
 `app.menu` is off by default, so a deployment shows no navigation until the flag is set.
 Turning it on takes effect only where there is something to navigate to — with fewer than
@@ -426,7 +427,7 @@ browser tab with a search param:
 
 | Param | Values | Example |
 |---|---|---|
-| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
+| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu`, `optimization.storage.report.allsites` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` / `onedrive-gaps` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
@@ -446,7 +447,8 @@ foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggl
 
 - **Data**: *Live tenant data* or one of the mock scenarios. Live keeps signing in and
   reading the real tenant, on any build, including a mock preview.
-- **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
+- **Features**: the Storage Optimisation report, the OneDrive Usage report, the report menu
+  and the *All sites and OneDrives* table.
 - **Names**: hide names (see *Hiding names*).
 - **Delay** (mock data only): holds every mock answer for 0.8, 2 or 5 s, so the loading
   screen shows on the next load or scenario switch (Refresh data keeps the report on screen

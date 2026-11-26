@@ -15,6 +15,7 @@
   "admin.data": "Data",
   "admin.features": "Features",
   "admin.feature.menu": "Report menu",
+  "admin.feature.allSitesTable": "All sites table",
   "admin.names": "Names",
   "admin.hideNames": "Hide names",
   "admin.namesConcealed": "Microsoft conceals names in this tenant's reports, so they stay hidden. An admin turns that off in the Microsoft 365 admin center: Settings → Org settings → Reports.",
