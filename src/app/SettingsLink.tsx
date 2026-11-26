@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 
-export function SettingsLink({ onOpen, children }: { onOpen: () => void; children: ReactNode }) {
+export function SettingsLink({ onOpen, children }: { onOpen: (event: MouseEvent<HTMLButtonElement>) => void; children: ReactNode }) {
   return (
     <button
       type="button"

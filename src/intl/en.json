@@ -261,6 +261,8 @@
   "storageOptimisation.kpi.enterEntitlement": "Enter it in Report settings",
   "storageOptimisation.kpi.usedOver": "{over} over",
   "storageOptimisation.kpi.usedEstimated": "entitlement estimated from licences",
+  "storageOptimisation.kpi.usedFromSiteReport": "Total of the site usage report: Microsoft 365's storage trend lists no day with storage yet.",
+  "storageOptimisation.kpi.usedFromSiteReportTrendUnread": "Total of the site usage report: Microsoft 365's SharePoint storage trend did not come back this time.",
   "storageOptimisation.kpi.inactivePeriod": "Inactive means no activity for {years, plural, one {# year} other {# years}}.",
   "storageOptimisation.kpi.changeInSettings": "Change it in Report settings",
 

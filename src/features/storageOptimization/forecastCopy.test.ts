@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { StorageOverview } from '@/types/storage'
 import { translate as t } from '@/test/render'
 import { LABEL_TONES } from '@/design/theme'
-import { buildCallout, estimatedQuotaNote, forecastCard, siteReportSource } from './forecastCopy'
+import { buildCallout, estimatedQuotaNote, forecastCard, storageUsedSource } from './forecastCopy'
 import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 const withGrowth = (over: Partial<StorageOverview['growth']>): StorageOverview => ({
@@ -40,15 +40,15 @@ describe('forecastCard', () => {
   })
 })
 
-describe('siteReportSource', () => {
+describe('storageUsedSource', () => {
   it('names nothing while the storage comes from the trend', () => {
-    expect(siteReportSource(base, t)).toBeNull()
+    expect(storageUsedSource(base, t)).toBeNull()
   })
 
   it('says the storage is the site usage report total when the trend lists no day', () => {
     const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
-    expect(siteReportSource(noTrend, t)).toBe(
-      "This is the total of its site usage report: Microsoft 365's storage trend lists no day with storage yet.",
+    expect(storageUsedSource(noTrend, t)).toBe(
+      "Total of the site usage report: Microsoft 365's storage trend lists no day with storage yet.",
     )
   })
 
@@ -57,8 +57,8 @@ describe('siteReportSource', () => {
       ...firstDay,
       sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true, trendRead: false },
     }
-    expect(siteReportSource(trendUnread, t)).toBe(
-      "This is the total of its site usage report: Microsoft 365's SharePoint storage trend did not come back this time.",
+    expect(storageUsedSource(trendUnread, t)).toBe(
+      "Total of the site usage report: Microsoft 365's SharePoint storage trend did not come back this time.",
     )
   })
 })

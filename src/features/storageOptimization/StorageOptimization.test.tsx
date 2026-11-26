@@ -273,6 +273,10 @@ describe('Storage Optimisation app', () => {
 
     expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Report settings' })).not.toBeInTheDocument())
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('region', { name: 'Tenant capacity' }))
   })
 
   it('keeps Report settings open while the entitlement is typed in from the storage used card', SETTINGS_ROUND_TRIP, async () => {

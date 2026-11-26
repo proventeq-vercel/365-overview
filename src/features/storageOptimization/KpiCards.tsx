@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
-import { costHint, forecastCard, siteReportSource } from './forecastCopy'
+import { costHint, forecastCard, storageUsedSource } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
@@ -43,7 +43,8 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   const { sharePoint, cost, archive } = overview
   const money = (amount: number) => formatMoney(amount, cost.currency)
   const rate = money(cost.ratePerGb)
-  const { openSettings, dialog } = useSettingsDialog()
+  const region = useRef<HTMLElement>(null)
+  const { openSettings, dialog } = useSettingsDialog(region)
 
   const storageUsedInformation = (): ReactNode =>
     sharePoint.entitledBytes === null ? (
@@ -73,7 +74,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
     const id = kpi.id
     switch (kpi.id) {
       case 'storageUsed': {
-        const source = siteReportSource(overview, t)
+        const source = storageUsedSource(overview, t)
         return (
           <StatCard
             key={id}
@@ -163,12 +164,6 @@ export function KpiCards({ overview, delay = 0 }: Props) {
               <>
                 {deletedHeld(deleted, t)} ·{' '}
                 {deletedBillingHint(deleted, money(deleted.billableAnnualCost), t)}
-                {deleted.billing === 'entitlementUnknown' && (
-                  <>
-                    {' '}
-                    <SettingsLink onOpen={openSettings('entitlement')}>{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
-                  </>
-                )}
               </>
             }
           />
@@ -181,8 +176,10 @@ export function KpiCards({ overview, delay = 0 }: Props) {
 
   return (
     <section
+      ref={region}
+      tabIndex={-1}
       aria-label={t('storageOptimisation.capacity.title')}
-      className="enter-rise flex flex-col gap-2"
+      className="enter-rise flex flex-col gap-2 outline-none"
       style={{ animationDelay: `${delay}ms` }}
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">

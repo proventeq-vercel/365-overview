@@ -48,10 +48,12 @@ export function SettingsDialog({
   open,
   onOpenChange,
   focus,
+  finalFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   focus?: SettingsField
+  finalFocus?: () => HTMLElement | null
 }) {
   const t = useTranslation()
   const { settings, update } = useSettings()
@@ -73,6 +75,7 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         initialFocus={focus ? () => document.getElementById(fieldIds[focus]) : undefined}
+        finalFocus={finalFocus ?? true}
       >
         <DialogTitle>{t('settings.title')}</DialogTitle>
         <DialogDescription>{t('settings.description')}</DialogDescription>

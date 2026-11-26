@@ -36,12 +36,20 @@ function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
     : t('storageOptimisation.growth.firstDayNote')
 }
 
-export function siteReportSource(overview: StorageOverview, t: TranslateFn): string | null {
+function siteReportSource(overview: StorageOverview, t: TranslateFn): string | null {
   const { sharePoint } = overview
   if (!sharePoint.usedFromSiteReport) return null
   return sharePoint.trendRead
     ? t('storageOptimisation.growth.siteReportSource')
     : t('storageOptimisation.growth.siteReportSourceTrendUnread')
+}
+
+export function storageUsedSource(overview: StorageOverview, t: TranslateFn): string | null {
+  const { sharePoint } = overview
+  if (!sharePoint.usedFromSiteReport) return null
+  return sharePoint.trendRead
+    ? t('storageOptimisation.kpi.usedFromSiteReport')
+    : t('storageOptimisation.kpi.usedFromSiteReportTrendUnread')
 }
 
 const joined = (...parts: (string | null)[]) => parts.filter((part) => part !== null).join(' ')

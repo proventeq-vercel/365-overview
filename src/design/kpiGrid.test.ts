@@ -3,8 +3,8 @@ import { kpiGridColumns } from './kpiGrid'
 
 describe('kpiGridColumns', () => {
   it.each([
-    [0, ''],
-    [1, ''],
+    [0, 'sm:grid-cols-2 xl:grid-cols-2'],
+    [1, 'sm:grid-cols-2 xl:grid-cols-2'],
     [2, 'sm:grid-cols-2 xl:grid-cols-2'],
     [3, 'sm:grid-cols-2 xl:grid-cols-3'],
     [4, 'sm:grid-cols-2 xl:grid-cols-4'],

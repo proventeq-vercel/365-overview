@@ -110,7 +110,7 @@ describe('KpiCards', () => {
   it('names the site usage report on the storage used card when the trend gave no storage', () => {
     render(<KpiCards overview={{ ...quiet, sharePoint: { ...quiet.sharePoint, usedFromSiteReport: true } }} />)
     expect(card(USED)).toHaveTextContent(
-      "entitlement estimated from licencesThis is the total of its site usage report: Microsoft 365's storage trend lists no day with storage yet.",
+      "entitlement estimated from licencesTotal of the site usage report: Microsoft 365's storage trend lists no day with storage yet.",
     )
   })
 
