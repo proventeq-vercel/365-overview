@@ -240,6 +240,7 @@
   "storageOptimisation.kpi.archivableHint": "{count, plural, one {# site} other {# sites}} · {percent} of live site storage · no activity since {date}",
   "storageOptimisation.kpi.costOfNothing": "Cost of doing nothing, next 3 years",
   "storageOptimisation.kpi.costOfNothingHint": "Extra spend over the next three years on growth beyond your entitlement, valued at {rate}/GB per month.",
+  "storageOptimisation.kpi.costOfNothingHintNoEntitlement": "Spend over the next three years on all storage growth, valued at {rate}/GB per month: with no entitlement entered, none of it is counted as covered.",
   "storageOptimisation.kpi.forecast": "Forecast exhaustion",
   "storageOptimisation.kpi.forecastHint": "At current growth",
   "storageOptimisation.kpi.usedToday": "SharePoint storage used",

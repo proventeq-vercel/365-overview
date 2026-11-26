@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
 import { costHint, forecastCard, storageUsedSource } from './forecastCopy'
@@ -44,6 +44,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   const money = (amount: number) => formatMoney(amount, cost.currency)
   const rate = money(cost.ratePerGb)
   const region = useRef<HTMLElement>(null)
+  const titleId = useId()
   const { openSettings, dialog } = useSettingsDialog(region)
 
   const storageUsedInformation = (): ReactNode =>
@@ -178,11 +179,11 @@ export function KpiCards({ overview, delay = 0 }: Props) {
     <section
       ref={region}
       tabIndex={-1}
-      aria-label={t('storageOptimisation.capacity.title')}
+      aria-labelledby={titleId}
       className="enter-rise flex flex-col gap-2 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">
+      <p id={titleId} className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">
         {t('storageOptimisation.capacity.title')}
       </p>
       <div className={`grid grid-cols-1 gap-4 ${kpiGridColumns(cards.length)}`}>

@@ -65,7 +65,11 @@ export function estimatedQuotaNote(overview: StorageOverview, t: TranslateFn): s
 }
 
 export function costHint(overview: StorageOverview, rate: string, t: TranslateFn): string {
-  return joined(t('storageOptimisation.kpi.costOfNothingHint', { rate }), dailyRateNote(overview, t))
+  const hint =
+    overview.sharePoint.entitledBytes === null
+      ? t('storageOptimisation.kpi.costOfNothingHintNoEntitlement', { rate })
+      : t('storageOptimisation.kpi.costOfNothingHint', { rate })
+  return joined(hint, dailyRateNote(overview, t))
 }
 
 export interface ForecastCard {

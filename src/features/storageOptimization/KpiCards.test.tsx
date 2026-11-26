@@ -72,6 +72,14 @@ describe('KpiCards', () => {
     expect(within(card(USED)).getByRole('button', { name: 'Enter it in Report settings' })).toBeInTheDocument()
   })
 
+  it('prices all growth on the cost card without saying it is beyond an entitlement while none is entered', () => {
+    render(<KpiCards overview={{ ...unknownEntitlement, cost: { ...unknownEntitlement.cost, cumulativeYear3: 1296 } }} />)
+    expect(card(COST)).toHaveTextContent(
+      'Spend over the next three years on all storage growth, valued at £0.02/GB per month: with no entitlement entered, none of it is counted as covered.',
+    )
+    expect(card(COST)).not.toHaveTextContent('beyond your entitlement')
+  })
+
   it('puts the amount over the entitlement on the storage used card, in red', () => {
     render(<KpiCards overview={busy} />)
     expect(card(USED)).toHaveTextContent('1.1 TB of 1000 GB entitlement · 100 GB over')
@@ -88,6 +96,7 @@ describe('KpiCards', () => {
     expect(labels()).toEqual([USED, OVER, COST, ARCHIVE, DELETED])
     expect(card(OVER)).toHaveTextContent('100 GB')
     expect(card(COST)).toHaveTextContent('£1,296.00')
+    expect(card(COST)).toHaveTextContent('growth beyond your entitlement')
     expect(card(DELETED)).toHaveTextContent(
       '24 GBDeleted but still billing4 deleted sites in the recycle bin or under retention · 24 GB of it is past your entitlement and billed · £5.76/yr until purged',
     )
@@ -105,6 +114,41 @@ describe('KpiCards', () => {
       'Counts toward your storage, not billed today: you are under your entitlement by 500 GB',
     )
     expect(card(DELETED_COUNTING).style.borderLeftColor).toBe(rgb(P365.grey500))
+  })
+
+  it.each([
+    {
+      name: 'exactly at the entitlement',
+      overview: { ...quiet, sharePoint: { ...quiet.sharePoint, remainingBytes: 0, overageBytes: 0 } },
+      sites: 4,
+      drives: 0,
+      text: '4 deleted sites in the recycle bin or under retention · Counts toward your storage, not billed today: you are at your entitlement, so any growth is billed',
+    },
+    {
+      name: 'with no entitlement entered',
+      overview: { ...unknownEntitlement, cost: { ...unknownEntitlement.cost, applies: false } },
+      sites: 4,
+      drives: 2,
+      text: '4 deleted sites and 2 deleted OneDrives in the recycle bin or under retention · Counts toward your storage; whether it is billed depends on your entitlement.',
+    },
+    {
+      name: 'holding OneDrives only',
+      overview: busy,
+      sites: 0,
+      drives: 2,
+      text: '2 deleted OneDrives under retention · Held in the OneDrive pool, outside your SharePoint storage entitlement',
+    },
+  ])('says what deleted storage costs $name', ({ overview, sites, drives, text }) => {
+    render(
+      <KpiCards
+        overview={{
+          ...overview,
+          sharePoint: { ...overview.sharePoint, deletedButBilling: { bytes: sites * 6 * GB, count: sites } },
+          oneDrive: { ...overview.oneDrive, deletedButBilling: { bytes: drives * 3 * GB, count: drives } },
+        }}
+      />,
+    )
+    expect(card(DELETED_COUNTING)).toHaveTextContent(text)
   })
 
   it('names the site usage report on the storage used card when the trend gave no storage', () => {
