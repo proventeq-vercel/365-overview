@@ -163,8 +163,6 @@ export interface StorageOverview {
     usedFromSiteReport: boolean
     entitledBytes: number | null
     remainingBytes: number | null
-    usedPercentage: number | null
-    headroomRatio: number | null
     overageBytes: number | null
     exhausted: boolean
     entitlementIsMeasured: boolean

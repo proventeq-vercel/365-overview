@@ -88,14 +88,11 @@ describe('buildStorageOverview pools', () => {
     expect(withMoreOneDrive.sharePoint.remainingBytes).toBe(
       baseline.sharePoint.remainingBytes,
     )
-    expect(withMoreOneDrive.sharePoint.usedPercentage).toBe(
-      baseline.sharePoint.usedPercentage,
-    )
   })
 
-  it('reports the used percentage against the entitlement', () => {
+  it('reports what is left of the entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 300 * GB }))
-    expect(overview.sharePoint.usedPercentage).toBeCloseTo(0.5, 10)
+    expect(overview.sharePoint.remainingBytes).toBe(150 * GB)
   })
 })
 
@@ -146,8 +143,6 @@ describe('buildStorageOverview entitlement', () => {
     const overview = buildStorageOverview(unknownEntitlement())
     expect(overview.sharePoint.entitledBytes).toBeNull()
     expect(overview.sharePoint.remainingBytes).toBeNull()
-    expect(overview.sharePoint.usedPercentage).toBeNull()
-    expect(overview.sharePoint.headroomRatio).toBeNull()
     expect(overview.sharePoint.overageBytes).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Unknown')
     expect(overview.growth.forecastExhaustionDate).toBeNull()
@@ -853,12 +848,12 @@ describe('buildStorageOverview growth and cost', () => {
   it('reports zero overage, not a negative one, inside the entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
     expect(overview.sharePoint.overageBytes).toBe(0)
-    expect(overview.sharePoint.headroomRatio).toBeCloseTo(0.85, 10)
+    expect(overview.sharePoint.remainingBytes).toBe(850 * GB)
   })
 
-  it('clamps headroom at zero over the entitlement, never negative', () => {
+  it('clamps what is left at zero over the entitlement, never negative', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
-    expect(overview.sharePoint.headroomRatio).toBe(0)
+    expect(overview.sharePoint.remainingBytes).toBe(0)
   })
 
   it('reports the measured growth rate and the window it was measured over', () => {

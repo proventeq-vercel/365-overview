@@ -385,7 +385,7 @@ test('every report section explains itself and links to its help page', async ({
   await expect(help).toHaveURL(/\/help\/reports\/storage-optimisation\/storage-distribution$/)
 })
 
-test('the cards sit straight under the title, above the storage usage line', async ({ page }) => {
+test('the cards sit straight under the title, above the storage usage rows', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
   const main = page.getByRole('main')

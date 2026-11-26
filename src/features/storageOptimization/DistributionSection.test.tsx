@@ -5,7 +5,7 @@ import { render } from '@/test/render'
 import { storageUsage } from '@/model/storageUsage'
 import type { StorageOverview, StorageRow } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
-import { base, overEntitlement, unknownEntitlement } from './testFixtures'
+import { base, overEntitlement } from './testFixtures'
 
 afterEach(cleanup)
 
@@ -139,6 +139,11 @@ describe('DistributionSection', () => {
     expect(await screen.findByRole('dialog', { name: 'Teams' })).toHaveTextContent(
       'Live sites created from Teams channel and group templates',
     )
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(screen.getByRole('button', { name: /^SharePoint/ }))
+    expect(await screen.findByRole('dialog', { name: 'SharePoint' })).toHaveTextContent(
+      'Live SharePoint sites, from the SharePoint site usage report.',
+    )
   })
 
   it('shows an empty block, not a total or a bar, when no source reports storage', () => {
@@ -148,7 +153,8 @@ describe('DistributionSection', () => {
       oneDrive: { ...withTemplates.oneDrive, drives: [] },
     })
     render(<DistributionSection overview={nothing} />)
-    expect(screen.getByText('No storage is reported for SharePoint, Teams or OneDrive yet.')).toBeInTheDocument()
+    expect(screen.getByText('No live site or OneDrive holds storage in the reports that came back.')).toBeInTheDocument()
+    expect(screen.getByText('What each source stores today. OneDrive is a separate pool from SharePoint.')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Storage usage' })).not.toBeInTheDocument()
     expect(screen.queryByText(/stored in total/)).not.toBeInTheDocument()
   })
@@ -172,14 +178,11 @@ describe('DistributionSection', () => {
     expect(screen.queryByRole('list', { name: 'SharePoint' })).not.toBeInTheDocument()
   })
 
-  it('keeps the section when the entitlement is unknown', () => {
-    render(<DistributionSection overview={{ ...unknownEntitlement, sharePoint: { ...unknownEntitlement.sharePoint, byTemplate: [] } }} />)
-    expect(rowHeaders().map((header) => header.textContent)).toEqual([
-      'SharePoint350 GB56.5% of stored',
-      'Teams150 GB24.2% of stored',
-      'OneDrive120 GB19.4% of stored',
-    ])
-    expect(screen.getByText('620 GB stored in total')).toBeInTheDocument()
+  it('invites a hover or selection only while there are sources to select', () => {
+    render(<DistributionSection overview={withTemplates} />)
+    expect(
+      screen.getByText('What each source stores today. OneDrive is a separate pool from SharePoint. Hover or select a source for details.'),
+    ).toBeInTheDocument()
   })
 
   it('says the template grouping will not match the admin centre', () => {

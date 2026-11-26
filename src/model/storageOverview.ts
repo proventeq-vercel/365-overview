@@ -226,8 +226,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const oneDriveUsed = usedFrom(oneDriveTrend, drives)
 
   const remainingBytes = entitledBytes === null ? null : Math.max(0, entitledBytes - sharePointUsed)
-  const usedPercentage = entitledBytes === null ? null : sharePointUsed / entitledBytes
-  const headroomRatio = usedPercentage === null ? null : Math.max(0, 1 - usedPercentage)
   const overageBytes = entitledBytes === null ? null : Math.max(0, sharePointUsed - entitledBytes)
   const exhausted = entitledBytes !== null && sharePointUsed >= entitledBytes
 
@@ -296,8 +294,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       usedFromSiteReport: sharePointTrend.length === 0,
       entitledBytes,
       remainingBytes,
-      usedPercentage,
-      headroomRatio,
       overageBytes,
       exhausted,
       entitlementIsMeasured,

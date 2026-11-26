@@ -45,7 +45,11 @@ export function StorageUsagePanel({ overview }: { overview: StorageOverview }) {
   return (
     <Panel>
       <PanelLabel>{t('storageOptimisation.usage.title')}</PanelLabel>
-      <PanelDescription>{t('storageOptimisation.usage.subtitle')}</PanelDescription>
+      <PanelDescription>
+        {rows.length === 0
+          ? t('storageOptimisation.usage.subtitle')
+          : `${t('storageOptimisation.usage.subtitle')} ${t('storageOptimisation.usage.hint')}`}
+      </PanelDescription>
       {rows.length === 0 ? (
         <EmptyBlock>{t('storageOptimisation.usage.empty')}</EmptyBlock>
       ) : (

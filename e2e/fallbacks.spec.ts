@@ -80,7 +80,7 @@ test('without licences the storage used card asks for the entitlement and the ca
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'SharePoint storage used' })).toContainText('No entitlement entered · Enter it in Report settings')
   await expect(page.locator('[data-slot="stat-card"]', { hasText: 'Forecast exhaustion' })).toHaveCount(0)
   await expect(page.getByText(/^SharePoint storage reaches .+ in 6 months$/)).toBeVisible()
-  await expect(page.getByRole('list', { name: 'Storage usage' }).getByText('Free')).toHaveCount(0)
+  await expect(page.getByRole('list', { name: 'Storage usage' }).getByRole('button')).toHaveText([/^SharePoint/, /^Teams/, /^OneDrive/])
 })
 
 test('from a single reported day the trend chart still draws that day', async ({ page }) => {

@@ -393,9 +393,7 @@ describe('Storage Optimisation app', () => {
     cleanup()
     renderApp('no-licences', { getDrives: down, getOneDriveTrend: down })
     await reportLoaded()
-    expect(
-      screen.getByText('What each source stores today. OneDrive is a separate pool from SharePoint. Hover or select a source for details.'),
-    ).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Storage usage' })).queryByText('OneDrive')).not.toBeInTheDocument()
   })
 
   it('lists no offenders and reads no daily report when neither usage report comes back', async () => {
