@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
+import type { GrowthPoint } from '@/types/storage'
 import { GB_IN_BYTES } from './entitlement'
 import {
   COST_YEARS,
   annualGrowthGb,
   billableGrowthGb,
+  costOverTime,
   cumulativeGrowthCost,
   growthCostAnnual,
   growthCostStatus,
@@ -127,5 +129,69 @@ describe('cumulativeGrowthCost', () => {
 
   it('scales with the rate', () => {
     expect(cumulativeGrowthCost(100, 0.02, null)).toBeCloseTo(450 * 12 * 0.02, 2)
+  })
+})
+
+describe('costOverTime', () => {
+  const GB = GB_IN_BYTES
+  const point = (
+    month: string,
+    actualGb: number | null,
+    projectedGb: number,
+    afterCleanUpGb: number | null,
+  ): GrowthPoint => ({
+    month,
+    actualUsedBytes: actualGb === null ? null : actualGb * GB,
+    projectedUsedBytes: projectedGb * GB,
+    afterCleanUpBytes: afterCleanUpGb === null ? null : afterCleanUpGb * GB,
+  })
+  const points = [
+    point('2026-05', 100, 100, 90),
+    point('2026-06', null, 110, 100),
+    point('2026-07', null, 120, 110),
+  ]
+
+  it('prices every line above the entitlement when the forecast passes it', () => {
+    const { basis, rows } = costOverTime(points, 105 * GB, 0.5, 10 * GB)
+    expect(basis).toBe('billable')
+    expect(rows).toEqual([
+      { month: '2026-06', forecastCost: 2.5, afterCleanUpCost: 0, afterArchiveCost: 0 },
+      { month: '2026-07', forecastCost: 7.5, afterCleanUpCost: 2.5, afterArchiveCost: 0 },
+    ])
+  })
+
+  it('never prices what a tenant already over its entitlement holds today', () => {
+    const over = [
+      point('2026-05', 1100, 1100, 900),
+      point('2026-06', null, 1110, 910),
+      point('2026-07', null, 1120, 920),
+    ]
+    const { basis, rows } = costOverTime(over, 1000 * GB, 0.5, 0)
+    expect(basis).toBe('billable')
+    expect(rows).toEqual([
+      { month: '2026-06', forecastCost: 5, afterCleanUpCost: 0, afterArchiveCost: null },
+      { month: '2026-07', forecastCost: 10, afterCleanUpCost: 0, afterArchiveCost: null },
+    ])
+  })
+
+  it('treats a tenant at its entitlement as billable even while it shrinks, and prices nothing', () => {
+    const shrinking = [point('2026-05', 100, 100, null), point('2026-06', null, 95, null), point('2026-07', null, 90, null)]
+    const { basis, rows } = costOverTime(shrinking, 100 * GB, 0.5, 0)
+    expect(basis).toBe('billable')
+    expect(rows.map((row) => row.forecastCost)).toEqual([0, 0])
+    expect(rows.map((row) => row.afterCleanUpCost)).toEqual([null, null])
+  })
+
+  it('charts the list-price value of growth inside the entitlement', () => {
+    const { basis, rows } = costOverTime(points, 500 * GB, 0.5, 10 * GB)
+    expect(basis).toBe('withinEntitlement')
+    expect(rows.map((row) => row.forecastCost)).toEqual([5, 10])
+    expect(rows.every((row) => row.afterCleanUpCost === null && row.afterArchiveCost === null)).toBe(true)
+  })
+
+  it('charts the list-price value of growth when the entitlement is unknown', () => {
+    const { basis, rows } = costOverTime(points, null, 0.5, 0)
+    expect(basis).toBe('notional')
+    expect(rows.map((row) => row.forecastCost)).toEqual([5, 10])
   })
 })

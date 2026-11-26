@@ -62,8 +62,29 @@ export interface CostOverTime {
   rows: CostRow[]
 }
 
-function monthlyCostAbove(bytes: number, entitledBytes: number, ratePerGb: number): number {
-  return (Math.max(0, bytes - entitledBytes) / GB_IN_BYTES) * ratePerGb
+type Line = (point: GrowthPoint) => number | null
+
+function monthlyCostAbove(
+  bytes: number,
+  entitledBytes: number,
+  startBytes: number,
+  ratePerGb: number,
+): number {
+  return (Math.max(0, bytes - Math.max(entitledBytes, startBytes)) / GB_IN_BYTES) * ratePerGb
+}
+
+function lineCosts(
+  points: GrowthPoint[],
+  forecast: GrowthPoint[],
+  line: Line,
+  entitledBytes: number,
+  ratePerGb: number,
+): (number | null)[] {
+  const start = points.map(line).find((value) => value !== null) ?? 0
+  return forecast.map((point) => {
+    const bytes = line(point)
+    return bytes === null ? null : monthlyCostAbove(bytes, entitledBytes, start, ratePerGb)
+  })
 }
 
 export function costOverTime(
@@ -74,8 +95,10 @@ export function costOverTime(
 ): CostOverTime {
   const forecast = points.filter((point) => point.actualUsedBytes === null)
   const projected = (point: GrowthPoint) => point.projectedUsedBytes ?? 0
+  const today = points.findLast((point) => point.actualUsedBytes !== null)?.actualUsedBytes ?? 0
   const billable =
-    entitledBytes !== null && forecast.some((point) => projected(point) > entitledBytes)
+    entitledBytes !== null &&
+    (today >= entitledBytes || forecast.some((point) => projected(point) > entitledBytes))
   const basis: CostBasis = billable
     ? 'billable'
     : entitledBytes === null
@@ -83,7 +106,6 @@ export function costOverTime(
       : 'withinEntitlement'
 
   if (entitledBytes === null || !billable) {
-    const today = points.findLast((point) => point.actualUsedBytes !== null)?.actualUsedBytes ?? 0
     return {
       basis,
       rows: forecast.map((point) => ({
@@ -95,15 +117,19 @@ export function costOverTime(
     }
   }
 
-  const costOf = (bytes: number | null) =>
-    bytes === null ? null : monthlyCostAbove(bytes, entitledBytes, ratePerGb)
+  const forecastCosts = lineCosts(points, forecast, (point) => point.projectedUsedBytes, entitledBytes, ratePerGb)
+  const cleanUpCosts = lineCosts(points, forecast, (point) => point.afterCleanUpBytes, entitledBytes, ratePerGb)
+  const archiveCosts =
+    archivedBytes > 0
+      ? lineCosts(points, forecast, (point) => afterArchiveBytes(point, archivedBytes), entitledBytes, ratePerGb)
+      : null
   return {
     basis,
-    rows: forecast.map((point) => ({
+    rows: forecast.map((point, index) => ({
       month: point.month,
-      forecastCost: monthlyCostAbove(projected(point), entitledBytes, ratePerGb),
-      afterCleanUpCost: costOf(point.afterCleanUpBytes),
-      afterArchiveCost: archivedBytes > 0 ? costOf(afterArchiveBytes(point, archivedBytes)) : null,
+      forecastCost: forecastCosts[index] ?? 0,
+      afterCleanUpCost: cleanUpCosts[index],
+      afterArchiveCost: archiveCosts === null ? null : archiveCosts[index],
     })),
   }
 }
