@@ -184,7 +184,7 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
 
         {mock && (
           <div className="flex items-center gap-1.5">
-            <label htmlFor={delayId} className="text-xs font-semibold text-p365-grey-500">
+            <label htmlFor={delayId} className="text-xs font-semibold text-p365-grey-text">
               {t('admin.delay')}
             </label>
             <Select
