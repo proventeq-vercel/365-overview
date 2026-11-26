@@ -126,9 +126,10 @@ measured against the storage each user is licensed for use the commonest OneDriv
 and say so (*Over the usual OneDrive limit*). Enter the OneDrive storage per user in
 [Report settings](../reference/settings.md) to measure against your licences.
 
-The SharePoint figures never show as Unknown: without the entitlement the report shows the
-monthly growth and the storage in use instead. Enter the SharePoint entitlement in Report settings
-to see the headroom and when it runs out.
+The SharePoint figures never show as Unknown. Without the entitlement the *Forecast exhaustion*
+card is left out, and the *SharePoint storage used* card says none is entered, with a link to
+Report settings. Enter the SharePoint entitlement there to see the headroom and when it runs out.
+From a single reported day the *SharePoint storage used* card shows the latest figure.
 
 ## A Microsoft report did not come back
 
@@ -138,18 +139,19 @@ the page still loads from the others. The report asks for a failed one a second 
 Microsoft said it was busy, which the report has already waited out. A note at the top names the
 report that did not come back, and the figures drawn from it are left out:
 
-- Without the **SharePoint site usage report**, the per-site figures are left out: inactive sites,
-  the saving, the template chart, *Live sites*, the top sites, the line after clean-up and the
+- Without the **SharePoint site usage report**, the per-site figures are left out: the
+  *Inactive sites to archive* card and its saving, the template chart, *Live sites*, the top sites, the line after clean-up and the
   Teams, Deleted and Inactive parts of the storage usage line. Storage used and the forecast come
   from the storage trend.
 - Without the **OneDrive usage report**, the per-OneDrive figures are left out: the OneDrive cards
   other than the storage, *Drives near their quota*, the top OneDrives, the over-licence and
   inactive sections and the table of OneDrives. The OneDrive storage comes from its storage trend.
-- If one of the two usage reports is missing, *Deleted but still billing* is left out, since it
-  adds the two, and *Main offenders* lists the pool whose report came back. If both are missing,
+- If one of the two usage reports is missing, the *Deleted but still counting* (or *billing*)
+  card is left out, since it adds the two, and *Main offenders* lists the pool whose report came back. If both are missing,
   *Main offenders* is left out.
 - Without a **storage trend**, storage used is the total of the matching usage report, and there
-  is no forecast until the trend comes back.
+  is no forecast until the trend comes back. The *SharePoint storage used* card says where the
+  figure comes from.
 - When a pool's usage report is missing and its storage trend holds no storage, that pool is left
   out as a whole.
 

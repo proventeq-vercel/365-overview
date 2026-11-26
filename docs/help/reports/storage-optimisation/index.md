@@ -10,9 +10,10 @@ order: 0
 The Storage Optimisation report covers your whole tenant on one page. From top to bottom it runs
 from today's position to the actions that would change it:
 
-1. [Capacity cards](tenant-capacity.md), straight under the title: inactive sites to archive,
-   what archiving would save once you are over the entitlement, what growth beyond the
-   entitlement costs, and when the entitlement runs out.
+1. [Capacity cards](tenant-capacity.md), straight under the title with a small *Tenant capacity*
+   label: SharePoint storage used, then only the cards you can act on. They are over the
+   entitlement, when it runs out, what growth beyond it costs over three years, inactive sites to
+   archive and deleted storage.
 2. [Current storage distribution](storage-distribution.md): one line for SharePoint, Teams,
    deleted sites, inactive and free storage against the SharePoint entitlement, and how
    SharePoint splits by site template.
@@ -26,8 +27,8 @@ from today's position to the actions that would change it:
 - **Data as of** under the title is the day Microsoft's usage report was produced. Microsoft
   publishes it two to three days behind.
 - **Colours carry a state.** Green means healthy. Orange means watch it. Red means act. Navy
-  marks a card that shows a measured figure without grading it, for example the monthly growth
-  when the entitlement is unknown. Each card's page says what moves it between them.
+  marks a card that shows a measured figure without grading it, for example the storage used.
+  Each card's page says what moves it between them.
 - **SharePoint and OneDrive are two pools.** The SharePoint entitlement is shared by the whole
   tenant. Each OneDrive has its own per-user allowance. The report never mixes the two in one
   percentage.

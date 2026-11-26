@@ -8,7 +8,7 @@ Guidance for working in this repo. See `README.md` for setup/permissions and
 A React 19 + TypeScript + Vite 8 SPA that renders **one report** —
 a sneak-peek of the Proventeq 365 storage-optimisation report — from a Microsoft
 365 tenant's own Graph usage reports. In order: the Tenant capacity KPI cards
-(straight under the page title, no section heading) · Current storage distribution · Future state & growth impact ·
+(straight under the page title, a small visible "Tenant capacity" label, no section heading) · Current storage distribution · Future state & growth impact ·
 Main offenders.
 No lead capture, no telemetry. By default nothing leaves the browser; with
 `VITE_GRAPH_PROXY_URL` set the browser's Graph calls go through `functions/`,
@@ -505,13 +505,19 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   functions in `features/storageOptimization/actionableCards.ts` over the
   model: *SharePoint storage used* always, then, in this order and only when
   they apply, *Over entitlement* (`overageBytes > 0`), *Forecast exhaustion*
-  (within `FORECAST_WINDOW_MONTHS` = 24 and not exceeded), *Cost of doing
-  nothing, next 3 years* (`cost.applies` and `cumulativeYear3 > 0`),
-  *Inactive sites to archive* (a site qualifies; the saving joins its
-  description when `archive.savingApplies`) and the deleted storage card
-  (`deletedStorageCard`, billed only for the site part above the entitlement).
-  A card whose value would be zero or "no exhaustion" is left out. The grid's
-  `xl` column count follows the number of cards.
+  (within `FORECAST_CARD_MONTHS` = 24 and the entitlement not yet reached),
+  *Cost of doing nothing, next 3 years* (`cost.applies` and
+  `cumulativeYear3 > 0`), *Inactive sites to archive* (a live site qualifies
+  and they hold storage; the saving joins its description when
+  `archive.savingApplies`) and the deleted storage card (`deletedStorageCard`,
+  billed only for the site part above the entitlement; left out unless both
+  usage reports were read, and it counts only a pool whose deleted rows hold
+  storage). A card whose value would be zero or "no exhaustion" is left out.
+  `actionableCards` returns each card as a `KpiCard` union carrying its own
+  figures, so `KpiCards` does no arithmetic. The grid's `xl` column count
+  follows the number of cards (`design/kpiGrid.kpiGridColumns(count)`). The
+  cards sit under a small visible *Tenant capacity* label (a paragraph, not a
+  heading).
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
@@ -615,9 +621,10 @@ typecheck · test · build as a separate job.
   *Current storage distribution*) carry two more, also graded in the model:
   `archive.status` (`lib/archive.ts` — archivable share of live site storage,
   watch >5% / attention >50%; drives both the archive and the saving card) and
-  `cost.growthAnnualStatus` (`lib/cost.ts` — healthy at zero, watch above,
-  attention once the next 12 months bill more than a tenth of the licensed
-  entitlement again; rate-independent). A site is archivable when its
+  `cost.cumulativeYear3Status` (`lib/cost.ts` `growthCostStatus` — healthy at
+  zero, watch above, attention once the third year's billable growth
+  (mid-year volume) is more than a tenth of the entitlement; watch, never
+  attention, with no entitlement; rate-independent). A site is archivable when its
   `lastActivityDate` is older than `settings.inactiveYears` (default 3) before
   `reportRefreshDate`; a site with no recorded activity is never counted.
 
