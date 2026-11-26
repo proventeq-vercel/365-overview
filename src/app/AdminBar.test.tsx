@@ -137,6 +137,16 @@ describe('AdminBar', () => {
     expect(hrefOf(navigate).searchParams.get('admin')).toBe('true')
   })
 
+  it('reloads with the all sites and OneDrives table switched on', async () => {
+    const user = userEvent.setup()
+    const { navigate } = renderBar()
+    await user.click(screen.getByRole('button', { name: 'All sites and OneDrives table' }))
+    await user.click(screen.getByRole('button', { name: 'Apply and reload' }))
+    expect(hrefOf(navigate).searchParams.get('features')).toBe(
+      'optimization.storage.report.overview,optimization.storage.report.allsites',
+    )
+  })
+
   it('switches a mock tab to the live tenant data', async () => {
     const user = userEvent.setup()
     const { navigate } = renderBar()

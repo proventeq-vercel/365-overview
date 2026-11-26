@@ -81,7 +81,7 @@ another address. A refused link stops the answer it belongs to:
   the screen returns, see below.
 - When only some answers were refused, the page loads from the rest. A refused usage report
   shows as a report that did not come back (see
-  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)). A refused
+  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)).
   On a tenant of more than 10,000 licensed users, a
   refused user licence report leaves OneDrives with no activity for over 93 days standing in for
   the unlicensed ones. **Refresh data** meets the same link again, so see below.
