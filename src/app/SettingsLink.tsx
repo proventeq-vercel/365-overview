@@ -1,22 +1,13 @@
-import { useState, type ReactNode } from 'react'
-import { SettingsDialog, type SettingsField } from './SettingsDialog'
+import type { ReactNode } from 'react'
 
-export function SettingsLink({ field, children }: { field: SettingsField; children: ReactNode }) {
-  const [open, setOpen] = useState(false)
-  const [opened, setOpened] = useState(false)
+export function SettingsLink({ onOpen, children }: { onOpen: () => void; children: ReactNode }) {
   return (
-    <>
-      <button
-        type="button"
-        className="font-semibold text-p365-teal underline-offset-2 transition-colors duration-150 ease-out hover:underline"
-        onClick={() => {
-          setOpened(true)
-          setOpen(true)
-        }}
-      >
-        {children}
-      </button>
-      {opened && <SettingsDialog open={open} onOpenChange={setOpen} focus={field} />}
-    </>
+    <button
+      type="button"
+      className="rounded-sm font-semibold text-p365-teal underline-offset-2 outline-none transition-colors duration-150 ease-out hover:underline focus-visible:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+      onClick={onOpen}
+    >
+      {children}
+    </button>
   )
 }

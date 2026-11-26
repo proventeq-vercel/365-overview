@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { StorageOverview } from '@/types/storage'
 import { translate as t } from '@/test/render'
 import { LABEL_TONES } from '@/design/theme'
-import { buildCallout, estimatedQuotaNote, forecastCard } from './forecastCopy'
+import { buildCallout, estimatedQuotaNote, forecastCard, siteReportSource } from './forecastCopy'
 import { base, dailyRate, firstDay, unknownEntitlement } from './testFixtures'
 
 const withGrowth = (over: Partial<StorageOverview['growth']>): StorageOverview => ({
@@ -22,25 +22,71 @@ const flat: StorageOverview = withGrowth({
   avgMonthlyGrowthBytes: 0,
 })
 
-const headline = (overview: StorageOverview) => forecastCard(overview, t).value
-const hint = (overview: StorageOverview) => forecastCard(overview, t).hint
+const hint = (overview: StorageOverview) => forecastCard('2030-01-01', overview, t).hint
 
 describe('forecastCard', () => {
   it('shows the exhaustion month at current growth, graded by the forecast', () => {
-    expect(forecastCard(base, t)).toEqual({ value: 'January 2030', status: 'Healthy', hint: 'At current growth' })
-  })
-
-  it('says the entitlement is already exceeded at zero runway', () => {
-    expect(headline(overEntitlement)).toBe('Entitlement already exceeded')
-    expect(hint(overEntitlement)).toBe(t('storageOptimisation.growth.alreadyExhaustedNote'))
+    expect(forecastCard('2030-01-01', base, t)).toEqual({
+      value: 'January 2030',
+      status: 'Healthy',
+      hint: 'At current growth',
+    })
   })
 
   it('names the days a short-history forecast was measured over', () => {
-    expect(hint(dailyRate)).toMatch(/^At current growth · /)
+    expect(hint(dailyRate)).toBe(
+      'At current growth · Forecast from the last 40 days of storage: there are fewer than six monthly figures, so treat it as indicative.',
+    )
+  })
+})
+
+describe('siteReportSource', () => {
+  it('names nothing while the storage comes from the trend', () => {
+    expect(siteReportSource(base, t)).toBeNull()
+  })
+
+  it('says the storage is the site usage report total when the trend lists no day', () => {
+    const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
+    expect(siteReportSource(noTrend, t)).toBe(
+      "This is the total of its site usage report: Microsoft 365's storage trend lists no day with storage yet.",
+    )
+  })
+
+  it('says the trend did not come back, not that it lists no day, when it failed', () => {
+    const trendUnread: StorageOverview = {
+      ...firstDay,
+      sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true, trendRead: false },
+    }
+    expect(siteReportSource(trendUnread, t)).toBe(
+      "This is the total of its site usage report: Microsoft 365's SharePoint storage trend did not come back this time.",
+    )
   })
 })
 
 describe('buildCallout', () => {
+  it('says the figure is the site report total when the storage trend has no day at all', () => {
+    const noTrend: StorageOverview = { ...firstDay, sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true } }
+    expect(buildCallout(noTrend, t).note).toMatch(/^Microsoft 365's storage trend lists no day with storage for this tenant yet, so this is the total of its site usage report\./)
+  })
+
+  it('says the storage trend did not come back, not that it lists no day, when it failed', () => {
+    const trendUnread: StorageOverview = {
+      ...firstDay,
+      sharePoint: { ...firstDay.sharePoint, usedFromSiteReport: true, trendRead: false },
+    }
+    expect(buildCallout(trendUnread, t).note).toMatch(
+      /^Microsoft 365's SharePoint storage trend did not come back this time, so this is the total of the site usage report\. The forecast returns when Refresh data brings the trend back\./,
+    )
+    const exhausted: StorageOverview = {
+      ...trendUnread,
+      sharePoint: { ...trendUnread.sharePoint, exhausted: true, remainingBytes: 0, overageBytes: 1_073_741_824 },
+      growth: { ...firstDay.growth, forecastStatus: 'Critical', forecastMonthsToExhaustion: 0 },
+    }
+    expect(buildCallout(exhausted, t).note).toMatch(
+      /This is the total of its site usage report: Microsoft 365's SharePoint storage trend did not come back this time\. /,
+    )
+  })
+
   it('reports capacity exhaustion with a warn tone when action is needed', () => {
     const callout = buildCallout(withGrowth({ forecastStatus: 'Warning' }), t)
     expect(callout.tone).toBe('warn')

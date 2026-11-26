@@ -262,6 +262,33 @@ describe('Storage Optimisation app', () => {
     })
   })
 
+  it('keeps Report settings open when the inactivity period it sets takes away the card that opened it', SETTINGS_ROUND_TRIP, async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await reportLoaded()
+
+    await user.click(within(archiveCard()).getByRole('button', { name: 'Change it in Report settings' }))
+    await user.click(await screen.findByRole('combobox', { name: 'Archive sites inactive for' }))
+    await user.click(await screen.findByRole('option', { name: '5 years' }))
+
+    expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+  })
+
+  it('keeps Report settings open while the entitlement is typed in from the storage used card', SETTINGS_ROUND_TRIP, async () => {
+    const user = userEvent.setup()
+    renderApp('no-licences')
+    await reportLoaded()
+
+    await user.click(within(statCard('SharePoint storage used')).getByRole('button', { name: 'Enter it in Report settings' }))
+    const entitlement = await screen.findByLabelText('SharePoint entitlement')
+    await user.type(entitlement, '40')
+
+    expect(screen.getByRole('dialog', { name: 'Report settings' })).toBeInTheDocument()
+    expect(screen.getByLabelText('SharePoint entitlement')).toHaveValue(40)
+    expect(within(statCard('SharePoint storage used')).queryByRole('button', { name: 'Enter it in Report settings' })).not.toBeInTheDocument()
+  })
+
   it('refetches every query from the refresh option', async () => {
     const user = userEvent.setup()
     const { ds } = renderApp()

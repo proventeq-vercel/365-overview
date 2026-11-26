@@ -36,7 +36,7 @@ function firstDayNote(overview: StorageOverview, t: TranslateFn): string {
     : t('storageOptimisation.growth.firstDayNote')
 }
 
-function siteReportSource(overview: StorageOverview, t: TranslateFn): string | null {
+export function siteReportSource(overview: StorageOverview, t: TranslateFn): string | null {
   const { sharePoint } = overview
   if (!sharePoint.usedFromSiteReport) return null
   return sharePoint.trendRead
@@ -66,19 +66,12 @@ export interface ForecastCard {
   hint: string
 }
 
-export function forecastCard(overview: StorageOverview, t: TranslateFn): ForecastCard {
-  const date = exhaustionLabel(overview)
-  return date === null
-    ? {
-        value: t('storageOptimisation.growth.alreadyExhausted'),
-        status: overview.growth.forecastStatus,
-        hint: t('storageOptimisation.growth.alreadyExhaustedNote'),
-      }
-    : {
-        value: date,
-        status: overview.growth.forecastStatus,
-        hint: shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t),
-      }
+export function forecastCard(exhaustionDate: string, overview: StorageOverview, t: TranslateFn): ForecastCard {
+  return {
+    value: formatLongMonthYear(exhaustionDate),
+    status: overview.growth.forecastStatus,
+    hint: shortHint(t('storageOptimisation.kpi.forecastHint'), overview, t),
+  }
 }
 
 interface ForecastCallout {

@@ -61,6 +61,7 @@ export function SettingsDialog({
   const entitlementId = useId()
   const oneDriveEntitlementId = useId()
   const inactiveYearsId = useId()
+  const fieldIds: Record<SettingsField, string> = { entitlement: entitlementId, inactiveYears: inactiveYearsId }
 
   const licenceEstimateBytes = data?.sharePoint.licenceEstimateBytes ?? null
   const licenceEstimate = licenceEstimateBytes === null ? null : formatBytes(licenceEstimateBytes)
@@ -71,11 +72,7 @@ export function SettingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        initialFocus={
-          focus
-            ? () => document.getElementById(focus === 'entitlement' ? entitlementId : inactiveYearsId)
-            : undefined
-        }
+        initialFocus={focus ? () => document.getElementById(fieldIds[focus]) : undefined}
       >
         <DialogTitle>{t('settings.title')}</DialogTitle>
         <DialogDescription>{t('settings.description')}</DialogDescription>

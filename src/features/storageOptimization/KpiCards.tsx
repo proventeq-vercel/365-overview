@@ -1,20 +1,15 @@
 import type { ReactNode } from 'react'
 import { formatBytes, formatShare, formatShortDate } from '@/lib/format'
 import { useTranslation, type TranslateFn } from '@/hooks/useTranslation'
-import { costHint, forecastCard } from './forecastCopy'
+import { costHint, forecastCard, siteReportSource } from './forecastCopy'
 import { formatMoney } from './money'
 import type { StorageOverview } from '@/types/storage'
 import { StatCard } from '@/design/StatCard'
-import { KPI_GRID_COLUMNS } from '@/design/kpiGrid'
+import { kpiGridColumns } from '@/design/kpiGrid'
 import { HEALTH_COLOR, P365, RISK_COLOR } from '@/design/theme'
 import { SettingsLink } from '@/app/SettingsLink'
-import {
-  actionableCards,
-  annualCost,
-  deletedStorageCard,
-  type DeletedStorageCard,
-  type KpiCardId,
-} from './actionableCards'
+import { useSettingsDialog } from '@/app/useSettingsDialog'
+import { actionableCards, type DeletedStorageCard, type KpiCard } from './actionableCards'
 
 function deletedHeld(deleted: DeletedStorageCard, t: TranslateFn): string {
   const values = { sites: deleted.siteCount, oneDrives: deleted.oneDriveCount }
@@ -48,10 +43,37 @@ export function KpiCards({ overview, delay = 0 }: Props) {
   const { sharePoint, cost, archive } = overview
   const money = (amount: number) => formatMoney(amount, cost.currency)
   const rate = money(cost.ratePerGb)
+  const { openSettings, dialog } = useSettingsDialog()
 
-  const card = (id: KpiCardId): ReactNode => {
-    switch (id) {
-      case 'storageUsed':
+  const storageUsedInformation = (): ReactNode =>
+    sharePoint.entitledBytes === null ? (
+      <>
+        {t('storageOptimisation.kpi.usedNoEntitlement')} ·{' '}
+        <SettingsLink onOpen={openSettings('entitlement')}>{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
+      </>
+    ) : (
+      <>
+        {t('storageOptimisation.kpi.usedOfEntitled', {
+          used: formatBytes(sharePoint.usedBytes),
+          entitled: formatBytes(sharePoint.entitledBytes),
+        })}
+        {sharePoint.overageBytes !== null && sharePoint.overageBytes > 0 && (
+          <>
+            {' · '}
+            <span className="font-semibold" style={{ color: P365.red }}>
+              {t('storageOptimisation.kpi.usedOver', { over: formatBytes(sharePoint.overageBytes) })}
+            </span>
+          </>
+        )}
+        {overview.caveats.entitlementIsEstimated && ` · ${t('storageOptimisation.kpi.usedEstimated')}`}
+      </>
+    )
+
+  const card = (kpi: KpiCard): ReactNode => {
+    const id = kpi.id
+    switch (kpi.id) {
+      case 'storageUsed': {
+        const source = siteReportSource(overview, t)
         return (
           <StatCard
             key={id}
@@ -59,45 +81,26 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             value={formatBytes(sharePoint.usedBytes)}
             color={P365.navy}
             information={
-              sharePoint.entitledBytes === null ? (
-                <>
-                  {t('storageOptimisation.kpi.usedNoEntitlement')} ·{' '}
-                  <SettingsLink field="entitlement">{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
-                </>
-              ) : (
-                <>
-                  {t('storageOptimisation.kpi.usedOfEntitled', {
-                    used: formatBytes(sharePoint.usedBytes),
-                    entitled: formatBytes(sharePoint.entitledBytes),
-                  })}
-                  {(sharePoint.overageBytes ?? 0) > 0 && (
-                    <>
-                      {' · '}
-                      <span className="font-semibold" style={{ color: P365.red }}>
-                        {t('storageOptimisation.kpi.usedOver', { over: formatBytes(sharePoint.overageBytes ?? 0) })}
-                      </span>
-                    </>
-                  )}
-                  {overview.caveats.entitlementIsEstimated && ` · ${t('storageOptimisation.kpi.usedEstimated')}`}
-                </>
-              )
+              <>
+                {storageUsedInformation()}
+                {source !== null && <span className="mt-1 block">{source}</span>}
+              </>
             }
           />
         )
+      }
       case 'overEntitlement':
         return (
           <StatCard
             key={id}
             label={t('storageOptimisation.kpi.overEntitlement')}
-            value={formatBytes(sharePoint.overageBytes ?? 0)}
+            value={formatBytes(kpi.overageBytes)}
             color={P365.red}
-            information={t('storageOptimisation.kpi.overEntitlementHint', {
-              cost: money(annualCost(sharePoint.overageBytes ?? 0, cost.ratePerGb)),
-            })}
+            information={t('storageOptimisation.kpi.overEntitlementHint', { cost: money(kpi.annualCost) })}
           />
         )
       case 'forecastExhaustion': {
-        const forecast = forecastCard(overview, t)
+        const forecast = forecastCard(kpi.exhaustionDate, overview, t)
         return (
           <StatCard
             key={id}
@@ -114,7 +117,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             key={id}
             label={t('storageOptimisation.kpi.costOfNothing')}
             value={money(cost.cumulativeYear3)}
-            color={HEALTH_COLOR[cost.growthAnnualStatus]}
+            color={HEALTH_COLOR[cost.cumulativeYear3Status]}
             information={costHint(overview, rate, t)}
           />
         )
@@ -137,7 +140,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
                   : sites}
                 <span className="mt-1 block">
                   {t('storageOptimisation.kpi.inactivePeriod', { years: archive.inactiveYears })}{' '}
-                  <SettingsLink field="inactiveYears">{t('storageOptimisation.kpi.changeInSettings')}</SettingsLink>
+                  <SettingsLink onOpen={openSettings('inactiveYears')}>{t('storageOptimisation.kpi.changeInSettings')}</SettingsLink>
                 </span>
               </>
             }
@@ -145,8 +148,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
         )
       }
       case 'deletedButBilling': {
-        const deleted = deletedStorageCard(overview)
-        if (deleted === null) return null
+        const { deleted } = kpi
         const billed = deleted.billing === 'billed'
         const color = billed ? P365.orange : P365.grey500
         return (
@@ -160,11 +162,11 @@ export function KpiCards({ overview, delay = 0 }: Props) {
             information={
               <>
                 {deletedHeld(deleted, t)} ·{' '}
-                {deletedBillingHint(deleted, money(annualCost(deleted.billableBytes, cost.ratePerGb)), t)}
+                {deletedBillingHint(deleted, money(deleted.billableAnnualCost), t)}
                 {deleted.billing === 'entitlementUnknown' && (
                   <>
                     {' '}
-                    <SettingsLink field="entitlement">{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
+                    <SettingsLink onOpen={openSettings('entitlement')}>{t('storageOptimisation.kpi.enterEntitlement')}</SettingsLink>
                   </>
                 )}
               </>
@@ -186,9 +188,10 @@ export function KpiCards({ overview, delay = 0 }: Props) {
       <p className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">
         {t('storageOptimisation.capacity.title')}
       </p>
-      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${KPI_GRID_COLUMNS[cards.length]}`}>
+      <div className={`grid grid-cols-1 gap-4 ${kpiGridColumns(cards.length)}`}>
         {cards.map(card)}
       </div>
+      {dialog}
     </section>
   )
 }

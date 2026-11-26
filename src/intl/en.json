@@ -73,6 +73,7 @@
   "app.unreadReports.name.drives": "OneDrive usage report",
   "app.unreadReports.name.sharePointTrend": "SharePoint storage trend",
   "app.unreadReports.name.oneDriveTrend": "OneDrive storage trend",
+
   "header.refresh": "Refresh data",
   "header.refreshHint": "Reload the report from Microsoft Graph",
   "header.refreshing": "Reloading from Microsoft Graph…",
@@ -84,6 +85,7 @@
   "header.switchAccountHint": "Sign in with a different Microsoft account",
   "header.signOut": "Sign out",
   "header.signOutHint": "End this session",
+
   "settings.title": "Report settings",
   "settings.description": "Cost assumptions, the tenant entitlement, OneDrive storage per user and when a site counts as inactive. Saved in this browser only.",
   "settings.currency": "Currency",
@@ -108,6 +110,7 @@
   "settings.inactiveYears": "Archive sites inactive for",
   "settings.inactiveYearsHint": "A site with no activity for this long counts as ready to archive, and a OneDrive as inactive. Default {years} years.",
   "settings.inactiveYearsOption": "{years, plural, one {# year} other {# years}}",
+
   "loading.starting.badge": "Starting",
   "loading.starting.title": "Getting your report ready",
   "loading.starting.subtitle": "Preparing a secure Microsoft 365 sign-in.",
@@ -126,23 +129,26 @@
   "loading.loadingReport.step": "Reading SharePoint and OneDrive usage…",
   "loading.loadingReport.checklist": "Read SharePoint and OneDrive usage",
   "loading.loadingReport.footer": "This usually takes under a minute",
+
   "auth.unknownError": "An unknown authentication error occurred.",
   "auth.signInFailed": "Sign-in failed",
   "auth.notAssigned.title": "Your account is not allowed to use this app",
   "auth.notAssigned.body": "Your organisation limits this report to chosen users or groups, and your account is not one of them. An administrator can add you under the app's Users and groups in Microsoft Entra.",
-  "auth.consent.title": "Your organisation has not approved this app yet",
+  "auth.consent.title":"Your organisation has not approved this app yet",
   "auth.consent.body": "This report only reads Microsoft 365 data, but a Global Administrator has to grant admin consent once before anyone in your tenant can use it.",
   "auth.consent.link": "Grant admin consent",
   "auth.consent.linkTail": " — you will be asked to review the read-only permissions this report needs, then returned here.",
+
   "errors.unexpected": "An unexpected error occurred.",
   "errors.insufficientPermissions": "Insufficient permissions — admin consent or the required role may be needed for this report.",
   "errors.retry": "Try again",
   "errors.linkNotAllowed.title": "The data service sent a link to another address",
   "errors.linkNotAllowed.body": "The report did not follow it, so your sign-in was not sent there and the report could not be loaded.",
+
   "access.consent.title": "Your organisation has not approved this app yet",
   "access.consent.body": "Approving sign-in is not enough: the report reads your tenant with application permissions, which a Global Administrator has to grant once for the whole tenant. Signing in again will not help until they do.",
   "access.consent.delegatedBody": "The report reads usage reports as you, and your organisation has not granted it that permission yet — signing in does not grant it, and no role of yours changes that. A Global Administrator has to grant admin consent once for the whole tenant.",
-  "access.permissions.intro": "The grant covers these read-only permissions, and Microsoft lists the same ones on its consent page:",
+  "access.permissions.intro":"The grant covers these read-only permissions, and Microsoft lists the same ones on its consent page:",
   "access.permissions.listLabel": "Permissions the report needs",
   "access.permissions.reports": "Microsoft 365 usage reports: storage per site and per OneDrive, and who holds a OneDrive licence",
   "access.permissions.organization": "tenant name and licences, for the storage entitlement and OneDrive storage per user",
@@ -184,6 +190,7 @@
   "help.center.viewMarkdown": "View as Markdown",
   "helpButton.label": "About {title}",
   "helpButton.seeMore": "See more",
+
   "table.sites": "Sites",
   "table.search": "Search {label}",
   "table.searchPlaceholder": "Search name, owner or id",
@@ -209,7 +216,7 @@
   "table.column.help.share": "This row's storage as a percentage of its own pool: a site's share of all SharePoint storage in use, a OneDrive's share of all OneDrive storage in use. The bar is drawn to the same scale. A pool that holds no storage at all gives each of its rows 0.0%; shares that would round to 0.0% or 100.0% read <0.1% and >99.9%.",
   "table.column.help.lastActivity": "The most recent day with file activity in the 180-day reporting period. Never means no activity was recorded in that period.",
   "table.column.help.template": "The SharePoint template the site was created from, or Template not reported when Microsoft's usage report gives none; empty for OneDrives. Team Channel and Group templates count as Teams in the workload split; everything else counts as SharePoint.",
-  "table.column.help.capacity": "How much of the drive's own storage quota is used — the limit a OneDrive actually stops at. Blank for sites, whose allocation is the 25 TB site-collection maximum rather than a quota, and for a OneDrive that reports no limit.",
+  "table.column.help.capacity": "How much of the drive's own storage quota is used \u2014 the limit a OneDrive actually stops at. Blank for sites, whose allocation is the 25 TB site-collection maximum rather than a quota, and for a OneDrive that reports no limit.",
   "table.column.help.overEntitlement": "How much more the drive holds than the OneDrive storage per user this report measures against.",
   "table.column.help.overDriveLimit": "How much more the drive holds than the commonest OneDrive limit, which this report measures against when no licence or setting gives the storage per user.",
   "table.resolvingName": "Looking up the site name",
@@ -223,8 +230,10 @@
   "pagination.jump.previous": "Previous page",
   "pagination.jump.next": "Next page",
   "pagination.jump.last": "Last page",
+
   "reports.storageOptimisation.title": "Storage Optimisation",
   "reports.oneDriveUsage.title": "OneDrive Usage",
+
   "storageOptimisation.description": "A consolidated summary of tenant storage — where it sits today, where it is heading, and what drives it.",
   "storageOptimisation.capacity.title": "Tenant capacity",
   "storageOptimisation.kpi.archivable": "Inactive sites to archive",
@@ -254,6 +263,7 @@
   "storageOptimisation.kpi.usedEstimated": "entitlement estimated from licences",
   "storageOptimisation.kpi.inactivePeriod": "Inactive means no activity for {years, plural, one {# year} other {# years}}.",
   "storageOptimisation.kpi.changeInSettings": "Change it in Report settings",
+
   "storageOptimisation.distribution.title": "Current storage distribution",
   "storageOptimisation.distribution.subtitle": "Where storage sits today — every SharePoint workload against your SharePoint entitlement, and which site types drive the volume",
   "storageOptimisation.distribution.subtitlePartial": "Where storage sits today, from the Microsoft reports that came back",
@@ -282,6 +292,7 @@
   "storageOptimisation.template.subtitle": "SharePoint storage grouped by the template each site was created from",
   "storageOptimisation.template.notReported": "Template not reported",
   "storageOptimisation.template.other": "Other",
+
   "storageOptimisation.growth.sectionTitle": "Future state & growth impact",
   "storageOptimisation.growth.sectionSubtitle": "Where storage is heading at the current growth rate — and what it costs if nothing changes",
   "storageOptimisation.growth.trendTitle": "Storage trend & forecast",
@@ -339,6 +350,7 @@
   "storageOptimisation.growth.sites": "Live sites",
   "storageOptimisation.growth.drivesNearCap": "Drives near their quota",
   "storageOptimisation.growth.drivesOverLicence": "Drives over their licence",
+
   "storageOptimisation.offenders.title": "Main offenders",
   "storageOptimisation.offenders.subtitle": "The sites and drives driving the most storage",
   "storageOptimisation.offenders.subtitleSites": "The sites driving the most storage",
@@ -376,6 +388,7 @@
   "hiddenName.concealed.body": "Your tenant conceals user and site names in its usage reports, so Microsoft sends hashes instead of names, and the report looks up no names. To show real names: Microsoft 365 admin centre → Settings → Org settings → Reports → uncheck \"Display concealed user, group, and site names\".",
   "storageOptimisation.hiddenNamesNote": "Site names and owners are hidden: they are blurred below, site links are removed, and the report looks up no names. The storage figures are unaffected.",
   "storageOptimisation.concealedNamesNote": "Your tenant conceals user and site names in usage reports, so identities below are blurred. The storage figures are unaffected. To show real names: Microsoft 365 admin centre → Settings → Org settings → Reports → uncheck \"Display concealed user, group, and site names\".",
+
   "oneDrive.description": "How much of the tenant sits in personal OneDrives, who holds the most, and which drives are running out of room.",
   "oneDrive.kpi.used": "OneDrive storage",
   "oneDrive.kpi.usedHint": "Tenant-wide, as reported by Microsoft 365",

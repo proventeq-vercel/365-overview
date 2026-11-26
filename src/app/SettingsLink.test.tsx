@@ -7,6 +7,7 @@ import { render } from '@/test/render'
 import { DataSourceContext } from '@/data/useDataSource'
 import { createMockDataSource } from '@/data/fixtures'
 import { SettingsLink } from './SettingsLink'
+import { useSettingsDialog } from './useSettingsDialog'
 import { SettingsProvider } from './SettingsProvider'
 import type { SettingsField } from './SettingsDialog'
 
@@ -26,7 +27,16 @@ function renderLink(field: SettingsField) {
       </QueryClientProvider>
     )
   }
-  render(<SettingsLink field={field}>Change it</SettingsLink>, { wrapper: Wrapper })
+  function Link() {
+    const { openSettings, dialog } = useSettingsDialog()
+    return (
+      <>
+        <SettingsLink onOpen={openSettings(field)}>Change it</SettingsLink>
+        {dialog}
+      </>
+    )
+  }
+  render(<Link />, { wrapper: Wrapper })
 }
 
 describe('SettingsLink', () => {

@@ -245,8 +245,8 @@ export interface StorageOverview {
     ratePerGb: number
     currency: string
     growthAnnual: number
-    growthAnnualStatus: HealthStatus
     cumulativeYear3: number
+    cumulativeYear3Status: HealthStatus
   }
 
   caveats: {

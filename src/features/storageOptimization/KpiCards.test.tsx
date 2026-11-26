@@ -4,7 +4,7 @@ import { render } from '@/test/render'
 import { base, dailyRate, overEntitlement, unknownEntitlement } from './testFixtures'
 import type { StorageOverview } from '@/types/storage'
 import { KpiCards } from './KpiCards'
-import { P365 } from '@/design/theme'
+import { HEALTH_COLOR, P365 } from '@/design/theme'
 
 afterEach(cleanup)
 
@@ -39,7 +39,12 @@ const quiet: StorageOverview = {
 
 const soon: StorageOverview = {
   ...base,
-  growth: { ...base.growth, forecastStatus: 'Critical', forecastMonthsToExhaustion: 10 },
+  growth: {
+    ...base.growth,
+    forecastStatus: 'Critical',
+    forecastMonthsToExhaustion: 10,
+    forecastExhaustionDate: '2027-06-01',
+  },
 }
 
 const busy: StorageOverview = {
@@ -102,6 +107,23 @@ describe('KpiCards', () => {
     expect(card(DELETED_COUNTING).style.borderLeftColor).toBe(rgb(P365.grey500))
   })
 
+  it('names the site usage report on the storage used card when the trend gave no storage', () => {
+    render(<KpiCards overview={{ ...quiet, sharePoint: { ...quiet.sharePoint, usedFromSiteReport: true } }} />)
+    expect(card(USED)).toHaveTextContent(
+      "entitlement estimated from licencesThis is the total of its site usage report: Microsoft 365's storage trend lists no day with storage yet.",
+    )
+  })
+
+  it('names no source on the storage used card while the trend holds the storage', () => {
+    render(<KpiCards overview={quiet} />)
+    expect(card(USED)).not.toHaveTextContent('site usage report')
+  })
+
+  it('rails the cost of doing nothing by its three-year grade', () => {
+    render(<KpiCards overview={{ ...busy, cost: { ...busy.cost, cumulativeYear3Status: 'attention' } }} />)
+    expect(card(COST).style.borderLeftColor).toBe(rgb(HEALTH_COLOR.attention))
+  })
+
   it('rails the over-entitlement card red', () => {
     render(<KpiCards overview={busy} />)
     expect(card(OVER).style.borderLeftColor).toBe(rgb(P365.red))
@@ -109,7 +131,7 @@ describe('KpiCards', () => {
 
   it('shows the forecast inside the 24-month window, railed by its grade', () => {
     render(<KpiCards overview={soon} />)
-    expect(card(FORECAST)).toHaveTextContent(/^January 2030Forecast exhaustionAt current growth$/)
+    expect(card(FORECAST)).toHaveTextContent(/^June 2027Forecast exhaustionAt current growth$/)
     expect(card(FORECAST).style.borderLeftColor).toBe(rgb(P365.red))
   })
 
