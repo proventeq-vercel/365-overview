@@ -96,6 +96,14 @@ describe('SegmentedBar', () => {
     expect(await screen.findByRole('dialog', { name: 'Drives' })).toHaveTextContent('Drives row explained')
   })
 
+  it('writes the popover value in the text shade of its colour', async () => {
+    const user = userEvent.setup()
+    const { part } = renderBar()
+    await user.click(part('Files'))
+    const dialog = await screen.findByRole('dialog', { name: 'Files' })
+    expect(within(dialog).getByText('1 TB')).toHaveStyle({ color: '#267574' })
+  })
+
   it('closes a clicked part when the pointer moves on to another, so one popover shows', async () => {
     const user = userEvent.setup()
     const { part } = renderBar()

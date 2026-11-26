@@ -27,6 +27,7 @@ export const P365_TEXT = {
 const TEXT_SHADE: Record<string, string> = {
   [P365.grey500]: P365_TEXT.grey,
   [P365.grey400]: P365_TEXT.grey,
+  [P365.grey100]: P365_TEXT.grey,
   [P365.teal]: P365_TEXT.teal,
   [P365.red]: P365_TEXT.red,
   [P365.orange]: P365_TEXT.orange,

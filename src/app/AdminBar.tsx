@@ -85,7 +85,7 @@ function Toggle({
         aria-hidden="true"
         className={cn(
           'flex size-4 items-center justify-center rounded-sm border',
-          pressed ? 'border-white bg-white text-p365-teal-text' : 'border-p365-grey-400 bg-white',
+          pressed ? 'border-white bg-white text-p365-teal' : 'border-p365-grey-400 bg-white',
         )}
       >
         {pressed && (locked ? <Lock className="size-2.5" strokeWidth={3} /> : <Check className="size-3" strokeWidth={3} />)}

@@ -155,7 +155,7 @@ body {
 .error-state { background:#fff; border:1px solid #dedede; border-left:3px solid #f97f50; border-radius:8px; padding:1rem 1.25rem; }
 .error-state__message { font-weight:600; color:#0f2c3d; }
 .error-state__hint { margin-top:.35rem; font-size:.8rem; color:#535353; }
-.error-state a { color:#34a1a0; font-weight:600; }
+.error-state a { color:#267574; font-weight:600; }
 .auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f9fafb; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

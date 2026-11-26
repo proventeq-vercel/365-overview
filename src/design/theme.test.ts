@@ -21,11 +21,8 @@ describe('text shades', () => {
     for (const background of PAGE_BACKGROUNDS) expect(contrast(shade, background)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it.each([
-    ['red', '#fedada'],
-    ['green', '#e6f2d1'],
-  ] as const)('the %s pill text reads at 4.5:1 or more on its own background', (tone, background) => {
-    expect(contrast(LABEL_TONES[tone].text, background)).toBeGreaterThanOrEqual(4.5)
+  it.each(['red', 'green'] as const)('the %s pill text reads at 4.5:1 or more on its own background', (tone) => {
+    expect(contrast(LABEL_TONES[tone].text, LABEL_TONES[tone].background)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('maps each brand colour to its text shade and leaves dark colours as they are', () => {
@@ -35,6 +32,7 @@ describe('text shades', () => {
     expect(textShade(P365.red)).toBe('#c70606')
     expect(textShade(P365.teal)).toBe('#267574')
     expect(textShade(P365.grey400)).toBe('#6a6a6a')
+    expect(textShade(P365.grey100)).toBe('#6a6a6a')
     expect(textShade(P365.navy)).toBe('#0f2c3d')
   })
 
@@ -43,5 +41,10 @@ describe('text shades', () => {
     for (const [name, shade] of Object.entries(P365_TEXT)) {
       expect(css).toContain(`--color-p365-${name}-text: ${shade};`)
     }
+  })
+
+  it('writes the auth screen links in the teal text shade', () => {
+    const css = readFileSync(join(__dirname, '../index.css'), 'utf8')
+    expect(css).toContain('.error-state a { color:#267574;')
   })
 })

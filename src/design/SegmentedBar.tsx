@@ -6,6 +6,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { textShade } from '@/design/theme'
 import { cn } from '@/lib/utils'
 
 interface BarDetails {
@@ -47,7 +48,7 @@ function Details({ details, trigger }: { details: BarDetails; trigger: ReactElem
           <i className="size-3 shrink-0 rounded-sm" style={{ background: details.color }} aria-hidden="true" />
           <PopoverTitle>{details.label}</PopoverTitle>
         </div>
-        <p className="tabular mt-1 text-lg font-bold" style={{ color: details.color }}>
+        <p className="tabular mt-1 text-lg font-bold" style={{ color: textShade(details.color) }}>
           {details.value}
         </p>
         <p className="text-p365-grey-text">{details.shareLabel}</p>

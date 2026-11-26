@@ -633,8 +633,9 @@ typecheck · test · build as a separate job.
   `--color-p365-{grey,teal,red,orange,yellow,green}-text` in `index.css`;
   `theme.test.ts` checks each shade's contrast and the mirror). `StatCard` and
   `ShareHeadline` keep the brand colour on the rail and write the value in
-  `textShade(color)`; the pill tones use the shades. Rails, chart fills, icons
-  and placeholders keep the brand colours (user, N5, 2026-11-25). The static
+  `textShade(color)`, as does the `SegmentedBar` popover value; the pill tones
+  use the shades. Rails, charts (their fills and axis text), icons and
+  placeholders keep the brand colours (user, N5, 2026-11-25). The static
   boot copy in `index.html` uses the same shades for its text.
 - Chart palette + shared config live in `src/components/charts/chartTheme.ts`
   (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
