@@ -24,8 +24,9 @@ counts.
 | OneDrive | OneDrive blue | Live OneDrives, from the OneDrive usage report. |
 
 - When the usage reports came back, deleted sites and OneDrives are not on the lines, so the
-  lines add up to less than the storage trends by what deleted sites and OneDrives still hold. A
-  line that comes from a storage trend includes that deleted storage.
+  lines usually add up to less than the storage trends, by what deleted sites and OneDrives still
+  hold; the trends can also end on another day than the usage reports. A line that comes from a
+  storage trend includes that deleted storage.
   [Main offenders](main-offenders.md#deleted-but-still-billing) lists the ones Microsoft still
   holds. Inactive sites are on their lines like any live site; the
   [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card adds them up.

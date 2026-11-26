@@ -82,12 +82,13 @@ another address. A refused link stops the answer it belongs to:
 - When only some answers were refused, the page loads from the rest. A refused usage report
   shows as a report that did not come back (see
   [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)). A refused
-  site directory leaves site names to be looked up a page at a time. On a tenant of more than 10,000 licensed users, a
+  On a tenant of more than 10,000 licensed users, a
   refused user licence report leaves OneDrives with no activity for over 93 days standing in for
   the unlicensed ones. **Refresh data** meets the same link again, so see below.
 
 ::: feature optimization.storage.report.allsites
-With a refused site directory, the search of the All sites and OneDrives table finds only the
+A refused site directory leaves the site names in the All sites and OneDrives table to be looked
+up a page at a time, and its search of the All sites and OneDrives table finds only the
 fifty largest sites and those already shown.
 :::
 
@@ -132,8 +133,9 @@ and say so (*Over the usual OneDrive limit*). Enter the OneDrive storage per use
 
 The SharePoint figures never show as Unknown. Without the entitlement the *Forecast exhaustion*
 card is left out, and the *SharePoint storage used* card says none is entered, with a link to
-Report settings. Enter the SharePoint entitlement there to see the headroom and when it runs out.
-From a single reported day the *SharePoint storage used* card shows the latest figure.
+Report settings. Enter the SharePoint entitlement there to see the storage used against it and
+when it runs out. From a single reported day the *SharePoint storage used* card shows the latest
+figure.
 
 ## A Microsoft report did not come back
 

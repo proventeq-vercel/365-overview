@@ -476,7 +476,7 @@ The app renders the Storage Optimisation report in the Proventeq 365 look: a sti
 header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
 one **⋯ Options** menu whose items each carry an icon and a one-line description:
 **Refresh data**, **Report settings**, and in live mode **Switch account** and
-**Sign out**), KPI rails, panels, monochrome charts and the full site table. With the default
+**Sign out**), KPI rails, panels and monochrome charts. With the default
 flags there is no navigation and it runs as a single report; the flags below change that, and
 *Modes* says what the production builds set.
 
@@ -692,8 +692,8 @@ so read the summary after a first run.
 ### Lighthouse
 
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
-builds in **mock mode** with `VITE_FEATURES` naming both reports (whichever ones production
-enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
+builds in **mock mode** with `VITE_FEATURES` naming both reports and the All sites and OneDrives
+table (whichever ones production enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
 entry), serves the build with `npm run preview`, and runs Lighthouse
 CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.

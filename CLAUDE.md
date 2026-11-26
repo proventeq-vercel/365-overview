@@ -417,7 +417,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `overEntitlementBytes`; the Storage page's *Drives over their licence* stat
   shows only for `set` / `licences`. Never walk `/users` for per-user licences from here.
 - **Unknown entitlement produces `null`, never `0`. Any `?? 0` on
-  `entitledBytes`, `remainingBytes`, `usedPercentage` or `overageBytes` is a
+  `entitledBytes`, `remainingBytes` or `overageBytes` is a
   defect.** The cost figures are the exception and are never null: with an
   unknown entitlement nothing says the growth fits, so all of it is priced and
   `cost.growthAnnual` / `cost.cumulativeYear3` stay real numbers.
