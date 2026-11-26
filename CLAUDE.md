@@ -633,7 +633,7 @@ typecheck · test · build as a separate job.
   `--color-p365-{grey,teal,red,orange,yellow,green}-text` in `index.css`;
   `theme.test.ts` checks each shade's contrast and the mirror). `StatCard` keeps
   the brand colour on the rail and writes the value in `textShade(color)`, as
-  do the `ShareHeadline` percentage and the `SegmentedBar` popover value; the pill tones
+  does the `SegmentedBar` popover value; the pill tones
   use the shades. Rails, charts (their fills and axis text), icons and
   placeholders keep the brand colours (user, N5, 2026-11-25). The static
   boot copy in `index.html` uses the same shades for its text.

@@ -104,7 +104,7 @@ function PartList({ row }: { row: BarRow }) {
                   <span className="truncate">{segment.label}</span>
                 </span>
                 <span className="tabular text-sm font-semibold text-p365-navy">{segment.value}</span>
-                <span className="tabular text-xs text-p365-grey-500">{segment.shareLabel}</span>
+                <span className="tabular text-xs text-p365-grey-text">{segment.shareLabel}</span>
               </button>
             }
           />
@@ -133,7 +133,7 @@ export function SegmentedBar({ rows, ariaLabel, className }: { rows: BarRow[]; a
                 </span>
                 <span className="flex shrink-0 items-baseline gap-2">
                   <span className="tabular text-sm font-semibold text-p365-navy">{row.value}</span>
-                  <span className="tabular text-xs text-p365-grey-500">{row.caption}</span>
+                  <span className="tabular text-xs text-p365-grey-text">{row.caption}</span>
                 </span>
               </button>
             }

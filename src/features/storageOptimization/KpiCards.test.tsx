@@ -58,6 +58,7 @@ describe('KpiCards', () => {
     render(<KpiCards overview={quiet} />)
     expect(screen.queryByRole('heading')).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Tenant capacity' })).toHaveTextContent(/^Tenant capacity/)
+    expect(screen.getByText('Tenant capacity')).toHaveClass('text-p365-grey-text')
   })
 
   it('shows only the storage used, against the entitlement, for a quiet tenant', () => {
@@ -80,10 +81,10 @@ describe('KpiCards', () => {
     expect(card(COST)).not.toHaveTextContent('beyond your entitlement')
   })
 
-  it('puts the amount over the entitlement on the storage used card, in red', () => {
+  it('puts the amount over the entitlement on the storage used card, in the red text shade', () => {
     render(<KpiCards overview={busy} />)
     expect(card(USED)).toHaveTextContent('1.1 TB of 1000 GB entitlement · 100 GB over')
-    expect(within(card(USED)).getByText('100 GB over').style.color).toBe(rgb(P365.red))
+    expect(within(card(USED)).getByText('100 GB over')).toHaveClass('text-p365-red-text')
   })
 
   it('says when the entitlement is estimated from licences', () => {
