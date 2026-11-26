@@ -10,7 +10,7 @@ import { FacetBars } from '@/design/charts'
 import { PanelDescription, PanelLabel, Panel, Section, SplitGrid } from '@/design/primitives'
 import { WORKLOAD_COLOR } from '@/design/theme'
 import { FastestGrowingPanel } from './FastestGrowingPanel'
-import { WORKLOAD_LABEL } from './workloadLabel'
+import { workloadLabel } from './workloadLabel'
 
 const OFFENDER_COLUMNS = [
   'name',
@@ -82,7 +82,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
               items={topSites.map((slice) => ({
                 ...slice,
                 color: WORKLOAD_COLOR[slice.workload],
-                label: t(WORKLOAD_LABEL[slice.workload]),
+                label: workloadLabel(slice.workload, t),
               }))}
               formatValue={formatBytes}
               ariaLabel={t('storageOptimisation.offenders.topSites')}
@@ -98,7 +98,7 @@ export function OffendersSection({ overview, growth, delay }: Props) {
               items={topDrives.map((slice) => ({
                 ...slice,
                 color: WORKLOAD_COLOR[slice.workload],
-                label: t(WORKLOAD_LABEL[slice.workload]),
+                label: workloadLabel(slice.workload, t),
               }))}
               formatValue={formatBytes}
               ariaLabel={t('storageOptimisation.offenders.topDrives')}

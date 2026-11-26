@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties, type ReactElement, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactElement, type ReactNode } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -7,8 +7,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-
-export type BarPattern = 'solid' | 'hatched' | 'faded'
 
 interface BarDetails {
   label: string
@@ -21,7 +19,6 @@ interface BarDetails {
 export interface BarSegment extends BarDetails {
   id: string
   share: number
-  pattern?: BarPattern
 }
 
 export interface BarRow {
@@ -40,23 +37,6 @@ const HOVER_CLOSE_DELAY = 120
 const GROW_DURATION_MS = 400
 const GROW_STAGGER_MS = 60
 const GROW_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
-
-function patternStyle(color: string, pattern: BarPattern = 'solid'): CSSProperties {
-  switch (pattern) {
-    case 'hatched':
-      return {
-        background: `repeating-linear-gradient(135deg, ${color} 0 3px, color-mix(in srgb, ${color} 35%, transparent) 3px 6px)`,
-      }
-    case 'faded':
-      return {
-        background: `color-mix(in srgb, ${color} 50%, transparent)`,
-        border: `1.5px dashed ${color}`,
-        boxSizing: 'border-box',
-      }
-    default:
-      return { background: color }
-  }
-}
 
 function Details({ details, trigger }: { details: BarDetails; trigger: ReactElement<Record<string, unknown>> }) {
   return (
@@ -117,7 +97,7 @@ function PartList({ row }: { row: BarRow }) {
                 <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-p365-grey-700">
                   <i
                     className="size-2.5 shrink-0 rounded-sm"
-                    style={patternStyle(segment.color, segment.pattern)}
+                    style={{ background: segment.color }}
                     aria-hidden="true"
                   />
                   <span className="truncate">{segment.label}</span>
@@ -170,9 +150,8 @@ export function SegmentedBar({ rows, ariaLabel, className }: { rows: BarRow[]; a
                         type="button"
                         tabIndex={-1}
                         data-segment={segment.id}
-                        data-pattern={segment.pattern ?? 'solid'}
                         className="h-full min-w-0.5 basis-0 transition-[filter] duration-150 ease-out hover:brightness-110 data-popup-open:brightness-110"
-                        style={{ flexGrow: segment.share, ...patternStyle(segment.color, segment.pattern) }}
+                        style={{ flexGrow: segment.share, background: segment.color }}
                       />
                     }
                   />

@@ -4,6 +4,7 @@ import type { StorageOverview, StorageUsageRow } from '@/types/storage'
 import { SegmentedBar, type BarRow } from '@/design/SegmentedBar'
 import { EmptyBlock, Panel, PanelDescription, PanelLabel } from '@/design/primitives'
 import { WORKLOAD_COLOR } from '@/design/theme'
+import { workloadLabel } from './workloadLabel'
 
 function describe(row: StorageUsageRow, t: TranslateFn): string {
   switch (row.source) {
@@ -21,7 +22,7 @@ function describe(row: StorageUsageRow, t: TranslateFn): string {
 }
 
 function toBarRow(row: StorageUsageRow, t: TranslateFn): BarRow {
-  const label = t(`storageOptimisation.usage.segment.${row.workload}`)
+  const label = workloadLabel(row.workload, t)
   const value = formatBytes(row.bytes)
   const caption = t('storageOptimisation.usage.share', { percent: formatShare(row.share, 1) })
   const description = describe(row, t)

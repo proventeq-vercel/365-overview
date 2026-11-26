@@ -5,7 +5,7 @@ import type { GrowthRanking, NameMask, StorageGrowth } from '@/types/storage'
 import { FacetBars } from '@/design/charts'
 import { Legend, PanelDescription, PanelLabel, Panel } from '@/design/primitives'
 import { WORKLOAD_COLOR } from '@/design/theme'
-import { WORKLOAD_LABEL } from './workloadLabel'
+import { workloadLabel } from './workloadLabel'
 
 function useRankingTitle(ranking: GrowthRanking) {
   const t = useTranslation()
@@ -55,7 +55,7 @@ export function FastestGrowingPanel({
           <Legend
             columns={growth.workloads.length}
             items={growth.workloads.map((workload) => ({
-              name: t(WORKLOAD_LABEL[workload]),
+              name: workloadLabel(workload, t),
               color: WORKLOAD_COLOR[workload],
             }))}
           />
@@ -69,7 +69,7 @@ export function FastestGrowingPanel({
               name: leader.name,
               value: leader.value,
               color: WORKLOAD_COLOR[leader.workload],
-              label: t(WORKLOAD_LABEL[leader.workload]),
+              label: workloadLabel(leader.workload, t),
             }))}
             formatValue={formatBytes}
             ariaLabel={title}

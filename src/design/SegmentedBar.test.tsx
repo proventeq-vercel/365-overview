@@ -6,15 +6,14 @@ import { SegmentedBar, type BarRow, type BarSegment } from './SegmentedBar'
 
 afterEach(cleanup)
 
-const segment = (id: string, label: string, share: number, pattern?: BarSegment['pattern']): BarSegment => ({
+const segment = (id: string, label: string, share: number, color = '#34a1a0'): BarSegment => ({
   id,
   label,
-  color: '#34a1a0',
+  color,
   share,
   value: '1 TB',
   shareLabel: '50% of stored',
   description: `${label} explained`,
-  pattern,
 })
 
 const row = (id: string, label: string, scale: number, segments: BarSegment[]): BarRow => ({
@@ -28,7 +27,7 @@ const row = (id: string, label: string, scale: number, segments: BarSegment[]): 
   segments,
 })
 
-const storage = row('storage', 'Storage', 1, [segment('files', 'Files', 0.75), segment('teams', 'Teams', 0.25, 'faded')])
+const storage = row('storage', 'Storage', 1, [segment('files', 'Files', 0.75), segment('teams', 'Teams', 0.25, '#5b5fc7')])
 const drives = row('drives', 'Drives', 0.25, [segment('drives', 'Drives', 1)])
 
 function renderBar(rows: BarRow[] = [storage]) {
@@ -69,14 +68,13 @@ describe('SegmentedBar', () => {
     expect(empty).not.toHaveClass('min-w-1')
   })
 
-  it('sizes the parts of a row by their share and draws each in its own pattern', () => {
+  it('sizes the parts of a row by their share and draws each in its own colour', () => {
     const { container } = renderBar()
     const parts = [...container.querySelectorAll<HTMLElement>('[data-segment]')]
-    expect(parts.map((part) => [part.dataset.segment, part.dataset.pattern, part.style.flexGrow])).toEqual([
-      ['files', 'solid', '0.75'],
-      ['teams', 'faded', '0.25'],
+    expect(parts.map((part) => [part.dataset.segment, part.style.background, part.style.flexGrow])).toEqual([
+      ['files', 'rgb(52, 161, 160)', '0.75'],
+      ['teams', 'rgb(91, 95, 199)', '0.25'],
     ])
-    expect(parts[1].style.border).toBe('1.5px dashed rgb(52, 161, 160)')
   })
 
   it('leaves a part with no share off the bar but keeps it in the list', () => {
