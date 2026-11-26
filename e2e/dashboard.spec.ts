@@ -313,7 +313,7 @@ test.describe('modes from the URL', () => {
   })
 
   test('?hideNames=true blurs every site and owner name and skips the links', async ({ page }) => {
-    await page.goto('/?hideNames=true')
+    await page.goto(`${WITH_ALL_SITES_TABLE}&hideNames=true`)
     await reportLoaded(page)
     const main = page.getByRole('main')
     await expect(main.getByText(/site names and owners are hidden/i)).toBeVisible()

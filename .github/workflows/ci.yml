@@ -79,7 +79,7 @@ jobs:
       - run: npm run build
         env:
           VITE_USE_MOCK: 'true'
-          VITE_FEATURES: optimization.storage.report.overview,optimization.storage.report.onedrive
+          VITE_FEATURES: optimization.storage.report.overview,optimization.storage.report.onedrive,optimization.storage.report.allsites
       - run: npx --yes @lhci/cli@0.15.1 autorun
       - uses: actions/upload-artifact@v4
         if: always()
