@@ -179,7 +179,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
       ref={region}
       tabIndex={-1}
       aria-label={t('storageOptimisation.capacity.title')}
-      className="enter-rise flex flex-col gap-2 outline-none"
+      className="enter-rise flex flex-col gap-2 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       style={{ animationDelay: `${delay}ms` }}
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">
