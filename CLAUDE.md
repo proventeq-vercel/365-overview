@@ -363,7 +363,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 
 - **Sections consume `buildStorageOverview` and nothing else.** A number a
   section needs (e.g. `offenders.topSites`, `sharePoint.licenceEstimateBytes`)
-  is added to the model with a test, never derived in a component.
+  is added to the model with a test, never derived in a component. The
+  *Tenant capacity* cards' figures (the overage's yearly cost, the deleted
+  card's billed part) come from the pure, table-tested
+  `features/storageOptimization/actionableCards.ts` over the model, the one
+  other place a card number is derived; never in `KpiCards` itself.
 - **The UI copies P365, it does not restyle it.** Colours, sizes and layout come
   from `Frontend/src/components/styles/themes.ts` and
   `features/storageOptimization/styles.ts` in the P365 repo (tokens mirrored as
@@ -420,7 +424,8 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   names (`lib/rowName.ts`, shared with `SiteTable`). The one sanctioned
   exception is the generic `SiteTable`'s per-row Share (`shareOfPool`: the
   row over the model's `poolUsedBytes` for its pool), computed for the rows it
-  pages and sorts, since the table is fed by several pages.
+  pages and sorts, since the table is fed by several pages. The other is
+  `actionableCards.ts` (see the first rule above), which `KpiCards` reads.
 - **Exhausted is a state, not a date.** Used ≥ entitled ⇒ `forecastStatus`
   `Critical`, `forecastMonthsToExhaustion` `0`, `forecastExhaustionDate`
   `null` — decided before the history check, exactly as P365's

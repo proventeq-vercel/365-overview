@@ -71,7 +71,9 @@ because you already pay for it, so the card is left out while growth fits.
 
 - If growth crosses the entitlement, only the part above it is priced.
 - If the tenant is already over its entitlement, all of the growth is priced.
-- If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced.
+- If the entitlement is unknown, nothing shows that the growth fits, so all of it is priced, and
+  the description says so: *Spend over the next three years on all storage growth … with no
+  entitlement entered, none of it is counted as covered.*
 
 The card is shown only when there is a growth rate and the three-year figure is above zero. Its
 colour is graded on that figure:
