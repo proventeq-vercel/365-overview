@@ -12,7 +12,7 @@ import {
   type WorkloadSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
-import { archivableSites, archiveStatus, inactiveSince, isInactiveSince } from '@/lib/archive'
+import { archivableSites, archiveStatus, inactiveSince } from '@/lib/archive'
 import {
   COST_YEARS,
   annualGrowthGb,

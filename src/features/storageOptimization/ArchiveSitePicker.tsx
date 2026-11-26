@@ -12,10 +12,10 @@ import { useSiteDetails } from '@/hooks/useSiteDetails'
 import { useTranslation } from '@/hooks/useTranslation'
 import { formatBytes, formatShortDate } from '@/lib/format'
 import { rowName } from '@/lib/rowName'
-import { workloadOf } from '@/model/storageOverview'
+import { workloadOf } from '@/model/workload'
 import type { NameMask, StorageRow } from '@/types/storage'
 import { useArchiveDraft } from './useArchivePicks'
-import { WORKLOAD_LABEL } from './workloadLabel'
+import { workloadLabel } from './workloadLabel'
 
 interface Props {
   open: boolean
@@ -115,7 +115,7 @@ function PickerBody({
                       )}
                       <span className="text-xs text-p365-grey-500">
                         {t('storageOptimisation.archivePicker.lastActivity', {
-                          workload: t(WORKLOAD_LABEL[workloadOf(site)]),
+                          workload: workloadLabel(workloadOf(site), t),
                           date: lastActivity,
                         })}
                       </span>
