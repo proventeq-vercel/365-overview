@@ -8,7 +8,7 @@ import type {
   StorageRow,
   Workload,
 } from '@/types/storage'
-import { workloadOf } from './storageOverview'
+import { workloadOf } from './workload'
 
 export const TOP_GROWERS = 10
 

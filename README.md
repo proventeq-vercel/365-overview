@@ -29,9 +29,9 @@ Each site also serves `/help` — the help centre for every report and for enabl
 | Section | What it shows |
 |---|---|
 | **Tenant capacity** (cards, a small label, no heading) | SharePoint storage used, then only the cards you can act on: over entitlement, forecast exhaustion, the cost of doing nothing over 3 years, inactive sites to archive and deleted storage (see below) |
-| **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive and free — against the SharePoint entitlement, each part explained in a popover; and SharePoint split by site template |
+| **Current storage distribution** | One bar per source — SharePoint, Teams and OneDrive — each scaled against the largest and explained in a popover, with the total stored; and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth (from the daily figures under six months of history), the projected exhaustion date, or the projected storage without an entitlement, and the cost of doing nothing |
-| **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
+| **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site and OneDrive in a paginated, searchable detail table (only with the `optimization.storage.report.allsites` flag), and deleted sites and drives that still consume quota |
 
 **Tenant capacity** sits straight under the report title with a small *Tenant capacity* label and
 no section heading. Each card's
@@ -55,9 +55,10 @@ The rules are pure functions in `src/features/storageOptimization/actionableCard
 page *Tenant capacity* (`docs/help/reports/storage-optimisation/tenant-capacity.md`) is the full
 reference.
 
-The remaining headroom is on the *Storage usage* line under the cards. SharePoint and
-OneDrive are reported as two separate pools: the line is SharePoint only, and OneDrive has its own
-panel under it, because OneDrive storage is not part of the SharePoint entitlement.
+The *Storage usage* bars under the cards show what each source stores today, with its share of the
+total stored; they carry no entitlement or free figure (the entitlement is on the *SharePoint
+storage used* card). SharePoint and OneDrive are reported as two separate pools, so OneDrive has its
+own bar, because OneDrive storage is not part of the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
 > The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service
@@ -186,6 +187,7 @@ that set rather than adding to it, so a list must name every flag it wants.
 | `optimization.storage.report.overview` | yes | The Storage Optimisation report — the whole point of the app |
 | `optimization.storage.report.onedrive` | no | The OneDrive Usage report, on `/onedrive-usage` |
 | `app.menu` | no | The hamburger and the side menu of reports |
+| `optimization.storage.report.allsites` | no | The *All sites and OneDrives* table at the end of Main offenders |
 
 `app.menu` is off by default, so a deployment shows no navigation until the flag is set.
 Turning it on takes effect only where there is something to navigate to — with fewer than
@@ -426,7 +428,7 @@ browser tab with a search param:
 
 | Param | Values | Example |
 |---|---|---|
-| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
+| `features` | comma list of `optimization.storage.report.overview`, `optimization.storage.report.onedrive`, `app.menu`, `optimization.storage.report.allsites` | `/?features=optimization.storage.report.overview,optimization.storage.report.onedrive,app.menu` (both reports + the menu) |
 | `mock` | `true` / `false` | `/?mock=true` (fixture data, no sign-in) |
 | `scenario` | `healthy` / `over-entitlement` / `concealed` / `short-history` / `onedrive-over-licence` / `nothing-to-clean` / `no-licences` / `first-day` / `no-daily-reports` / `onedrive-gaps` | `/?mock=true&scenario=concealed` |
 | `hideNames` | `true` | `/?hideNames=true` (mask names; see *Hiding names*) |
@@ -446,7 +448,8 @@ foot of the page for that tab. **Options (⋯) → Show / Hide admin bar** toggl
 
 - **Data**: *Live tenant data* or one of the mock scenarios. Live keeps signing in and
   reading the real tenant, on any build, including a mock preview.
-- **Features**: the Storage Optimisation report, the OneDrive Usage report and the report menu.
+- **Features**: the Storage Optimisation report, the OneDrive Usage report, the report menu
+  and the *All sites and OneDrives* table.
 - **Names**: hide names (see *Hiding names*).
 - **Delay** (mock data only): holds every mock answer for 0.8, 2 or 5 s, so the loading
   screen shows on the next load or scenario switch (Refresh data keeps the report on screen
@@ -473,7 +476,7 @@ The app renders the Storage Optimisation report in the Proventeq 365 look: a sti
 header (the proventeq365 wordmark, tenant name, in live mode the signed-in user, and
 one **⋯ Options** menu whose items each carry an icon and a one-line description:
 **Refresh data**, **Report settings**, and in live mode **Switch account** and
-**Sign out**), KPI rails, panels, monochrome charts and the full site table. With the default
+**Sign out**), KPI rails, panels and monochrome charts. With the default
 flags there is no navigation and it runs as a single report; the flags below change that, and
 *Modes* says what the production builds set.
 
@@ -689,9 +692,9 @@ so read the summary after a first run.
 ### Lighthouse
 
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
-builds in **mock mode** with `VITE_FEATURES` naming both reports (whichever ones production
-enables; a new report goes into that list and into `lighthouserc.json` with its own threshold
-entry), serves the build with `npm run preview`, and runs Lighthouse
+builds in **mock mode** with `VITE_FEATURES` naming both reports and the All sites and OneDrives
+table, so every page and section is audited even when production leaves it off (a new report goes
+into that list and into `lighthouserc.json` with its own threshold entry), serves the build with `npm run preview`, and runs Lighthouse
 CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
 `lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,

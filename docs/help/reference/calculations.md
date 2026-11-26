@@ -7,7 +7,9 @@ order: 20
 ---
 
 Every figure on screen is calculated in one place from the same inputs, so the cards, charts and
-tables always agree.
+tables draw on the same figures. When the usage reports came back, the storage usage lines count
+live sites and OneDrives only, so they usually add up to less than the two storage trends, by what
+deleted sites and OneDrives still hold.
 
 ## SharePoint entitlement
 

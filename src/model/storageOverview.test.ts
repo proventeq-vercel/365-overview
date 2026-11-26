@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { LicenseSku, UsagePoint } from '@/types/reports'
 import type { StorageRow } from '@/types/storage'
 import { GB_IN_BYTES } from '@/lib/entitlement'
-import { buildStorageOverview, classifyWorkload } from './storageOverview'
+import { buildStorageOverview } from './storageOverview'
 import type { OverviewInputs } from './storageOverview'
 
 const GB = GB_IN_BYTES
@@ -65,28 +65,6 @@ const inputs = (over: Partial<OverviewInputs> = {}): OverviewInputs => ({
 const unknownEntitlement = (over: Partial<OverviewInputs> = {}): OverviewInputs =>
   inputs({ skus: [], forceUnknownEntitlement: true, ...over })
 
-describe('classifyWorkload', () => {
-  it('treats Teams channel and group sites as Teams, in the words Graph reports', () => {
-    expect(classifyWorkload('Team Channel')).toBe('Teams')
-    expect(classifyWorkload('Group')).toBe('Teams')
-  })
-
-  it('still recognises the internal template ids', () => {
-    expect(classifyWorkload('TEAMCHANNEL#0')).toBe('Teams')
-    expect(classifyWorkload('GROUP#0')).toBe('Teams')
-  })
-
-  it('keeps Team Sites and Site Page Publishing under SharePoint', () => {
-    expect(classifyWorkload('Team Site')).toBe('SharePoint')
-    expect(classifyWorkload('Site Page Publishing')).toBe('SharePoint')
-  })
-
-  it('treats everything else, including an unknown template, as SharePoint', () => {
-    expect(classifyWorkload('STS#3')).toBe('SharePoint')
-    expect(classifyWorkload(undefined)).toBe('SharePoint')
-  })
-})
-
 describe('buildStorageOverview pools', () => {
   it('takes SharePoint used bytes from the trend, not the site sum', () => {
     const overview = buildStorageOverview(inputs())
@@ -110,14 +88,11 @@ describe('buildStorageOverview pools', () => {
     expect(withMoreOneDrive.sharePoint.remainingBytes).toBe(
       baseline.sharePoint.remainingBytes,
     )
-    expect(withMoreOneDrive.sharePoint.usedPercentage).toBe(
-      baseline.sharePoint.usedPercentage,
-    )
   })
 
-  it('reports the used percentage against the entitlement', () => {
+  it('reports what is left of the entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 300 * GB }))
-    expect(overview.sharePoint.usedPercentage).toBeCloseTo(0.5, 10)
+    expect(overview.sharePoint.remainingBytes).toBe(150 * GB)
   })
 })
 
@@ -168,8 +143,6 @@ describe('buildStorageOverview entitlement', () => {
     const overview = buildStorageOverview(unknownEntitlement())
     expect(overview.sharePoint.entitledBytes).toBeNull()
     expect(overview.sharePoint.remainingBytes).toBeNull()
-    expect(overview.sharePoint.usedPercentage).toBeNull()
-    expect(overview.sharePoint.headroomRatio).toBeNull()
     expect(overview.sharePoint.overageBytes).toBeNull()
     expect(overview.growth.forecastStatus).toBe('Unknown')
     expect(overview.growth.forecastExhaustionDate).toBeNull()
@@ -469,66 +442,35 @@ describe('buildStorageOverview composition', () => {
     })
   })
 
-  describe('storage usage line', () => {
+  describe('storage usage rows', () => {
     const estate = (over: Partial<OverviewInputs> = {}) =>
       inputs({
         sites: [
           site({ id: 'team', template: 'TEAMCHANNEL#0', storageUsedBytes: 30 * GB }),
-          site({ id: 'quiet-team', template: 'TEAMCHANNEL#0', storageUsedBytes: 15 * GB, lastActivityDate: '2020-01-01' }),
-          site({ id: 'quiet-site', template: 'STS#3', storageUsedBytes: 25 * GB, lastActivityDate: '2021-01-01' }),
           site({ id: 'busy-site', template: 'STS#3', storageUsedBytes: 20 * GB }),
           site({ id: 'gone', template: 'STS#3', storageUsedBytes: 10 * GB, isDeleted: true }),
         ],
-        drives: [drive(), drive({ id: 'left', storageUsedBytes: 4 * GB, isDeleted: true })],
+        drives: [drive({ storageUsedBytes: 4 * GB }), drive({ id: 'left', storageUsedBytes: 9 * GB, isDeleted: true })],
         ...over,
       })
-    const bytesOf = (overview: ReturnType<typeof buildStorageOverview>) =>
-      Object.fromEntries(overview.breakdown.segments.map((segment) => [segment.key, segment.bytes]))
 
-    it('splits every workload into parts that never overlap, in the order the line draws them', () => {
+    it('draws live rows from the usage reports, against the trend totals the cards show', () => {
       const overview = buildStorageOverview(estate())
-      expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual([
-        'sharePoint',
-        'teams',
-        'deleted',
-        'inactive',
-        'free',
+      expect(overview.usage.rows.map(({ workload, bytes, source }) => [workload, bytes, source])).toEqual([
+        ['sharePoint', 20 * GB, 'siteReport'],
+        ['teams', 30 * GB, 'siteReport'],
+        ['oneDrive', 4 * GB, 'accountReport'],
       ])
-      expect(bytesOf(overview)).toEqual({
-        sharePoint: 70 * GB,
-        teams: 30 * GB,
-        deleted: 10 * GB,
-        inactive: 40 * GB,
-        free: 1874 * GB,
-      })
-      expect(overview.breakdown.totalBytes).toBe(2024 * GB)
-      expect(overview.breakdown.deletedCount).toBe(1)
+      expect(overview.usage.totalBytes).toBe(54 * GB)
+      expect(overview.sharePoint.usedBytes).toBe(150 * GB)
     })
 
-    it('gives each part its share of the line', () => {
-      const { breakdown } = buildStorageOverview(estate())
-      const share = Object.fromEntries(breakdown.segments.map((segment) => [segment.key, segment.share]))
-      expect(share.teams).toBeCloseTo(30 / 2024, 10)
-      expect(share.free).toBeCloseTo(1874 / 2024, 10)
-    })
-
-    it('has no free part, rather than a zero, when the entitlement is unknown', () => {
-      const overview = buildStorageOverview(unknownEntitlement({ sites: estate().sites, drives: estate().drives }))
-      expect(bytesOf(overview).free).toBeUndefined()
-      expect(overview.breakdown.totalBytes).toBe(150 * GB)
-    })
-
-    it('leaves nothing free once SharePoint storage passes the entitlement', () => {
-      const overview = buildStorageOverview(estate({ entitlementOverrideBytes: 100 * GB }))
-      expect(bytesOf(overview).free).toBe(0)
-      expect(overview.sharePoint.exhausted).toBe(true)
-    })
-
-    it('never draws a negative SharePoint part when the site rows add up to more than the trend', () => {
-      const overview = buildStorageOverview(
-        estate({ sharePointTrend: monthly([20 * GB, 30 * GB, 40 * GB, 50 * GB, 60 * GB, 70 * GB]) }),
-      )
-      expect(bytesOf(overview).sharePoint).toBe(0)
+    it('falls back to the trend totals, deleted storage included, for a report that did not come back', () => {
+      const overview = buildStorageOverview(estate({ unreadReports: ['sites', 'drives'] }))
+      expect(overview.usage.rows.map(({ workload, bytes, source }) => [workload, bytes, source])).toEqual([
+        ['sharePoint', 150 * GB, 'sharePointTrend'],
+        ['oneDrive', 60 * GB, 'oneDriveTrend'],
+      ])
     })
   })
 
@@ -903,21 +845,15 @@ describe('buildStorageOverview growth and cost', () => {
     expect(overview.growth.forecastMonthsToExhaustion).not.toBe(0)
   })
 
-  it('grades utilisation against the entitlement, and not at all without one', () => {
-    expect(buildStorageOverview(inputs({ entitlementOverrideBytes: 160 * GB })).sharePoint.utilization).toBe('watch')
-    expect(buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB })).sharePoint.utilization).toBe('healthy')
-    expect(buildStorageOverview(unknownEntitlement()).sharePoint.utilization).toBeNull()
-  })
-
   it('reports zero overage, not a negative one, inside the entitlement', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 1000 * GB }))
     expect(overview.sharePoint.overageBytes).toBe(0)
-    expect(overview.sharePoint.headroomRatio).toBeCloseTo(0.85, 10)
+    expect(overview.sharePoint.remainingBytes).toBe(850 * GB)
   })
 
-  it('clamps headroom at zero over the entitlement, never negative', () => {
+  it('clamps what is left at zero over the entitlement, never negative', () => {
     const overview = buildStorageOverview(inputs({ entitlementOverrideBytes: 10 * GB }))
-    expect(overview.sharePoint.headroomRatio).toBe(0)
+    expect(overview.sharePoint.remainingBytes).toBe(0)
   })
 
   it('reports the measured growth rate and the window it was measured over', () => {
@@ -1058,7 +994,7 @@ describe('buildStorageOverview growth and cost', () => {
     ])
     expect(overview.growth.forecastEndBytes).toBe(0)
     expect(Number.isFinite(overview.cost.growthAnnual)).toBe(true)
-    expect(overview.breakdown.segments.every((segment) => Number.isFinite(segment.share))).toBe(true)
+    expect(overview.usage).toEqual({ rows: [], totalBytes: 0 })
     expect(overview.oneDrive.drivesNearCap).toBe(0)
   })
 })

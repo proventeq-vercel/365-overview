@@ -1,7 +1,7 @@
 ---
 title: Current storage distribution
 nav: Storage distribution
-description: Where storage sits today — every SharePoint workload on one line against the SharePoint entitlement, and how SharePoint splits by site template.
+description: Where storage sits today — what SharePoint, Teams and OneDrive each store, and how SharePoint splits by site template.
 section: storage-optimisation
 feature: optimization.storage.report.overview
 order: 10
@@ -12,42 +12,39 @@ comes back, this section is left out: see [A Microsoft report did not come back]
 
 ## Storage usage
 
-One line shows where SharePoint storage sits, split into five parts, and ends in what is left of
-your SharePoint entitlement. Hover over or select a part, on the line or in the list under it, to
-see its size, its share of the line and what it counts. When the SharePoint site usage report does
-not come back, the Teams, Deleted and Inactive parts are left out and the SharePoint part holds all
-the storage in the storage trend: see [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
+One line per source shows what it stores today: SharePoint, Teams and OneDrive. Every line is drawn
+against the largest one, so the lengths compare, and each gives its size and its share of all the
+storage shown. Above the lines is the total stored. Hover over or select a line to see what it
+counts.
 
-OneDrive is not on this line. Microsoft's
-[SharePoint limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/sharepoint-online-service-description/sharepoint-online-limits)
-give the organisation's total storage as "not including the OneDrive created for each licensed
-user": each OneDrive has its own allowance from the user's licence.
-
-Above the line, the percentage is SharePoint storage against the SharePoint entitlement. The percentage is
-green below 85%, orange from 85% and red from 95%. A tenant already over its entitlement also
-shows how far over it is, in red.
-
-| Part | Colour | What it counts |
+| Line | Colour | What it counts |
 | --- | --- | --- |
-| SharePoint | SharePoint teal | Live SharePoint sites with activity inside the inactivity window. It is Microsoft's SharePoint storage total less the Teams, Inactive and deleted-site parts, so the SharePoint parts add up to that total. |
-| Teams | Teams purple | Live sites with activity inside the inactivity window, created from a Teams channel or group template. |
-| Deleted | Red | Deleted sites that Microsoft still holds, and counts against the entitlement, until their retention period ends. Deleted OneDrives are not part of the SharePoint entitlement, so they are not on this line. [Main offenders](main-offenders.md#deleted-but-still-billing) lists both. |
-| Inactive | Amber | Live sites, Teams sites included, with no activity for the [inactivity window](../../reference/settings.md#archive-sites-inactive-for). It is the same storage as the [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card. |
-| Free | Light grey | The SharePoint entitlement less SharePoint storage, never below zero. Left out when the entitlement is unknown. |
+| SharePoint | SharePoint teal | Live SharePoint sites, from the SharePoint site usage report. |
+| Teams | Teams purple | Live sites created from a Teams channel or group template, from the same report. |
+| OneDrive | OneDrive blue | Live OneDrives, from the OneDrive usage report. |
 
-- The parts never overlap: an inactive Teams site counts once, under **Inactive**.
+- When the usage reports came back, deleted sites and OneDrives are not on the lines, so the
+  lines usually add up to less than the storage trends, by what deleted sites and OneDrives still
+  hold; the trends can also end on another day than the usage reports. A line that comes from a
+  storage trend includes that deleted storage.
+  [Main offenders](main-offenders.md#deleted-but-still-billing) lists the ones Microsoft still
+  holds. Inactive sites are on their lines like any live site; the
+  [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card adds them up.
+- How much of the SharePoint entitlement is used is not shown here: this panel is about what is
+  stored, not about the quota.
+- OneDrive is a separate pool. Microsoft's
+  [SharePoint limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/sharepoint-online-service-description/sharepoint-online-limits)
+  give the organisation's total storage as "not including the OneDrive created for each licensed
+  user": each OneDrive has its own allowance from the user's licence.
+- When the SharePoint site usage report does not come back, one SharePoint line holds all the
+  SharePoint storage in the storage trend, Teams sites and deleted sites included, and there is no
+  Teams line. When the OneDrive usage report does not come back, the OneDrive line comes from the
+  OneDrive storage trend, deleted OneDrives included. See [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
 - Microsoft Graph does not say which sites belong to Teams. The report groups by the template each
   site was created from, so these figures will not match the SharePoint admin centre, which
   groups differently.
-- If the entitlement is unknown, the headline gives the SharePoint storage in use, the line has
-  no **Free** part, and a note says how to enter the entitlement under
-  **Options (⋯) → Report settings**.
-- If the entitlement was [estimated from licences](../../reference/calculations.md#sharepoint-entitlement),
-  a note under the line says so.
-
-On the line, the percentage above it and each part's share: a share that would round to
-0.0% shows as **<0.1%**, and one that would round to 100.0% as **>99.9%**. A tenant over its
-entitlement still shows its real percentage, above 100%.
+- A share that would round to 0.0% shows as **<0.1%**, and one that would round to 100.0% as
+  **>99.9%**.
 
 ## Storage by site template
 

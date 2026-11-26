@@ -9,7 +9,6 @@ import {
   type StorageOverview,
   type StorageRow,
   type TemplateSlice,
-  type Workload,
   type WorkloadSlice,
 } from '@/types/storage'
 import { GB_IN_BYTES, estimateEntitlementBytes, oneDriveBytesPerUser } from '@/lib/entitlement'
@@ -24,14 +23,14 @@ import {
   storageCostAnnual,
 } from '@/lib/cost'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
-import { storageBreakdown } from '@/lib/storageBreakdown'
 import type { OneDriveLicences } from '@/reports/activeUsers'
 import { oneDriveAttention } from './oneDriveAttention'
 import { nameMaskOf } from '@/lib/concealment'
 import { hideRowNames } from '@/lib/hiddenNames'
 import { reportedTemplate } from '@/lib/reportedTemplate'
 import { rowName } from '@/lib/rowName'
-import { STORAGE_THRESHOLDS, utilizationStatus } from '@/lib/thresholds'
+import { storageUsage } from '@/model/storageUsage'
+import { workloadOf } from '@/model/workload'
 import { topNWithOther } from '@/lib/topNWithOther'
 import {
   FORECAST_CHART_MONTHS,
@@ -55,8 +54,6 @@ const TOP_PER_POOL = 5
 
 const TOP_TEMPLATE_SLICES = 8
 
-const TEAMS_TEMPLATE_MARKERS = ['TEAMCHANNEL', 'TEAM CHANNEL', 'GROUP']
-
 export interface OverviewInputs {
   sites: StorageRow[]
   drives: StorageRow[]
@@ -74,18 +71,6 @@ export interface OverviewInputs {
   forceUnknownEntitlement?: boolean
   namesHidden?: boolean
   unreadReports?: CoreReport[]
-}
-
-export function classifyWorkload(template?: string): 'SharePoint' | 'Teams' {
-  const upper = (template ?? '').toUpperCase()
-  return TEAMS_TEMPLATE_MARKERS.some((marker) => upper.includes(marker))
-    ? 'Teams'
-    : 'SharePoint'
-}
-
-export function workloadOf(row: StorageRow): Workload {
-  if (row.pool === 'OneDrive') return 'oneDrive'
-  return classifyWorkload(row.template) === 'Teams' ? 'teams' : 'sharePoint'
 }
 
 const latest = (series: UsagePoint[]): number =>
@@ -241,14 +226,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const oneDriveUsed = usedFrom(oneDriveTrend, drives)
 
   const remainingBytes = entitledBytes === null ? null : Math.max(0, entitledBytes - sharePointUsed)
-  const usedPercentage = entitledBytes === null ? null : sharePointUsed / entitledBytes
-  const headroomRatio = usedPercentage === null ? null : Math.max(0, 1 - usedPercentage)
   const overageBytes = entitledBytes === null ? null : Math.max(0, sharePointUsed - entitledBytes)
   const exhausted = entitledBytes !== null && sharePointUsed >= entitledBytes
-  const utilization =
-    entitledBytes === null
-      ? null
-      : utilizationStatus(sharePointUsed, entitledBytes, STORAGE_THRESHOLDS)
 
   const liveSites = sites.filter((site) => !site.isDeleted)
   const liveDrives = drives.filter((drive) => !drive.isDeleted)
@@ -286,12 +265,6 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
   const archivableShare = liveSiteBytes > 0 ? archivableBytes / liveSiteBytes : 0
   const savingBytes =
     overageBytes === null ? archivableBytes : Math.min(archivableBytes, overageBytes)
-  const activeTeamsBytes = sumBytes(
-    liveSites.filter(
-      (site) =>
-        classifyWorkload(site.template) === 'Teams' && !isInactiveSince(site, archiveCutoff),
-    ),
-  )
   const deletedSites = retainedTotal(sites)
   const deletedDrives = retainedTotal(drives)
 
@@ -321,11 +294,8 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       usedFromSiteReport: sharePointTrend.length === 0,
       entitledBytes,
       remainingBytes,
-      usedPercentage,
-      headroomRatio,
       overageBytes,
       exhausted,
-      utilization,
       entitlementIsMeasured,
       licenceEstimateBytes,
       byTemplate: templateSlices(liveSites),
@@ -366,14 +336,13 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
         : null,
     },
 
-    breakdown: storageBreakdown({
+    usage: storageUsage({
+      siteReportRead,
+      sites,
       sharePointUsedBytes: sharePointUsed,
-      teamsBytes: activeTeamsBytes,
-      inactiveBytes: archivableBytes,
-      deletedSiteBytes: deletedSites.bytes,
-      deletedCount: deletedSites.count,
-      freeBytes: remainingBytes,
-      siteFiguresRead: siteReportRead,
+      accountReportRead,
+      drives,
+      oneDriveUsedBytes: oneDriveUsed,
     }),
 
     offenders: {

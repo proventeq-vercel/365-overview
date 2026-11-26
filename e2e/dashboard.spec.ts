@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
 import { HELP_BOOT_SCRIPT } from '../src/app/help/helpBoot'
 
+const WITH_ALL_SITES_TABLE = '/?features=optimization.storage.report.overview,optimization.storage.report.allsites'
+
 async function reportLoaded(page: Page) {
   await expect(page.getByRole('heading', { name: /main offenders/i })).toBeVisible()
 }
@@ -45,7 +47,7 @@ test.describe('the offenders table pages through a large estate', () => {
   const bodyRows = (page: Page) => page.getByRole('table', { name: 'Sites and drives' }).getByRole('row').filter({ has: page.getByRole('cell') })
 
   test('shows fifty rows a page with the range and disables the back buttons on page one', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(WITH_ALL_SITES_TABLE)
     await reportLoaded(page)
     await expect(bodyRows(page)).toHaveCount(50)
     await expect(page.getByText(/^1–50 of [\d,]+$/)).toBeVisible()
@@ -55,7 +57,7 @@ test.describe('the offenders table pages through a large estate', () => {
   })
 
   test('next, last and first move through the pages', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(WITH_ALL_SITES_TABLE)
     await reportLoaded(page)
     const firstName = (await bodyRows(page).first().getByRole('cell').first().textContent()) ?? ''
     await page.getByRole('button', { name: 'Next page' }).click()
@@ -69,7 +71,7 @@ test.describe('the offenders table pages through a large estate', () => {
   })
 
   test('the page size can be raised and a search starts again from page one', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(WITH_ALL_SITES_TABLE)
     await reportLoaded(page)
     await page.getByRole('combobox', { name: 'Rows per page' }).click()
     await page.getByRole('option', { name: '100' }).click()
@@ -86,7 +88,7 @@ test.describe('the offenders table pages through a large estate', () => {
 })
 
 test('a sortable column sorts from anywhere in its header, not only its label', async ({ page }) => {
-  await page.goto('/')
+  await page.goto(WITH_ALL_SITES_TABLE)
   await reportLoaded(page)
   const share = page.getByRole('columnheader', { name: 'Share' })
   await expect(share).not.toHaveAttribute('aria-sort')
@@ -311,7 +313,7 @@ test.describe('modes from the URL', () => {
   })
 
   test('?hideNames=true blurs every site and owner name and skips the links', async ({ page }) => {
-    await page.goto('/?hideNames=true')
+    await page.goto(`${WITH_ALL_SITES_TABLE}&hideNames=true`)
     await reportLoaded(page)
     const main = page.getByRole('main')
     await expect(main.getByText(/site names and owners are hidden/i)).toBeVisible()
@@ -375,7 +377,7 @@ test('every report section explains itself and links to its help page', async ({
   }
   await main.getByRole('button', { name: 'About Current storage distribution' }).click()
   const dialog = page.getByRole('dialog', { name: 'Current storage distribution' })
-  await expect(dialog).toContainText('every SharePoint workload on one line')
+  await expect(dialog).toContainText('what SharePoint, Teams and OneDrive each store')
   const opened = context.waitForEvent('page')
   await dialog.getByRole('link', { name: 'See more' }).click()
   const help = await opened
@@ -383,7 +385,7 @@ test('every report section explains itself and links to its help page', async ({
   await expect(help).toHaveURL(/\/help\/reports\/storage-optimisation\/storage-distribution$/)
 })
 
-test('the cards sit straight under the title, above the storage usage line', async ({ page }) => {
+test('the cards sit straight under the title, above the storage usage rows', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
   const main = page.getByRole('main')
@@ -401,54 +403,64 @@ test('the cards sit straight under the title, above the storage usage line', asy
   ])
 })
 
-test('hovering a part of the storage usage line explains it', async ({ page }) => {
+test('hovering a source of the storage usage explains it, and a key opens it too', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
-  await expect(parts).toHaveCount(5)
+  const usage = page.getByRole('list', { name: 'Storage usage' })
+  await expect(usage.locator('[data-row]')).toHaveCount(3)
   await page.locator('[data-segment="teams"]').hover()
   const popover = page.getByRole('dialog', { name: 'Teams' })
   await expect(popover).toBeVisible()
-  await expect(popover).toContainText('of the line')
   await expect(popover).toContainText('Teams channel and group templates')
   await page.mouse.move(0, 0)
   await expect(popover).toBeHidden()
-  await parts.filter({ hasText: 'Inactive' }).focus()
+  await usage.locator('[data-row="oneDrive"]').focus()
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('dialog', { name: 'Inactive' })).toContainText('of the line')
+  await expect(page.getByRole('dialog', { name: 'OneDrive' })).toContainText('separate pool')
 })
 
-test('the storage distribution shows only the SharePoint usage line, with no OneDrive pool and no versions', async ({ page }) => {
+test('the storage usage gives each source one line, with no entitlement, versions or ROT', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
   const distribution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Current storage distribution' }) })
-  const parts = distribution.getByRole('list', { name: 'Storage usage' }).getByRole('button')
-  await expect(parts).toHaveText([/^SharePoint/, /^Teams/, /^Deleted/, /^Inactive/, /^Free/])
-  await expect(distribution.getByText('Live OneDrive storage')).toHaveCount(0)
-  await expect(distribution.getByText(/version/i)).toHaveCount(0)
+  await expect(distribution.getByRole('list', { name: 'Storage usage' }).locator('[data-row]')).toHaveText([
+    /^SharePoint/,
+    /^Teams/,
+    /^OneDrive/,
+  ])
+  await expect(distribution.getByText(/entitlement used|version|ROT/i)).toHaveCount(0)
 })
 
-test('a clicked part of the usage line gives way to the next one hovered', async ({ page }) => {
+test('a clicked source of the usage gives way to the next one hovered', async ({ page }) => {
   await page.goto('/')
   await reportLoaded(page)
-  const parts = page.getByRole('list', { name: 'Storage usage' }).getByRole('button')
-  await parts.filter({ hasText: 'Teams' }).click()
+  await page.locator('[data-segment="teams"]').click()
   const teams = page.getByRole('dialog', { name: 'Teams' })
   await expect(teams).toBeVisible()
   await page.mouse.move(0, 0)
   await expect(teams).toBeVisible()
-  await parts.filter({ hasText: 'Inactive' }).hover()
-  await expect(page.getByRole('dialog', { name: 'Inactive' })).toBeVisible()
+  await page.locator('[data-segment="oneDrive"]').hover()
+  await expect(page.getByRole('dialog', { name: 'OneDrive' })).toBeVisible()
   await expect(teams).toBeHidden()
   await expect(page.getByRole('dialog')).toHaveCount(1)
 
-  await parts.filter({ hasText: 'Inactive' }).click()
+  await page.locator('[data-segment="oneDrive"]').click()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
-  await parts.filter({ hasText: 'Teams' }).click()
+  await page.locator('[data-segment="teams"]').click()
   await expect(teams).toBeVisible()
   await page.mouse.click(5, 5)
   await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('the all sites and OneDrives table stays off unless its feature is on', async ({ page }) => {
+  await page.goto('/')
+  await reportLoaded(page)
+  await expect(page.getByText('All sites and OneDrives')).toHaveCount(0)
+  await expect(page.getByRole('table')).toHaveCount(0)
+  await page.goto(WITH_ALL_SITES_TABLE)
+  await reportLoaded(page)
+  await expect(page.getByText('All sites and OneDrives')).toBeVisible()
 })
 
 test('a tenant over its entitlement sees what it is billed instead of the forecast', async ({ page }) => {
@@ -465,7 +477,6 @@ test('a tenant over its entitlement sees what it is billed instead of the foreca
   await expect(cards.locator('[data-slot="stat-card"]', { hasText: 'Inactive sites to archive' })).toContainText(
     'archiving saves',
   )
-  await expect(page.getByText(/over the entitlement$/)).toBeVisible()
 })
 
 test('the help lists only the reports this site has switched on', async ({ page }) => {

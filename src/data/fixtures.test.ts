@@ -186,7 +186,6 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.sharePoint.entitledBytes).toBeNull()
     expect(overview.growth.rateSource).toBe('monthly')
     expect(overview.growth.forecastEndBytes).toBeGreaterThan(overview.sharePoint.usedBytes)
-    expect(overview.breakdown.segments.map((segment) => segment.key)).not.toContain('free')
   })
 
   it('first-day: one reported day, so the storage used and no rate, no forecast and no cost', async () => {
@@ -224,7 +223,10 @@ describe('mock scenarios reach every caveat state', () => {
     expect(overview.archive.savingApplies).toBe(false)
     expect(overview.growth.afterCleanUp).toMatchObject({ applies: false, endBytes: null, staysUnderEntitlement: null })
     expect(overview.growth.points.every((point) => point.afterCleanUpBytes === null)).toBe(true)
-    expect(overview.breakdown.segments.map((segment) => segment.key)).toEqual(['sharePoint', 'free'])
+    expect(overview.usage.rows.map((row) => [row.workload, row.source])).toEqual([
+      ['sharePoint', 'sharePointTrend'],
+      ['oneDrive', 'accountReport'],
+    ])
     expect(overview.offenders.retained).toBeNull()
     expect(overview.oneDrive.attention).not.toBeNull()
   })

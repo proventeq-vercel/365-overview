@@ -29,11 +29,8 @@ export const base: StorageOverview = {
     usedFromSiteReport: false,
     entitledBytes: 1000 * GB,
     remainingBytes: 500 * GB,
-    usedPercentage: 0.5,
-    headroomRatio: 0.5,
     overageBytes: 0,
     exhausted: false,
-    utilization: 'healthy',
     entitlementIsMeasured: false,
     licenceEstimateBytes: 1000 * GB,
     byTemplate: [],
@@ -63,16 +60,13 @@ export const base: StorageOverview = {
     },
     attention: baseAttention,
   },
-  breakdown: {
-    segments: [
-      { key: 'sharePoint', bytes: 200 * GB, share: 200 / 1000 },
-      { key: 'teams', bytes: 170 * GB, share: 170 / 1000 },
-      { key: 'deleted', bytes: 10 * GB, share: 10 / 1000 },
-      { key: 'inactive', bytes: 120 * GB, share: 120 / 1000 },
-      { key: 'free', bytes: 500 * GB, share: 500 / 1000 },
+  usage: {
+    rows: [
+      { workload: 'sharePoint', bytes: 350 * GB, share: 350 / 620, scale: 1, source: 'siteReport' },
+      { workload: 'teams', bytes: 150 * GB, share: 150 / 620, scale: 150 / 350, source: 'siteReport' },
+      { workload: 'oneDrive', bytes: 120 * GB, share: 120 / 620, scale: 120 / 350, source: 'accountReport' },
     ],
-    totalBytes: 1000 * GB,
-    deletedCount: 4,
+    totalBytes: 620 * GB,
   },
   offenders: {
     read: true,
@@ -136,10 +130,7 @@ export const unknownEntitlement: StorageOverview = {
     ...base.sharePoint,
     entitledBytes: null,
     remainingBytes: null,
-    usedPercentage: null,
-    headroomRatio: null,
     overageBytes: null,
-    utilization: null,
   },
   growth: {
     ...base.growth,
@@ -147,10 +138,6 @@ export const unknownEntitlement: StorageOverview = {
     forecastExhaustionDate: null,
     forecastMonthsToExhaustion: null,
     afterCleanUp: { ...base.growth.afterCleanUp, staysUnderEntitlement: null },
-  },
-  breakdown: {
-    ...base.breakdown,
-    segments: base.breakdown.segments.filter((segment) => segment.key !== 'free'),
   },
   oneDrive: {
     ...base.oneDrive,
@@ -202,17 +189,8 @@ export const overEntitlement: StorageOverview = {
     ...base.sharePoint,
     usedBytes: 1100 * GB,
     remainingBytes: 0,
-    usedPercentage: 1.1,
-    headroomRatio: 0,
     overageBytes: 100 * GB,
     exhausted: true,
-    utilization: 'attention',
-  },
-  breakdown: {
-    ...base.breakdown,
-    segments: base.breakdown.segments.map((segment) =>
-      segment.key === 'free' ? { ...segment, bytes: 0, share: 0 } : segment,
-    ),
   },
   growth: {
     ...base.growth,

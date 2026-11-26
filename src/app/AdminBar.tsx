@@ -23,6 +23,7 @@ const FEATURES: readonly { flag: FeatureFlag; label: TranslateKey }[] = [
   { flag: FeatureFlags.OptimizationStorageReportOverview, label: 'reports.storageOptimisation.title' },
   { flag: FeatureFlags.OptimizationStorageReportOneDrive, label: 'reports.oneDriveUsage.title' },
   { flag: FeatureFlags.AppReportMenu, label: 'admin.feature.menu' },
+  { flag: FeatureFlags.OptimizationStorageReportAllSitesTable, label: 'admin.feature.allSitesTable' },
 ]
 
 const DATA_SOURCES: readonly AdminDataSource[] = ['live', ...MOCK_SCENARIOS]

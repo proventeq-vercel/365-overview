@@ -81,11 +81,15 @@ another address. A refused link stops the answer it belongs to:
   the screen returns, see below.
 - When only some answers were refused, the page loads from the rest. A refused usage report
   shows as a report that did not come back (see
-  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)). A refused
-  site directory leaves site names to be looked up a page at a time, so search finds only the
-  fifty largest sites and those already shown. On a tenant of more than 10,000 licensed users, a
+  [A Microsoft report did not come back](#a-microsoft-report-did-not-come-back)).
+  On a tenant of more than 10,000 licensed users, a
   refused user licence report leaves OneDrives with no activity for over 93 days standing in for
   the unlicensed ones. **Refresh data** meets the same link again, so see below.
+
+::: feature optimization.storage.report.allsites
+A refused site directory leaves the site names in the All sites and OneDrives table to be looked
+up a page at a time, and its search finds only the fifty largest sites and those already shown.
+:::
 
 ::: audience application
 The data service here is Proventeq's Graph proxy. This is a setup fault on Proventeq's side:
@@ -128,8 +132,9 @@ and say so (*Over the usual OneDrive limit*). Enter the OneDrive storage per use
 
 The SharePoint figures never show as Unknown. Without the entitlement the *Forecast exhaustion*
 card is left out, and the *SharePoint storage used* card says none is entered, with a link to
-Report settings. Enter the SharePoint entitlement there to see the headroom and when it runs out.
-From a single reported day the *SharePoint storage used* card shows the latest figure.
+Report settings. Enter the SharePoint entitlement there to see the storage used against it and
+when it runs out. From a single reported day the *SharePoint storage used* card shows the latest
+figure.
 
 ## A Microsoft report did not come back
 
@@ -141,7 +146,7 @@ report that did not come back, and the figures drawn from it are left out:
 
 - Without the **SharePoint site usage report**, the per-site figures are left out: the
   *Inactive sites to archive* card and its saving, the template chart, *Live sites*, the top sites, the line after clean-up and the
-  Teams, Deleted and Inactive parts of the storage usage line. Storage used and the forecast come
+  Teams line of the storage usage panel. Storage used, the SharePoint line and the forecast come
   from the storage trend.
 - Without the **OneDrive usage report**, the per-OneDrive figures are left out: the OneDrive cards
   other than the storage, *Drives near their quota*, the top OneDrives, the over-licence and

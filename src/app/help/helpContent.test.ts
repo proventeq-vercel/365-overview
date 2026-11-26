@@ -94,6 +94,24 @@ describe('help content', () => {
     expect(storageOnly.page('')!.body).not.toContain('OneDrive Usage')
   })
 
+  it('describes the storage usage as one line per source', () => {
+    const page = helpCatalogueFor(new Set([FeatureFlags.OptimizationStorageReportOverview])).page(
+      'reports/storage-optimisation/storage-distribution',
+    )
+    expect(page?.body).toContain('| SharePoint | SharePoint teal | Live SharePoint sites')
+    expect(page?.body).toContain('| Teams | Teams purple | Live sites created from a Teams channel or group template')
+    expect(page?.body).toContain('| OneDrive | OneDrive blue | Live OneDrives')
+  })
+
+  it('describes the All sites and OneDrives table only while its flag is on', () => {
+    const slug = 'reports/storage-optimisation/main-offenders'
+    const overview = FeatureFlags.OptimizationStorageReportOverview
+    const without = helpCatalogueFor(new Set([overview])).page(slug)
+    const withTable = helpCatalogueFor(new Set([overview, FeatureFlags.OptimizationStorageReportAllSitesTable])).page(slug)
+    expect(without?.body).not.toContain('## All sites and OneDrives')
+    expect(withTable?.body).toContain('## All sites and OneDrives')
+  })
+
   it('documents every enabled report and no other, for every set of features', () => {
     const wrong = FLAG_SETS.flatMap((flags) => {
       const catalogue = helpCatalogueFor(new Set(flags))
