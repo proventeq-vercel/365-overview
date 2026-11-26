@@ -221,6 +221,7 @@ export interface StorageOverview {
     inactiveYears: number
     inactiveSince: string
     siteCount: number
+    sites: StorageRow[]
     bytes: number
     shareOfSharePoint: number
     status: HealthStatus

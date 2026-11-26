@@ -1,24 +1,31 @@
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { HiddenName } from '@/design/HiddenName'
+import { Pagination } from '@/design/Pagination'
 import { EmptyBlock } from '@/design/primitives'
 import { WORKLOAD_COLOR } from '@/design/theme'
+import { TruncatedText } from '@/design/TruncatedText'
+import { usePagination } from '@/hooks/usePagination'
+import { useSiteDetails } from '@/hooks/useSiteDetails'
 import { useTranslation } from '@/hooks/useTranslation'
-import { formatBytes, formatLongDate } from '@/lib/format'
+import { formatBytes, formatShortDate } from '@/lib/format'
 import { rowName } from '@/lib/rowName'
 import { workloadOf } from '@/model/storageOverview'
 import type { NameMask, StorageRow } from '@/types/storage'
 import { useArchiveDraft } from './useArchivePicks'
+import { WORKLOAD_LABEL } from './workloadLabel'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   sites: StorageRow[]
-  picked: StorageRow[]
+  pickedIds: ReadonlySet<string>
   inactiveSince: string
   inactiveYears: number
   nameMask: NameMask | null
-  onApply: (sites: StorageRow[]) => void
+  onApply: (ids: ReadonlySet<string>) => void
 }
 
 export function ArchiveSitePicker({ open, onOpenChange, ...body }: Props) {
@@ -30,7 +37,7 @@ export function ArchiveSitePicker({ open, onOpenChange, ...body }: Props) {
           <DialogTitle>{t('storageOptimisation.archivePicker.title')}</DialogTitle>
           <DialogDescription>
             {t('storageOptimisation.archivePicker.subtitle', {
-              date: formatLongDate(body.inactiveSince),
+              date: formatShortDate(body.inactiveSince),
             })}
           </DialogDescription>
         </div>
@@ -42,21 +49,25 @@ export function ArchiveSitePicker({ open, onOpenChange, ...body }: Props) {
 
 function PickerBody({
   sites,
-  picked,
+  pickedIds,
   inactiveYears,
   nameMask,
   onApply,
   onDone,
 }: Omit<Props, 'open' | 'onOpenChange' | 'inactiveSince'> & { onDone: () => void }) {
   const t = useTranslation()
-  const draft = useArchiveDraft(sites, picked)
+  const draft = useArchiveDraft(sites, pickedIds)
+  const pagination = usePagination(sites.length)
+  const { start, end } = pagination
+  const pageSlice = useMemo(() => sites.slice(start, end), [sites, start, end])
+  const { rows: pageRows, isPending: namesPending } = useSiteDetails(pageSlice, nameMask === null)
 
   return (
     <>
       {sites.length === 0 ? (
         <EmptyBlock>{t('storageOptimisation.archivePicker.empty', { years: inactiveYears })}</EmptyBlock>
       ) : (
-        <div className="flex min-h-0 flex-col">
+        <div className="flex min-h-0 flex-col gap-2">
           <label className="flex items-center gap-2 border-b border-p365-grey-100 pb-2 text-sm text-p365-grey-500">
             <input
               type="checkbox"
@@ -70,8 +81,11 @@ function PickerBody({
             {t('storageOptimisation.archivePicker.selectAll')}
           </label>
           <ul className="min-h-0 overflow-y-auto py-1">
-            {sites.map((site) => {
+            {pageRows.map((site) => {
               const name = rowName(site)
+              const resolving = namesPending && !site.name && !site.url
+              const size = formatBytes(site.storageUsedBytes)
+              const lastActivity = formatShortDate(site.lastActivityDate ?? '')
               return (
                 <li key={site.id}>
                   <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 transition-colors duration-150 ease-out hover:bg-p365-grey-50">
@@ -80,7 +94,11 @@ function PickerBody({
                       className="size-4 shrink-0 accent-p365-teal"
                       checked={draft.ids.has(site.id)}
                       onChange={() => draft.toggle(site.id)}
-                      aria-label={nameMask === null ? name : t('hiddenName.label')}
+                      aria-label={t('storageOptimisation.archivePicker.rowLabel', {
+                        name: nameMask === null ? name : t('hiddenName.label'),
+                        size,
+                        date: lastActivity,
+                      })}
                     />
                     <span
                       aria-hidden="true"
@@ -88,29 +106,27 @@ function PickerBody({
                       style={{ backgroundColor: WORKLOAD_COLOR[workloadOf(site)] }}
                     />
                     <span className="flex min-w-0 flex-1 flex-col">
-                      {nameMask === null ? (
-                        <span className="truncate text-sm text-p365-navy" title={name}>
-                          {name}
-                        </span>
-                      ) : (
+                      {nameMask !== null ? (
                         <HiddenName mask={nameMask} seed={name} className="text-sm text-p365-navy" />
+                      ) : resolving ? (
+                        <Skeleton className="h-3.5 w-1/2" aria-label={t('table.resolvingName')} />
+                      ) : (
+                        <TruncatedText text={name} className="text-sm text-p365-navy" />
                       )}
                       <span className="text-xs text-p365-grey-500">
-                        {site.lastActivityDate === null
-                          ? t('storageOptimisation.archivePicker.noActivity')
-                          : t('storageOptimisation.archivePicker.lastActivity', {
-                              date: formatLongDate(site.lastActivityDate),
-                            })}
+                        {t('storageOptimisation.archivePicker.lastActivity', {
+                          workload: t(WORKLOAD_LABEL[workloadOf(site)]),
+                          date: lastActivity,
+                        })}
                       </span>
                     </span>
-                    <span className="tabular shrink-0 text-sm font-bold text-p365-navy">
-                      {formatBytes(site.storageUsedBytes)}
-                    </span>
+                    <span className="tabular shrink-0 text-sm font-bold text-p365-navy">{size}</span>
                   </label>
                 </li>
               )
             })}
           </ul>
+          <Pagination pagination={pagination} label={t('storageOptimisation.archivePicker.title')} />
         </div>
       )}
       <div className="flex items-center justify-between gap-3 border-t border-p365-grey-100 pt-3">
@@ -127,7 +143,7 @@ function PickerBody({
           <Button
             type="button"
             onClick={() => {
-              onApply(draft.chosen)
+              onApply(draft.chosenIds)
               onDone()
             }}
           >

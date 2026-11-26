@@ -1020,6 +1020,11 @@ describe('buildStorageOverview inactive sites', () => {
     expect(archive.bytes).toBe(40 * GB)
   })
 
+  it('lists the archivable sites largest first, never a deleted or unrecorded one', () => {
+    const { archive } = buildStorageOverview(tenant())
+    expect(archive.sites.map((row) => row.id)).toEqual(['dormant', 'quiet'])
+  })
+
   it('measures the archivable share against live site storage, leaving OneDrive and deleted sites out', () => {
     const { archive } = buildStorageOverview(tenant())
     expect(archive.shareOfSharePoint).toBeCloseTo(40 / 105, 10)
@@ -1030,6 +1035,7 @@ describe('buildStorageOverview inactive sites', () => {
     const { archive } = buildStorageOverview({ ...tenant(), inactiveYears: 5 })
     expect(archive.inactiveSince).toBe('2021-08-30')
     expect(archive.siteCount).toBe(1)
+    expect(archive.sites.map((row) => row.id)).toEqual(['quiet'])
     expect(archive.bytes).toBe(10 * GB)
   })
 

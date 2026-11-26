@@ -179,11 +179,10 @@ export function cleanUpOutlook(
   archivedBytes: number,
   entitledBytes: number | null,
 ): CleanUpOutlook {
-  const forecast = points.filter((point) => point.actualUsedBytes === null)
-  const values = forecast.map((point) =>
-    archivedBytes > 0 ? afterArchiveBytes(point, archivedBytes) : point.afterCleanUpBytes,
-  )
-  if (values.every((value) => value === null)) return { endBytes: null, staysUnderEntitlement: null }
+  if (!points.some((point) => point.actualUsedBytes === null)) {
+    return { endBytes: null, staysUnderEntitlement: null }
+  }
+  const values = points.map((point) => afterArchiveBytes(point, archivedBytes))
   return {
     endBytes: values.at(-1) ?? null,
     staysUnderEntitlement: staysUnder(values, entitledBytes),

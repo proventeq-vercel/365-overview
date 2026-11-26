@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { screen, cleanup } from '@testing-library/react'
 import { render } from '@/test/render'
 import { GrowthSection } from './GrowthSection'
-import { base, firstDay, unknownEntitlement } from './testFixtures'
+import { base, firstDay, overEntitlement, unknownEntitlement } from './testFixtures'
 
 vi.mock('@/design/charts', () => ({
   MonoLineChart: ({
@@ -71,7 +71,7 @@ describe('GrowthSection trend chart', () => {
       'Actual used:actualUsedBytes:solid',
       'Linear forecast:projectedUsedBytes:dashed',
     ])
-    expect(screen.queryByText('If inactive and deleted sites are cleaned up')).not.toBeInTheDocument()
+    expect(screen.queryByText('Removable today')).not.toBeInTheDocument()
   })
 
   it('draws only the measured line when a single day has been reported', () => {
@@ -79,5 +79,41 @@ describe('GrowthSection trend chart', () => {
     expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Actual used:actualUsedBytes:solid',
     ])
+  })
+
+  describe('cost chart', () => {
+    const GB = 1_073_741_824
+    const costPoints = [
+      { month: '2026-07', actualUsedBytes: 1100 * GB, projectedUsedBytes: 1100 * GB, afterCleanUpBytes: 980 * GB },
+      { month: '2026-08', actualUsedBytes: null, projectedUsedBytes: 1110 * GB, afterCleanUpBytes: 990 * GB },
+    ]
+    const costChart = (name: string) => screen.getByRole('img', { name })
+    const seriesOf = (name: string) =>
+      Array.from(costChart(name).querySelectorAll('li')).map((item) => item.textContent)
+
+    it('titles and names the billable spend when the tenant is over its entitlement', () => {
+      render(<GrowthSection overview={{ ...overEntitlement, growth: { ...overEntitlement.growth, points: costPoints } }} />)
+      expect(screen.getByRole('heading', { name: 'Projected cost if nothing changes' })).toBeInTheDocument()
+      expect(seriesOf('Projected cost if nothing changes')).toEqual([
+        'Monthly spend above the entitlement:forecastCost:solid',
+        'Spend after clean-up:afterCleanUpCost:dotted',
+      ])
+      expect(
+        screen.getByText('Extra spend once storage grows past the entitlement, at the configured rate.'),
+      ).toBeInTheDocument()
+    })
+
+    it('titles the chart the value of growth, with its own copy, when the entitlement is unknown', () => {
+      render(
+        <GrowthSection overview={{ ...unknownEntitlement, growth: { ...unknownEntitlement.growth, points: costPoints } }} />,
+      )
+      expect(screen.getByRole('heading', { name: 'Projected value of growth' })).toBeInTheDocument()
+      expect(seriesOf('Projected value of growth')).toEqual(['Value of the storage added:forecastCost:solid'])
+      expect(
+        screen.getByText(
+          'Enter the tenant entitlement in Options, Report settings to see billable spend. The chart is the list-price value of the storage added.',
+        ),
+      ).toBeInTheDocument()
+    })
   })
 })

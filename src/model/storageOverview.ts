@@ -76,7 +76,7 @@ export interface OverviewInputs {
 const latest = (series: UsagePoint[]): number =>
   series.length === 0 ? 0 : series[series.length - 1].value
 
-const sumBytes = (rows: StorageRow[]): number =>
+export const sumBytes = (rows: StorageRow[]): number =>
   rows.reduce((total, row) => total + row.storageUsedBytes, 0)
 
 const usedFrom = (trend: UsagePoint[], rows: StorageRow[]): number =>
@@ -387,6 +387,7 @@ export function buildStorageOverview(inputs: OverviewInputs): StorageOverview {
       inactiveYears,
       inactiveSince: archiveCutoff,
       siteCount: archivable.length,
+      sites: archivable,
       bytes: archivableBytes,
       shareOfSharePoint: archivableShare,
       status: archiveStatus(archivableShare),

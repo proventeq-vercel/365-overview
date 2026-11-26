@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { HelpButton } from '@/app/help/HelpButton'
 import { formatBytes, formatNumber, formatShortMonthYear, formatSignedBytes } from '@/lib/format'
-import { archivableSites } from '@/lib/archive'
-import { costOverTime } from '@/lib/cost'
-import { FORECAST_CHART_MONTHS, growthRows } from '@/lib/forecast'
+import { FORECAST_CHART_MONTHS } from '@/lib/forecast'
 import { useTranslation } from '@/hooks/useTranslation'
 import { ArchiveSitePicker } from './ArchiveSitePicker'
 import { CleanUpForecast } from './CleanUpForecast'
@@ -37,18 +35,9 @@ export function GrowthSection({ overview, delay }: Props) {
   const { growth, sharePoint, oneDrive, cost, archive } = overview
   const callout = buildCallout(overview, t)
   const forecasting = growth.rateSource !== 'none'
-  const { picked, archivedBytes, setPicked } = useArchivePicks(overview)
+  const { impact, pickedIds, setPickedIds } = useArchivePicks(overview)
+  const { archivedBytes, cleansUp, cost: costs } = impact
   const [pickerOpen, setPickerOpen] = useState(false)
-  const candidates = useMemo(
-    () => archivableSites(sharePoint.sites, archive.inactiveSince),
-    [sharePoint.sites, archive.inactiveSince],
-  )
-  const rows = useMemo(() => growthRows(growth.points, archivedBytes), [growth.points, archivedBytes])
-  const costs = useMemo(
-    () => costOverTime(growth.points, sharePoint.entitledBytes, cost.ratePerGb, archivedBytes),
-    [growth.points, sharePoint.entitledBytes, cost.ratePerGb, archivedBytes],
-  )
-  const cleansUp = growth.afterCleanUp.applies && growth.afterCleanUp.removableBytes > 0
 
   const series: LineSeries[] = [
     { key: 'actualUsedBytes', name: t('storageOptimisation.growth.actual') },
@@ -65,16 +54,19 @@ export function GrowthSection({ overview, delay }: Props) {
       : []),
   ]
   const billable = costs.basis === 'billable'
+  const costTitle = billable
+    ? t('storageOptimisation.growth.costTitle')
+    : t('storageOptimisation.growth.costValueTitle')
   const costSeries: LineSeries[] = [
     {
       key: 'forecastCost',
       name: billable ? t('storageOptimisation.growth.costSeries') : t('storageOptimisation.growth.costSeriesValue'),
     },
     ...(billable && cleansUp
-      ? [{ key: 'afterCleanUpCost', name: t('storageOptimisation.growth.afterCleanUp'), dotted: true }]
+      ? [{ key: 'afterCleanUpCost', name: t('storageOptimisation.growth.costAfterCleanUp'), dotted: true }]
       : []),
     ...(billable && archivedBytes > 0
-      ? [{ key: 'afterArchiveCost', name: t('storageOptimisation.growth.afterArchive'), dashDot: true }]
+      ? [{ key: 'afterArchiveCost', name: t('storageOptimisation.growth.costAfterArchive'), dashDot: true }]
       : []),
   ]
 
@@ -89,7 +81,7 @@ export function GrowthSection({ overview, delay }: Props) {
         <Panel>
           <PanelLabel>{t('storageOptimisation.growth.trendTitle')}</PanelLabel>
           <MonoLineChart
-            data={rows}
+            data={impact.trendRows}
             xKey="month"
             series={series}
             formatValue={formatBytes}
@@ -173,9 +165,7 @@ export function GrowthSection({ overview, delay }: Props) {
           </MiniStatRow>
           {cost.applies && (
             <div className="mt-3 flex flex-col gap-1">
-              <PanelLabel>
-                {billable ? t('storageOptimisation.growth.costTitle') : t('storageOptimisation.growth.costValueTitle')}
-              </PanelLabel>
+              <PanelLabel>{costTitle}</PanelLabel>
               {costs.rows.length > 0 && (
                 <MonoLineChart
                   data={costs.rows.map((row) => ({ ...row }))}
@@ -183,7 +173,7 @@ export function GrowthSection({ overview, delay }: Props) {
                   series={costSeries}
                   formatValue={(value) => formatMoney(value, cost.currency)}
                   formatX={formatShortMonthYear}
-                  ariaLabel={t('storageOptimisation.growth.costTitle')}
+                  ariaLabel={costTitle}
                   height={COST_HEIGHT}
                 />
               )}
@@ -201,7 +191,7 @@ export function GrowthSection({ overview, delay }: Props) {
                 {billable
                   ? t('storageOptimisation.growth.costSubtitle')
                   : costs.basis === 'withinEntitlement'
-                    ? t('storageOptimisation.growth.costWithinEntitlement')
+                    ? t('storageOptimisation.growth.costWithinEntitlement', { months: FORECAST_CHART_MONTHS })
                     : t('storageOptimisation.growth.costNotional')}
               </PanelDescription>
             </div>
@@ -209,8 +199,7 @@ export function GrowthSection({ overview, delay }: Props) {
           {growth.afterCleanUp.applies && (
             <CleanUpForecast
               overview={overview}
-              pickedCount={picked.length}
-              archivedBytes={archivedBytes}
+              impact={impact}
               onChooseSites={() => setPickerOpen(true)}
             />
           )}
@@ -219,12 +208,12 @@ export function GrowthSection({ overview, delay }: Props) {
       <ArchiveSitePicker
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        sites={candidates}
-        picked={picked}
+        sites={archive.sites}
+        pickedIds={pickedIds}
         inactiveSince={archive.inactiveSince}
         inactiveYears={archive.inactiveYears}
         nameMask={overview.caveats.nameMask}
-        onApply={setPicked}
+        onApply={setPickedIds}
       />
     </Section>
   )

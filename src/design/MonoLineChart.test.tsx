@@ -18,8 +18,13 @@ vi.mock('recharts', async (importOriginal) => {
     Tooltip: Nothing,
     Legend: Nothing,
     ReferenceLine: Nothing,
-    Line: ({ dataKey, dot }: { dataKey: string; dot: unknown }) => (
-      <span data-testid="line" data-key={dataKey} data-dot={dot === false ? 'none' : 'drawn'} />
+    Line: ({ dataKey, dot, strokeDasharray }: { dataKey: string; dot: unknown; strokeDasharray?: string }) => (
+      <span
+        data-testid="line"
+        data-key={dataKey}
+        data-dot={dot === false ? 'none' : 'drawn'}
+        data-dash={strokeDasharray ?? ''}
+      />
     ),
   }
 })
@@ -59,5 +64,47 @@ describe('MonoLineChart', () => {
       ]),
     )
     expect(dots()).toEqual({ actual: 'none', projected: 'none' })
+  })
+
+  it('draws each line style with its own dash pattern', () => {
+    render(
+      <MonoLineChart
+        data={[{ month: '2026-08', a: 1, b: 2, c: 3, d: 4 }]}
+        xKey="month"
+        series={[
+          { key: 'a', name: 'A' },
+          { key: 'b', name: 'B', dashed: true },
+          { key: 'c', name: 'C', dotted: true },
+          { key: 'd', name: 'D', dashDot: true },
+        ]}
+        formatValue={String}
+        formatX={String}
+        ariaLabel="Styles"
+      />,
+    )
+    expect(Object.fromEntries(screen.getAllByTestId('line').map((line) => [line.dataset.key, line.dataset.dash]))).toEqual({
+      a: '',
+      b: '8 4',
+      c: '1 4',
+      d: '10 4 1 4',
+    })
+  })
+
+  it('keeps its height as a minimum when it fills the room it is given', () => {
+    const { rerender } = render(chart([{ month: '2026-08', actual: 150, projected: 150 }]))
+    expect(screen.getByRole('img', { name: 'Storage trend' })).not.toHaveStyle({ minHeight: '256px' })
+
+    rerender(
+      <MonoLineChart
+        data={[{ month: '2026-08', actual: 150, projected: 150 }]}
+        xKey="month"
+        series={series}
+        formatValue={String}
+        formatX={String}
+        ariaLabel="Storage trend"
+        fill
+      />,
+    )
+    expect(screen.getByRole('img', { name: 'Storage trend' })).toHaveStyle({ minHeight: '256px' })
   })
 })

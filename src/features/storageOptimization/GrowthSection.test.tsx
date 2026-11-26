@@ -109,7 +109,9 @@ describe('GrowthSection', () => {
   it('prices growth identically whether or not the entitlement is known', () => {
     const { unmount } = render(<GrowthSection overview={withGrowth} />)
     expect(screen.getByRole('heading', { name: /projected value of growth/i })).toBeInTheDocument()
-    expect(screen.getByText(/stays inside your entitlement, so growth adds no spend yet/)).toBeInTheDocument()
+    expect(
+      screen.getByText('The forecast stays inside your entitlement for the next 6 months, so the chart is the list-price value of the storage added.'),
+    ).toBeInTheDocument()
     expect(screen.getByText('Next 12 months').nextElementSibling).toHaveTextContent('£288.00')
     expect(screen.getByText('Cumulative, 3 years').nextElementSibling).toHaveTextContent(
       '£1,296.00',
@@ -167,15 +169,37 @@ describe('GrowthSection', () => {
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^440 GB$/)
     })
 
-    it('says no deleted site is billing and points to the archive pick when nothing is removable', () => {
-      render(
-        <GrowthSection
-          overview={withCleanUp({ deletedBytes: 0, removableBytes: 0, endBytes: 560 * GB, staysUnderEntitlement: true })}
-        />,
-      )
+    const nothingRemovable = withCleanUp({ deletedBytes: 0, removableBytes: 0, endBytes: 560 * GB, staysUnderEntitlement: true })
+    const candidate = {
+      pool: 'SharePoint' as const,
+      id: 'old',
+      url: 'https://contoso.sharepoint.com/sites/old',
+      ownerDisplayName: '',
+      storageUsedBytes: 30 * GB,
+      fileCount: 0,
+      activeFileCount: 0,
+      lastActivityDate: '2021-03-03',
+      isDeleted: false,
+    }
+
+    it('says no deleted site is billing and points to the archive pick when nothing is removable but sites are inactive', () => {
+      render(<GrowthSection overview={{ ...nothingRemovable, archive: { ...nothingRemovable.archive, sites: [candidate] } }} />)
       expect(row('Total')).toHaveTextContent(/^0 B$/)
       expect(row('Forecast after clean-up (6 mo)')).toHaveTextContent(/^560 GB$/)
-      expect(screen.getByText(/^No deleted site is still billing\./)).toBeInTheDocument()
+      expect(screen.getByText(/^No deleted site is still billing\. Choose inactive sites/)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Choose sites/ })).toBeInTheDocument()
+    })
+
+    it('says there is nothing to clean up, and offers no pick, when no site is deleted or inactive', () => {
+      render(<GrowthSection overview={nothingRemovable} />)
+      expect(row('Archive inactive sites')).toHaveTextContent(/^0 B$/)
+      expect(screen.queryByRole('button', { name: /Choose sites/ })).not.toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Nothing to clean up: no deleted site is still billing and no live site has gone 3 years without activity.',
+        ),
+      ).toBeInTheDocument()
+      expect(screen.queryByText(/Choose inactive sites/)).not.toBeInTheDocument()
     })
   })
 

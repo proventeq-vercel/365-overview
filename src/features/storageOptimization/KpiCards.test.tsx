@@ -32,6 +32,7 @@ function rgb(hex: string): string {
 
 const quiet: StorageOverview = {
   ...base,
+  sharePoint: { ...base.sharePoint, deletedButBilling: { bytes: 0, count: 0 } },
   growth: { ...base.growth, forecastExhaustionDate: null, forecastMonthsToExhaustion: null },
   archive: { ...base.archive, siteCount: 0, bytes: 0 },
   cost: { ...base.cost, cumulativeYear3: 0 },
