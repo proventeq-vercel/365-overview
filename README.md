@@ -29,9 +29,9 @@ Each site also serves `/help` — the help centre for every report and for enabl
 | Section | What it shows |
 |---|---|
 | **Tenant capacity** (cards, a small label, no heading) | SharePoint storage used, then only the cards you can act on: over entitlement, forecast exhaustion, the cost of doing nothing over 3 years, inactive sites to archive and deleted storage (see below) |
-| **Current storage distribution** | One storage usage line — SharePoint, Teams, deleted sites, inactive and free — against the SharePoint entitlement, each part explained in a popover; and SharePoint split by site template |
+| **Current storage distribution** | One bar per source — SharePoint, Teams and OneDrive — each scaled against the largest and explained in a popover, with the total stored; and SharePoint split by site template |
 | **Future state & growth impact** | The measured 180-day storage trend, the average monthly growth (from the daily figures under six months of history), the projected exhaustion date, or the projected storage without an entitlement, and the cost of doing nothing |
-| **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site in a paginated, searchable detail table, and deleted sites and drives that still consume quota |
+| **Main offenders** | The fastest-growing sites and OneDrives as bars coloured by service, the largest sites and OneDrive drives, every site and OneDrive in a paginated, searchable detail table (only with the `optimization.storage.report.allsites` flag), and deleted sites and drives that still consume quota |
 
 **Tenant capacity** sits straight under the report title with a small *Tenant capacity* label and
 no section heading. Each card's
@@ -55,9 +55,10 @@ The rules are pure functions in `src/features/storageOptimization/actionableCard
 page *Tenant capacity* (`docs/help/reports/storage-optimisation/tenant-capacity.md`) is the full
 reference.
 
-The remaining headroom is on the *Storage usage* line under the cards. SharePoint and
-OneDrive are reported as two separate pools: the line is SharePoint only, and OneDrive has its own
-panel under it, because OneDrive storage is not part of the SharePoint entitlement.
+The *Storage usage* bars under the cards show what each source stores today, with its share of the
+total stored; they carry no entitlement or free figure (the entitlement is on the *SharePoint
+storage used* card). SharePoint and OneDrive are reported as two separate pools, so OneDrive has its
+own bar, because OneDrive storage is not part of the SharePoint entitlement.
 
 > **Entitlement note:** Microsoft Graph does not publish a tenant's pooled storage entitlement.
 > The report estimates it the way Proventeq 365 does — 1 TiB plus 10 GB per licence whose service

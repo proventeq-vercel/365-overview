@@ -14,7 +14,8 @@ comes back, this section is left out: see [A Microsoft report did not come back]
 
 One line per source shows what it stores today: SharePoint, Teams and OneDrive. Every line is drawn
 against the largest one, so the lengths compare, and each gives its size and its share of all the
-storage shown. Above the lines is the total. Hover over or select a line to see what it counts.
+storage shown. Above the lines is the total stored. Hover over or select a line to see what it
+counts.
 
 | Line | Colour | What it counts |
 | --- | --- | --- |
@@ -22,8 +23,11 @@ storage shown. Above the lines is the total. Hover over or select a line to see 
 | Teams | Teams purple | Live sites created from a Teams channel or group template, from the same report. |
 | OneDrive | OneDrive blue | Live OneDrives, from the OneDrive usage report. |
 
-- Deleted sites and OneDrives are not on the lines. [Main offenders](main-offenders.md#deleted-but-still-billing)
-  lists the ones Microsoft still holds. Inactive sites are on their lines like any live site; the
+- When the usage reports came back, deleted sites and OneDrives are not on the lines, so the
+  lines add up to less than the storage trends by what deleted sites and OneDrives still hold. A
+  line that comes from a storage trend includes that deleted storage.
+  [Main offenders](main-offenders.md#deleted-but-still-billing) lists the ones Microsoft still
+  holds. Inactive sites are on their lines like any live site; the
   [Inactive sites to archive](tenant-capacity.md#inactive-sites-to-archive) card adds them up.
 - How much of the SharePoint entitlement is used is not shown here: this panel is about what is
   stored, not about the quota.
@@ -32,9 +36,9 @@ storage shown. Above the lines is the total. Hover over or select a line to see 
   give the organisation's total storage as "not including the OneDrive created for each licensed
   user": each OneDrive has its own allowance from the user's licence.
 - When the SharePoint site usage report does not come back, one SharePoint line holds all the
-  SharePoint storage in the storage trend, Teams sites included, and there is no Teams line. When
-  the OneDrive usage report does not come back, the OneDrive line comes from the OneDrive storage
-  trend. See [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
+  SharePoint storage in the storage trend, Teams sites and deleted sites included, and there is no
+  Teams line. When the OneDrive usage report does not come back, the OneDrive line comes from the
+  OneDrive storage trend, deleted OneDrives included. See [A Microsoft report did not come back](../../getting-started/troubleshooting.md#a-microsoft-report-did-not-come-back).
 - Microsoft Graph does not say which sites belong to Teams. The report groups by the template each
   site was created from, so these figures will not match the SharePoint admin centre, which
   groups differently.

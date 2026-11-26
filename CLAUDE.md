@@ -126,7 +126,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/model/storageOverview.ts` — `buildStorageOverview(inputs)`: **the** single
   derivation of every figure on screen. Pure, table-tested.
 - `src/lib/` — `entitlement`, `forecast`, `cost`, `concealment`, `settings`,
-  `topNWithOther`, `format`, `thresholds`, `reportedTemplate`, `rowSearch` (the table's search and
+  `topNWithOther`, `format`, `reportedTemplate`, `rowSearch` (the table's search and
   sort, sized for millions of rows: one lower-cased key per row built once per
   data load, an index permutation per sort change, one `includes` per row per
   keystroke — `SiteTable` feeds it a `useDeferredValue` query so typing never
@@ -197,11 +197,11 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   shrank, else `size` (*Sites & OneDrives by storage used*, storage used on
   `sizesOn`, zero-byte rows left out). Each leader carries a `workload` (OneDrive pool →
   `oneDrive`; SharePoint → `classifyWorkload(template)`, no template →
-  `sharePoint`: the template rule the usage line uses for Teams, though an inactive Teams site is Teams here and Inactive on the line) and `workloads` lists the distinct ones
+  `sharePoint`: the template rule the usage rows use for Teams; an inactive Teams site is Teams on the usage rows too) and `workloads` lists the distinct ones
   in the order SharePoint, Teams, OneDrive; the panel draws `FacetBars` in
   `WORKLOAD_COLOR` with a legend of exactly those. `offenders.topSites` /
   `topDrives` are `WorkloadSlice`s with the same `workloadOf(row)` (in
-  `storageOverview.ts`), so `OffendersSection` colours the two top lists by
+  `model/workload.ts`), so `OffendersSection` colours the two top lists by
   service too; labels come from `workloadLabel.ts`. `explanation` names the description:
   `growth`, `shrink`, or for the size ranking `reportDateTooOld` (empty
   window: a report date at or before today − 26), `noDailyReports` (no report
@@ -288,16 +288,18 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   its box, in full in a popover on hover, click/tap and keyboard focus only
   while it is cut; every `FacetBars` name and the `SiteTable` name, id and owner
   cells use it; masked names stay `HiddenName`), `AlertPanel`,
-  `AdornedInput` (prefix/suffix input), `ShareHeadline` (the big coloured percentage plus its sentence, heading the SharePoint usage line), `ByteOverrideInput` (a byte figure
+  `AdornedInput` (prefix/suffix input), `ByteOverrideInput` (a byte figure
   edited in a unit, null when cleared — both settings overrides), `ReportSkeleton`, `LoadingOverlay`, `Logo` (inline SVG of
   the proventeq365 wordmark — the "365" glyphs are outlined paths, no font
   load), `DescribedMenuItem` (dropdown item with icon, label, description),
   `PoolIcon` (the SharePoint / OneDrive glyphs from P365's `sprite.svg`, teal,
   1.25rem), `ExternalUrlLink` (P365's teal path-only link, new tab),
-  `SegmentedBar` (a generic one-line stacked bar plus a list of its parts;
-  every part, on the line and in the list, opens a popover on hover or click —
-  the line is `aria-hidden` and mouse-only, the list is the keyboard and
-  screen-reader path; parts with no share are listed but not drawn).
+  `SegmentedBar` (a generic list of rows, each one bar scaled against the
+  largest row and never narrower than a sliver while its scale is above 0; a
+  row with several segments also lists its parts; every row header, segment and
+  listed part opens a popover on hover or click — the bars are `aria-hidden`
+  and mouse-only, the headers and lists are the keyboard and screen-reader
+  path; parts with no share are listed but not drawn).
   `components/ui/popover.tsx` is the shadcn-style Base UI popover it uses.
   `HiddenName` (the one blurred stand-in for a masked name, owner or link: a
   neutral `Lorem ipsum` placeholder whose length varies by seed, `blur-[3px]`,
@@ -421,7 +423,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `cost.growthAnnual` / `cost.cumulativeYear3` stay real numbers.
 - **Components do no arithmetic. If a section needs a number, add it to
   `buildStorageOverview`.** That includes clamps (`remainingBytes` is already
-  ≥ 0, as P365's backend returns it), grades (`sharePoint.utilization`), the
+  ≥ 0, as P365's backend returns it), the
   offenders' top-N and retained totals (`overview.offenders`), and display
   names (`lib/rowName.ts`, shared with `SiteTable`). The one sanctioned
   exception is the generic `SiteTable`'s per-row Share (`shareOfPool`: the
@@ -467,7 +469,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   same place, and its copy names that source and window. With no entitlement
   the *SharePoint storage used* card says none is entered and links to Report
   settings, the forecast card is left out, the callout projects used storage (pill *Projection*), and figures measured against the
-  entitlement (Free, Over entitlement today, Stays under the entitlement) are
+  entitlement (Over entitlement today, Stays under the entitlement) are
   left out, never shown as Unknown. This copy is the app's own: P365 still has
   its unavailable strings. The full list is
   `agent-context/proventeq-365-lite/specs/fallbacks.md`.
@@ -530,21 +532,28 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   on close focus goes back to that link, or to the cards' region when the link
   has gone (the card left out by the new setting). The cards sit under a small
   visible *Tenant capacity* label (a paragraph, not a heading).
-- **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
-  never double-counts and holds SharePoint only** (Microsoft's SharePoint
-  limits: the organisation's storage is "not including the OneDrive created
-  for each licensed user"). Five parts in this order: SharePoint · Teams ·
-  Deleted · Inactive · Free. Inactive wins over Teams (an inactive
-  Teams site counts once, as inactive); Deleted holds deleted **sites** only;
-  the SharePoint part is the trend total (the site rows' total when the trend
-  lists no day with storage) less Teams, Inactive and deleted sites, clamped at 0; Free is `remainingBytes` (left out when unknown — no Free
-  part). OneDrive is its own pool and is not drawn on the line or as a panel. The Share column divides each row by its own pool
+- **The storage usage rows (`overview.usage`, `model/storageUsage.ts`) draw
+  one row per source and never double-count**: SharePoint, Teams and OneDrive,
+  in that order, only those with bytes above 0. Each row's `source` says where
+  its figure came from. With the site usage report read, SharePoint and Teams
+  are the **live** sites of that report split by `workloadOf` (an inactive Teams
+  site is Teams; deleted sites are left out); without it there is one SharePoint
+  row from the SharePoint storage trend (`sharePointTrend`). OneDrive is the live
+  drives of the OneDrive usage report (`accountReport`), else the OneDrive
+  storage trend (`oneDriveTrend`). Rows from the usage reports leave deleted
+  sites and OneDrives out, while the trend totals (the Storage used card)
+  include them, so the rows can sum to less than those totals by what deleted
+  storage still holds; a row from a trend includes it, and its copy says so.
+  OneDrive is its own pool, drawn as its own row. `share` is the row's part of
+  the total stored across the rows drawn, not a capacity figure, and `scale` is
+  the row against the largest one; no entitlement or free part is drawn. The
+  Share column of the table divides each row by its own pool
   (`offenders.poolUsedBytes`, the two trend totals, or the rows' totals when
   a trend lists no day with storage). A pool total of 0 therefore means every
   row in it is 0 B, and the Share reads 0.0%, never *Unknown*.
   Versions are not a part: the usage reports count version history inside
   each site's storage and never split it out, so nothing is shown for them.
-  Every segment's `bytes` is a number. Workload colours are
+  Workload colours are
   the products' own (`WORKLOAD_COLOR`: SharePoint `#038387`, OneDrive
   `#0078d4`, Teams `#5b5fc7` — P365's `teamsBlue`).
   `Workload` (`sharePoint` | `teams` | `oneDrive`) types its keys.
@@ -624,13 +633,10 @@ typecheck · test · build as a separate job.
   theme only.
 - Chart palette + shared config live in `src/components/charts/chartTheme.ts`
   (`CHART_COLORS` order = teal, coral, sky, amber, lime — stable across sections).
-- Two gradings, kept apart on purpose: `src/lib/thresholds.ts` grades
-  *utilisation* (watch ≥85% / attention ≥95%) once, in the model
-  (`sharePoint.utilization`), and the percentage over the storage usage line
-  takes that grade — the line never grades itself; `src/lib/forecast.ts`
-  grades *runway* (Critical <12 months / Warning <36) and drives the forecast
-  badge. They answer different questions. The *Tenant capacity* cards (above
-  *Current storage distribution*) carry two more, also graded in the model:
+- Gradings: `src/lib/thresholds.ts` holds the `HealthStatus` type;
+  `src/lib/forecast.ts` grades *runway* (Critical <12 months / Warning <36)
+  and drives the forecast badge. The *Tenant capacity* cards (above
+  *Current storage distribution*) carry two more, graded in the model:
   `archive.status` (`lib/archive.ts` — archivable share of live site storage,
   watch >5% / attention >50%; drives the archive card, whose description carries the saving) and
   `cost.cumulativeYear3Status` (`lib/cost.ts` `growthCostStatus` — healthy at

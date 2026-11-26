@@ -26,7 +26,9 @@ usually listed by their id; where an earlier approval still includes it, a site 
 you can open it. The application-permissions site names every site.
 :::
 
+::: feature optimization.storage.report.allsites
 A name you have seen anywhere in the report becomes searchable in the table.
+:::
 
 ## Long names
 

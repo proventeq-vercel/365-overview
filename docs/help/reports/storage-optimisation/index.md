@@ -14,13 +14,16 @@ from today's position to the actions that would change it:
    label: SharePoint storage used, then only the cards you can act on. They are over the
    entitlement, when it runs out, what growth beyond it costs over three years, inactive sites to
    archive and deleted storage.
-2. [Current storage distribution](storage-distribution.md): one line for SharePoint, Teams,
-   deleted sites, inactive and free storage against the SharePoint entitlement, and how
-   SharePoint splits by site template.
+2. [Current storage distribution](storage-distribution.md): one bar for SharePoint, Teams and
+   OneDrive storage, and how SharePoint splits by site template.
 3. [Future state & growth impact](growth-forecast.md): the storage trend, a six-month forecast,
    and the projected cost if nothing changes.
-4. [Main offenders](main-offenders.md): the biggest sites and OneDrives, storage that is deleted
-   but still billing, and a searchable table of every site and drive.
+4. [Main offenders](main-offenders.md): the biggest sites and OneDrives and storage that is
+   deleted but still billing.
+
+::: feature optimization.storage.report.allsites
+Main offenders ends with a searchable table of every site and drive.
+:::
 
 ## Reading the report
 
