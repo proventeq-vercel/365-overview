@@ -49,7 +49,6 @@ export type GrowthRateSource = 'monthly' | 'daily' | 'none'
 
 export interface CleanUpForecast {
   applies: boolean
-  inactiveBytes: number
   deletedBytes: number
   removableBytes: number
   endBytes: number | null
@@ -222,6 +221,7 @@ export interface StorageOverview {
     inactiveYears: number
     inactiveSince: string
     siteCount: number
+    sites: StorageRow[]
     bytes: number
     shareOfSharePoint: number
     status: HealthStatus

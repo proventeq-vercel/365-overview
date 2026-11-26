@@ -1,9 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import type { UsagePoint } from '@/types/reports'
+import type { GrowthPoint } from '@/types/storage'
+import { GB_IN_BYTES } from './entitlement'
 import {
   CRITICAL_MONTHS,
   HORIZON_MONTHS,
   WARNING_MONTHS,
+  afterArchiveBytes,
+  cleanUpOutlook,
+  growthRows,
   buildGrowthPoints,
   dailyRateBytesPerMonth,
   daysSpanned,
@@ -353,5 +358,58 @@ describe('staysUnder', () => {
 
   it('is unknown, not true, without a limit', () => {
     expect(staysUnder([10, 20], null)).toBeNull()
+  })
+})
+
+describe('archive lines', () => {
+  const GB = GB_IN_BYTES
+  const points: GrowthPoint[] = [
+    { month: '2026-05', actualUsedBytes: 100 * GB, projectedUsedBytes: 100 * GB, afterCleanUpBytes: 90 * GB },
+    { month: '2026-06', actualUsedBytes: null, projectedUsedBytes: 110 * GB, afterCleanUpBytes: 100 * GB },
+    { month: '2026-07', actualUsedBytes: null, projectedUsedBytes: 120 * GB, afterCleanUpBytes: 110 * GB },
+  ]
+
+  describe('afterArchiveBytes', () => {
+    it('takes the picked sites off the line after clean-up, never below zero', () => {
+      expect(afterArchiveBytes(points[1], 30 * GB)).toBe(70 * GB)
+      expect(afterArchiveBytes(points[0], 200 * GB)).toBe(0)
+    })
+
+    it('starts from the forecast when there is no line after clean-up', () => {
+      expect(afterArchiveBytes({ ...points[1], afterCleanUpBytes: null }, 30 * GB)).toBe(80 * GB)
+      expect(
+        afterArchiveBytes({ month: '2026-01', actualUsedBytes: 5, projectedUsedBytes: null, afterCleanUpBytes: null }, 1),
+      ).toBeNull()
+    })
+  })
+
+  describe('growthRows', () => {
+    it('adds the archive line only when sites are picked', () => {
+      expect(growthRows(points, 0)[1]).not.toHaveProperty('afterArchiveBytes')
+      expect(growthRows(points, 10 * GB).map((row) => row.afterArchiveBytes)).toEqual([80 * GB, 90 * GB, 100 * GB])
+    })
+  })
+
+  describe('cleanUpOutlook', () => {
+    it('ends the forecast with the picked sites archived and says whether it stays under the entitlement', () => {
+      expect(cleanUpOutlook(points, 20 * GB, 95 * GB)).toEqual({ endBytes: 90 * GB, staysUnderEntitlement: true })
+      expect(cleanUpOutlook(points, 5 * GB, 95 * GB)).toEqual({ endBytes: 105 * GB, staysUnderEntitlement: false })
+    })
+
+    it('counts today after the pick, like the model, not only the forecast months', () => {
+      const shrinking: GrowthPoint[] = [
+        { month: '2026-05', actualUsedBytes: 705 * GB, projectedUsedBytes: 705 * GB, afterCleanUpBytes: null },
+        { month: '2026-06', actualUsedBytes: null, projectedUsedBytes: 695 * GB, afterCleanUpBytes: null },
+        { month: '2026-07', actualUsedBytes: null, projectedUsedBytes: 685 * GB, afterCleanUpBytes: null },
+      ]
+      expect(cleanUpOutlook(shrinking, 1 * GB, 700 * GB)).toEqual({
+        endBytes: 684 * GB,
+        staysUnderEntitlement: false,
+      })
+    })
+
+    it('has nothing to say without forecast months', () => {
+      expect(cleanUpOutlook(points.slice(0, 1), 5 * GB, 95 * GB)).toEqual({ endBytes: null, staysUnderEntitlement: null })
+    })
   })
 })

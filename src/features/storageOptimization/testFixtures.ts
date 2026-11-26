@@ -36,7 +36,7 @@ export const base: StorageOverview = {
     byTemplate: [],
     sites: [],
     siteCount: 1089,
-    deletedButBilling: { bytes: 0, count: 0 },
+    deletedButBilling: { bytes: 120 * GB, count: 4 },
   },
   oneDrive: {
     read: true,
@@ -90,8 +90,7 @@ export const base: StorageOverview = {
     forecastEndBytes: 560 * GB,
     afterCleanUp: {
       applies: true,
-      inactiveBytes: 120 * GB,
-      deletedBytes: 0,
+      deletedBytes: 120 * GB,
       removableBytes: 120 * GB,
       endBytes: 440 * GB,
       staysUnderEntitlement: true,
@@ -102,6 +101,7 @@ export const base: StorageOverview = {
     inactiveYears: 3,
     inactiveSince: '2023-08-30',
     siteCount: 42,
+    sites: [],
     bytes: 120 * GB,
     shareOfSharePoint: 0.24,
     status: 'watch',

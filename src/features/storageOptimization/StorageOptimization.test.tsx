@@ -353,7 +353,7 @@ describe('Storage Optimisation app', () => {
     expect(screen.queryByText('Inactive sites to archive')).not.toBeInTheDocument()
     expect(screen.getByText('Forecast exhaustion')).toBeInTheDocument()
     expect(screen.queryByText('Storage by site template')).not.toBeInTheDocument()
-    expect(screen.queryByText('If inactive and deleted sites are cleaned up')).not.toBeInTheDocument()
+    expect(screen.queryByText('Removable today')).not.toBeInTheDocument()
     expect(screen.queryByText('Deleted but still billing')).not.toBeInTheDocument()
     expect(screen.queryByText('Top SharePoint sites by storage')).not.toBeInTheDocument()
     expect(screen.queryByText('Forecast after clean-up')).not.toBeInTheDocument()

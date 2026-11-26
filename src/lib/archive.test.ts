@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { StorageRow } from '@/types/storage'
-import { archiveStatus, inactiveSince, isInactiveSince } from './archive'
+import { archivableSites, archiveStatus, inactiveSince, isInactiveSince, toggleId } from './archive'
 
 const withActivity = (lastActivityDate: string | null): StorageRow => ({
   pool: 'SharePoint',
@@ -59,5 +59,32 @@ describe('archiveStatus', () => {
 
   it('needs attention above 50%', () => {
     expect(archiveStatus(0.501)).toBe('attention')
+  })
+})
+
+const siteOf = (id: string, usedGb: number, lastActivityDate: string | null, isDeleted = false): StorageRow => ({
+  ...withActivity(lastActivityDate),
+  id,
+  storageUsedBytes: usedGb,
+  isDeleted,
+})
+
+describe('archivableSites', () => {
+  it('lists the live sites inactive before the cutoff, largest first', () => {
+    const sites = [
+      siteOf('small', 1, '2020-01-01'),
+      siteOf('busy', 9, '2026-08-01'),
+      siteOf('big', 5, '2021-06-01'),
+      siteOf('gone', 7, '2019-01-01', true),
+      siteOf('unknown', 3, null),
+    ]
+    expect(archivableSites(sites, '2023-08-30').map((row) => row.id)).toEqual(['big', 'small'])
+  })
+})
+
+describe('toggleId', () => {
+  it('adds an id that is not there and removes one that is', () => {
+    expect([...toggleId(new Set(['a']), 'b')]).toEqual(['a', 'b'])
+    expect([...toggleId(new Set(['a', 'b']), 'a')]).toEqual(['b'])
   })
 })

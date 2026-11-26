@@ -74,10 +74,13 @@ total of the matching usage report's rows.
 - A single reported day: no forecast; the storage used is shown.
 - No entitlement: the forecast projects used storage six months ahead, with no exhaustion date.
 - Status: **Critical** under 12 months, **At risk** under 36, otherwise **Healthy**.
-- **Forecast after clean-up** = forecast − (inactive live site storage + deleted site storage
-  still billing), never below zero. It stays under the entitlement when every month from today
-  to the end of the forecast is below it. Deleted OneDrives are not counted. With
-  nothing removable it is the forecast itself.
+- **Forecast after clean-up** = forecast − deleted site storage still billing, never below zero.
+  Inactive sites are not counted unless you pick them. Deleted OneDrives are not counted. With
+  nothing removable no line is drawn.
+- **Forecast after clean-up and archiving** = forecast after clean-up − the storage of the sites
+  you picked to archive (the forecast itself when nothing else is removable), never below zero.
+- Both stay under the entitlement when every month from today to the end of the forecast is
+  below it, today after the pick included.
 
 ## Costs
 
@@ -85,6 +88,12 @@ total of the matching usage report's rows.
 - **Billable growth** is only the part of that growth above the entitlement. It is all of the
   growth when the tenant is already over the entitlement or the entitlement is unknown.
 - **Next 12 months** = billable growth × rate × 12.
+- **The monthly cost chart** prices each line above the entitlement, but never what the line
+  already holds today: a month costs the storage over the larger of the entitlement and the
+  line's value today, × rate. Growth inside the entitlement costs nothing, and a tenant already
+  over the entitlement is charged only for the growth. When the forecast stays inside the
+  entitlement, or the entitlement is unknown, the chart is the list-price value of the storage
+  added instead, with no clean-up or archiving lines.
 - **Cost of doing nothing, next 3 years** adds up years 1 to 3. Each year's billable growth is
   worked out on the volume grown by mid-year (0.5, 1.5 and 2.5 years of growth) and priced at
   billable growth × rate × 12. Its colour is graded on this figure: green at zero, orange above
