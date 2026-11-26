@@ -16,7 +16,7 @@ export function BootstrapError({ message, overridden }: BootstrapErrorProps) {
         <AlertPanel tone="error" title={t('app.bootstrap.title')}>
           <p className="text-sm text-p365-grey-600">{t('app.bootstrap.body')}</p>
           {overridden && <ModesOverrideHint />}
-          <p className="text-sm break-words text-p365-grey-500">{message}</p>
+          <p className="text-sm break-words text-p365-grey-text">{message}</p>
           <HelpLink />
         </AlertPanel>
       </div>

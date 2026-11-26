@@ -96,6 +96,20 @@ describe('SegmentedBar', () => {
     expect(await screen.findByRole('dialog', { name: 'Drives' })).toHaveTextContent('Drives row explained')
   })
 
+  it('writes the row caption and the share of each part in the grey text shade', () => {
+    renderBar([storage, drives])
+    expect(screen.getAllByText('80% of stored').every((caption) => caption.classList.contains('text-p365-grey-text'))).toBe(true)
+    expect(screen.getAllByText('50% of stored').every((share) => share.classList.contains('text-p365-grey-text'))).toBe(true)
+  })
+
+  it('writes the popover value in the text shade of its colour', async () => {
+    const user = userEvent.setup()
+    const { part } = renderBar()
+    await user.click(part('Files'))
+    const dialog = await screen.findByRole('dialog', { name: 'Files' })
+    expect(within(dialog).getByText('1 TB')).toHaveStyle({ color: '#267574' })
+  })
+
   it('closes a clicked part when the pointer moves on to another, so one popover shows', async () => {
     const user = userEvent.setup()
     const { part } = renderBar()

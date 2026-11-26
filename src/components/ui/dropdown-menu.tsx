@@ -49,7 +49,7 @@ function DropdownMenuGroupLabel({
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-group-label"
       className={cn(
-        "px-2 pt-1.5 pb-1 text-[0.6875rem] font-semibold tracking-wide text-p365-grey-500 uppercase",
+        "px-2 pt-1.5 pb-1 text-[0.6875rem] font-semibold tracking-wide text-p365-grey-text uppercase",
         className
       )}
       {...props}

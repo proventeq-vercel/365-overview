@@ -8,7 +8,7 @@ export function ModesOverrideHint() {
       {t('app.modes.overridden')}{' '}
       <a
         href={`?${MODES_RESET_PARAM}=${MODES_RESET_VALUE}`}
-        className="font-semibold text-p365-teal underline-offset-2 hover:underline"
+        className="font-semibold text-p365-teal-text underline-offset-2 hover:underline"
       >
         {t('app.modes.reset')}
       </a>

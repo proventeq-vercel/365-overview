@@ -95,7 +95,7 @@ function Toggle({
         aria-hidden="true"
         className={cn(
           'rounded-sm px-1 text-[0.625rem] font-bold uppercase tracking-wide',
-          pressed ? 'bg-white/20 text-white' : 'bg-p365-grey-50 text-p365-grey-500',
+          pressed ? 'bg-white/20 text-white' : 'bg-p365-grey-50 text-p365-grey-text',
         )}
       >
         {pressed ? t('admin.toggle.on') : t('admin.toggle.off')}
@@ -107,7 +107,7 @@ function Toggle({
 function Group({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={label} className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs font-semibold text-p365-grey-500">{label}</span>
+      <span className="text-xs font-semibold text-p365-grey-text">{label}</span>
       {children}
     </div>
   )
@@ -159,7 +159,7 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
         </span>
 
         <div className="flex items-center gap-1.5">
-          <label htmlFor={dataId} className="text-xs font-semibold text-p365-grey-500">
+          <label htmlFor={dataId} className="text-xs font-semibold text-p365-grey-text">
             {t('admin.data')}
           </label>
           <Select
@@ -184,7 +184,7 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
 
         {mock && (
           <div className="flex items-center gap-1.5">
-            <label htmlFor={delayId} className="text-xs font-semibold text-p365-grey-500">
+            <label htmlFor={delayId} className="text-xs font-semibold text-p365-grey-text">
               {t('admin.delay')}
             </label>
             <Select
@@ -236,7 +236,7 @@ export function AdminBar({ env, navigate }: { env: AdminEnv; navigate: (href: st
         </Group>
 
         <div className="ml-auto flex items-center gap-1.5">
-          <span role="status" className={cn('text-xs', changed ? 'font-semibold text-p365-navy' : 'text-p365-grey-500')}>
+          <span role="status" className={cn('text-xs', changed ? 'font-semibold text-p365-navy' : 'text-p365-grey-text')}>
             {changed ? t('admin.pending', { count: pendingCount }) : t('admin.applied')}
           </span>
           <Button type="button" size="sm" disabled={!changed} onClick={apply}>

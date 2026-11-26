@@ -17,7 +17,7 @@ export function HelpButton({ topic }: { topic: HelpTopic }) {
       <DialogTrigger
         aria-label={t('helpButton.label', { title: page.title })}
         title={t('helpButton.label', { title: page.title })}
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-p365-grey-400 text-xs leading-none font-bold text-p365-grey-400 transition-colors duration-150 ease-out hover:border-p365-grey-600 hover:text-p365-grey-600 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-p365-grey-400 text-xs leading-none font-bold text-p365-grey-text transition-colors duration-150 ease-out hover:border-p365-grey-600 hover:text-p365-grey-600 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         ?
       </DialogTrigger>
@@ -31,7 +31,7 @@ export function HelpButton({ topic }: { topic: HelpTopic }) {
             href={helpUrl(page.slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-p365-teal')}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'text-p365-teal-text')}
           >
             {t('helpButton.seeMore')}
             <ExternalLink aria-hidden="true" />

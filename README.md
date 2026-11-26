@@ -694,18 +694,16 @@ so read the summary after a first run.
 The `lighthouse` job in `.github/workflows/ci.yml` runs on every pull request and on `main`. It
 builds in **mock mode** with `VITE_FEATURES` naming both reports and the All sites and OneDrives
 table, so every page and section is audited even when production leaves it off (a new report goes
-into that list and into `lighthouserc.json` with its own threshold entry), serves the build with `npm run preview`, and runs Lighthouse
+into that list and gets its URL in `lighthouserc.json`), serves the build with `npm run preview`, and runs Lighthouse
 CI (`@lhci/cli`, pinned in the workflow, desktop preset, three runs, median) on
 `/storage-optimisation`, `/onedrive-usage`, `/help` and `/help/reports/storage-optimisation`.
 `lighthouserc.json` holds the thresholds, each set at the measured baseline: performance ≥ 0.9,
 best practices and SEO at 1, every scored accessibility audit at 1 on its own (title, `lang`,
 labels, ARIA roles and attributes, names, lists, …), console errors and text compression at 1,
-and at most the one known CSP finding. Colour contrast is the one exception: the help pages hold
-it at 1, the report pages at no more failing elements than today, because the P365 palette's
-teal links, grey secondary text and state-coloured card values sit under 4.5:1. Their
-accessibility score is held at 0.96: with every other audit held on its own it moves only when a
-page stops carrying audits that apply to it, which is a reason to re-measure, not a defect. The
-help articles share one template, so `/help` and one article stand for all of them. A regression
+the accessibility score and colour contrast at 1 on every page, and at most the one known CSP
+finding. Text in the P365 palette uses its text-safe shades (`P365_TEXT` in
+`src/design/theme.ts`, the `--color-p365-*-text` tokens), which read at 4.5:1 or more; rails,
+charts and icons keep the brand colours. The help articles share one template, so `/help` and one article stand for all of them. A regression
 fails the job. The reports are
 kept as the `lighthouse-reports` artifact for 14 days and are never uploaded to a public server.
 

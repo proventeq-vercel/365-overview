@@ -62,7 +62,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
         {sharePoint.overageBytes !== null && sharePoint.overageBytes > 0 && (
           <>
             {' · '}
-            <span className="font-semibold" style={{ color: P365.red }}>
+            <span className="font-semibold text-p365-red-text">
               {t('storageOptimisation.kpi.usedOver', { over: formatBytes(sharePoint.overageBytes) })}
             </span>
           </>
@@ -183,7 +183,7 @@ export function KpiCards({ overview, delay = 0 }: Props) {
       className="enter-rise flex flex-col gap-2 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <p id={titleId} className="text-xs font-semibold uppercase tracking-wide text-p365-grey-500">
+      <p id={titleId} className="text-xs font-semibold uppercase tracking-wide text-p365-grey-text">
         {t('storageOptimisation.capacity.title')}
       </p>
       <div className={`grid grid-cols-1 gap-4 ${kpiGridColumns(cards.length)}`}>

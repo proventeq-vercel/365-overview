@@ -44,6 +44,11 @@ function renderLink(field: SettingsField) {
 }
 
 describe('SettingsLink', () => {
+  it('writes the link in the teal text shade', () => {
+    renderLink('inactiveYears')
+    expect(screen.getByRole('button', { name: 'Change it' })).toHaveClass('text-p365-teal-text')
+  })
+
   it('opens Report settings on the inactivity period', async () => {
     renderLink('inactiveYears')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

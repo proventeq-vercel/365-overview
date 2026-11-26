@@ -15,6 +15,30 @@ export const P365 = {
   grey700: '#434343',
 } as const
 
+export const P365_TEXT = {
+  grey: '#6a6a6a',
+  teal: '#267574',
+  red: '#c70606',
+  orange: '#c03a07',
+  yellow: '#83650b',
+  green: '#50730e',
+} as const
+
+const TEXT_SHADE: Record<string, string> = {
+  [P365.grey500]: P365_TEXT.grey,
+  [P365.grey400]: P365_TEXT.grey,
+  [P365.grey100]: P365_TEXT.grey,
+  [P365.teal]: P365_TEXT.teal,
+  [P365.red]: P365_TEXT.red,
+  [P365.orange]: P365_TEXT.orange,
+  [P365.yellow]: P365_TEXT.yellow,
+  [P365.green]: P365_TEXT.green,
+}
+
+export function textShade(color: string): string {
+  return TEXT_SHADE[color] ?? color
+}
+
 export const WORKLOAD_COLOR = {
   sharePoint: '#038387',
   oneDrive: '#0078d4',
@@ -27,10 +51,10 @@ export interface LabelTone {
 }
 
 export const LABEL_TONES = {
-  green: { text: '#82bc17', background: '#e6f2d1' },
-  orange: { text: '#f97f50', background: 'rgba(249, 127, 80, 0.10)' },
-  red: { text: '#f94545', background: '#fedada' },
-  grey: { text: '#6b7280', background: '#f3f4f6' },
+  green: { text: P365_TEXT.green, background: '#e6f2d1' },
+  orange: { text: P365_TEXT.orange, background: 'rgba(249, 127, 80, 0.10)' },
+  red: { text: P365_TEXT.red, background: '#fedada' },
+  grey: { text: P365_TEXT.grey, background: '#f3f4f6' },
 } as const satisfies Record<string, LabelTone>
 
 export const RISK_COLOR: Record<ForecastStatus, string> = {

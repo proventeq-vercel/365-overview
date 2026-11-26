@@ -6,6 +6,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { textShade } from '@/design/theme'
 import { cn } from '@/lib/utils'
 
 interface BarDetails {
@@ -47,10 +48,10 @@ function Details({ details, trigger }: { details: BarDetails; trigger: ReactElem
           <i className="size-3 shrink-0 rounded-sm" style={{ background: details.color }} aria-hidden="true" />
           <PopoverTitle>{details.label}</PopoverTitle>
         </div>
-        <p className="tabular mt-1 text-lg font-bold" style={{ color: details.color }}>
+        <p className="tabular mt-1 text-lg font-bold" style={{ color: textShade(details.color) }}>
           {details.value}
         </p>
-        <p className="text-p365-grey-500">{details.shareLabel}</p>
+        <p className="text-p365-grey-text">{details.shareLabel}</p>
         <PopoverDescription className="mt-2">{details.description}</PopoverDescription>
       </PopoverContent>
     </Popover>
@@ -103,7 +104,7 @@ function PartList({ row }: { row: BarRow }) {
                   <span className="truncate">{segment.label}</span>
                 </span>
                 <span className="tabular text-sm font-semibold text-p365-navy">{segment.value}</span>
-                <span className="tabular text-xs text-p365-grey-500">{segment.shareLabel}</span>
+                <span className="tabular text-xs text-p365-grey-text">{segment.shareLabel}</span>
               </button>
             }
           />
@@ -132,7 +133,7 @@ export function SegmentedBar({ rows, ariaLabel, className }: { rows: BarRow[]; a
                 </span>
                 <span className="flex shrink-0 items-baseline gap-2">
                   <span className="tabular text-sm font-semibold text-p365-navy">{row.value}</span>
-                  <span className="tabular text-xs text-p365-grey-500">{row.caption}</span>
+                  <span className="tabular text-xs text-p365-grey-text">{row.caption}</span>
                 </span>
               </button>
             }

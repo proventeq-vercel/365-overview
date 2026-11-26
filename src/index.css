@@ -36,6 +36,12 @@
   --color-p365-grey-700: #434343;
   --color-p365-soft-green: #e1f1f1;
   --color-p365-soft-orange: #fef2ee;
+  --color-p365-grey-text: #6a6a6a;
+  --color-p365-teal-text: #267574;
+  --color-p365-red-text: #c70606;
+  --color-p365-orange-text: #c03a07;
+  --color-p365-yellow-text: #83650b;
+  --color-p365-green-text: #50730e;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-float: 0 12px 32px rgba(15, 44, 61, 0.18);
@@ -149,7 +155,7 @@ body {
 .error-state { background:#fff; border:1px solid #dedede; border-left:3px solid #f97f50; border-radius:8px; padding:1rem 1.25rem; }
 .error-state__message { font-weight:600; color:#0f2c3d; }
 .error-state__hint { margin-top:.35rem; font-size:.8rem; color:#535353; }
-.error-state a { color:#34a1a0; font-weight:600; }
+.error-state a { color:#267574; font-weight:600; }
 .auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; background:#f9fafb; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

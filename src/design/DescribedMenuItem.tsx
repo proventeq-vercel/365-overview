@@ -20,7 +20,7 @@ export function DescribedMenuItem({
       <Icon aria-hidden="true" className={cn('mt-0.5 text-p365-teal', iconClassName)} />
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="font-semibold text-p365-navy">{label}</span>
-        <span className="text-xs text-p365-grey-500">{description}</span>
+        <span className="text-xs text-p365-grey-text">{description}</span>
       </span>
     </DropdownMenuItem>
   )
