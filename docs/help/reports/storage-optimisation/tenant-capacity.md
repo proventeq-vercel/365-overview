@@ -24,8 +24,9 @@ to act on, in this order:
 A card whose value would be zero, empty or "no exhaustion" is left out rather than shown with that
 value.
 
-The money on *Over entitlement*, the billed amount on the deleted storage card and the saving on
-*Inactive sites to archive* overlap: the last two are parts of the first. Do not add them up.
+When storage is over the entitlement, the money on *Over entitlement*, the billed amount on the
+deleted storage card and the saving on *Inactive sites to archive* overlap: the last two are parts
+of the first. Do not add them up.
 
 ## SharePoint storage used
 
@@ -38,9 +39,9 @@ example *500 GB of 1000 GB entitlement*.
 - With no entitlement at all it reads *No entitlement entered · Enter it in Report settings*. The link
   opens [Report settings](../../reference/settings.md#sharepoint-entitlement) on the SharePoint
   entitlement.
-- When the storage figure is the total of the site usage report, a second line says so: *This is
-  the total of its site usage report: Microsoft 365's storage trend lists no day with storage
-  yet.*, or *… Microsoft 365's SharePoint storage trend did not come back this time.*
+- When the storage figure is the total of the site usage report, a second line says so: *Total of
+  the site usage report: Microsoft 365's storage trend lists no day with storage yet.*, or *…
+  Microsoft 365's SharePoint storage trend did not come back this time.*
 
 ## Over entitlement
 
@@ -78,7 +79,7 @@ colour is graded on that figure:
 | Rail | Because |
 | --- | --- |
 | Orange | Above zero. |
-| Red | The billable growth in the third year (priced on its mid-year volume) is more than a tenth of the entitlement. With no entitlement it is orange, never red. |
+| Red | The billable growth up to the middle of the third year (two and a half years of growth) is more than a tenth of the entitlement. With no entitlement it is orange, never red. |
 
 The growth rate is the typical month-to-month growth from the storage trend, or the daily rate
 under six months of history ([how](../../reference/calculations.md#growth-rate)).
@@ -109,7 +110,7 @@ inactivity period (1 to 10 years, 3 by default).
 
 ### Potential saving per year
 
-When no entitlement is entered, or you are already at or over it, the description adds what
+When no entitlement is entered, or storage is already over it, the description adds what
 archiving saves a year: *· archiving saves £24.00/yr*. Only storage **over the entitlement** costs
 anything, so only that part is priced:
 `smaller of (inactive GB, GB over the entitlement) × cost per GB per month × 12`. With no
@@ -130,7 +131,7 @@ report did not come back:
 | Over the entitlement | **Deleted but still billing**, in orange: *24 GB of it is past your entitlement and billed · £5.76/yr until purged*. Only the deleted storage that sits above the entitlement is billed. |
 | Under the entitlement | *Counts toward your storage, not billed today: you are under your entitlement by 500 GB.* |
 | Exactly at the entitlement | *Counts toward your storage, not billed today: you are at your entitlement, so any growth is billed.* |
-| Against no entitlement | *Counts toward your storage; whether it is billed depends on your entitlement.*, with a link to enter it. |
+| Against no entitlement | *Counts toward your storage; whether it is billed depends on your entitlement.* The *SharePoint storage used* card links to Report settings to enter it. |
 
 Deleted OneDrives are not part of the SharePoint entitlement. When only OneDrives are deleted the
 card reads *Held in the OneDrive pool, outside your SharePoint storage entitlement*.

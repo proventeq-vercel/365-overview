@@ -45,11 +45,11 @@ appear only when there is something to act on, in this order:
 | **Over entitlement** | SharePoint storage is above the entitlement; priced as *Billed now* at the configured rate |
 | **Forecast exhaustion** | The entitlement runs out within 24 months at the measured growth and is not reached yet; left out at or over the entitlement (red under 12 months, orange under 36) |
 | **Cost of doing nothing, next 3 years** | There is a growth rate and growth beyond the entitlement over the next three years costs more than zero; coloured on that figure |
-| **Inactive sites to archive** | At least one live site has had no activity for the inactivity window (Report settings, default 3 years) and they hold storage; the saving joins its description when no entitlement is entered or it is reached |
+| **Inactive sites to archive** | At least one live site has had no activity for the inactivity window (Report settings, default 3 years) and they hold storage; the saving joins its description when no entitlement is entered or storage is over it |
 | **Deleted but still counting (or billing)** | Deleted sites or OneDrives still hold storage and both usage reports came back; billed only for the part above the entitlement |
 
-The money on *Over entitlement*, the deleted card's billed amount and the archive saving overlap:
-the last two are parts of the first. Do not add them up.
+When storage is over the entitlement, the money on *Over entitlement*, the deleted card's billed
+amount and the archive saving overlap: the last two are parts of the first. Do not add them up.
 
 The rules are pure functions in `src/features/storageOptimization/actionableCards.ts`; the help
 page *Tenant capacity* (`docs/help/reports/storage-optimisation/tenant-capacity.md`) is the full

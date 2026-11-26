@@ -86,7 +86,7 @@ total of the matching usage report's rows.
 - **Cost of doing nothing, next 3 years** adds up years 1 to 3. Each year's billable growth is
   worked out on the volume grown by mid-year (0.5, 1.5 and 2.5 years of growth) and priced at
   billable growth × rate × 12. Its colour is graded on this figure: green at zero, orange above
-  zero, red once the third year's billable growth is more than a tenth of the entitlement. With
+  zero, red once the billable growth up to the middle of the third year is more than a tenth of the entitlement. With
   no entitlement it is orange, never red.
 - **Archiving saving per year** = the smaller of inactive site storage and the storage over the
   entitlement × rate × 12, or all the inactive storage when no entitlement is entered. It joins the

@@ -434,7 +434,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   `daily` (fewer: the least-squares slope of the daily trend,
   `lib/forecast.dailyRateBytesPerMonth`, labelled with `windowDays`) or
   `none` (a single reported day: no rate, status `Unknown`, no forecast
-  months, the cards and callout show the storage used under a *Latest* pill;
+  months, the callout shows the storage used under a *Latest* pill;
   *Avg growth / mo*, *Added last …*, *Forecast (6 mo)* and the cost figures
   are left out, `cost.applies` false). An exceeded entitlement wins over all
   of this in the copy: *Entitlement already exceeded*, Critical. Zero-valued
@@ -515,9 +515,14 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
   storage). A card whose value would be zero or "no exhaustion" is left out.
   `actionableCards` returns each card as a `KpiCard` union carrying its own
   figures, so `KpiCards` does no arithmetic. The grid's `xl` column count
-  follows the number of cards (`design/kpiGrid.kpiGridColumns(count)`). The
-  cards sit under a small visible *Tenant capacity* label (a paragraph, not a
-  heading).
+  follows the number of cards (`design/kpiGrid.kpiGridColumns(count)`; a lone
+  card stays half width). The *SharePoint storage used* card names the site
+  usage report when its figure comes from it (`forecastCopy.storageUsedSource`).
+  A card's *Report settings* link opens the one dialog `KpiCards` owns
+  (`app/useSettingsDialog`), so the dialog outlives the card that opened it;
+  on close focus goes back to that link, or to the cards' region when the link
+  has gone (the card left out by the new setting). The cards sit under a small
+  visible *Tenant capacity* label (a paragraph, not a heading).
 - **The storage usage line (`overview.breakdown`, `lib/storageBreakdown.ts`)
   never double-counts and holds SharePoint only** (Microsoft's SharePoint
   limits: the organisation's storage is "not including the OneDrive created
@@ -620,10 +625,10 @@ typecheck · test · build as a separate job.
   badge. They answer different questions. The *Tenant capacity* cards (above
   *Current storage distribution*) carry two more, also graded in the model:
   `archive.status` (`lib/archive.ts` — archivable share of live site storage,
-  watch >5% / attention >50%; drives both the archive and the saving card) and
+  watch >5% / attention >50%; drives the archive card, whose description carries the saving) and
   `cost.cumulativeYear3Status` (`lib/cost.ts` `growthCostStatus` — healthy at
-  zero, watch above, attention once the third year's billable growth
-  (mid-year volume) is more than a tenth of the entitlement; watch, never
+  zero, watch above, attention once the billable growth up to the middle of
+  the third year is more than a tenth of the entitlement; watch, never
   attention, with no entitlement; rate-independent). A site is archivable when its
   `lastActivityDate` is older than `settings.inactiveYears` (default 3) before
   `reportRefreshDate`; a site with no recorded activity is never counted.
