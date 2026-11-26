@@ -52,9 +52,7 @@ const costOfNothingCard = (overview: StorageOverview): KpiCard | null =>
   overview.cost.applies && overview.cost.cumulativeYear3 > 0 ? { id: 'costOfNothing' } : null
 
 const archiveCandidatesCard = (overview: StorageOverview): KpiCard | null =>
-  overview.archive.applies && overview.archive.siteCount > 0 && overview.archive.bytes > 0
-    ? { id: 'archiveCandidates' }
-    : null
+  overview.archive.applies && overview.archive.bytes > 0 ? { id: 'archiveCandidates' } : null
 
 const deletedBilling = (
   siteBytes: number,

@@ -149,6 +149,11 @@ describe('deletedStorageCard', () => {
     const card = deletedStorageCard(emptySites)
     expect(card?.siteCount).toBe(0)
     expect(card?.oneDriveCount).toBe(2)
+    const emptyDrives: StorageOverview = {
+      ...withDeleted(quiet, 24 * GB),
+      oneDrive: { ...quiet.oneDrive, deletedButBilling: { bytes: 0, count: 2 } },
+    }
+    expect(deletedStorageCard(emptyDrives)?.oneDriveCount).toBe(0)
   })
 
   it('is left out when either usage report did not come back, since it adds the two', () => {
