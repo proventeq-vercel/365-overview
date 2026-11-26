@@ -94,7 +94,7 @@ function GrowIn({ index, scale, children }: { index: number; scale: number; chil
     <div
       ref={bar}
       data-bar-scale={scale}
-      className="flex h-full origin-left gap-0.5 overflow-hidden rounded-full"
+      className={cn('flex h-full origin-left gap-0.5 overflow-hidden rounded-full', scale > 0 && 'min-w-1')}
       style={{ width: `${scale * 100}%` }}
     >
       {children}

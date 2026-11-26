@@ -58,6 +58,17 @@ describe('SegmentedBar', () => {
     expect(bars.map((bar) => bar.style.width)).toEqual(['100%', '25%'])
   })
 
+  it('keeps a row too small to see at its width as a visible sliver, and draws nothing for no storage', () => {
+    const { container } = renderBar([
+      storage,
+      row('tiny', 'Tiny', 0.0000003, [segment('tiny', 'Tiny', 1)]),
+      row('empty', 'Empty', 0, [segment('empty', 'Empty', 1)]),
+    ])
+    const [, tiny, empty] = [...container.querySelectorAll<HTMLElement>('[data-bar-scale]')]
+    expect(tiny).toHaveClass('min-w-1')
+    expect(empty).not.toHaveClass('min-w-1')
+  })
+
   it('sizes the parts of a row by their share and draws each in its own pattern', () => {
     const { container } = renderBar()
     const parts = [...container.querySelectorAll<HTMLElement>('[data-segment]')]

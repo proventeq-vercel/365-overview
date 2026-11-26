@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { screen, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from '@/test/render'
+import { storageUsage } from '@/model/storageUsage'
 import type { StorageOverview, StorageRow } from '@/types/storage'
 import { DistributionSection } from './DistributionSection'
 import { base, overEntitlement, unknownEntitlement } from './testFixtures'
@@ -23,7 +24,19 @@ const storageRow = (overrides: Partial<StorageRow>): StorageRow => ({
   ...overrides,
 })
 
-const withTemplates: StorageOverview = {
+const withUsage = (overview: StorageOverview): StorageOverview => ({
+  ...overview,
+  usage: storageUsage({
+    siteReportRead: overview.sharePoint.siteReportRead,
+    sites: overview.sharePoint.sites,
+    sharePointUsedBytes: overview.sharePoint.usedBytes,
+    accountReportRead: overview.oneDrive.accountReportRead,
+    drives: overview.oneDrive.drives,
+    oneDriveUsedBytes: overview.oneDrive.usedBytes,
+  }),
+})
+
+const withTemplates: StorageOverview = withUsage({
   ...base,
   sharePoint: {
     ...base.sharePoint,
@@ -41,7 +54,7 @@ const withTemplates: StorageOverview = {
     ...base.oneDrive,
     drives: [storageRow({ pool: 'OneDrive', id: 'ada', storageUsedBytes: 125 * GB })],
   },
-}
+})
 
 const usage = () => screen.getByRole('list', { name: 'Storage usage' })
 
@@ -72,7 +85,7 @@ describe('DistributionSection', () => {
       'Teams200 GB32.0% of stored',
       'OneDrive125 GB20.0% of stored',
     ])
-    expect(screen.getByText('625 GB stored across SharePoint, Teams and OneDrive')).toBeInTheDocument()
+    expect(screen.getByText('625 GB stored in total')).toBeInTheDocument()
   })
 
   it('draws each source in its own product colour, against the largest source', () => {
@@ -93,17 +106,51 @@ describe('DistributionSection', () => {
     )
   })
 
-  it('says the SharePoint line holds all SharePoint storage, Teams included, when the site usage report did not come back', async () => {
-    const unread: StorageOverview = {
+  it('says the SharePoint line holds all SharePoint storage, Teams and deleted sites included, when the site usage report did not come back', async () => {
+    const unread = withUsage({
       ...withTemplates,
       sharePoint: { ...withTemplates.sharePoint, siteReportRead: false, usedBytes: 520 * GB },
-    }
+    })
     render(<DistributionSection overview={unread} />)
     expect(rowHeaders().map((header) => header.dataset.row)).toEqual(['sharePoint', 'oneDrive'])
+    expect(rowHeaders()[0]).toHaveTextContent('SharePoint520 GB')
     await userEvent.click(screen.getByRole('button', { name: /^SharePoint/ }))
     expect(await screen.findByRole('dialog', { name: 'SharePoint' })).toHaveTextContent(
-      'All SharePoint storage in use, from the SharePoint storage trend, Teams sites included',
+      'All SharePoint storage, from the SharePoint storage trend, Teams sites and deleted sites included',
     )
+  })
+
+  it('says the OneDrive line holds all OneDrive storage, deleted OneDrives included, when the OneDrive usage report did not come back', async () => {
+    const unread = withUsage({
+      ...withTemplates,
+      oneDrive: { ...withTemplates.oneDrive, accountReportRead: false, usedBytes: 140 * GB },
+    })
+    render(<DistributionSection overview={unread} />)
+    expect(rowHeaders()[2]).toHaveTextContent('OneDrive140 GB')
+    await userEvent.click(screen.getByRole('button', { name: /^OneDrive/ }))
+    expect(await screen.findByRole('dialog', { name: 'OneDrive' })).toHaveTextContent(
+      'All OneDrive storage, from the OneDrive storage trend, deleted OneDrives included',
+    )
+  })
+
+  it('describes the live rows by the usage report they come from', async () => {
+    render(<DistributionSection overview={withTemplates} />)
+    await userEvent.click(screen.getByRole('button', { name: /^Teams/ }))
+    expect(await screen.findByRole('dialog', { name: 'Teams' })).toHaveTextContent(
+      'Live sites created from Teams channel and group templates',
+    )
+  })
+
+  it('shows an empty block, not a total or a bar, when no source reports storage', () => {
+    const nothing = withUsage({
+      ...withTemplates,
+      sharePoint: { ...withTemplates.sharePoint, sites: [] },
+      oneDrive: { ...withTemplates.oneDrive, drives: [] },
+    })
+    render(<DistributionSection overview={nothing} />)
+    expect(screen.getByText('No storage is reported for SharePoint, Teams or OneDrive yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Storage usage' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/stored in total/)).not.toBeInTheDocument()
   })
 
   it('shows storage usage, never quota usage: no entitlement headline, no free part', () => {
@@ -127,7 +174,12 @@ describe('DistributionSection', () => {
 
   it('keeps the section when the entitlement is unknown', () => {
     render(<DistributionSection overview={{ ...unknownEntitlement, sharePoint: { ...unknownEntitlement.sharePoint, byTemplate: [] } }} />)
-    expect(screen.getByRole('list', { name: 'Storage usage' })).toBeInTheDocument()
+    expect(rowHeaders().map((header) => header.textContent)).toEqual([
+      'SharePoint350 GB56.5% of stored',
+      'Teams150 GB24.2% of stored',
+      'OneDrive120 GB19.4% of stored',
+    ])
+    expect(screen.getByText('620 GB stored in total')).toBeInTheDocument()
   })
 
   it('says the template grouping will not match the admin centre', () => {
@@ -154,10 +206,10 @@ describe('DistributionSection', () => {
   })
 
   it('shows a source too small to round as under 0.1% of stored, not as nothing', () => {
-    const tiny: StorageOverview = {
+    const tiny = withUsage({
       ...withTemplates,
       oneDrive: { ...withTemplates.oneDrive, drives: [storageRow({ pool: 'OneDrive', id: 'tiny', storageUsedBytes: 100_000 })] },
-    }
+    })
     render(<DistributionSection overview={tiny} />)
     expect(within(usage()).getByRole('button', { name: /^OneDrive/ })).toHaveTextContent('<0.1% of stored')
   })

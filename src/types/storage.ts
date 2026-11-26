@@ -88,29 +88,22 @@ export type UnlicensedDrives =
   | (DriveGroup & { basis: 'licences'; notListed: number })
   | (DriveGroup & { basis: 'noActivity'; days: number; since: string })
 
-export const STORAGE_SEGMENTS = [
-  'sharePoint',
-  'teams',
-  'deleted',
-  'inactive',
-  'free',
-] as const
+export type Workload = 'sharePoint' | 'teams' | 'oneDrive'
 
-export type StorageSegmentKey = (typeof STORAGE_SEGMENTS)[number]
+export type StorageUsageSource = 'siteReport' | 'sharePointTrend' | 'accountReport' | 'oneDriveTrend'
 
-export interface StorageSegment {
-  key: StorageSegmentKey
+export interface StorageUsageRow {
+  workload: Workload
   bytes: number
   share: number
+  scale: number
+  source: StorageUsageSource
 }
 
-export interface StorageBreakdown {
-  segments: StorageSegment[]
+export interface StorageUsage {
+  rows: StorageUsageRow[]
   totalBytes: number
-  deletedCount: number
 }
-
-export type Workload = 'sharePoint' | 'teams' | 'oneDrive'
 
 export interface WorkloadSlice extends Slice {
   workload: Workload
@@ -174,7 +167,6 @@ export interface StorageOverview {
     headroomRatio: number | null
     overageBytes: number | null
     exhausted: boolean
-    utilization: HealthStatus | null
     entitlementIsMeasured: boolean
     licenceEstimateBytes: number | null
     byTemplate: TemplateSlice[]
@@ -201,7 +193,7 @@ export interface StorageOverview {
     attention: OneDriveAttention | null
   }
 
-  breakdown: StorageBreakdown
+  usage: StorageUsage
 
   offenders: {
     read: boolean
