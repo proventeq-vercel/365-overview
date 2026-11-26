@@ -14,6 +14,15 @@ function contrast(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05)
 }
 
+function over(background: string, page: string): string {
+  const tint = background.match(/^rgba\((\d+), (\d+), (\d+), ([\d.]+)\)$/)
+  if (!tint) return background
+  const alpha = Number(tint[4])
+  const base = [1, 3, 5].map((i) => parseInt(page.slice(i, i + 2), 16))
+  const mixed = base.map((channel, i) => Math.round(Number(tint[i + 1]) * alpha + channel * (1 - alpha)))
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
 const PAGE_BACKGROUNDS = ['#ffffff', '#f0f0f0', '#f9fafb', '#f3f4f6', '#e1f1f1', '#fef2ee']
 
 describe('text shades', () => {
@@ -21,8 +30,16 @@ describe('text shades', () => {
     for (const background of PAGE_BACKGROUNDS) expect(contrast(shade, background)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it.each(['red', 'green'] as const)('the %s pill text reads at 4.5:1 or more on its own background', (tone) => {
-    expect(contrast(LABEL_TONES[tone].text, LABEL_TONES[tone].background)).toBeGreaterThanOrEqual(4.5)
+  const SOFT_ORANGE = '#fef2ee'
+  const SOFT_GREEN = '#e1f1f1'
+
+  it.each([
+    ['red', SOFT_ORANGE],
+    ['orange', SOFT_ORANGE],
+    ['green', SOFT_GREEN],
+    ['grey', SOFT_GREEN],
+  ] as const)('the %s pill text reads at 4.5:1 or more on its own background inside its callout', (tone, callout) => {
+    expect(contrast(LABEL_TONES[tone].text, over(LABEL_TONES[tone].background, callout))).toBeGreaterThanOrEqual(4.5)
   })
 
   it('maps each brand colour to its text shade and leaves dark colours as they are', () => {

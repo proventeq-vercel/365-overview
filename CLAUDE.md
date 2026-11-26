@@ -278,7 +278,7 @@ a light, **Proventeq-branded**, chart-led page built on **Tailwind v4 + shadcn/u
 - `src/design/` — the P365 design system: `theme.ts` (tokens mirrored as
   `--color-p365-*` in `index.css`, `monoColor` = P365's `monoColorByIndex`,
   `facetFill` = its teal tint cycle), `StatCard` (coloured left rail, value in
-  the rail colour), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
+  the rail colour's text shade), `primitives.tsx` (`Section` with staggered `delay`, `Panel`,
   `MiniStat`, `SoftCallout`, `Pill`, `Legend`, `EmptyBlock`), `charts.tsx`
   (monochrome Recharts doughnut / line + `FacetBars`: a ranked bar list whose
   items may carry a `color`, drawn as a light tint with a solid left edge and
@@ -631,9 +631,9 @@ typecheck · test · build as a separate job.
   grey-500, teal, red, orange, yellow and green read under 4.5:1 as text, so
   text takes `P365_TEXT` (`src/design/theme.ts`, mirrored as
   `--color-p365-{grey,teal,red,orange,yellow,green}-text` in `index.css`;
-  `theme.test.ts` checks each shade's contrast and the mirror). `StatCard` and
-  `ShareHeadline` keep the brand colour on the rail and write the value in
-  `textShade(color)`, as does the `SegmentedBar` popover value; the pill tones
+  `theme.test.ts` checks each shade's contrast and the mirror). `StatCard` keeps
+  the brand colour on the rail and writes the value in `textShade(color)`, as
+  do the `ShareHeadline` percentage and the `SegmentedBar` popover value; the pill tones
   use the shades. Rails, charts (their fills and axis text), icons and
   placeholders keep the brand colours (user, N5, 2026-11-25). The static
   boot copy in `index.html` uses the same shades for its text.

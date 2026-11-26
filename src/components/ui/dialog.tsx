@@ -43,7 +43,7 @@ function DialogContent({
               variant="ghost"
               size="icon-sm"
               aria-label={t('app.close')}
-              className="absolute top-3 right-3 text-p365-grey-text"
+              className="absolute top-3 right-3 text-p365-grey-500"
             />
           }
         >
